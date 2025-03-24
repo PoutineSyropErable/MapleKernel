@@ -27,10 +27,10 @@ $(ISO): $(ISO_DIR)/boot/$(KERNEL)
 	grub-mkrescue -o $(ISO) $(ISO_DIR)
 
 run: $(ISO)
-	qemu-system-x86_64 -cdrom $(ISO)
+	qemu-system-x86_64 -cdrom $(ISO) -nographic -serial mon:stdio
 
 debug: $(ISO)
-	qemu-system-x86_64 -cdrom $(ISO) -s -S
+	qemu-system-x86_64 -cdrom $(ISO) -nographic -serial mon:stdio -s -S
 
 clean:
 	rm -f *.o *.bin $(ISO)
