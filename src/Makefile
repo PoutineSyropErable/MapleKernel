@@ -1,29 +1,38 @@
-CC=x86_64-elf-gcc
-LD=x86_64-elf-ld
-CFLAGS=-std=gnu99 -ffreestanding -O2 -Wall -Wextra -m64
-LDFLAGS=-T linker.ld -nostdlib
+CC = clang
+LD = ld.lld
+CFLAGS = -ffreestanding -O0 -g -Wall -Wextra -m64 -target x86_64-elf -nostdlib -fno-exceptions -fno-rtti
+LDFLAGS = -T linker.ld -nostdlib
 
-all: iso/kernel.bin
+KERNEL = kernel.bin
+ISO = mykernel.iso
+ISO_DIR = iso
+
+all: $(ISO_DIR)/boot/$(KERNEL)
 
 kernel.o: kernel.c
-	$(CC) $(CFLAGS) -c kernel.c -o kernel.o
+	$(CC) $(CFLAGS) -c $< -o $@
 
 boot_header.o: boot_header.S
-	$(CC) $(CFLAGS) -c boot_header.S -o boot_header.o
+	$(CC) $(CFLAGS) -c $< -o $@
 
-kernel.bin: kernel.o boot_header.o
-	$(LD) $(LDFLAGS) kernel.o boot_header.o -o kernel.bin
+$(KERNEL): kernel.o boot_header.o
+	$(LD) $(LDFLAGS) kernel.o boot_header.o -o $(KERNEL)
 
-iso/kernel.bin: kernel.bin
-	mkdir -p iso/boot/grub
-	cp kernel.bin iso/boot/
-	cp boot/grub.cfg iso/boot/grub/
+$(ISO_DIR)/boot/$(KERNEL): $(KERNEL)
+	mkdir -p $(ISO_DIR)/boot/grub
+	cp $(KERNEL) $(ISO_DIR)/boot/
+	cp boot/grub.cfg $(ISO_DIR)/boot/grub/
 
-run: all
-	grub-mkrescue -o kernel.iso iso
-	qemu-system-x86_64 -cdrom kernel.iso
+$(ISO): $(ISO_DIR)/boot/$(KERNEL)
+	grub-mkrescue -o $(ISO) $(ISO_DIR)
+
+run: $(ISO)
+	qemu-system-x86_64 -cdrom $(ISO)
+
+debug: $(ISO)
+	qemu-system-x86_64 -cdrom $(ISO) -s -S
 
 clean:
-	rm -f *.o *.bin *.iso
-	rm -rf iso
+	rm -f *.o *.bin $(ISO)
+	rm -rf $(ISO_DIR)
 
