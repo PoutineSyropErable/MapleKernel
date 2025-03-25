@@ -28,16 +28,16 @@ SECTIONS
 		*(.multiboot)
 		*(.text)
 	}
-	// Allocate a block of 4 kilo byte total. It will be start alligned to 4k, so X000000 (leftmost/least significant)
-	// If it doesn't fit, it will be take multiple blocks, going by n*4K where n £ |N 
-	// * is for wildcard, it's so that the .text segment of every different file is present. (kernel.o, boot.o)
+	/* Allocate a block of 4 kilo byte total. It will be start alligned to 4k, so X000000 (leftmost/least significant)
+	 If it doesn't fit, it will be take multiple blocks, going by n*4K where n £ |N 
+	 * is for wildcard, it's so that the .text segment of every different file is present. (kernel.o, boot.o) */
 	
 
 	/* Read-only data. */
 	.rodata BLOCK(4K) : ALIGN(4K)
 	{
 		*(.rodata)
-		// we didn't define .rodata, but kernel.o and boot.o might have them as section in the elf file, so we need to add it
+		/* we didn't define .rodata, but kernel.o and boot.o might have them as section in the elf file, so we need to add it */
 	}
 
 	/* Read-write data (initialized) */
@@ -51,7 +51,7 @@ SECTIONS
 	{
 		*(COMMON)
 		*(.bss)
-		// .bss is also present in boot.s
+		 /* .bss is also present in boot.s */
 	}
 
 	/* The compiler may produce other sections, by default it will put them in
