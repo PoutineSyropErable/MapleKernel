@@ -32,3 +32,15 @@ cp grub.cfg "$ISO_DIR/boot/grub/grub.cfg"
 grub-mkrescue -o "$BUILD_DIR/myos.iso" "$ISO_DIR"
 
 echo "ISO created successfully: $BUILD_DIR/myos.iso"
+
+qemu-system-i386 -cdrom ./build/myos.iso &
+QEMU_PID=$!
+
+# Give QEMU a second to start up
+sleep 1
+
+# Launch VNC viewer
+vncviewer localhost:5900
+
+# After you close the VNC viewer, kill QEMU
+kill $QEMU_PID 2>/dev/null
