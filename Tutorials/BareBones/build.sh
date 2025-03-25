@@ -34,6 +34,9 @@ grub-mkrescue -o "$BUILD_DIR/myos.iso" "$ISO_DIR"
 echo "ISO created successfully: $BUILD_DIR/myos.iso"
 
 qemu-system-i386 -cdrom ./build/myos.iso &
+# or do this to use the binary directly
+# qemu-system-i386 -kernel ./build/myos.bin &
+
 QEMU_PID=$!
 
 # Give QEMU a second to start up
