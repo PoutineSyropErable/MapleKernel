@@ -1,0 +1,6 @@
+cc
+-m32
+-g
+-nostdlib
+-fno-builtin
+
