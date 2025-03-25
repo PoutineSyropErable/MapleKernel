@@ -1,5 +1,5 @@
 [default_config]
-assembler = "nasm"
+assembler = "gas"
 instruction_set = "x86/x86-64"
 
 [opts]
