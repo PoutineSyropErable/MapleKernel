@@ -1,6 +1,6 @@
 CompileFlags:
   Add:
-    - -target=x86_64-elf
+    - --target=x86_64-elf
     - -ffreestanding
     - -nostdlib
     - -fno-exceptions

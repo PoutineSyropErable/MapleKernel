@@ -1,0 +1,9 @@
+[default_config]
+assembler = "nasm"
+instruction_set = "x86/x86-64"
+
+[opts]
+compiler = "i686-elf-gcc"
+diagnostics = true
+default_diagnostics = true
+
