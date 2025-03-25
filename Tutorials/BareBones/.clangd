@@ -1,14 +1,10 @@
 CompileFlags:
   Add:
-    - --target=x86_64-elf
+    - --target=i686-elf
+    - -m32
     - -ffreestanding
     - -nostdlib
     - -fno-exceptions
     - -fno-rtti
     - -Wall
-    - -m64
     - -std=gnu99
-Diagnostics:
-  Suppress:
-    - missing-prototypes
-    - main
