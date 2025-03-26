@@ -9,16 +9,7 @@ printf -- "\n\n\n===========Iso============\n\n\n"
 ./iso.sh
 
 printf -- "\n\n\n===========qemu============\n\n\n"
-./qemu.sh &
 # qemu-system-x86_64 -drive format=raw,file=hello.bin &
-QEMU_PID=$!
+./qemu.sh
 
-# Give QEMU a second to start up
-sleep 1
-
-printf -- "\n\n\n===========VNC seeing============\n\n\n"
-# Launch VNC viewer
-vncviewer localhost:5900
-
-# After you close the VNC viewer, kill QEMU
-kill $QEMU_PID 2>/dev/null
+# vnc is in qemu.sh
