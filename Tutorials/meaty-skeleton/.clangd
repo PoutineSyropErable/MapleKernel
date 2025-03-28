@@ -1,0 +1,2 @@
+CompileFlags:
+  Add: [-isystem=sysroot/usr/include, -isystem=sysroot/include, -Ilibc/include, -Ikernel/include, -DKERNEL_BUILD=1]
