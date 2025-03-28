@@ -2,4 +2,5 @@
 isodir
 sysroot
 
-.nvim-session/
+**/nvim-session/
+**/.cache/
