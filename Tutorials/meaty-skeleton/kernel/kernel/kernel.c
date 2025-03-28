@@ -5,4 +5,5 @@
 void kernel_main(void) {
 	terminal_initialize();
 	printf("Hello, kernel World!\n");
+	printf("Multi line supports works\n");
 }
