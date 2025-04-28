@@ -51,6 +51,31 @@ struct Position get_terminal_size() {
 	return p;
 }
 
+void refresh_line(GapBuffer* gb) {
+	// 1. Go back to start of line
+	printf("\r");
+
+	// 2. Clear the entire line from cursor
+	printf("\033[K");
+
+	// 3. Optional: Indent if you want (ex: tab)
+	printf("\t");
+
+	// 4. Flatten the buffer and print it
+	char* flattened = gap_buffer_flatten(gb);
+	printf("%s", flattened);
+	free(flattened);
+
+	// 5. Move back to start and move to cursor position
+	printf("\r\t"); // Return + indent
+
+	for (size_t i = 0; i < gb->gap_start; ++i) {
+		MOVE_RIGHT(1);
+	}
+
+	fflush(stdout);
+}
+
 // --- Main loop ---
 
 void main_loop() {
@@ -61,8 +86,6 @@ void main_loop() {
 	char currentLine[MAX_LINE_LENGTH + 1] = {'\0'};
 	GapBuffer currentLineGB;
 	gap_buffer_init(&currentLineGB, MAX_LINE_LENGTH + 1);
-
-	size_t currentLinePos = 0;
 
 	char c_to_write = '\0';
 
@@ -90,7 +113,12 @@ void main_loop() {
 			fflush(stdout);
 
 			disable_raw_mode();
-			parseCurrentLine(gap_buffer_flatten(&currentLineGB));
+			char* line = gap_buffer_flatten(&currentLineGB);
+			parseCurrentLine(line);
+			free(line);
+			gap_buffer_free(&currentLineGB);
+			gap_buffer_init(&currentLineGB, MAX_LINE_LENGTH + 1);
+
 			enable_raw_mode();
 			break;
 
@@ -105,8 +133,7 @@ void main_loop() {
 		case BACKSPACE_KEY:
 			send_notification("backswapce", "pressed backsapce");
 			gap_buffer_delete(&currentLineGB);
-			MOVE_LEFT(1);
-			putchar(' ');
+			refresh_line(&currentLineGB);
 
 			break;
 
@@ -131,11 +158,9 @@ void main_loop() {
 				keybindMode = false;
 
 			} else {
-				if (currentLinePos < MAX_LINE_LENGTH) {
-					gap_buffer_insert(&currentLineGB, c);
+				gap_buffer_insert(&currentLineGB, c);
 
-					c_to_write = c;
-				}
+				c_to_write = c;
 			}
 
 			break;
@@ -153,7 +178,6 @@ void main_loop() {
 
 		if (c_to_write) {
 			putchar(c_to_write);
-			c_to_write = '\0';
 		}
 
 		fflush(stdout);

@@ -18,6 +18,13 @@ void send_notification(const char* title, const char* text) {
 	}
 }
 
+void safe_free(void** ptr) {
+	if (ptr && *ptr) {
+		free(*ptr);
+		*ptr = NULL;
+	}
+}
+
 // Initialize the gap buffer
 void gap_buffer_init(GapBuffer* gb, size_t initial_capacity) {
 	gb->capacity = initial_capacity;
@@ -26,8 +33,20 @@ void gap_buffer_init(GapBuffer* gb, size_t initial_capacity) {
 		perror("malloc");
 		exit(1);
 	}
+	memset(gb->buffer, 0, gb->capacity);
 	gb->gap_start = 0;
 	gb->gap_end = gb->capacity;
+
+	gb->flattened = NULL;
+}
+
+void gap_buffer_set_flatten(GapBuffer* gb) {
+
+	if (gb->flattened) {
+		free(gb->flattened);
+		gb->flattened = NULL;
+	}
+	gb->flattened = gap_buffer_flatten(gb);
 }
 
 // Move cursor one position left
@@ -71,6 +90,8 @@ void gap_buffer_insert(GapBuffer* gb, char c) {
 	}
 
 	gb->buffer[gb->gap_start++] = c;
+
+	gap_buffer_set_flatten(gb);
 }
 
 // Delete a character before the cursor (backspace)
@@ -78,6 +99,8 @@ void gap_buffer_delete(GapBuffer* gb) {
 	if (gb->gap_start > 0) {
 		gb->gap_start--;
 	}
+
+	gap_buffer_set_flatten(gb);
 }
 
 // Flatten the gap buffer into a null-terminated string
@@ -105,4 +128,9 @@ void gap_buffer_free(GapBuffer* gb) {
 	gb->buffer = NULL;
 	gb->capacity = 0;
 	gb->gap_start = gb->gap_end = 0;
+
+	if (gb->flattened) {
+		free(gb->flattened);
+	}
+	gb->flattened = NULL;
 }

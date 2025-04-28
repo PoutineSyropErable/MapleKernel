@@ -8,6 +8,7 @@ typedef struct GapBuffer {
 	size_t gap_start;
 	size_t gap_end;
 	size_t capacity;
+	char* flattened;
 } GapBuffer;
 
 // Initialize the gap buffer
