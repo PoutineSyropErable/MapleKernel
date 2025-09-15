@@ -1,0 +1,13 @@
+# .clang-format
+Language:        C
+IndentWidth:     4
+UseTab:          Never
+BreakBeforeBraces: Allman
+AlignAfterOpenBracket: DontAlign
+IndentPPDirectives: AfterHash
+MacroBlockBegin: ''
+MacroBlockEnd:   ''
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+
+
