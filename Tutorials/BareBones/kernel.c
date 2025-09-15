@@ -1,3 +1,4 @@
+#include "virtual_memory.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -261,6 +262,10 @@ static inline void wait(unsigned int seconds) {
 }
 
 void kernel_main(void) {
+
+	init_paging();
+	init_page_bitmap();
+
 	/* Initialize terminal interface */
 	TerminalContext term = {0};
 	initialize_terminal(&term);

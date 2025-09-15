@@ -12,9 +12,16 @@ i686-elf-as boot.s -o "$BUILD_DIR/boot.o"
 
 # Compile the kernel
 i686-elf-gcc -c kernel.c -o "$BUILD_DIR/kernel.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+i686-elf-gcc -c virtual_memory.c -o "$BUILD_DIR/virtual_memory.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+i686-elf-gcc -c idt.c -o "$BUILD_DIR/idt.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
 # Link the kernel and generate the final binary
-i686-elf-gcc -T linker.ld -o "$BUILD_DIR/myos.bin" -ffreestanding -O2 -nostdlib "$BUILD_DIR/boot.o" "$BUILD_DIR/kernel.o" -lgcc
+i686-elf-gcc -T linker.ld -o "$BUILD_DIR/myos.bin" -ffreestanding -O2 -nostdlib \
+	"$BUILD_DIR/boot.o" \
+	"$BUILD_DIR/kernel.o" \
+	"$BUILD_DIR/virtual_memory.o" \
+	"$BUILD_DIR/idt.o" \
+	-lgcc
 
 # Check if the kernel is multiboot-compliant
 if grub-file --is-x86-multiboot "$BUILD_DIR/myos.bin"; then
