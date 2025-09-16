@@ -87,14 +87,7 @@ typedef struct {
 
 color_char terminal_big_scrollable_buffer[VGA_WIDTH * VGA_MEM_HEIGHT];
 
-void initialize_terminal(TerminalContext* terminal) {
-	terminal->current_write_row = 0;
-	terminal->current_write_column = 0;
-	terminal->color =
-	    vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
-
-	const int terminal_vga_text_memory_start = 0xB8000;
-	terminal->vga_buffer = (volatile color_char*)terminal_vga_text_memory_start;
+inline void clear_visible_terminal(TerminalContext* terminal) {
 
 	for (size_t y = 0; y < VGA_HEIGHT; y++) {
 		for (size_t x = 0; x < VGA_WIDTH; x++) {
@@ -105,6 +98,18 @@ void initialize_terminal(TerminalContext* terminal) {
 			    vga_entry(' ', terminal->color);
 		}
 	}
+}
+
+void initialize_terminal(TerminalContext* terminal) {
+	terminal->current_write_row = 0;
+	terminal->current_write_column = 0;
+	terminal->color =
+	    vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
+
+	const int terminal_vga_text_memory_start = 0xB8000;
+	terminal->vga_buffer = (volatile color_char*)terminal_vga_text_memory_start;
+
+	clear_visible_terminal(terminal);
 
 	terminal->big_scrollable_buffer = terminal_big_scrollable_buffer;
 	terminal->scroll_row = 0;
@@ -170,13 +175,14 @@ void terminal_putentryat(TerminalContext* term, char c, color_bg_fg color,
 
 inline void terminal_increase_row(TerminalContext* terminal) {
 	terminal->current_write_row++;
-	if (terminal->current_write_row - terminal->scroll_row >= VGA_HEIGHT) {
+	if (terminal->current_write_row - terminal->scroll_row > VGA_HEIGHT) {
 		terminal_scroll_down(terminal, 1);
 	}
 	if (terminal->current_write_row >= VGA_MEM_HEIGHT) {
 		terminal->current_write_row = 0;
 		terminal->current_write_column = 0;
 		terminal_set_scroll(terminal, 0);
+		clear_visible_terminal(terminal);
 	}
 }
 
@@ -248,17 +254,38 @@ size_t itoa(int value, char* buffer) {
 	return pos;
 }
 
-static inline void wait(unsigned int seconds) {
+static inline void wait(float seconds) {
 	volatile unsigned long count;
+	const unsigned long loops_per_sec = 150000000UL; // tuned for ~1s per unit
 
-	// Tuned experimentally for ~1s per unit on a modern CPU
-	const unsigned long loops_per_sec = 150000000;
+	// total loops = seconds * loops_per_sec
+	unsigned long total_loops = (unsigned long)(seconds * loops_per_sec);
 
-	for (unsigned int s = 0; s < seconds; s++) {
-		for (count = 0; count < loops_per_sec; count++) {
-			__asm__ volatile("nop");
+	for (unsigned long i = 0; i < total_loops; i++) {
+		__asm__ volatile("nop");
+	}
+}
+
+void print_array_terminal(TerminalContext* term, int* arr, size_t n) {
+	char buf[12];
+	terminal_writestring(term, "["); // start bracket
+
+	for (size_t i = 0; i < n; i++) {
+		itoa(arr[i], buf);
+		terminal_writestring(term, buf);
+
+		if (i != n - 1) {
+			terminal_writestring(term, ", ");
+		}
+
+		// Insert newline every 10 elements to handle scrolling
+		if ((i + 1) % 10 == 0) {
+			terminal_writestring(term, "\n");
+			wait(0.1);
 		}
 	}
+
+	terminal_writestring(term, "]\n"); // end bracket with newline
 }
 
 void kernel_main(void) {
@@ -279,13 +306,19 @@ void kernel_main(void) {
 	wait(2);
 	terminal_writestring(&term, "Test123\n");
 	char buf[12];
-	for (int i = 0; i < 50; i++) {
+	for (int i = 0; i < 10; i++) {
 		size_t len = itoa(i, buf);
 		buf[len] = '\n';     // replace the null terminator with newline
 		buf[len + 1] = '\0'; // add new null terminator
 		terminal_writestring(&term, buf);
-		wait(2);
+		wait(0.1);
 	}
 	terminal_writestring(&term, "This is a nice test\n");
-	terminal_writestring(&term, "Last line doesn't need a newline");
+
+	int* big_array = (int*)kmalloc(1024 * 1024 * 1024);
+	for (int i = 0; i < 100000; i++) {
+		big_array[i] = i;
+	}
+
+	print_array_terminal(&term, big_array, 100000);
 }

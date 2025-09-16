@@ -1,62 +1,57 @@
 #include "virtual_memory.h"
+#include <stddef.h> // for NULL
 #include <stdint.h>
 
-#define PAGE_PRESENT 0x1 // The page exist in physical memory.
-#define PAGE_RW 0x2      // This page is read write or read only
+#define PAGE_PRESENT 0x1 // Page exists in physical memory
+#define PAGE_RW 0x2      // Read/write
 
-#define PAGE_USER 0x004       // Bit 2: User/supervisor (1 = user)
-#define PAGE_PWT 0x008        // Bit 3: Page-level write-through
-#define PAGE_PCD 0x010        // Bit 4: Page-level cache disable
-#define PAGE_ACCESSED 0x020   // Bit 5: Accessed by CPU
-#define PAGE_DIRTY 0x040      // Bit 6: Dirty (for page tables)
-#define PAGE_PS 0x080         // Bit 7: Page size (0=4KB, 1=4MB)
-#define PAGE_GLOBAL 0x100     // Bit 8: Global page (ignore TLB flush)
-#define PAGE_AVAILABLE1 0x200 // Bit 9: Available for OS
-#define PAGE_AVAILABLE2 0x400 // Bit 10: Available for OS
-#define PAGE_AVAILABLE3 0x800 // Bit 11: Available for OS
+#define PAGE_USER 0x004       // User/supervisor
+#define PAGE_PWT 0x008        // Page-level write-through
+#define PAGE_PCD 0x010        // Page-level cache disable
+#define PAGE_ACCESSED 0x020   // Accessed by CPU
+#define PAGE_DIRTY 0x040      // Dirty (for page tables)
+#define PAGE_PS 0x080         // Page size (0=4KB, 1=4MB)
+#define PAGE_GLOBAL 0x100     // Global page
+#define PAGE_AVAILABLE1 0x200 // OS available
+#define PAGE_AVAILABLE2 0x400
+#define PAGE_AVAILABLE3 0x800
 
 uint32_t page_directory[1024] __attribute__((aligned(4096)));
 uint32_t first_page_table[1024] __attribute__((aligned(4096)));
 
 #define PAGE_SIZE 0x1000                        // 4 KB
-#define TOTAL_MEMORY (4UL * 1024 * 1024 * 1024) // 4 GB emulated memory
-#define NUM_PAGES (TOTAL_MEMORY / PAGE_SIZE)    // total number of pages
-#define BITMAP_SIZE (NUM_PAGES / 8)             // 1 bit per pag
+#define TOTAL_MEMORY (4UL * 1024 * 1024 * 1024) // 4 GB
+#define NUM_PAGES (TOTAL_MEMORY / PAGE_SIZE)
+#define BITMAP_SIZE (NUM_PAGES / 8)
 uint8_t page_bitmap[BITMAP_SIZE];
 
-#define PAGE_INDEX(addr) ((addr) / PAGE_SIZE)
-#define SET_PAGE_PRESENT(idx) (page_bitmap[(idx) / 8] |= (1 << ((idx) % 8)))
-#define CLEAR_PAGE_PRESENT(idx) (page_bitmap[(idx) / 8] &= ~(1 << ((idx) % 8)))
-#define IS_PAGE_PRESENT(idx) (page_bitmap[(idx) / 8] & (1 << ((idx) % 8)))
+/* Page bitmap helpers */
+static inline uint32_t page_index(uint32_t addr) { return addr / PAGE_SIZE; }
+static inline void set_page_present(uint32_t idx) { page_bitmap[idx / 8] |= (1 << (idx % 8)); }
+static inline void clear_page_present(uint32_t idx) { page_bitmap[idx / 8] &= ~(1 << (idx % 8)); }
+static inline int is_page_present(uint32_t idx) { return page_bitmap[idx / 8] & (1 << (idx % 8)); }
 
-void init_page_bitmap() {
-	uint32_t page_index; // Current page number
-	uint32_t byte_index; // Which byte in the bitmap
-	uint8_t bit_mask;    // Mask for the bit inside the byte
-
-	// Clear the entire bitmap initially
-	for (uint32_t i = 0; i < NUM_PAGES / 8; i++) {
+/**
+ * Initialize the page bitmap.
+ * Marks first 4 MB (first page table) as allocated.
+ */
+void init_page_bitmap(void) {
+	for (uint32_t i = 0; i < BITMAP_SIZE; i++)
 		page_bitmap[i] = 0;
-	}
 
-	// Set bits for the pages that are mapped in the first page table (first 4 MB)
-	for (page_index = 0; page_index < 1024; page_index++) {
-		byte_index = page_index / 8;      // Which byte contains this page's bit
-		bit_mask = 1 << (page_index % 8); // Which bit inside the byte
-
-		page_bitmap[byte_index] |= bit_mask; // Mark page as present
-	}
+	for (uint32_t i = 0; i < 1024; i++) // First 1024 pages = 4 MB
+		set_page_present(i);
 }
 
-void init_paging() {
-	// 0x1000 = 4096 = 1024 * sizeof(int32/float32)
+/**
+ * Enable paging with first 4 MB identity-mapped.
+ */
+void init_paging(void) {
 	for (int i = 0; i < 1024; i++)
-		first_page_table[i] = (i * 0x1000) | PAGE_PRESENT | PAGE_RW;
+		first_page_table[i] = (i * PAGE_SIZE) | PAGE_PRESENT | PAGE_RW;
 
 	page_directory[0] = ((uint32_t)first_page_table) | PAGE_PRESENT | PAGE_RW;
-	// Only map the first page directory. So only 4mb of memory are present. They are identity mapped.
 
-	// Inline assembly to load CR3 and enable paging
 	asm volatile(
 	    "mov %[pd], %%cr3\n"
 	    "mov %%cr0, %%eax\n"
@@ -69,143 +64,156 @@ void init_paging() {
 
 /**
  * Allocate a single 4 KB page.
- *
- * Scans the page bitmap for the first free page, marks it as present,
- * and returns its physical address. Returns 0 if no free pages remain.
- *
- * Optimizable: Could use a free-list or bit-scan instructions for faster O(1) search.
+ * Returns the physical address, or 0 if none available.
  */
-int32_t alloc_page() {
-	uint32_t page_index;
-	uint32_t byte_index;
-	uint8_t bit_mask;
-
-	for (page_index = 0; page_index < NUM_PAGES; page_index++) {
-		byte_index = page_index / 8;
-		bit_mask = 1 << (page_index % 8);
-
-		// Check if the page is free
-		if (!(page_bitmap[byte_index] & bit_mask)) {
-			// Mark it as present
-			page_bitmap[byte_index] |= bit_mask;
-
-			// Return physical address
-			return page_index * PAGE_SIZE;
+uint32_t alloc_page(void) {
+	for (uint32_t i = 0; i < NUM_PAGES; i++) {
+		if (!is_page_present(i)) {
+			set_page_present(i);
+			return i * PAGE_SIZE;
 		}
 	}
-
-	// No free pages available
 	return 0;
 }
 
 /**
- * Free a previously allocated page.
- *
- * Clears the present bit in the page bitmap so that it can be reallocated.
- *
- * page_addr: Physical address of the page to free. Must be 4 KB aligned.
+ * Free a single 4 KB page.
  */
-void free_page(uint32_t page_addr) {
-	uint32_t page_index = page_addr / PAGE_SIZE;
-	uint32_t byte_index = page_index / 8;
-	uint8_t bit_mask = 1 << (page_index % 8);
-
-	// Mark page as free
-	page_bitmap[byte_index] &= ~bit_mask;
+void free_page(uint32_t phys_addr) {
+	uint32_t idx = page_index(phys_addr);
+	clear_page_present(idx);
 }
 
 /**
- * Allocate 'n' consecutive 4 KB pages.
- *
- * Scans the page bitmap to find a hole of 'n' free pages. Marks them as present
- * and returns the physical address of the first page.
- *
- * Returns 0 if no suitable hole is found.
- *
- * Optimizable: Could maintain a free-list of contiguous page ranges or use
- * hierarchical bitmaps for faster search.
+ * Allocate 'n' consecutive pages. Returns physical address of first page.
+ * Returns 0 if not enough contiguous pages exist.
  */
 uint32_t alloc_n_pages(uint32_t n) {
-	if (n == 0 || n > NUM_PAGES) {
-		return 0; // invalid request
-	}
+	if (n == 0 || n > NUM_PAGES)
+		return 0;
 
-	uint32_t start_index = 0; // candidate start of free block
-	uint32_t free_count = 0;  // number of consecutive free pages found
-	uint32_t page_index, byte_index;
-	uint8_t bit_mask;
-
-	// Scan through all pages
-	for (page_index = 0; page_index < NUM_PAGES; page_index++) {
-		byte_index = page_index / 8;
-		bit_mask = 1 << (page_index % 8);
-
-		if (!(page_bitmap[byte_index] & bit_mask)) {
-			// Page is free
-			if (free_count == 0) {
-				start_index = page_index; // potential start of hole
-			}
-			free_count++;
-
-			if (free_count == n) {
-				// Found enough consecutive pages, mark them as allocated
-				for (uint32_t i = 0; i < n; i++) {
-					uint32_t idx = start_index + i;
-					page_bitmap[idx / 8] |= 1 << (idx % 8);
-				}
-
-				// Return physical address of the first page
-				return start_index * PAGE_SIZE;
+	uint32_t start = 0, count = 0;
+	for (uint32_t i = 0; i < NUM_PAGES; i++) {
+		if (!is_page_present(i)) {
+			if (count == 0)
+				start = i;
+			count++;
+			if (count == n) {
+				for (uint32_t j = 0; j < n; j++)
+					set_page_present(start + j);
+				return start * PAGE_SIZE;
 			}
 		} else {
-			// Page is taken, reset counter
-			free_count = 0;
+			count = 0;
+		}
+	}
+	return 0;
+}
+
+/**
+ * Free 'n' consecutive pages starting at physical address.
+ */
+void free_n_pages(uint32_t phys_addr, uint32_t n) {
+	uint32_t start_idx = page_index(phys_addr);
+	for (uint32_t i = 0; i < n; i++)
+		clear_page_present(start_idx + i);
+}
+
+/* --- kmalloc / kfree --- */
+
+// ***Translate a kernel virtual address to a physical address.*Returns 0 if the virtual address is unmapped.*/
+uint32_t virt_to_phys(uint32_t virt_addr) {
+	uint32_t pd_index = (virt_addr >> 22) & 0x3FF; // top 10 bits
+	uint32_t pt_index = (virt_addr >> 12) & 0x3FF; // next 10 bits
+	uint32_t offset = virt_addr & 0xFFF;           // bottom 12 bits
+
+	uint32_t pd_entry = page_directory[pd_index];
+	if (!(pd_entry & PAGE_PRESENT)) {
+		// Page directory entry not present
+		return 0;
+	}
+
+	uint32_t* pt = (uint32_t*)(pd_entry & 0xFFFFF000); // mask flags
+	uint32_t pt_entry = pt[pt_index];
+	if (!(pt_entry & PAGE_PRESENT)) {
+		// Page table entry not present
+		return 0;
+	}
+
+	uint32_t phys_addr = (pt_entry & 0xFFFFF000) + offset;
+	return phys_addr;
+}
+
+/**
+ * Translate a physical address to a kernel virtual address.
+ * Scans the page tables for the first mapping.
+ * Returns NULL if the physical page is not mapped.
+ *
+ * Optimizable: a reverse mapping table could make this O(1).
+ */
+void* phys_to_virt(uint32_t phys_addr) {
+	uint32_t pd_index, pt_index, offset;
+	offset = phys_addr & 0xFFF; // offset within page
+	uint32_t phys_page = phys_addr & 0xFFFFF000;
+
+	// Scan page directory
+	for (pd_index = 0; pd_index < 1024; pd_index++) {
+		uint32_t pd_entry = page_directory[pd_index];
+		if (!(pd_entry & PAGE_PRESENT))
+			continue;
+
+		uint32_t* pt = (uint32_t*)(pd_entry & 0xFFFFF000);
+		for (pt_index = 0; pt_index < 1024; pt_index++) {
+			uint32_t pt_entry = pt[pt_index];
+			if (!(pt_entry & PAGE_PRESENT))
+				continue;
+
+			if ((pt_entry & 0xFFFFF000) == phys_page) {
+				// Found mapping
+				uint32_t virt_addr = (pd_index << 22) | (pt_index << 12) | offset;
+				return (void*)virt_addr;
+			}
 		}
 	}
 
-	// No contiguous block of 'n' pages found
-	return 0;
+	// No mapping found
+	return NULL;
 }
 
 struct kmalloc_header {
-	uint32_t pages;
+	uint32_t pages; // Number of pages allocated
 };
 
-// Simple kmalloc: allocate contiguous pages
+/**
+ * Allocate 'size' bytes from the kernel heap.
+ * Returns a virtual address or NULL.
+ */
 void* kmalloc(uint32_t size) {
-	if (size == 0)
+	if (!size)
 		return NULL;
 
-	// Calculate number of pages required
 	uint32_t pages_needed = (size + PAGE_SIZE - 1) / PAGE_SIZE;
-
-	// Allocate physical pages
 	uint32_t phys_addr = alloc_n_pages(pages_needed);
-	if (phys_addr == 0)
-		return NULL; // allocation failed
+	if (!phys_addr)
+		return NULL;
 
-	// Convert to kernel virtual address
 	uint32_t* virt_addr = (uint32_t*)phys_to_virt(phys_addr);
 
-	// Store header before returned pointer
 	struct kmalloc_header* header = (struct kmalloc_header*)virt_addr;
 	header->pages = pages_needed;
 
-	// Return pointer after header
 	return (void*)(header + 1);
 }
 
+/**
+ * Free memory previously allocated by kmalloc.
+ */
 void kfree(void* ptr) {
 	if (!ptr)
 		return;
 
-	// Retrieve header
 	struct kmalloc_header* header = ((struct kmalloc_header*)ptr) - 1;
-	uint32_t pages_to_free = header->pages;
-
-	// Compute physical address of allocation
 	uint32_t phys_addr = virt_to_phys((uint32_t)header);
 
-	// Free physical pages
-	free_n_pages(phys_addr, pages_to_free);
+	free_n_pages(phys_addr, header->pages);
 }
