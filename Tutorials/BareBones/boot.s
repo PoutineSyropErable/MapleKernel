@@ -31,7 +31,7 @@ stack is properly aligned and failure to align the stack will result in
 undefined behavior.
 */
 .section .bss
-.align 16 # 16 bytes, not 16 bits. (Bits allignement is impossible i think)
+.align 16 # 16 bytes, not 16 bits. (Bits allignement is impossible i think. Yeah cause you can't read/write bits)
 stack_bottom:
 .skip 16384 # 16 KiB
 stack_top:
@@ -74,7 +74,9 @@ _start:
 	environment where crucial features are offline. Note that the
 	processor is not fully initialized yet: Features such as floating
 	point instructions and instruction set extensions are not initialized
-	yet. The GDT should be loaded here. Paging should be enabled here.
+	yet. 
+	The GDT should be loaded here. 
+	Paging should be enabled here.
 	C++ features such as global constructors and exceptions will require
 	runtime support to work as well.
 	*/
