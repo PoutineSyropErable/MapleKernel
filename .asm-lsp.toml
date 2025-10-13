@@ -1,0 +1,64 @@
+# ===========================
+# ASM LSP configuration
+# ===========================
+[default_config]
+# Configure documentation available for features like hover and completions
+assembler = "nasm"
+instruction_set = "x86/x86-64"
+
+
+# 1️⃣ NASM projects (rawboot folder)
+[[project]]
+path = "Tutorials/rawboot"
+assembler = "nasm"
+instruction_set = "x86/x86-64"
+
+[project.opts]
+compiler = "nasm"
+compile_flags_txt = [
+  "-f", "elf64",    # generate 64-bit ELF object files
+  "-g",             # debug symbols
+  "-F", "dwarf",    # DWARF format
+  "-Wall"           # enable warnings
+]
+
+# 2️⃣ GCC Intel syntax projects (e.g., kernel, boot headers)
+[[project]]
+path = "src"
+assembler = "gas"
+instruction_set = "x86/x86-64"
+
+[project.opts]
+compiler = "gcc"
+compile_flags_txt = [
+  "-x", "assembler",    # treat as assembly
+  "-masm=intel",        # Intel syntax
+  "-g",                 # debug symbols
+  "-Wall",
+  "-Wextra",
+  "-O0",                # no optimization
+  "-m64"                # target 64-bit
+]
+
+
+
+
+# 2️⃣ GCC Intel syntax projects (e.g., kernel, boot headers)
+[[project]]
+path = "Tutorials/BareBones"
+assembler = "gas"
+instruction_set = "x86/x86-64"
+
+[project.opts]
+compiler = "gcc"
+compile_flags_txt = [
+  "-x", "assembler",    # treat as assembly
+  "-masm=intel",        # Intel syntax
+  "-g",                 # debug symbols
+  "-Wall",
+  "-Wextra",
+  "-O0",                # no optimization
+  "-m64"                # target 64-bit
+]
+
+
