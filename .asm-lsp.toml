@@ -22,6 +22,22 @@ compile_flags_txt = [
   "-Wall"           # enable warnings
 ]
 
+
+# 1️⃣ NASM projects (tiny 16 bit boot loader folder)
+[[project]]
+path = "Tutorials/tinyBootLoader"
+assembler = "nasm"
+instruction_set = "x86/x86-64"
+
+[project.opts]
+compiler = "nasm"
+compile_flags_txt = [
+  "-f", "elf64",    # generate 64-bit ELF object files
+  "-g",             # debug symbols
+  "-F", "dwarf",    # DWARF format
+  "-Wall"           # enable warnings
+]
+
 # 2️⃣ GCC Intel syntax projects (e.g., kernel, boot headers)
 [[project]]
 path = "src"

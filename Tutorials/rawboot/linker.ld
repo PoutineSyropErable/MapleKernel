@@ -1,31 +1,21 @@
-/* linker.ld */
-OUTPUT_FORMAT("binary")        /* produce a flat binary */
-ENTRY(start16)                 /* entry point at 16-bit reset vector */
+OUTPUT_FORMAT("elf32-i386")        /* intermediate ELF for symbols/debug */
+ENTRY(start16)
 
 SECTIONS
 {
-    /* -----------------------------
-       16-bit stage (boot16 + boot16_2)
-       ----------------------------- */
-    . = 0xFFFFFFF0;            /* reset vector load address */
+    /* 16-bit stage */
+    . = 0xFFFFFFF0;
     .text16 : { *(.text16) }
+    .data16 : { *(.data16) }
 
-    /* -----------------------------
-       32-bit stage (boot32)
-       ----------------------------- */
-    . = ALIGN(16);              /* optional alignment */
+    /* 32-bit stage */
+    . = ALIGN(16);
+    .bss32 : { *(.bss32) }
     .text32 : { *(.text32) }
 
-    /* -----------------------------
-       64-bit stage (boot64)
-       ----------------------------- */
+    /* 64-bit stage */
     . = ALIGN(16);
     .text64 : { *(.text64) }
-
-    /* -----------------------------
-       64-bit data
-       ----------------------------- */
-    . = ALIGN(16);
     .data64 : { *(.data64) }
 }
 

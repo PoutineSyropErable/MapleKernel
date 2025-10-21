@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
+set -euo pipefail
+alias ld64="x86_64-elf-ld"
 
-# 16-bit boot sector / reset vector
-nasm -f bin boot16.s -o boot16.bin
+mkdir -p build
 
-# 16-bit real mode setup
-nasm -f elf32 boot16_2.s -o boot16_2.o
+# Assemble 16-bit stages
+nasm -f bin -o build/boot16.bin boot16.s
+nasm -f bin -o build/boot16_2.bin boot16_2.s
 
-# 32-bit protected mode
-nasm -f elf32 boot32.s -o boot32.o
+# Assemble 32-bit stage (NASM)
+nasm -f elf32 -o build/boot32.o boot32.s
 
-# 64-bit long mode
-nasm -f elf64 boot64.s -o boot64.o
+# Assemble 64-bit stage (NASM)
+nasm -f elf64 -o build/boot64.o boot64.s
 
-ld -T linker.ld -o mykernel.bin boot16_2.o boot32.o boot64.o
+# Link everything into a flat binary
+ld64 -T linker.ld -o build/mykernel.bin \
+	build/boot16.o build/boot16_2.o build/boot32.o build/boot64.o
 
-qemu-system-x86_64 \
-	-machine accel=tcg \
-	-nographic \
-	-bios none \
-	-device loader,file=mykernel.bin,addr=0xFFFFFFF0
+echo "Build complete. Output: build/mykernel.bin"
