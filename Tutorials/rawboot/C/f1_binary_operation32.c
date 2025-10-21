@@ -1,9 +1,9 @@
-#include "f1_binary_operation.h"
+#include "f1_binary_operation32.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-uint32_t generateMask(uint8_t endBig, uint8_t startSmall) {
+uint32_t generateMask32(uint8_t endBig, uint8_t startSmall) {
 
 	uint8_t width = endBig - startSmall + 1;
 
@@ -19,33 +19,20 @@ uint32_t generateMask(uint8_t endBig, uint8_t startSmall) {
 	return mask_left;
 }
 
-uint32_t generateAntiMask(uint8_t endBig, uint8_t startSmall) {
+uint32_t generateAntiMask32(uint8_t endBig, uint8_t startSmall) {
 
-	return ~generateMask(endBig, startSmall);
+	return ~generateMask32(endBig, startSmall);
 }
 
-uint32_t getBits(uint32_t value, uint8_t endBig, uint8_t startSmall) {
+uint32_t getBits32(uint32_t value, uint8_t endBig, uint8_t startSmall) {
 
-	uint32_t mask_left = generateMask(endBig, startSmall);
+	uint32_t mask_left = generateMask32(endBig, startSmall);
 	uint32_t value_left = value & mask_left;
 	uint32_t return_value = value_left >> startSmall;
 	return return_value;
 }
 
-uint32_t getBits2(uint32_t value, uint8_t endBig, uint8_t startSmall) {
-	if (endBig < startSmall) {
-		printf("[ERROR]: big >= small ");
-		abort();
-	}
-
-	uint32_t shifted_value = value >> startSmall;
-	uint32_t mask_plus_one = 1 << (endBig - startSmall + 1);
-	uint32_t mask = mask_plus_one - 1;
-
-	return shifted_value & mask;
-}
-
-uint32_t setBits(uint32_t a_dest, uint32_t b_value, uint8_t endBig, uint8_t startSmall) {
+uint32_t setBits32(uint32_t a_dest, uint32_t b_value, uint8_t endBig, uint8_t startSmall) {
 	/*
 	Example:
 
@@ -65,7 +52,7 @@ uint32_t setBits(uint32_t a_dest, uint32_t b_value, uint8_t endBig, uint8_t star
 	*/
 
 	uint32_t b_shifted = b_value << startSmall;
-	uint32_t a_reverse_mask = generateAntiMask(endBig, startSmall);
+	uint32_t a_reverse_mask = generateAntiMask32(endBig, startSmall);
 
 	return a_dest & a_reverse_mask | b_shifted;
 }
@@ -92,7 +79,7 @@ uint32_t setBits(uint32_t a_dest, uint32_t b_value, uint8_t endBig, uint8_t star
     setBits(&x, 0xD, 19, 16);
 
 */
-void setBitsModify(uint32_t* a_dest, uint32_t b_value, uint8_t endBig, uint8_t startSmall) {
+void setBitsModify32(uint32_t* a_dest, uint32_t b_value, uint8_t endBig, uint8_t startSmall) {
 
-	*a_dest = setBits(*a_dest, b_value, endBig, startSmall);
+	*a_dest = setBits32(*a_dest, b_value, endBig, startSmall);
 }

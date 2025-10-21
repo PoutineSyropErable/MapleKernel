@@ -1,6 +1,5 @@
-#include "f1_binary_operation.h"
-#include "f2_string.h"
-#include "f3_segment_descriptor_internals.h"
+#include "f2_string32.h"
+#include "f3_segment_descriptor_internals32.h"
 #include <stdio.h>
 
 int main(void) {
@@ -27,22 +26,23 @@ int main(void) {
 
 	printf("====== END OF SETTING ======\n\n\n");
 
-	printBinary(gdt.segmentsInfo[5].higher, "higher");
-	printBinary(gdt.segmentsInfo[5].lower, "lower");
+	printBinary32(gdt.segmentsInfo[5].higher, "higher");
+	printBinary32(gdt.segmentsInfo[5].lower, "lower");
+
 	printf("\n");
 
 	printf("----- Parsed Fields -----\n");
 	uint32_t baseAddress = getBaseAddress(&gdt, 5);
-	printBinary(baseAddress, "Base Address");
+	printBinary32(baseAddress, "Base Address");
 
-	printBinary(getType(&gdt, 5), "Type (bits 8-11)");
+	printBinary32(getType(&gdt, 5), "Type (bits 8-11)");
 	printf("DescriptorTypeS = %u\n", getDescriptorTypeS(&gdt, 5));
-	printBinary(getPriviledgeDPL(&gdt, 5), "DPL (bits 13-14)");
+	printBinary32(getPriviledgeDPL(&gdt, 5), "DPL (bits 13-14)");
 	printf("Present = %u\n", getPresent(&gdt, 5));
 	printf("AVL = %u\n", getAVL(&gdt, 5));
-	printBinary(getSegmentLimit(&gdt, 5), "SegmentLimit (bits 0-19)");
+	printBinary32(getSegmentLimit(&gdt, 5), "SegmentLimit (bits 0-19)");
 	printf("LongMode = %u\n", getLongMode(&gdt, 5));
 	printf("DefaultOperationSize = %u\n", getDefaultOperationSize(&gdt, 5));
 	printf("Granularity = %u\n", getGranularity(&gdt, 5));
-	printBinary(getBaseAddress(&gdt, 5), "BaseAddress (bits 0-31)");
+	printBinary32(getBaseAddress(&gdt, 5), "BaseAddress (bits 0-31)");
 }

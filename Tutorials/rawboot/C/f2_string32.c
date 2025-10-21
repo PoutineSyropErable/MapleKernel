@@ -1,8 +1,8 @@
-#include "f2_string.h"
+#include "f2_string32.h"
 #include "stdio.h"
 #include <stdlib.h>
 
-char* getSpacelessBitString(uint32_t a) {
+char* getSpacelessBitString32(uint32_t a) {
 	char* print_string = (char*)malloc(33);
 	print_string[32] = 0;
 
@@ -14,7 +14,7 @@ char* getSpacelessBitString(uint32_t a) {
 	return print_string;
 }
 
-char* addSpacesEvery4bits(char* spacelessBits) {
+char* addSpacesEvery4bits32(char* spacelessBits) {
 	char* print_str = malloc(40);
 
 	uint8_t bitIndex = 0;   // for the spacelessBits[bitIndex]
@@ -37,9 +37,9 @@ char* addSpacesEvery4bits(char* spacelessBits) {
 	return print_str;
 }
 
-void printBinary(uint32_t binaryNumber, char* variableName) {
-	char* spacelessBitString = getSpacelessBitString(binaryNumber);
-	char* spaceSeparatedBits = addSpacesEvery4bits(spacelessBitString);
+void printBinary32(uint32_t binaryNumber, char* variableName) {
+	char* spacelessBitString = getSpacelessBitString32(binaryNumber);
+	char* spaceSeparatedBits = addSpacesEvery4bits32(spacelessBitString);
 	printf("%s = %s = %x\n", variableName, spaceSeparatedBits, binaryNumber);
 	free(spaceSeparatedBits);
 	free(spacelessBitString);
