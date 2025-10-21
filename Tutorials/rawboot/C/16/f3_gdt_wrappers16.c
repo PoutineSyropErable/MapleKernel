@@ -16,6 +16,10 @@ uint8_t getType(GDT* gdt, size16_t index) {
 
 void setType(GDT* gdt, size16_t index, uint8_t type) {
 	SegmentDescriptor* sd = &gdt->segmentsInfo[index];
+	if (type > 0xF) {
+		printf("Type is too big\n");
+		type = 0XF & type;
+	}
 
 	setBitsModify8(&sd->p_dpl_s_type, type, TYPE_END, TYPE_START);
 
@@ -31,6 +35,11 @@ uint8_t getDescriptorTypeS(GDT* gdt, size16_t index) {
 
 void setDescriptorTypeS(GDT* gdt, size16_t index, uint8_t descriptorTypeS) {
 	SegmentDescriptor* sd = &gdt->segmentsInfo[index];
+
+	if (descriptorTypeS > 0b1) {
+		printf("S is too big\n");
+		descriptorTypeS = descriptorTypeS & 1;
+	}
 
 	setBitsModify8(&sd->p_dpl_s_type, descriptorTypeS, DESCRIPTOR_TYPE_S, DESCRIPTOR_TYPE_S);
 	printBinary8(descriptorTypeS, "descriptorTypeS");
@@ -48,6 +57,11 @@ uint8_t getPrivilegeDPL(GDT* gdt, size16_t index) {
 void setPrivilegeDPL(GDT* gdt, size16_t index, uint8_t privilegeDPL) {
 	SegmentDescriptor* sd = &gdt->segmentsInfo[index];
 
+	if (privilegeDPL > 0x3) {
+		printf("S is too big\n");
+		privilegeDPL = privilegeDPL & 1;
+	}
+
 	setBitsModify8(&sd->p_dpl_s_type, privilegeDPL, DPL_END, DPL_START);
 
 	printBinary8(privilegeDPL, "privilegeDPL");
@@ -62,6 +76,11 @@ uint8_t getPresent(GDT* gdt, size16_t index) {
 
 void setPresent(GDT* gdt, size16_t index, uint8_t presentP) {
 	SegmentDescriptor* sd = &gdt->segmentsInfo[index];
+
+	if (presentP > 0b1) {
+		printf("S is too big\n");
+		presentP = presentP & 1;
+	}
 
 	setBitsModify8(&sd->p_dpl_s_type, presentP, PRESENT, PRESENT);
 
@@ -108,6 +127,11 @@ uint8_t getAVL(GDT* gdt, size16_t index) {
 void setAVL(GDT* gdt, size16_t index, uint8_t avl) {
 	SegmentDescriptor* sd = &gdt->segmentsInfo[index];
 
+	if (avl > 0b1) {
+		printf("S is too big\n");
+		avl = avl & 1;
+	}
+
 	setBitsModify8(&sd->g_db_l_avl_segmentHigh, avl, AVL, AVL);
 
 	printBinary8(avl, "avl");
@@ -123,6 +147,11 @@ uint8_t getLongMode(GDT* gdt, size16_t index) {
 
 void setLongMode(GDT* gdt, size16_t index, uint8_t L) {
 	SegmentDescriptor* sd = &gdt->segmentsInfo[index];
+
+	if (L > 0b1) {
+		printf("S is too big\n");
+		L = L & 1;
+	}
 
 	setBitsModify8(&sd->g_db_l_avl_segmentHigh, L, LONG_MODE, LONG_MODE);
 
@@ -141,6 +170,11 @@ uint8_t getDefaultOperationSize(GDT* gdt, size16_t index) {
 void setDefaultOperationSize(GDT* gdt, size16_t index, uint8_t DsB) {
 	SegmentDescriptor* sd = &gdt->segmentsInfo[index];
 
+	if (DsB > 0b1) {
+		printf("S is too big\n");
+		DsB = DsB & 1;
+	}
+
 	setBitsModify8(&sd->g_db_l_avl_segmentHigh, DsB, DEFAULT_OPERATION_SIZE, DEFAULT_OPERATION_SIZE);
 
 	printBinary8(DsB, "DsB");
@@ -156,6 +190,11 @@ uint8_t getGranularity(GDT* gdt, size16_t index) {
 
 void setGranularity(GDT* gdt, size16_t index, uint8_t granularity) {
 	SegmentDescriptor* sd = &gdt->segmentsInfo[index];
+
+	if (granularity > 0b1) {
+		printf("S is too big\n");
+		granularity = granularity & 1;
+	}
 
 	setBitsModify8(&sd->g_db_l_avl_segmentHigh, granularity, GRANULARITY, GRANULARITY);
 
