@@ -4,37 +4,26 @@ set -eou pipefail
 
 BUILD_DIR="build"
 
-BINARY_OPERATION="16/f1_binary_operation16"
-BINARY_OPERATION_EXTENSION="32/f1_binary_operation32"
-STRING="16/f2_string16"
-STRING_EXTENSION="32/f2_string32"
-GDT_WRAPPERS="16/f3_gdt_wrappers16"
-GDT_WRAPPERS_EXTENSION="16/f3_1_gdt_wrappers_extension_32"
+BINARY_OPERATION="f1_binary_operation16"
+STRING="f2_string16"
+GDT_WRAPPERS="f3_gdt_wrappers16"
+GDT_WRAPPERS_EXTENSION="f3_1_gdt_wrappers_extension_32"
 MAIN="f4_main16" # updated to match your original main file
 
-OUT="gdt16_32"
+OUT="gdt16"
 
 mkdir -p "$BUILD_DIR"
-mkdir -p "$BUILD_DIR/32"
-mkdir -p "$BUILD_DIR/16"
 
 # Compile each source file
 gcc -c "$BINARY_OPERATION.c" -o "$BUILD_DIR/$BINARY_OPERATION.o"
-gcc -c "$BINARY_OPERATION_EXTENSION.c" -o "$BUILD_DIR/$BINARY_OPERATION_EXTENSION.o"
-
 gcc -c "$STRING.c" -o "$BUILD_DIR/$STRING.o"
-gcc -c "$STRING_EXTENSION.c" -o "$BUILD_DIR/$STRING_EXTENSION.o"
-
 gcc -c "$GDT_WRAPPERS.c" -o "$BUILD_DIR/$GDT_WRAPPERS.o"
 gcc -c "$GDT_WRAPPERS_EXTENSION.c" -o "$BUILD_DIR/$GDT_WRAPPERS_EXTENSION.o"
-
 gcc -c "$MAIN.c" -o "$BUILD_DIR/$MAIN.o"
 
 # Link object files into final executable
 gcc "$BUILD_DIR/$BINARY_OPERATION.o" \
-	"$BUILD_DIR/$BINARY_OPERATION_EXTENSION.o" \
 	"$BUILD_DIR/$STRING.o" \
-	"$BUILD_DIR/$STRING_EXTENSION.o" \
 	"$BUILD_DIR/$GDT_WRAPPERS.o" \
 	"$BUILD_DIR/$GDT_WRAPPERS_EXTENSION.o" \
 	"$BUILD_DIR/$MAIN.o" \

@@ -1,0 +1,50 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-o",
+      "build/f1_binary_operation16.o",
+      "f1_binary_operation16.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/rawboot/C/16",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/rawboot/C/16/f1_binary_operation16.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/rawboot/C/16/build/f1_binary_operation16.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-o",
+      "build/f2_string16.o",
+      "f2_string16.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/rawboot/C/16",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/rawboot/C/16/f2_string16.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/rawboot/C/16/build/f2_string16.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-o",
+      "build/f3_gdt_wrappers16.o",
+      "f3_gdt_wrappers16.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/rawboot/C/16",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/rawboot/C/16/f3_gdt_wrappers16.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/rawboot/C/16/build/f3_gdt_wrappers16.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-o",
+      "build/f4_main16.o",
+      "f4_main16.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/rawboot/C/16",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/rawboot/C/16/f4_main16.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/rawboot/C/16/build/f4_main16.o"
+  }
+]

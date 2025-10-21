@@ -1,0 +1,50 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-o",
+      "build/binary_operation.o",
+      "f1_binary_operation32.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/rawboot/C",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/rawboot/C/f1_binary_operation32.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/rawboot/C/build/binary_operation.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-o",
+      "build/string.o",
+      "f2_string32.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/rawboot/C",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/rawboot/C/f2_string32.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/rawboot/C/build/string.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-o",
+      "build/segment_descriptor_internals32.o",
+      "f3_segment_descriptor_internals32.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/rawboot/C",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/rawboot/C/f3_segment_descriptor_internals32.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/rawboot/C/build/segment_descriptor_internals32.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-o",
+      "build/main.o",
+      "f4_main.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/rawboot/C",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/rawboot/C/f4_main.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/rawboot/C/build/main.o"
+  }
+]
