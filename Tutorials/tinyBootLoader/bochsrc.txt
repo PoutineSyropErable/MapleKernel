@@ -1,0 +1,7 @@
+megs: 32
+	vgaromimage: file=/usr/share/bochs/VGABIOS-lgpl-latest.bin
+    floppya: 1_44=boot.com, status=inserted
+    boot: a
+    log: bochsout.txt
+    mouse: enabled=0
+    display_library: x, options="gui_debug"
