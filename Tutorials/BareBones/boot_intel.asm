@@ -36,8 +36,10 @@ _start:
     mov esp, stack_top
 
     ; Call the high-level kernel entry point
-    extern kernel_main
-    call kernel_main
+	mov esi, 15 
+	mov edi, 23
+	extern call_add16
+	call call_add16
 
     ; Infinite halt loop if kernel_main returns
 halt_loop:

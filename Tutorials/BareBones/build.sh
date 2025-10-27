@@ -11,23 +11,12 @@ mkdir -p "$BUILD_DIR" "$ISO_DIR/boot/grub"
 
 # Assemble the bootloader assembly
 nasm -f elf32 boot_intel.asm -o "$BUILD_DIR/boot.o"
-nasm -f elf add16_wrapper16.s -o "$BUILD_DIR/add16_wrapper16.o"
 nasm -f elf32 add16_wrapper32.s -o "$BUILD_DIR/add16_wrapper32.o"
-
-# Compile the kernel
-i686-elf-gcc -c kernel.c -o "$BUILD_DIR/kernel.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-i686-elf-gcc -c virtual_memory.c -o "$BUILD_DIR/virtual_memory.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-i686-elf-gcc -c idt.c -o "$BUILD_DIR/idt.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-
-ia16-elf-gcc -c ./add16.c -o "$BUILD_DIR/add16.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+nasm -f elf add16_wrapper16.s -o "$BUILD_DIR/add16_wrapper16.o"
 
 # Link the kernel and generate the final binary
 i686-elf-gcc -T linker.ld -o "$BUILD_DIR/myos.bin" -ffreestanding -O2 -nostdlib \
 	"$BUILD_DIR/boot.o" \
-	"$BUILD_DIR/kernel.o" \
-	"$BUILD_DIR/virtual_memory.o" \
-	"$BUILD_DIR/idt.o" \
-	"$BUILD_DIR/add16.o" \
 	"$BUILD_DIR/add16_wrapper16.o" \
 	"$BUILD_DIR/add16_wrapper32.o" \
 	-lgcc
