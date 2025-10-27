@@ -1,5 +1,4 @@
-#include "add16_wrapper.h"
-#include "virtual_memory.h"
+// #include "address_getter.c"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -354,32 +353,6 @@ void print_array_terminal(TerminalContext* term, int* arr, size_t n) {
 	terminal_writestring(term, "]\n"); // end bracket with newline
 }
 
-extern int add1616_start;
-
-int* get_add1616_start_address(void) {
-	return &add1616_start;
-}
-
-extern int stack16_start;
-extern int stack16_end;
-extern int args16_start;
-extern int args16_end;
-
-int* get_stack16_start_address(void) {
-	return &stack16_start;
-}
-
-int* get_stack16_end_address(void) {
-	return &stack16_end;
-}
-
-int* get_args16_start_address(void) {
-	return &args16_start;
-}
-int* get_args16_end_address(void) {
-	return &args16_end;
-}
-
 void print_int_var(TerminalContext* term, int var) {
 
 	char res_buff[12];
@@ -542,14 +515,14 @@ void kernel_main(void) {
 	terminal_writestring(&term, "Test123\n");
 	terminal_writestring(&term, "This is a nice test\n");
 
-	print_extern_address(&term, "The address of stack16_start: ", get_stack16_start_address);
-	print_extern_address(&term, "The address of stack16_end: ", get_stack16_end_address);
-	print_extern_address(&term, "The address of args16_start: ", get_args16_start_address);
-	print_extern_address(&term, "The address of args16_end: ", get_args16_end_address);
-	int* add1616_address = print_extern_address(&term, "The address of add1616: ", get_add1616_start_address);
+	// print_extern_address(&term, "The address of stack16_start: ", get_stack16_start_address);
+	// print_extern_address(&term, "The address of stack16_end: ", get_stack16_end_address);
+	// print_extern_address(&term, "The address of args16_start: ", get_args16_start_address);
+	// print_extern_address(&term, "The address of args16_end: ", get_args16_end_address);
+	// int* add1616_address = print_extern_address(&term, "The address of add1616: ", get_add1616_start_address);
 
-	uint32_t first_dword_of_code = *add1616_address;
-	terminal_write_hex(&term, "The value of the code at 0xb030: ", first_dword_of_code);
+	// uint32_t first_dword_of_code = *add1616_address;
+	// terminal_write_hex(&term, "The value of the code at 0xb030: ", first_dword_of_code);
 
 	print_extern_address16(&term, "\nThe value of cs: ", get_cs_selector);
 	print_extern_address16(&term, "\nThe value of ss: ", get_ss_selector);
@@ -569,7 +542,6 @@ void kernel_main(void) {
 	// print_int_var(&term, gdtr[2]);
 
 	uint16_t result = 0;
-	result = call_add16(245, 25);
 	terminal_writestring(&term, "The result of add16: ");
 	print_int_var(&term, result);
 	wait(10);
