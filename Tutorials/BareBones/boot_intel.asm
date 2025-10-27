@@ -32,6 +32,7 @@ section .text
 global _start
 _start:
     ; Set stack pointer (stack grows downward)
+	mov eax, 0xdeadface
     mov esp, stack_top
 
     ; Call the high-level kernel entry point

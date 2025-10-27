@@ -33,8 +33,8 @@ SECTIONS
     .text16 (NOLOAD) : ALIGN(16)
     {
         add1616_start = .;
-        KEEP(*(.text.add1616))  /* 16-bit wrapper */
-        KEEP(*(.text.add16))     /* actual add16 function */
+        KEEP(*(.text.add1616))  /* add16_wrapper32.s */
+        KEEP(*(.text.add16))     /* add16.c */
     }
 
     /* -----------------------------

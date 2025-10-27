@@ -255,6 +255,37 @@ size_t itoa(int value, char* buffer) {
 	return pos;
 }
 
+size_t uitoa(uint32_t value, char* buffer) {
+	size_t pos = 0;
+
+	if (value == 0) {
+		buffer[pos++] = '0';
+		buffer[pos] = '\0';
+		return pos;
+	}
+
+	// Write digits in reverse
+	size_t start = pos;
+	while (value > 0) {
+		buffer[pos++] = '0' + (value % 10);
+		value /= 10;
+	}
+
+	buffer[pos] = '\0';
+
+	// Reverse the string
+	size_t end = pos - 1;
+	while (start < end) {
+		char tmp = buffer[start];
+		buffer[start] = buffer[end];
+		buffer[end] = tmp;
+		start++;
+		end--;
+	}
+
+	return pos;
+}
+
 static inline void wait(float seconds) {
 	volatile unsigned long count;
 	const unsigned long loops_per_sec = 150000000UL; // tuned for ~1s per unit
@@ -324,6 +355,15 @@ void print_int_var(TerminalContext* term, int var) {
 	terminal_writestring(term, res_buff);
 }
 
+void print_uint_var(TerminalContext* term, uint32_t var) {
+
+	char res_buff[12];
+	size_t len = uitoa(var, res_buff);
+	res_buff[len] = '\n';     // replace the null terminator with newline
+	res_buff[len + 1] = '\0'; // add new null terminator
+	terminal_writestring(term, res_buff);
+}
+
 void print_something(TerminalContext* term) {
 
 	char buf[12];
@@ -336,12 +376,102 @@ void print_something(TerminalContext* term) {
 	}
 }
 
-void print_extern_address(TerminalContext* term, char* str, int* func()) {
+int* print_extern_address(TerminalContext* term, char* str, int* func()) {
 
 	terminal_writestring(term, str);
 	int* address_value = func();
 	print_int_var(term, (int)address_value);
 	terminal_writestring(term, "\n");
+	return address_value;
+}
+
+void terminal_write_uint(TerminalContext* term, char* str, uint32_t val) {
+
+	terminal_writestring(term, str);
+	print_uint_var(term, (int)val);
+}
+
+void print_extern_address16(TerminalContext* term, char* str, uint16_t func()) {
+
+	terminal_writestring(term, str);
+	uint16_t address_value = func();
+	print_int_var(term, (int)address_value);
+	// terminal_writestring(term, "\n");
+}
+
+uint16_t get_ss_selector() {
+	uint16_t ss_value;
+	__asm__ volatile(
+	    ".intel_syntax noprefix\n" // switch to Intel syntax
+	    "mov %0, ss\n"             // Intel-style mov
+	    ".att_syntax prefix\n"     // switch back to AT&T (default)
+	    : "=r"(ss_value)           // output operand
+	);
+	return ss_value;
+}
+
+uint16_t get_cs_selector() {
+	uint16_t cs_value;
+	__asm__ volatile(
+	    ".intel_syntax noprefix\n" // switch to Intel syntax
+	    "mov %0, cs\n"             // Intel-style mov
+	    ".att_syntax prefix\n"     // switch back to AT&T (default)
+	    : "=r"(cs_value)           // output operand
+	);
+	return cs_value;
+}
+
+uint16_t get_es_selector() {
+	uint16_t es_value;
+	__asm__ volatile(
+	    ".intel_syntax noprefix\n" // switch to Intel syntax
+	    "mov %0, es\n"             // Intel-style mov
+	    ".att_syntax prefix\n"     // switch back to AT&T (default)
+	    : "=r"(es_value)           // output operand
+	);
+	return es_value;
+}
+
+uint16_t get_fs_selector() {
+	uint16_t fs_value;
+	__asm__ volatile(
+	    ".intel_syntax noprefix\n" // switch to Intel syntax
+	    "mov %0, fs\n"             // Intel-style mov
+	    ".att_syntax prefix\n"     // switch back to AT&T (default)
+	    : "=r"(fs_value)           // output operand
+	);
+	return fs_value;
+}
+
+uint16_t get_gs_selector() {
+	uint16_t gs_value;
+	__asm__ volatile(
+	    ".intel_syntax noprefix\n" // switch to Intel syntax
+	    "mov %0, gs\n"             // Intel-style mov
+	    ".att_syntax prefix\n"     // switch back to AT&T (default)
+	    : "=r"(gs_value)           // output operand
+	);
+	return gs_value;
+}
+
+uint16_t get_ds_selector() {
+	uint16_t ds_value;
+	__asm__ volatile(
+	    ".intel_syntax noprefix\n" // switch to Intel syntax
+	    "mov %0, ds\n"             // Intel-style mov
+	    ".att_syntax prefix\n"     // switch back to AT&T (default)
+	    : "=r"(ds_value)           // output operand
+	);
+	return ds_value;
+}
+
+int* get_gdtr() {
+	int* gdtr;
+	__asm__ volatile(
+	    "sgdt %0\n"  // Intel-style mov
+	    : "=m"(gdtr) // output operand
+	);
+	return gdtr;
 }
 
 void kernel_main(void) {
@@ -369,8 +499,26 @@ void kernel_main(void) {
 	print_extern_address(&term, "The address of args16_end: ", get_args16_end_address);
 	print_extern_address(&term, "The address of add1616: ", get_add1616_start_address);
 
+	print_extern_address16(&term, "\nThe value of cs: ", get_cs_selector);
+	print_extern_address16(&term, "\nThe value of ss: ", get_ss_selector);
+	print_extern_address16(&term, "\nThe value of ds: ", get_ds_selector);
+	print_extern_address16(&term, "\nThe value of es: ", get_fs_selector);
+	print_extern_address16(&term, "\nThe value of fs: ", get_fs_selector);
+	print_extern_address16(&term, "\nThe value of gs: ", get_gs_selector);
+
+	int* gdtr = print_extern_address(&term, "\nThe gdtr: ", get_gdtr);
+
+	terminal_writestring(&term, "\nThe gdtr values:\n");
+	terminal_write_uint(&term, "(uint32_t) gdt[0] = ", gdtr[0]);
+	terminal_write_uint(&term, "(uint32_t) gdt[1] = ", gdtr[1]);
+	terminal_write_uint(&term, "(uint32_t) gdt[2] = ", gdtr[2]);
+	// print_int_var(&term, gdtr[0]);
+	// print_int_var(&term, gdtr[1]);
+	// print_int_var(&term, gdtr[2]);
+
 	uint16_t result = 0;
 	result = call_add16(245, 25);
+	terminal_writestring(&term, "The result of add16: ");
 	print_int_var(&term, result);
 
 	return;
