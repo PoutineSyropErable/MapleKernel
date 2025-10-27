@@ -1,12 +1,11 @@
-.intel_syntax noprefix
 ; =====================================================
 ; Multiboot Header Constants
 ; =====================================================
-ALIGN    equ 1<<0          ; align loaded modules on page boundaries
-MEMINFO  equ 1<<1          ; provide memory map
-FLAGS    equ ALIGN | MEMINFO ; multiboot 'flags'
-MAGIC    equ 0x1BADB002    ; magic number
-CHECKSUM equ -(MAGIC + FLAGS) ; checksum
+%define ALIGN    1
+%define MEMINFO  2  
+%define FLAGS    3
+%define MAGIC    0x1BADB002
+%define CHECKSUM 0xE4524FFB
 
 ; =====================================================
 ; Multiboot Header Section
@@ -36,9 +35,10 @@ _start:
     mov esp, stack_top
 
     ; Call the high-level kernel entry point
+    extern kernel_main
     call kernel_main
 
-; Infinite halt loop if kernel_main returns
+    ; Infinite halt loop if kernel_main returns
 halt_loop:
     cli                     ; clear interrupt flag
     hlt                     ; halt CPU
@@ -46,4 +46,3 @@ halt_loop:
 
 ; Set symbol size (optional, useful for debugging)
 ; size _start, . - _start
-

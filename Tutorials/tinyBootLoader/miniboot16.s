@@ -129,6 +129,7 @@ print:
 
 msg:    db "Oh boy do I sure love assembly!", 0
 
+; 206 bytes. Not so much. I can add some function to read from the drive. 
 times 446-($-$$) db 0
 ; the data of the partition table
 

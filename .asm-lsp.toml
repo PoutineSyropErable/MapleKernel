@@ -62,24 +62,41 @@ compile_flags_txt = [
 
 
 
-
-# 2️⃣ GCC Intel syntax projects (e.g., kernel, boot headers)
 [[project]]
 path = "Tutorials/BareBones"
-assembler = "gas"
+assembler = "nasm"
 instruction_set = "x86/x86-64"
 
 [project.opts]
-compiler = "gcc"
+compiler = "nasm"
 compile_flags_txt = [
-	"-x", "assembler",    # treat as assembly
-	"-masm=intel",        # Intel syntax
-	"-g",                 # debug symbols
-	"-Wall",
-	"-Wextra",
-	"-O0",                # no optimization
-	"-m64",                # target 64-bit
-	"-o", "/dev/null"
+	"-f", "elf32",    # generate 64-bit ELF object files
+	"-g",             # debug symbols
+	"-F", "dwarf",    # DWARF format
+	"-Wall",           # enable warnings
+	"-o", "/tmp/boot.o"
 ]
+
+
+
+
+# 2️⃣ GCC Intel syntax projects (e.g., kernel, boot headers)
+# [[project]]
+# path = "Tutorials/BareBones"
+# assembler = "gas"
+# instruction_set = "x86/x86-64"
+#
+# [project.opts]
+# compiler = "gcc"
+# compile_flags_txt = [
+# 	"-x", "assembler",    # treat as assembly
+# 	"-masm=intel",        # Intel syntax
+# 	"-g",                 # debug symbols
+# 	"-Wall",
+# 	"-Wextra",
+# 	"-O0",                # no optimization
+# 	"-m64",                # target 64-bit
+# 	"-o", "/dev/null"
+# ]
 
 
