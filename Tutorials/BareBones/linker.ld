@@ -9,6 +9,13 @@ SECTIONS
        ----------------------------- */
     . = 0x7000;              /* start at 28 KiB, safely below 1 MB */
 
+
+    /* Main text section */
+    .multiboot_start BLOCK(4K) : ALIGN(4K)
+    {
+        *(.multiboot)         /* multiboot header */
+    }
+
     /* 16-bit stack */
     .stack16 (NOLOAD) : ALIGN(16)
     {
@@ -30,12 +37,20 @@ SECTIONS
 	. += 16;
 
     /* 16-bit wrapper + add16 function */
-    .text16 (NOLOAD) : ALIGN(16)
+    .text16 : ALIGN(16)
     {
         add1616_start = .;
         KEEP(*(.text.add1616))  /* add16_wrapper32.s */
         KEEP(*(.text.add16))     /* add16.c */
     }
+
+
+	.resume32_low : ALIGN(16)
+	{
+		add1632_start = .;
+		KEEP(*(.text.add1632))   /* 32-bit wrapper code */
+		add1632_end = .;
+	}
 
     /* -----------------------------
        32-bit protected mode code
@@ -45,9 +60,8 @@ SECTIONS
     /* Main text section */
     .text BLOCK(4K) : ALIGN(4K)
     {
-        *(.multiboot)         /* multiboot header */
+        /* *(.multiboot)         /* multiboot header */ */
         *(.text)              /* 32-bit kernel code */
-        *(.text.add1632)      /* 32-bit wrapper */
     }
 
     /* Read-only data */

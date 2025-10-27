@@ -39,10 +39,10 @@ add1616_start:
 	; mov ds, ax
 
 
+	mov esp, [ds:args16_start]
 	mov ax, 0x18 
 	mov ss, ax    ; ss = 0x18 is the 32 bit ss value
 	mov ds, ax
-	mov esp, [args16_start]
 
 	; mov cs, 0x10 
     jmp 0x10:resume32                  ; far jump is unnecessary, 32-bit wrapper handles CR0
@@ -56,8 +56,8 @@ add1616_start:
 ; 	jmp halt_loop
 ;
 ;
-reset:
-	cli                     ; disable interrupts
-	xor eax, eax
-	lidt [eax]              ; load IDT base = 0, limit = 0 (invalid)
-	int 3                   ; trigger interrupt -> #GP -> #DF -> triple fault
+; reset:
+; 	cli                     ; disable interrupts
+; 	xor eax, eax
+; 	lidt [eax]              ; load IDT base = 0, limit = 0 (invalid)
+; 	int 3                   ; trigger interrupt -> #GP -> #DF -> triple fault

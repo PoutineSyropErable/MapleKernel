@@ -286,6 +286,40 @@ size_t uitoa(uint32_t value, char* buffer) {
 	return pos;
 }
 
+size_t int_to_hex(uint32_t value, char* buffer, int uppercase) {
+	const char* digits = uppercase ? "0123456789ABCDEF" : "0123456789abcdef";
+	int i;
+
+	// Handle zero explicitly
+	if (value == 0) {
+		buffer[0] = '0';
+		buffer[1] = '\0';
+		return 1;
+	}
+
+	char temp[9]; // Max 8 hex digits + null terminator
+	temp[8] = '\0';
+
+	// Convert each nibble
+	for (i = 7; i >= 0; i--) {
+		uint8_t nibble = value & 0xF;
+		temp[i] = digits[nibble];
+		value >>= 4;
+	}
+
+	// Copy skipping leading zeros
+	i = 0;
+	while (temp[i] == '0')
+		i++;
+	int j = 0;
+	while (temp[i] != '\0') {
+		buffer[j++] = temp[i++];
+	}
+	buffer[j] = '\0';
+
+	return (size_t)j;
+}
+
 static inline void wait(float seconds) {
 	volatile unsigned long count;
 	const unsigned long loops_per_sec = 150000000UL; // tuned for ~1s per unit
@@ -355,6 +389,15 @@ void print_int_var(TerminalContext* term, int var) {
 	terminal_writestring(term, res_buff);
 }
 
+void print_hex_var(TerminalContext* term, int var) {
+
+	char res_buff[12];
+	size_t len = int_to_hex(var, res_buff, 1);
+	res_buff[len] = '\n';     // replace the null terminator with newline
+	res_buff[len + 1] = '\0'; // add new null terminator
+	terminal_writestring(term, res_buff);
+}
+
 void print_uint_var(TerminalContext* term, uint32_t var) {
 
 	char res_buff[12];
@@ -380,15 +423,25 @@ int* print_extern_address(TerminalContext* term, char* str, int* func()) {
 
 	terminal_writestring(term, str);
 	int* address_value = func();
-	print_int_var(term, (int)address_value);
+	print_hex_var(term, (int)address_value);
 	terminal_writestring(term, "\n");
 	return address_value;
+}
+
+uint32_t read32(uint32_t addr) {
+	return *(volatile uint32_t*)addr;
 }
 
 void terminal_write_uint(TerminalContext* term, char* str, uint32_t val) {
 
 	terminal_writestring(term, str);
 	print_uint_var(term, (int)val);
+}
+
+void terminal_write_hex(TerminalContext* term, char* str, uint32_t val) {
+
+	terminal_writestring(term, str);
+	print_hex_var(term, (int)val);
 }
 
 void print_extern_address16(TerminalContext* term, char* str, uint16_t func()) {
@@ -482,14 +535,10 @@ void kernel_main(void) {
 	/* Initialize terminal interface */
 	TerminalContext term = {0};
 	initialize_terminal(&term);
-
 	terminal_set_scroll(&term, 0);
-	/* Newline support is left as an exercise. */
-	wait(2);
+
 	terminal_writestring(&term, "Hello, kernel World!\n");
-	wait(2);
 	terminal_writestring(&term, "How are you my friend\n");
-	wait(2);
 	terminal_writestring(&term, "Test123\n");
 	terminal_writestring(&term, "This is a nice test\n");
 
@@ -497,7 +546,10 @@ void kernel_main(void) {
 	print_extern_address(&term, "The address of stack16_end: ", get_stack16_end_address);
 	print_extern_address(&term, "The address of args16_start: ", get_args16_start_address);
 	print_extern_address(&term, "The address of args16_end: ", get_args16_end_address);
-	print_extern_address(&term, "The address of add1616: ", get_add1616_start_address);
+	int* add1616_address = print_extern_address(&term, "The address of add1616: ", get_add1616_start_address);
+
+	uint32_t first_dword_of_code = *add1616_address;
+	terminal_write_hex(&term, "The value of the code at 0xb030: ", first_dword_of_code);
 
 	print_extern_address16(&term, "\nThe value of cs: ", get_cs_selector);
 	print_extern_address16(&term, "\nThe value of ss: ", get_ss_selector);
@@ -520,6 +572,7 @@ void kernel_main(void) {
 	result = call_add16(245, 25);
 	terminal_writestring(&term, "The result of add16: ");
 	print_int_var(&term, result);
+	wait(10);
 
 	return;
 

@@ -1,6 +1,7 @@
 BITS 32
 
 global call_add16
+global resume32
 extern add1616_start
 
 extern stack16_start
@@ -58,18 +59,18 @@ call_add16:
 
     ; Far jump to 16-bit wrapper
 
-	jmp far 00:add1616_start
+	jmp far 01:add1616_start
 
 
 ; halt_loop: 
 ; 	hlt 
 ; 	jmp halt_loop
 ;
-reset:
-	cli                     ; disable interrupts
-	xor eax, eax
-	lidt [eax]              ; load IDT base = 0, limit = 0 (invalid)
-	int 3                   ; trigger interrupt -> #GP -> #DF -> triple fault
+; reset:
+; 	cli                     ; disable interrupts
+; 	xor eax, eax
+; 	lidt [eax]              ; load IDT base = 0, limit = 0 (invalid)
+; 	int 3                   ; trigger interrupt -> #GP -> #DF -> triple fault
 
 
 

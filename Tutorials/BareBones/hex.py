@@ -16,6 +16,7 @@ def simple2(address_start: int, address_end: int, name: str):
 
 
 stack_start = 0x7000
+stack_start = 0x10000
 stack_size = 16 * 1024
 stack_end = stack_start + stack_size
 
