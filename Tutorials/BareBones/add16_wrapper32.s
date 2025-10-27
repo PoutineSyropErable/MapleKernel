@@ -23,7 +23,7 @@ call_add16:
     push gs
 
 
-	mov eax, 0xdeadbeef
+	mov eax, 0xdeadfac1
 
 	; rdi = arg1 
 	; rsi = arg2
@@ -59,7 +59,7 @@ call_add16:
 
     ; Far jump to 16-bit wrapper
 
-	jmp far 01:add1616_start
+	jmp far 00:add1616_start
 
 
 ; halt_loop: 

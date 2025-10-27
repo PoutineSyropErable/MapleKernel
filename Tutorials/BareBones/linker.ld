@@ -63,7 +63,7 @@ SECTIONS
     /* Main text section */
     .text BLOCK(4K) : ALIGN(4K)
     {
-        *(.multiboot)         /* multiboot header */
+        /* *(.multiboot)         /* multiboot header */ */
         *(.text)              /* 32-bit kernel code */
     }
 

@@ -1,4 +1,6 @@
-// #include "address_getter.c"
+#include "add16_wrapper.h"
+#include "address_getter.c"
+#include "os_registers.c"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -320,6 +322,7 @@ size_t int_to_hex(uint32_t value, char* buffer, int uppercase) {
 }
 
 static inline void wait(float seconds) {
+
 	volatile unsigned long count;
 	const unsigned long loops_per_sec = 150000000UL; // tuned for ~1s per unit
 
@@ -425,81 +428,6 @@ void print_extern_address16(TerminalContext* term, char* str, uint16_t func()) {
 	// terminal_writestring(term, "\n");
 }
 
-uint16_t get_ss_selector() {
-	uint16_t ss_value;
-	__asm__ volatile(
-	    ".intel_syntax noprefix\n" // switch to Intel syntax
-	    "mov %0, ss\n"             // Intel-style mov
-	    ".att_syntax prefix\n"     // switch back to AT&T (default)
-	    : "=r"(ss_value)           // output operand
-	);
-	return ss_value;
-}
-
-uint16_t get_cs_selector() {
-	uint16_t cs_value;
-	__asm__ volatile(
-	    ".intel_syntax noprefix\n" // switch to Intel syntax
-	    "mov %0, cs\n"             // Intel-style mov
-	    ".att_syntax prefix\n"     // switch back to AT&T (default)
-	    : "=r"(cs_value)           // output operand
-	);
-	return cs_value;
-}
-
-uint16_t get_es_selector() {
-	uint16_t es_value;
-	__asm__ volatile(
-	    ".intel_syntax noprefix\n" // switch to Intel syntax
-	    "mov %0, es\n"             // Intel-style mov
-	    ".att_syntax prefix\n"     // switch back to AT&T (default)
-	    : "=r"(es_value)           // output operand
-	);
-	return es_value;
-}
-
-uint16_t get_fs_selector() {
-	uint16_t fs_value;
-	__asm__ volatile(
-	    ".intel_syntax noprefix\n" // switch to Intel syntax
-	    "mov %0, fs\n"             // Intel-style mov
-	    ".att_syntax prefix\n"     // switch back to AT&T (default)
-	    : "=r"(fs_value)           // output operand
-	);
-	return fs_value;
-}
-
-uint16_t get_gs_selector() {
-	uint16_t gs_value;
-	__asm__ volatile(
-	    ".intel_syntax noprefix\n" // switch to Intel syntax
-	    "mov %0, gs\n"             // Intel-style mov
-	    ".att_syntax prefix\n"     // switch back to AT&T (default)
-	    : "=r"(gs_value)           // output operand
-	);
-	return gs_value;
-}
-
-uint16_t get_ds_selector() {
-	uint16_t ds_value;
-	__asm__ volatile(
-	    ".intel_syntax noprefix\n" // switch to Intel syntax
-	    "mov %0, ds\n"             // Intel-style mov
-	    ".att_syntax prefix\n"     // switch back to AT&T (default)
-	    : "=r"(ds_value)           // output operand
-	);
-	return ds_value;
-}
-
-int* get_gdtr() {
-	int* gdtr;
-	__asm__ volatile(
-	    "sgdt %0\n"  // Intel-style mov
-	    : "=m"(gdtr) // output operand
-	);
-	return gdtr;
-}
-
 void kernel_main(void) {
 
 	// init_paging();
@@ -515,14 +443,14 @@ void kernel_main(void) {
 	terminal_writestring(&term, "Test123\n");
 	terminal_writestring(&term, "This is a nice test\n");
 
-	// print_extern_address(&term, "The address of stack16_start: ", get_stack16_start_address);
-	// print_extern_address(&term, "The address of stack16_end: ", get_stack16_end_address);
-	// print_extern_address(&term, "The address of args16_start: ", get_args16_start_address);
-	// print_extern_address(&term, "The address of args16_end: ", get_args16_end_address);
-	// int* add1616_address = print_extern_address(&term, "The address of add1616: ", get_add1616_start_address);
+	print_extern_address(&term, "The address of stack16_start: ", get_stack16_start_address);
+	print_extern_address(&term, "The address of stack16_end: ", get_stack16_end_address);
+	print_extern_address(&term, "The address of args16_start: ", get_args16_start_address);
+	print_extern_address(&term, "The address of args16_end: ", get_args16_end_address);
+	int* add1616_address = print_extern_address(&term, "The address of add1616: ", get_add1616_start_address);
 
-	// uint32_t first_dword_of_code = *add1616_address;
-	// terminal_write_hex(&term, "The value of the code at 0xb030: ", first_dword_of_code);
+	uint32_t first_dword_of_code = *add1616_address;
+	terminal_write_hex(&term, "The value of the code at 0xb030: ", first_dword_of_code);
 
 	print_extern_address16(&term, "\nThe value of cs: ", get_cs_selector);
 	print_extern_address16(&term, "\nThe value of ss: ", get_ss_selector);
@@ -531,17 +459,29 @@ void kernel_main(void) {
 	print_extern_address16(&term, "\nThe value of fs: ", get_fs_selector);
 	print_extern_address16(&term, "\nThe value of gs: ", get_gs_selector);
 
-	int* gdtr = print_extern_address(&term, "\nThe gdtr: ", get_gdtr);
+	GDT_ROOT gdt_root = get_gdt_root();
+	GDT_ENTRY* gdt = (GDT_ENTRY*)gdt_root.base;
+
+	terminal_write_hex(&term, "gdt base address = ", gdt_root.base);
+	terminal_write_uint(&term, "gdt size limit = ", gdt_root.limit);
 
 	terminal_writestring(&term, "\nThe gdtr values:\n");
-	terminal_write_uint(&term, "(uint32_t) gdt[0] = ", gdtr[0]);
-	terminal_write_uint(&term, "(uint32_t) gdt[1] = ", gdtr[1]);
-	terminal_write_uint(&term, "(uint32_t) gdt[2] = ", gdtr[2]);
+	terminal_write_hex(&term, "gdt[0].low = ", gdt[0].low);
+	terminal_write_hex(&term, "gdt[0].high = ", gdt[0].high);
+	terminal_write_hex(&term, "gdt[1].low = ", gdt[1].low);
+	terminal_write_hex(&term, "gdt[1].high = ", gdt[1].high);
+	terminal_write_hex(&term, "gdt[2].low = ", gdt[2].low);
+	terminal_write_hex(&term, "gdt[2].high = ", gdt[2].high);
+	terminal_write_hex(&term, "gdt[2].low = ", gdt[3].low);
+	terminal_write_hex(&term, "gdt[2].high = ", gdt[3].high);
 	// print_int_var(&term, gdtr[0]);
 	// print_int_var(&term, gdtr[1]);
 	// print_int_var(&term, gdtr[2]);
 
+	// wait(25);
+
 	uint16_t result = 0;
+	// result = call_add16(25, 56);
 	terminal_writestring(&term, "The result of add16: ");
 	print_int_var(&term, result);
 	wait(10);

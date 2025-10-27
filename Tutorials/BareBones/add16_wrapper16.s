@@ -8,6 +8,8 @@ extern resume32
 section .text.add1616
 
 add1616_start:
+
+	mov eax, 0xdeadfac2
 	
 
 
