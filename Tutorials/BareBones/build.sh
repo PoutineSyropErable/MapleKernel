@@ -27,6 +27,9 @@ i686-elf-gcc -T linker.ld -o "$BUILD_DIR/myos.bin" -ffreestanding -O2 -nostdlib 
 	"$BUILD_DIR/kernel.o" \
 	"$BUILD_DIR/virtual_memory.o" \
 	"$BUILD_DIR/idt.o" \
+	"$BUILD_DIR/add16_wrapper32.o" \
+	"$BUILD_DIR/add16_wrapper16.o" \
+	"$BUILD_DIR/add16.o" \
 	-lgcc
 
 # Check if the kernel is multiboot-compliant
