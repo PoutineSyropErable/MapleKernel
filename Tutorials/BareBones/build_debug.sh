@@ -42,5 +42,17 @@ qemu-system-i386 \
 	-kernel "$BUILD_DIR/myos.bin" \
 	-s -S \
 	-no-reboot \
-	-d int,cpu_reset \
+	-d in_asm,int,cpu_reset \
+	-D qemu_instr.log \
 	-serial stdio &
+
+QEMU_PID=$!
+
+# Give QEMU a second to start up
+sleep 1
+
+# Launch VNC viewer
+vncviewer localhost:5900
+
+# After you close the VNC viewer, kill QEMU
+kill $QEMU_PID 2>/dev/null

@@ -5,7 +5,12 @@ ENTRY(boot16_start)
 SECTIONS
 {
 
-	.= 0x7000
+
+    /* -----------------------------
+       16-bit real mode code & data
+       ----------------------------- */
+    . = 0x7000;              /* start at 28 KiB, safely below 1 MB */
+
 	.boot16 : ALIGN(16)
     {
         boot16_start = .;
@@ -23,11 +28,6 @@ SECTIONS
         KEEP(*(.bss.boot32))
         boot32_end = .;
     }
-
-    /* -----------------------------
-       16-bit real mode code & data
-       ----------------------------- */
-    . = 0x14000;              /* start at 28 KiB, safely below 1 MB */
 
 
     /* Main text section */
@@ -77,7 +77,8 @@ SECTIONS
     /* -----------------------------
        32-bit protected mode code
        ----------------------------- */
-    . = 0x200000;            /* 2 MiB start for 32-bit kernel */
+    . = 0x200000;    
+
 
     /* Main text section */
     .text BLOCK(4K) : ALIGN(4K)

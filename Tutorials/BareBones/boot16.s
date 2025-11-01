@@ -20,6 +20,13 @@ align 8
 
     gdt_end:
 
+
+section .bss.boot16 
+    align 16
+boot16_stack_bottom:
+    resb 4192              ; reserve 4 KiB
+boot16_stack_top:
+
 section .text.boot16
 boot16_start:
 
@@ -28,9 +35,11 @@ boot16_start:
     ; -------------------------------------------------
     ; Set up a 16-bit stack
     ; -------------------------------------------------
-    mov ax, 0x7000      ; segment for 16-bit stack (below 1 MB)
-    mov ss, ax
-    mov sp, 0xFFF0      ; top of 16-bit stack
+    mov eax, boot16_stack_bottom      ; segment for 16-bit stack (below 1 MB)
+	shr eax, 4
+	mov ss, ax
+
+    mov sp, boot16_stack_top - boot16_stack_bottom     ; top of 16-bit stack
 
     ; -------------------------------------------------
     ; Setup GDT (like GRUB)
