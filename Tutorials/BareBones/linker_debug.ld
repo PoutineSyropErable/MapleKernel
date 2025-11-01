@@ -1,5 +1,5 @@
 /* Entry point of the kernel */
-ENTRY(boot16_start)
+ENTRY(boot32_start)
 
 /* Sections layout */
 SECTIONS
@@ -10,24 +10,6 @@ SECTIONS
        16-bit real mode code & data
        ----------------------------- */
     . = 0x7000;              /* start at 28 KiB, safely below 1 MB */
-
-	.boot16 : ALIGN(16)
-    {
-        boot16_start = .;
-        KEEP(*(.text.boot16))
-        KEEP(*(.data.boot16))
-        KEEP(*(.bss.boot16))
-        boot16_end = .;
-    }
-
-	.boot32 : ALIGN(16)
-    {
-        boot32_start = .;
-        KEEP(*(.text.boot32))
-        KEEP(*(.data.boot32))
-        KEEP(*(.bss.boot32))
-        boot32_end = .;
-    }
 
 
     /* Main text section */
@@ -72,6 +54,16 @@ SECTIONS
 		add1632_end = .;
 	}
 
+
+	. =  0x20000;
+	.boot32 : ALIGN(16)
+    {
+        boot32_start = .;
+        KEEP(*(.text.boot32))
+        KEEP(*(.data.boot32))
+        KEEP(*(.bss.boot32))
+        boot32_end = .;
+    }
 
 
     /* -----------------------------

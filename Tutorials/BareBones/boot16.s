@@ -1,62 +1,62 @@
 ; =====================================================
-; boot16.s - 16-bit real mode entry
+; boot16_flat.s - 16-bit real mode entry (flat binary)
 ; =====================================================
 BITS 16
-GLOBAL boot16_start
-EXTERN boot32_start   ; entry point in boot32.s
+ORG 0x7000               ; load address in memory
 
-section .data.boot16
-align 8
-    gdt_start:
-        dq 0x0000000000000000    ; null descriptor
-        dq 0x0000000000000000    ; grub use an extra null
-		dq 0x00CF9A000000FFFF   ; gdt[2] code segment
-		dq 0x00CF93000000FFFF   ; gdt[3] data segment
-
-
-    gdt_descriptor:
-        dw gdt_end - gdt_start - 1  ; limit
-        dd gdt_start                ; base
-
-    gdt_end:
-
-
-section .bss.boot16 
-    align 16
+; -----------------------------
+; 16-bit stack (4 KB)
+; -----------------------------
 boot16_stack_bottom:
-    resb 4192              ; reserve 4 KiB
+    TIMES 4096 DB 0
 boot16_stack_top:
 
-section .text.boot16
+; -----------------------------
+; GDT (3 entries)
+; -----------------------------
+gdt_start:
+    DQ 0x0000000000000000       ; null descriptor
+    DQ 0x0000000000000000       ; extra null
+    DQ 0x00CF9A000000FFFF       ; 32-bit code segment
+    DQ 0x00CF93000000FFFF       ; 32-bit data segment
+
+gdt_descriptor:
+    DW gdt_end - gdt_start - 1  ; limit
+    DD gdt_start                ; base
+gdt_end:
+
+; -----------------------------
+; Entry point
+; -----------------------------
 boot16_start:
 
-    cli                 ; disable interrupts
+    cli                         ; disable interrupts
 
-    ; -------------------------------------------------
-    ; Set up a 16-bit stack
-    ; -------------------------------------------------
-    mov eax, boot16_stack_bottom      ; segment for 16-bit stack (below 1 MB)
-	shr eax, 4
-	mov ss, ax
+    ; -----------------------------
+    ; Set up 16-bit stack
+    ; -----------------------------
+    mov eax, boot16_stack_bottom
+    shr eax, 4                  ; convert byte address to segment
+    mov ss, ax
+    mov sp, boot16_stack_top - boot16_stack_bottom
 
-    mov sp, boot16_stack_top - boot16_stack_bottom     ; top of 16-bit stack
-
-    ; -------------------------------------------------
-    ; Setup GDT (like GRUB)
-    ; -------------------------------------------------
-    ; GDT structure: 3 entries (null, 16-bit, 32-bit)
-
+    ; -----------------------------
+    ; Load GDT
+    ; -----------------------------
     lgdt [gdt_descriptor]
 
-    ; -------------------------------------------------
+    ; -----------------------------
     ; Enable protected mode
-    ; -------------------------------------------------
+    ; -----------------------------
     mov eax, cr0
-    or eax, 1           ; set PE bit
+    or eax, 1
     mov cr0, eax
 
-    ; Far jump to 32-bit code segment
-    jmp 0x10:boot32_start    ; 0x08 = index of 32-bit code segment in GDT
+    ; -----------------------------
+    ; Far jump to 32-bit kernel
+    ; -----------------------------
+	%define boot32_start 0x20000
+    jmp 0x10:boot32_start       ; CS selector = 0x10
 
 halt_loop16:
     hlt
