@@ -188,7 +188,38 @@ inline void terminal_increase_row(TerminalContext* terminal) {
 	}
 }
 
+#define COM1 0x3F8
+
+static inline void outb(uint16_t port, uint8_t val) {
+	/*
+
+	%0 = val : Value to output
+	%1 = port: The io port
+	*/
+	__asm__ volatile("outb %0, %1" : : "a"(val), "Nd"(port));
+}
+
+static inline uint8_t inb(uint16_t port) {
+	uint8_t ret;
+	__asm__ volatile("inb %1, %0" : "=a"(ret) : "Nd"(port));
+	return ret;
+}
+
+void serial_write_char(char c) {
+	// Wait until the transmit buffer is empty
+	while (!(inb(COM1 + 5) & 0x20))
+		;
+	outb(COM1, c);
+}
+
+void serial_write_string(const char* str) {
+	while (*str) {
+		serial_write_char(*str++);
+	}
+}
+
 void terminal_putchar(TerminalContext* terminal, char c) {
+	serial_write_char(c);
 	if (c == '\n') {
 		terminal->current_write_column = 0;
 		terminal_increase_row(terminal);
@@ -481,7 +512,7 @@ void kernel_main(void) {
 	// wait(25);
 
 	uint16_t result = 0;
-	// result = call_add16(25, 56);
+	result = call_add16(25, 56);
 	terminal_writestring(&term, "The result of add16: ");
 	print_int_var(&term, result);
 	wait(10);

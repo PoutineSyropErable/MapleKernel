@@ -49,7 +49,18 @@ grub-mkrescue -o "$BUILD_DIR/myos.iso" "$ISO_DIR"
 
 echo "ISO created successfully: $BUILD_DIR/myos.iso"
 
-qemu-system-i386 -cdrom ./build/myos.iso -d in_asm,int -D qemu_instr.log -no-reboot &
+# start qemu using the binary, bypassing grub.
+# -no-reboot: don't reset if the kernel crash
+# -d in_asm, int, cpu_reset: Logs every instruction executed by cpu, every interupt and cpu reset events
+# -D qemu_instr.log : The log file (redirect -d)
+# -serial stdio: redirect COM1 serial port to your terminal
+
+qemu-system-i386 \
+	-kernel "$BUILD_DIR/myos.bin" \
+	-no-reboot \
+	-d in_asm,int,cpu_reset \
+	-D qemu_instr.log \
+	-serial stdio
 # or do this to use the binary directly
 # qemu-system-i386 -kernel ./build/myos.bin &
 
