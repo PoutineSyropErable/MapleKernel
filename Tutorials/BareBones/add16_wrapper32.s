@@ -1,3 +1,4 @@
+;add16_wrapper32.s
 BITS 32
 
 global call_add16
@@ -42,14 +43,17 @@ call_add16:
     and eax, 0xFFFFFFFE
     mov cr0, eax
 
+
+	; setup 16 bit data segment
+	mov ax, 0
+	mov ds, ax
+
     ; Set up 16-bit stack
     mov ax, word stack16_start
     shr ax, 4             ; segment = address >> 4
     mov ss, ax
     mov sp, 0x4000        ; top of 16-bit stack
 
-	mov ax, 0
-	mov ds, ax
 	; 1024  = 0x0400 = 1.00 KB
 	; 2048  = 0x0800 = 1.00 KB
 	; 4096  = 0x1000 = 1.00 KB
@@ -58,7 +62,6 @@ call_add16:
 
 
     ; Far jump to 16-bit wrapper
-
 	jmp far 00:add1616_start
 
 
@@ -79,6 +82,8 @@ call_add16:
 ; resume32 will be called by the 16-bit code when done
 resume32:
     ; Restore segment registers
+
+	mov eax, 0xbad32
     pop gs
     pop fs
     pop es

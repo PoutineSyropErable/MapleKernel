@@ -55,14 +55,17 @@ echo "ISO created successfully: $BUILD_DIR/myos.iso"
 # -D qemu_instr.log : The log file (redirect -d)
 # -serial stdio: redirect COM1 serial port to your terminal
 
+# ===== Pick one of those two
+# -kernel "$BUILD_DIR/myos.bin" \
+# -cdrom "$BUILD_DIR/myos.iso" \
 qemu-system-i386 \
-	-kernel "$BUILD_DIR/myos.bin" \
+	-cdrom "$BUILD_DIR/myos.iso" \
 	-no-reboot \
 	-d in_asm,int,cpu_reset \
 	-D qemu_instr.log \
-	-serial stdio
-# or do this to use the binary directly
-# qemu-system-i386 -kernel ./build/myos.bin &
+	-serial stdio &
+
+# qemu-system-i386 -kernel ./build/myos.bin & # or do this to use the binary directly # -cdrom "$BUILD_DIR/myos.iso" # -kernel "$BUILD_DIR/myos.bin" \
 
 QEMU_PID=$!
 

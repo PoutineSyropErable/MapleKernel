@@ -469,19 +469,25 @@ void kernel_main(void) {
 	initialize_terminal(&term);
 	terminal_set_scroll(&term, 0);
 
-	terminal_writestring(&term, "Hello, kernel World!\n");
-	terminal_writestring(&term, "How are you my friend\n");
-	terminal_writestring(&term, "Test123\n");
-	terminal_writestring(&term, "This is a nice test\n");
+	terminal_writestring(&term, "\n\n===== Start of Kernel=====\n\n");
 
 	print_extern_address(&term, "The address of stack16_start: ", get_stack16_start_address);
 	print_extern_address(&term, "The address of stack16_end: ", get_stack16_end_address);
 	print_extern_address(&term, "The address of args16_start: ", get_args16_start_address);
 	print_extern_address(&term, "The address of args16_end: ", get_args16_end_address);
-	int* add1616_address = print_extern_address(&term, "The address of add1616: ", get_add1616_start_address);
 
-	uint32_t first_dword_of_code = *add1616_address;
-	terminal_write_hex(&term, "The value of the code at 0xb030: ", first_dword_of_code);
+	int* add1616_address = print_extern_address(&term, "The address of add1616: ", get_add1616_start_address);
+	terminal_writestring(&term, "The value of the code at 0xb040: \n");
+	for (int i = 0; i < 50; i++) {
+		print_hex_var(&term, add1616_address[i]);
+	}
+
+	terminal_writestring(&term, "\n");
+	int* resume32_address = print_extern_address(&term, "The address of resume32: ", get_resume32_start_address);
+	terminal_writestring(&term, "The value of the code at 0xB0A8: \n");
+	for (int i = 0; i < 50; i++) {
+		print_hex_var(&term, resume32_address[i]);
+	}
 
 	print_extern_address16(&term, "\nThe value of cs: ", get_cs_selector);
 	print_extern_address16(&term, "\nThe value of ss: ", get_ss_selector);
@@ -511,6 +517,7 @@ void kernel_main(void) {
 
 	// wait(25);
 
+	return;
 	uint16_t result = 0;
 	result = call_add16(25, 56);
 	terminal_writestring(&term, "The result of add16: ");
