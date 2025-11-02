@@ -517,8 +517,8 @@ void kernel_main(void) {
 	terminal_write_hex(&term, "gdt[1].high = ", gdt[1].high);
 	terminal_write_hex(&term, "gdt[2].low = ", gdt[2].low);
 	terminal_write_hex(&term, "gdt[2].high = ", gdt[2].high);
-	terminal_write_hex(&term, "gdt[2].low = ", gdt[3].low);
-	terminal_write_hex(&term, "gdt[2].high = ", gdt[3].high);
+	terminal_write_hex(&term, "gdt[3].low = ", gdt[3].low);
+	terminal_write_hex(&term, "gdt[3].high = ", gdt[3].high);
 	// print_int_var(&term, gdtr[0]);
 	// print_int_var(&term, gdtr[1]);
 	// print_int_var(&term, gdtr[2]);

@@ -6,6 +6,7 @@ extern add16
 extern args16_start
 extern resume32
 
+section .text.add1616
 
 add1616_start:
 

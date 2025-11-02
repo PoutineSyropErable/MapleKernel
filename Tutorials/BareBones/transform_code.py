@@ -6,13 +6,15 @@ import subprocess, time
 
 from capstone import *
 
-BIT = 32
+print("Start")
+
+BIT = 16
 if BIT == 16:
     ORIGINAL_FUNCTION = "add1616_start"
-    CODE_START = 0xB040
+    CODE_START = 0xB080
 elif BIT == 32:
     ORIGINAL_FUNCTION = "resume32"
-    CODE_START = 0xB0A8
+    CODE_START = 0xB0B0
 
 else:
     print("16 or 32 bit")
@@ -64,9 +66,12 @@ def quick():
     # Initialize Capstone for 16-bit x86
     if BIT == 16:
         mode = CS_MODE_16
-    if BIT == 32:
+        mode = CS_MODE_32
+    elif BIT == 32:
         mode = CS_MODE_32
     else:
+        print("wrongm mode")
+        print(BIT)
         sys.exit(2)
 
     md = Cs(CS_ARCH_X86, mode)
