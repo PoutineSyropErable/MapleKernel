@@ -530,7 +530,7 @@ void kernel_main(void) {
 	result = call_add16(25, 56);
 	terminal_writestring(&term, "The result of add16: ");
 	print_int_var(&term, result);
-	wait(10);
+	wait(25);
 
 	return;
 

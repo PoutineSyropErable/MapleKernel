@@ -47,7 +47,7 @@ SECTIONS
 	.add16_wrapper : AlIGN(16)
 	{
 		add1616_start = .
-		KEEP(*(.text.add1616))   /* 32-bit wrapper code */
+		.incbin "add16_wrapper16.bin";
 		add1616_end = .
 	}
 

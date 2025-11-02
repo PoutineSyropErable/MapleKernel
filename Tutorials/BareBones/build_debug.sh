@@ -12,7 +12,7 @@ mkdir -p "$BUILD_DIR" "$ISO_DIR/boot/grub"
 # Assemble the bootloader assembly with debug info
 nasm -f elf32 -g -F dwarf boot32.s -o "$BUILD_DIR/boot32.o"
 nasm -f elf32 -g -F dwarf boot_intel.asm -o "$BUILD_DIR/boot.o"
-nasm -f elf -g -F dwarf add16_wrapper16.s -o "$BUILD_DIR/add16_wrapper16.o"
+nasm -f bin add16_wrapper16.s -o "$BUILD_DIR/add16_wrapper16.bin"
 nasm -f elf32 -g -F dwarf add16_wrapper32.s -o "$BUILD_DIR/add16_wrapper32.o"
 
 # Compile the kernel
@@ -31,7 +31,7 @@ i686-elf-gcc -T linker_debug.ld -o "$BUILD_DIR/myos.bin" -ffreestanding -O2 -nos
 	"$BUILD_DIR/virtual_memory.o" \
 	"$BUILD_DIR/idt.o" \
 	"$BUILD_DIR/add16_wrapper32.o" \
-	"$BUILD_DIR/add16_wrapper16.o" \
+	"$BUILD_DIR/add16_wrapper16.bin" \
 	"$BUILD_DIR/add16.o" \
 	-lgcc -g
 
