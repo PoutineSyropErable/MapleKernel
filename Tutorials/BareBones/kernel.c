@@ -459,6 +459,10 @@ void print_extern_address16(TerminalContext* term, char* str, uint16_t func()) {
 	// terminal_writestring(term, "\n");
 }
 
+void before(TerminalContext* term) {
+	terminal_writestring(term, "Before the main execution");
+}
+
 void kernel_main(void) {
 
 	// init_paging();
@@ -476,18 +480,22 @@ void kernel_main(void) {
 	print_extern_address(&term, "The address of args16_start: ", get_args16_start_address);
 	print_extern_address(&term, "The address of args16_end: ", get_args16_end_address);
 
+	int* add1632_address = print_extern_address(&term, "The address of add1632: ", get_add1632_start_address);
+	int* call_add16_address = print_extern_address(&term, "The address of call_add16: ", get_call_add16_address);
 	int* add1616_address = print_extern_address(&term, "The address of add1616: ", get_add1616_start_address);
-	terminal_writestring(&term, "The value of the code at 0xb040: \n");
-	for (int i = 0; i < 50; i++) {
-		print_hex_var(&term, add1616_address[i]);
-	}
-
-	terminal_writestring(&term, "\n");
 	int* resume32_address = print_extern_address(&term, "The address of resume32: ", get_resume32_start_address);
-	terminal_writestring(&term, "The value of the code at 0xB0A8: \n");
-	for (int i = 0; i < 50; i++) {
-		print_hex_var(&term, resume32_address[i]);
-	}
+
+	// terminal_writestring(&term, "\n");
+	// terminal_writestring(&term, "The value of the code at 0xb040: \n");
+	// for (int i = 0; i < 50; i++) {
+	// 	print_hex_var(&term, add1616_address[i]);
+	// }
+	//
+	// terminal_writestring(&term, "\n");
+	// terminal_writestring(&term, "The value of the code at 0xB0A8: \n");
+	// for (int i = 0; i < 50; i++) {
+	// 	print_hex_var(&term, resume32_address[i]);
+	// }
 
 	print_extern_address16(&term, "\nThe value of cs: ", get_cs_selector);
 	print_extern_address16(&term, "\nThe value of ss: ", get_ss_selector);
@@ -517,7 +525,7 @@ void kernel_main(void) {
 
 	// wait(25);
 
-	return;
+	before(&term);
 	uint16_t result = 0;
 	result = call_add16(25, 56);
 	terminal_writestring(&term, "The result of add16: ");

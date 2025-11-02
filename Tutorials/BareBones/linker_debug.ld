@@ -1,10 +1,9 @@
 /* Entry point of the kernel */
-ENTRY(boot32_start)
+ENTRY(_start)
 
 /* Sections layout */
 SECTIONS
 {
-
 
     /* -----------------------------
        16-bit real mode code & data
@@ -38,39 +37,40 @@ SECTIONS
 
 	. += 16;
 
-    /* 16-bit wrapper + add16 function */
-    .text16 : ALIGN(16)
-    {
-        add1616_start = .;
-        KEEP(*(.text.add1616))  /* add16_wrapper32.s */
-        KEEP(*(.text.add16))     /* add16.c */
-    }
-
-
-	.resume32_low : ALIGN(16)
+	.call_add16_section : ALIGN(16) 
 	{
-		add1632_start = .;
+        add1632_start = .;
 		KEEP(*(.text.add1632))   /* 32-bit wrapper code */
 		add1632_end = .;
 	}
 
+	.add16_wrapper : ALIGN(16)
+	{
+		add1616_start = .;
+		KEEP(*(.text.add1616))   /* 32-bit wrapper code */
+		add1616_end = .;
+	}
 
-	. =  0x20000;
-	.boot32 : ALIGN(16)
+	
+
+    /* 16-bit wrapper + add16 function */
+    .add16_function : ALIGN(16)
     {
-        boot32_start = .;
-        KEEP(*(.text.boot32))
-        KEEP(*(.data.boot32))
-        KEEP(*(.bss.boot32))
-        boot32_end = .;
+        KEEP(*(.text.add16))     /* add16.c */
     }
+
+
+	.resume32 : ALIGN(16)
+	{
+		KEEP(*(.text.resume32))   /* 32-bit wrapper code */
+	}
+
 
 
     /* -----------------------------
        32-bit protected mode code
        ----------------------------- */
-    . = 0x200000;    
-
+    . = 0x200000;            /* 2 MiB start for 32-bit kernel */
 
     /* Main text section */
     .text BLOCK(4K) : ALIGN(4K)
@@ -100,4 +100,5 @@ SECTIONS
 
     /* Catch-all for any other sections */
 }
+
 

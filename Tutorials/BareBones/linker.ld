@@ -37,20 +37,32 @@ SECTIONS
 
 	. += 16;
 
+	.call_add16_section: ALIGN(16) 
+	{
+        add1632_start = .;
+		KEEP(*(.text.add1632))   /* 32-bit wrapper code */
+		add1632_end = .;
+	}
+
+	.add16_wrapper : AlIGN(16)
+	{
+		add1616_start = .
+		KEEP(*(.text.add1616))   /* 32-bit wrapper code */
+		add1616_end = .
+	}
+
+	
+
     /* 16-bit wrapper + add16 function */
-    .text16 : ALIGN(16)
+    .add16_function : ALIGN(16)
     {
-        add1616_start = .;
-        KEEP(*(.text.add1616))  /* add16_wrapper32.s */
         KEEP(*(.text.add16))     /* add16.c */
     }
 
 
-	.resume32_low : ALIGN(16)
+	.resume32 : ALIGN(16)
 	{
-		add1632_start = .;
-		KEEP(*(.text.add1632))   /* 32-bit wrapper code */
-		add1632_end = .;
+		KEEP(*(.text.resume32))   /* 32-bit wrapper code */
 	}
 
 

@@ -10,28 +10,8 @@ section .text.add1616
 
 add1616_start:
 
-	mov eax, 0xdeadfac2
+	mov bx, 0xfac2
 	
-
-
-    ; Load arguments from buffer
-    ; mov ax, [args16_start+4]       ; first argument
-    ; mov bx, [args16_start+6]     ; second argument
-
-
-	; hlt
-	; jmp add1616_start
-
-	; push ax 
-	; push bx
-    ; call add16                    ; call actual 16-bit add
-	; mov ax, 15
-    ; mov [args16_start+8], ax      ; store result
-	; pop bx 
-	; pop ax
-
-
-
     ; --- Done, return to 32-bit wrapper ---
     mov eax, cr0
     or eax, 1
@@ -51,13 +31,6 @@ add1616_start:
 
 
 
-; halt_loop: 
-; 	hlt 
-; 	jmp halt_loop
-;
-;
-; reset:
-; 	cli                     ; disable interrupts
-; 	xor eax, eax
-; 	lidt [eax]              ; load IDT base = 0, limit = 0 (invalid)
-; 	int 3                   ; trigger interrupt -> #GP -> #DF -> triple fault
+halt_loop3: 
+	hlt 
+	jmp halt_loop3

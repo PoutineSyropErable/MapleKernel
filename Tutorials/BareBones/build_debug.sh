@@ -9,9 +9,6 @@ ISO_DIR="isodir"
 # Create necessary directories
 mkdir -p "$BUILD_DIR" "$ISO_DIR/boot/grub"
 
-# Assemble the flat binary
-nasm -f bin boot16.s -o "$BUILD_DIR/boot16.bin"
-
 # Assemble the bootloader assembly with debug info
 nasm -f elf32 -g -F dwarf boot32.s -o "$BUILD_DIR/boot32.o"
 nasm -f elf32 -g -F dwarf boot_intel.asm -o "$BUILD_DIR/boot.o"
@@ -38,13 +35,23 @@ i686-elf-gcc -T linker_debug.ld -o "$BUILD_DIR/myos.bin" -ffreestanding -O2 -nos
 	"$BUILD_DIR/add16.o" \
 	-lgcc -g
 
-# Create flat binary from ELF (for QEMU boot)
 printf "\n\n=======End of linking========\n\n\n"
+
+# Copy the kernel binary and GRUB configuration to the ISO directory
+cp "$BUILD_DIR/myos.bin" "$ISO_DIR/boot/myos.bin"
+cp grub.cfg "$ISO_DIR/boot/grub/grub.cfg"
+
+# Create the ISO image
+grub-mkrescue -o "$BUILD_DIR/myos.iso" "$ISO_DIR"
+
+echo "ISO created successfully: $BUILD_DIR/myos.iso"
+
+# Create flat binary from ELF (for QEMU boot)
 
 printf "\n\n=======Start of Qemu========\n\n\n"
 # Start QEMU in debug mode (paused, waiting for GDB)
 qemu-system-i386 \
-	-fda "$BUILD_DIR/boot16.bin" \
+	-cdrom "$BUILD_DIR/myos.iso" \
 	-s -S \
 	-no-reboot \
 	-d in_asm,int,cpu_reset \

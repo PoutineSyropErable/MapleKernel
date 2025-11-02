@@ -11,7 +11,7 @@ boot32_start:
     ; -------------------------------------------------
     ; Set up data segments
     ; -------------------------------------------------
-    mov ax, 0x18        ; data segment selector (gdt[3])
+    mov ax, 0x18        ; data segment selector (gdt[3]). 24. For all. This is correct
     mov ds, ax
     mov es, ax
     mov fs, ax
@@ -21,12 +21,11 @@ boot32_start:
     ; -------------------------------------------------
     ; Set up stack
     ; -------------------------------------------------
-    mov esp, 0x9FC00    ; example 32-bit stack, adjust as needed
 
     ; -------------------------------------------------
     ; Jump to 32-bit kernel entry
     ; -------------------------------------------------
-    call _start
+    jmp _start
 
 halt_loop32:
     cli

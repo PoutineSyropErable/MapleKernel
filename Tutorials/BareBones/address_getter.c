@@ -1,12 +1,22 @@
 extern int resume32;
 extern int add1616_start;
+extern int add1632_start;
 extern int stack16_start;
 extern int stack16_end;
 extern int args16_start;
 extern int args16_end;
+#include "add16_wrapper.h"
+
+int* get_call_add16_address(void) {
+	return (int*)&call_add16;
+}
 
 int* get_add1616_start_address(void) {
 	return &add1616_start;
+}
+
+int* get_add1632_start_address(void) {
+	return &add1632_start;
 }
 
 int* get_resume32_start_address(void) {

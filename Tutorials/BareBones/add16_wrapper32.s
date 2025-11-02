@@ -16,8 +16,6 @@ call_add16:
     ; Save 32-bit registers and flags
     pushad
     pushfd
-
-
     push ds
     push es
     push fs
@@ -29,14 +27,8 @@ call_add16:
 	; rdi = arg1 
 	; rsi = arg2
 	mov [args16_start], esp      ; 
-    ; mov [args16_start+4], di     ; first argument 
-    ; mov [args16_start+6], si     ; second argument
-	; Putting the arguments on the arg16 section
-
-
 
     cli
-
     ; --- Switch to 16-bit mode ---
 
     mov eax, cr0
@@ -52,7 +44,7 @@ call_add16:
     mov ax, word stack16_start
     shr ax, 4             ; segment = address >> 4
     mov ss, ax
-    mov sp, 0x4000        ; top of 16-bit stack
+	mov esp, 0x4000
 
 	; 1024  = 0x0400 = 1.00 KB
 	; 2048  = 0x0800 = 1.00 KB
@@ -65,9 +57,9 @@ call_add16:
 	jmp far 00:add1616_start
 
 
-; halt_loop: 
-; 	hlt 
-; 	jmp halt_loop
+halt_loop: 
+	hlt 
+	jmp halt_loop
 ;
 ; reset:
 ; 	cli                     ; disable interrupts
@@ -79,6 +71,7 @@ call_add16:
 
 
 
+section .text.resume32
 ; resume32 will be called by the 16-bit code when done
 resume32:
     ; Restore segment registers
@@ -99,4 +92,9 @@ resume32:
 	mov eax, 15
 
     ret
+
+
+halt_loop2: 
+	hlt 
+	jmp halt_loop2
 
