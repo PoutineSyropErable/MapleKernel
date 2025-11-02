@@ -1,4 +1,5 @@
 #!/bin/bash
+# build_debug.sh
 
 set -eou pipefail
 
@@ -14,11 +15,10 @@ nasm -f elf32 -g -F dwarf boot32.s -o "$BUILD_DIR/boot32.o"
 nasm -f elf32 -g -F dwarf boot_intel.asm -o "$BUILD_DIR/boot.o"
 nasm -f elf32 -g -F dwarf add16_wrapper32.s -o "$BUILD_DIR/add16_wrapper32.o"
 
-# or make it an elf?
-nasm -f bin add16_wrapper16.s -o "$BUILD_DIR/add16_wrapper16.bin"
-objcopy -I binary -O elf32-i386 -B i386 build/add16_wrapper16.bin build/add16_wrapper16.o
+nasm -f elf -g -F dwarf add16_wrapper16.s -o "$BUILD_DIR/add16_wrapper16.o"
 
-nasm -f bin add16_wrapper16.s -o "$BUILD_DIR/add16_wrapper16.bin"
+# ===== a raw binary that will be dd into the .bin ?
+# nasm -f bin add16_wrapper16.s -o "$BUILD_DIR/add16_wrapper16.bin"
 
 # Compile the kernel
 i686-elf-gcc -c kernel.c -o "$BUILD_DIR/kernel.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra -g
@@ -35,14 +35,16 @@ i686-elf-gcc -T linker_debug.ld -o "$BUILD_DIR/myos.bin" -ffreestanding -O2 -nos
 	"$BUILD_DIR/kernel.o" \
 	"$BUILD_DIR/virtual_memory.o" \
 	"$BUILD_DIR/idt.o" \
-	"$BUILD_DIR/add16_wrapper32.o" \
 	"$BUILD_DIR/add16_wrapper16.o" \
+	"$BUILD_DIR/add16_wrapper32.o" \
 	"$BUILD_DIR/add16.o" \
 	-lgcc -g
 
-# "$BUILD_DIR/add16_wrapper16.o"  # Should it be in there?
-
 printf "\n\n=======End of linking========\n\n\n"
+
+# dd if="$BUILD_DIR/add16_wrapper16.bin" \
+# 	of="$BUILD_DIR/myos.bin" \
+# 	bs=1 seek=$((0xB080)) conv=notrunc
 
 # Copy the kernel binary and GRUB configuration to the ISO directory
 cp "$BUILD_DIR/myos.bin" "$ISO_DIR/boot/myos.bin"

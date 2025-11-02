@@ -44,11 +44,11 @@ SECTIONS
 		add1632_end = .;
 	}
 
-	.add16_wrapper : ALIGN(16)
+	.add16_wrapper (NOLOAD) : ALIGN(16)
 	{
-	add1616_start = _binary_build_add16_wrapper16_bin_start;
-    KEEP(*(.data)) /* not strictly needed */
-    add1616_end = _binary_build_add16_wrapper16_bin_end;
+		add1616_start = .;  /* fixed address in memory */
+		. += 33;  /* reserve 33 bytes for the binary */
+		add1616_end = .;
 	}
 
 	
