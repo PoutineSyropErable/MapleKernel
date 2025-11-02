@@ -12,8 +12,13 @@ mkdir -p "$BUILD_DIR" "$ISO_DIR/boot/grub"
 # Assemble the bootloader assembly with debug info
 nasm -f elf32 -g -F dwarf boot32.s -o "$BUILD_DIR/boot32.o"
 nasm -f elf32 -g -F dwarf boot_intel.asm -o "$BUILD_DIR/boot.o"
-nasm -f elf -g -F dwarf add16_wrapper16.s -o "$BUILD_DIR/add16_wrapper16.o"
 nasm -f elf32 -g -F dwarf add16_wrapper32.s -o "$BUILD_DIR/add16_wrapper32.o"
+
+# or make it an elf?
+nasm -f bin add16_wrapper16.s -o "$BUILD_DIR/add16_wrapper16.bin"
+objcopy -I binary -O elf32-i386 -B i386 build/add16_wrapper16.bin build/add16_wrapper16.o
+
+nasm -f bin add16_wrapper16.s -o "$BUILD_DIR/add16_wrapper16.bin"
 
 # Compile the kernel
 i686-elf-gcc -c kernel.c -o "$BUILD_DIR/kernel.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra -g
@@ -23,7 +28,7 @@ i686-elf-gcc -c idt.c -o "$BUILD_DIR/idt.o" -std=gnu99 -ffreestanding -O2 -Wall 
 ia16-elf-gcc -c ./add16.c -o "$BUILD_DIR/add16.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra -g
 
 printf "\n\n=======Start of linking========\n\n\n"
-# Link the kernel and generate the final binary
+
 i686-elf-gcc -T linker_debug.ld -o "$BUILD_DIR/myos.bin" -ffreestanding -O2 -nostdlib \
 	"$BUILD_DIR/boot32.o" \
 	"$BUILD_DIR/boot.o" \
@@ -34,6 +39,8 @@ i686-elf-gcc -T linker_debug.ld -o "$BUILD_DIR/myos.bin" -ffreestanding -O2 -nos
 	"$BUILD_DIR/add16_wrapper16.o" \
 	"$BUILD_DIR/add16.o" \
 	-lgcc -g
+
+# "$BUILD_DIR/add16_wrapper16.o"  # Should it be in there?
 
 printf "\n\n=======End of linking========\n\n\n"
 
