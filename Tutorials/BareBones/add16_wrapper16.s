@@ -1,13 +1,16 @@
 ; add16_wrapper16.s
 BITS 16
-ORG 0        ; where the linker/script loads this in memory
 
-; declare “externs” as constants
-args16_start equ 0xB020
-resume32     equ 0xB0B0
+
+global add1616_start 
+extern resume32 
+extern args16_start
+
+section .text.add1616
 
 add1616_start:
     mov bx, 0xFAC2
+	; To find it easier in the binary
 
     ; --- Switch back to protected mode ---
     mov eax, cr0
@@ -22,6 +25,7 @@ add1616_start:
     jmp far 0x10:resume32
 
 halt_loop3:
+; This should never be reached
     hlt
     jmp halt_loop3
 

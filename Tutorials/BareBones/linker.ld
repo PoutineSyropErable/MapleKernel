@@ -46,7 +46,7 @@ SECTIONS
 
 	.add16_wrapper : ALIGN(16)
 	{
-		add1616_start = .;
+        add1616_start = .;
 		KEEP(*(.text.add1616))   /* 32-bit wrapper code */
 		add1616_end = .;
 	}
@@ -100,4 +100,6 @@ SECTIONS
 
     /* Catch-all for any other sections */
 }
+
+
 
