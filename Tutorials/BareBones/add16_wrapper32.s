@@ -12,6 +12,7 @@ extern args16_start
 section .text.add1632
 
 call_add16:
+	mov eax, 0xdeadfac1
 
     ; Save 32-bit registers and flags
     pushad
@@ -21,40 +22,39 @@ call_add16:
     push fs
     push gs
 
-
-	mov eax, 0xdeadfac1
-
 	; rdi = arg1 
 	; rsi = arg2
+	; Save the stack pointer in the first 1mb (first 64kb in fact)
+	; So its accessible in 16 bit, and can be restored on the way back to 32 bit
 	mov [args16_start], esp      ; 
+	mov [args16_start +4], edi      ; 
+	mov [args16_start +8], esi      ; 
+
 
     cli
+
+
+	; mov ax, 0
+	; mov ds, ax
+	; mov es, ax
+	; mov fs, ax
+	; mov gs, ax
+	;
+ ;    ; Set up 16-bit stack
+	; mov eax, 0
+ ;    mov eax, stack16_start
+ ;    shr eax, 4             ; segment = address >> 4
+ ;    mov ss, ax
+	; mov esp, 0x4000
+
     ; --- Switch to 16-bit mode ---
 
     mov eax, cr0
     and eax, 0xFFFFFFFE
     mov cr0, eax
-
-
-	; setup 16 bit data segment
-	mov ax, 0
-	mov ds, ax
-
-    ; Set up 16-bit stack
-    mov ax, word stack16_start
-    shr ax, 4             ; segment = address >> 4
-    mov ss, ax
-	mov esp, 0x4000
-
-	; 1024  = 0x0400 = 1.00 KB
-	; 2048  = 0x0800 = 1.00 KB
-	; 4096  = 0x1000 = 1.00 KB
-	; 8192  = 0x2000 = 1.00 KB
-	; 16384 = 0x4000 = 1.00 KB
-
-
     ; Far jump to 16-bit wrapper
 	jmp far 00:add1616_start
+
 
 
 halt_loop: 
@@ -76,7 +76,9 @@ section .text.resume32
 resume32:
     ; Restore segment registers
 
-	mov eax, 0xbad32
+
+    mov esp, [args16_start]
+
     pop gs
     pop fs
     pop es
@@ -88,8 +90,8 @@ resume32:
 
 
     ; Retrieve result
-    ; movzx eax, word [args16_start + 8]
-	mov eax, 15
+    movzx eax, word [args16_start + 8]
+	; mov eax, 15
 
     ret
 
