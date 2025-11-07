@@ -41,20 +41,20 @@ typedef struct {
 	color_char* big_scrollable_buffer; // The memory. Doesn't need to be volatile
 } TerminalContext;
 
-inline void clear_visible_terminal(TerminalContext* terminal);
+inline void clear_visible_terminal();
 
 void initialize_terminal();
 
-void terminal_update_vga_mem(TerminalContext* terminal);
+void terminal_update_vga_mem();
 
-void terminal_set_scroll(TerminalContext* terminal, size_t row);
-inline void terminal_scroll_down(TerminalContext* terminal, int scroll_amount);
+void terminal_set_scroll(size_t row);
+inline void terminal_scroll_down(int scroll_amount);
 
-void terminal_setcolor(TerminalContext* term, color_bg_fg color);
+void terminal_setcolor(color_bg_fg color);
 
-void terminal_putentryat(TerminalContext* term, char c, color_bg_fg color, size_t pos_x, size_t pos_y);
+void terminal_putentryat(char c, color_bg_fg color, size_t pos_x, size_t pos_y);
 
-inline void terminal_increase_row(TerminalContext* terminal);
+inline void terminal_increase_row();
 
 /* ======= Serial std out ======== */
 
@@ -64,12 +64,36 @@ void serial_write_char(char c);
 
 void serial_write_string(const char* str);
 
-void terminal_putchar(TerminalContext* terminal, char c);
+void terminal_putchar(char c);
 
-void terminal_write(TerminalContext* terminal, const char* data, size_t size);
+void terminal_write(const char* data, size_t size);
 
-void terminal_writestring(TerminalContext* terminal, const char* data);
+void terminal_writestring(const char* data);
 
-/* === ===   */
+/* === Global values ===   */
 
 extern TerminalContext term;
+
+/* ===== Print helpers ====== */
+
+void print_array_terminal(int* arr, size_t n);
+
+void print_int_var(int var);
+
+void print_hex_var(int var);
+
+void print_hex_ptr(void* ptr);
+
+void print_uint_var(uint32_t var);
+
+void print_something(void);
+
+int* print_extern_address(char* str, int* func(void));
+
+void terminal_write_uint(char* str, uint32_t val);
+
+void terminal_write_hex(char* str, uint32_t val);
+
+void terminal_write_ptr(char* str, void* val);
+
+void print_extern_address16(char* str, uint16_t func(void));

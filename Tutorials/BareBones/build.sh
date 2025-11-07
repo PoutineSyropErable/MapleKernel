@@ -20,6 +20,7 @@ i686-elf-gcc -c virtual_memory.c -o "$BUILD_DIR/virtual_memory.o" -std=gnu99 -ff
 i686-elf-gcc -c idt.c -o "$BUILD_DIR/idt.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 i686-elf-gcc -c string_helper.c -o "$BUILD_DIR/string_helper.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 i686-elf-gcc -c vga_terminal.c -o "$BUILD_DIR/vga_terminal.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+i686-elf-gcc -c pit_timer.c -o "$BUILD_DIR/pit_timer.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
 ia16-elf-gcc -c ./add16.c -o "$BUILD_DIR/add16.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
@@ -28,9 +29,10 @@ printf "\n\n====== Start of Linking =====\n\n"
 i686-elf-gcc -T linker.ld -o "$BUILD_DIR/myos.bin" -ffreestanding -O2 -nostdlib \
 	"$BUILD_DIR/boot.o" \
 	"$BUILD_DIR/kernel.o" \
-	"$BUILD_DIR/virtual_memory.o" \
 	"$BUILD_DIR/string_helper.o" \
+	"$BUILD_DIR/pit_timer.o" \
 	"$BUILD_DIR/vga_terminal.o" \
+	"$BUILD_DIR/virtual_memory.o" \
 	"$BUILD_DIR/idt.o" \
 	"$BUILD_DIR/add16_wrapper32.o" \
 	"$BUILD_DIR/add16_wrapper16.o" \
