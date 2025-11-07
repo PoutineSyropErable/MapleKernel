@@ -122,9 +122,15 @@ void kernel_main(void) {
 
 	before();
 	uint16_t result = 0;
-	result = call_add16(25, 56);
+	result = call_add16(25, 56); // This pass through 16 bit real mode. Goes to the depths of hell and come back
 	terminal_writestring("The result of add16: ");
 	print_int_var(result);
+
+	result = call_add16(42, 69);
+	terminal_writestring("The result of add16: ");
+	print_int_var(result);
+
+	terminal_writestring("\n\n===== End of Kernel=====\n\n");
 
 	return;
 

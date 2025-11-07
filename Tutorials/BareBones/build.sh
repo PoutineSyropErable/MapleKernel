@@ -30,7 +30,7 @@ ia16-elf-gcc -c ./add16.c -o "$BUILD_DIR/add16.o" -std=gnu99 -ffreestanding -O2 
 
 # Link the kernel and generate the final binary
 printf "\n\n====== Start of Linking =====\n\n"
-i686-elf-gcc -T linker_debug.ld -o "$BUILD_DIR/myos.bin" -ffreestanding -O2 -nostdlib \
+i686-elf-gcc -T linker.ld -o "$BUILD_DIR/myos.bin" -ffreestanding -O2 -nostdlib \
 	"$BUILD_DIR/boot.o" \
 	"$BUILD_DIR/kernel.o" \
 	"$BUILD_DIR/string_helper.o" \

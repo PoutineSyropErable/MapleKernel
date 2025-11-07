@@ -46,7 +46,7 @@ SECTIONS
 
 	.add16_wrapper : ALIGN(16)
 	{
-        add1616_start = .;
+        /* add1616_start = .; */
 		KEEP(*(.text.add1616))   /* 32-bit wrapper code */
 		add1616_end = .;
 	}
@@ -56,7 +56,7 @@ SECTIONS
     /* 16-bit wrapper + add16 function */
     .add16_function : ALIGN(16)
     {
-        KEEP(*(.text.add16))     /* add16.c */
+        KEEP(*(.text_add16))     /* add16.c */
     }
 
 
@@ -66,13 +66,12 @@ SECTIONS
 		resume32_end = .;
 	}
 
-
 	misc32_s1 = .;
 	.misc32 : ALIGN(16) 
 	{
 	misc32_s2 = .;
-		KEEP(*(.data.misc32.*))
-		KEEP(*(.text.misc32.*))
+		*(.data.misc32.*)
+		*(.text.misc32.*)
 	}
 
 
@@ -110,6 +109,5 @@ SECTIONS
 
     /* Catch-all for any other sections */
 }
-
 
 
