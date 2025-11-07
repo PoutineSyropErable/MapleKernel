@@ -31,7 +31,7 @@ SECTIONS
     .args16 (NOLOAD) : ALIGN(4)
     {
         args16_start = .;
-        . += 32;             /* 16 bytes for arguments + result */
+        . += 48;             /* 48 bytes for arguments + result */
         args16_end = .;
     }
 

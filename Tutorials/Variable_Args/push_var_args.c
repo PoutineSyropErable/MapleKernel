@@ -2,6 +2,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
+typedef uint64_t target_uint16_t;
+
 // Preprocessor macro to count arguments
 #define PP_NARG(...) PP_NARG_(__VA_ARGS__, PP_RSEQ_N())
 #define PP_NARG_(...) PP_ARG_N(__VA_ARGS__)
@@ -19,17 +21,19 @@
 	    20, 19, 18, 17, 16, 15, 14, 13, 12, 11, \
 	    10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
 
-uint16_t args16_start[32];
+target_uint16_t args16_start[32];
 
 // Internal function: explicit argc
-void push_to_args16_with_count(uint16_t argc, ...) {
+void push_to_args16_with_count(target_uint16_t argc, ...) {
 	va_list args;
 	va_start(args, argc);
 
-	args16_start[0] = argc;
+	target_uint16_t function_address = va_arg(args, target_uint16_t); // read promoted int
+	args16_start[0] = function_address;
+	args16_start[1] = argc;
 
 	for (int i = 0; i < argc; i++) {
-		int val = va_arg(args, int);         // read promoted int
+		uint16_t val = va_arg(args, int);    // read promoted int
 		args16_start[i + 1] = (uint16_t)val; // store as 16-bit
 	}
 
@@ -47,7 +51,7 @@ int main(void) {
 
 	uint16_t total = args16_start[0]; // argc is stored at args16_start[0]
 	for (uint16_t i = 0; i <= total; i++) {
-		printf("%u : %u\n", i, args16_start[i]);
+		printf("%u : %zu\n", i, args16_start[i]);
 	}
 
 	return 0;
