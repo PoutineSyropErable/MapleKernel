@@ -86,6 +86,74 @@
   },
   {
     "arguments": [
+      "/usr/bin/i686-elf-gcc",
+      "-c",
+      "-std=gnu99",
+      "-ffreestanding",
+      "-O2",
+      "-Wall",
+      "-Wextra",
+      "-o",
+      "build/pit_timer.o",
+      "pit_timer.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/pit_timer.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/build/pit_timer.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/i686-elf-gcc",
+      "-c",
+      "-std=gnu99",
+      "-ffreestanding",
+      "-O2",
+      "-Wall",
+      "-Wextra",
+      "-o",
+      "build/f1_binary_operation.o",
+      "f1_binary_operation.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/f1_binary_operation.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/build/f1_binary_operation.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/i686-elf-gcc",
+      "-c",
+      "-std=gnu99",
+      "-ffreestanding",
+      "-O2",
+      "-Wall",
+      "-Wextra",
+      "-o",
+      "build/f2_string.o",
+      "f2_string.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/f2_string.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/build/f2_string.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/i686-elf-gcc",
+      "-c",
+      "-std=gnu99",
+      "-ffreestanding",
+      "-O2",
+      "-Wall",
+      "-Wextra",
+      "-o",
+      "build/f3_segment_descriptor_internals.o",
+      "f3_segment_descriptor_internals.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/f3_segment_descriptor_internals.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/build/f3_segment_descriptor_internals.o"
+  },
+  {
+    "arguments": [
       "/usr/bin/ia16-elf-gcc",
       "-c",
       "-std=gnu99",

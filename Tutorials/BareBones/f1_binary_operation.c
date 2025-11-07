@@ -1,4 +1,5 @@
 #include "f1_binary_operation.h"
+#include "vga_terminal.h"
 #include <stdint.h>
 
 uint32_t generateMask(uint8_t endBig, uint8_t startSmall) {
@@ -32,8 +33,8 @@ uint32_t getBits(uint32_t value, uint8_t endBig, uint8_t startSmall) {
 
 uint32_t getBits2(uint32_t value, uint8_t endBig, uint8_t startSmall) {
 	if (endBig < startSmall) {
-		printf("[ERROR]: big >= small ");
-		abort();
+		terminal_writestring("[ERROR]: big >= small ");
+		return -1;
 	}
 
 	uint32_t shifted_value = value >> startSmall;

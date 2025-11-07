@@ -2,9 +2,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define SD_COUNT 8192 // 2^13.
+#define SD_COUNT 5 // 2^13.
 /*in the gdtr, there's 13 bits for table index, 2 for priviledge and 1 for gdt/ldt*/
-typedef struct {
+// 8912 is 2^13
+typedef struct __attribute__((packed)) {
 	uint32_t lower;
 	uint32_t higher;
 } SegmentDescriptor;
@@ -14,44 +15,44 @@ typedef struct {
 } GDT;
 
 // Type field
-uint8_t getType(GDT* gdt, size_t index);
-void setType(GDT* gdt, size_t index, uint8_t type);
+uint8_t getType(SegmentDescriptor* sd);
+void setType(SegmentDescriptor* sd, uint8_t type);
 
 // Descriptor Type (S)
-uint8_t getDescriptorTypeS(GDT* gdt, size_t index);
-void setDescriptorTypeS(GDT* gdt, size_t index, uint8_t descriptorTypeS);
+uint8_t getDescriptorTypeS(SegmentDescriptor* sd);
+void setDescriptorTypeS(SegmentDescriptor* sd, uint8_t descriptorTypeS);
 
 // Descriptor Privilege Level (DPL)
-uint8_t getPriviledgeDPL(GDT* gdt, size_t index);
-void setPriviledgeDPL(GDT* gdt, size_t index, uint8_t priviledgeDPL);
+uint8_t getPriviledgeDPL(SegmentDescriptor* sd);
+void setPriviledgeDPL(SegmentDescriptor* sd, uint8_t priviledgeDPL);
 
 // Present bit
-uint8_t getPresent(GDT* gdt, size_t index);
-void setPresent(GDT* gdt, size_t index, uint8_t presentP);
+uint8_t getPresent(SegmentDescriptor* sd);
+void setPresent(SegmentDescriptor* sd, uint8_t presentP);
 
 // Segment Limit
-uint32_t getSegmentLimit(GDT* gdt, size_t index);
-void setSegmentLimit(GDT* gdt, size_t index, uint32_t segmentLimit);
+uint32_t getSegmentLimit(SegmentDescriptor* sd);
+void setSegmentLimit(SegmentDescriptor* sd, uint32_t segmentLimit);
 
 // Available for system software (AVL)
-uint8_t getAVL(GDT* gdt, size_t index);
-void setAVL(GDT* gdt, size_t index, uint8_t avl);
+uint8_t getAVL(SegmentDescriptor* sd);
+void setAVL(SegmentDescriptor* sd, uint8_t avl);
 
 // Long Mode (L)
-uint8_t getLongMode(GDT* gdt, size_t index);
-void setLongMode(GDT* gdt, size_t index, uint8_t L);
+uint8_t getLongMode(SegmentDescriptor* sd);
+void setLongMode(SegmentDescriptor* sd, uint8_t L);
 
 // Default Operation Size (D/B)
-uint8_t getDefaultOperationSize(GDT* gdt, size_t index);
-void setDefaultOperationSize(GDT* gdt, size_t index, uint8_t DsB);
+uint8_t getDefaultOperationSize(SegmentDescriptor* sd);
+void setDefaultOperationSize(SegmentDescriptor* sd, uint8_t DsB);
 
 // Granularity
-uint8_t getGranularity(GDT* gdt, size_t index);
-void setGranularity(GDT* gdt, size_t index, uint8_t granularity);
+uint8_t getGranularity(SegmentDescriptor* sd);
+void setGranularity(SegmentDescriptor* sd, uint8_t granularity);
 
 // Base Address
-uint32_t getBaseAddress(GDT* gdt, size_t index);
-void setBaseAddress(GDT* gdt, size_t index, uint32_t baseAddress);
+uint32_t getBaseAddress(SegmentDescriptor* sd);
+void setBaseAddress(SegmentDescriptor* sd, uint32_t baseAddress);
 
 // Test function
 void test(void);

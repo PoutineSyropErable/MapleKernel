@@ -4,77 +4,68 @@
 #include "f2_string.h"
 #include "f3_segment_descriptor_internals.h"
 
-uint8_t getType(GDT* gdt, size_t index) {
-	SegmentDescriptor sd = gdt->segmentsInfo[index];
+uint8_t getType(SegmentDescriptor* sd) {
 
-	uint8_t type = getBits(sd.higher, TYPE_END, TYPE_START);
+	uint8_t type = getBits(sd->higher, TYPE_END, TYPE_START);
 	return type;
 }
 
-void setType(GDT* gdt, size_t index, uint8_t type) {
-	SegmentDescriptor* sd = &gdt->segmentsInfo[index];
+void setType(SegmentDescriptor* sd, uint8_t type) {
 
 	setBitsModify(&sd->higher, type, TYPE_END, TYPE_START);
 
 	printBinary(type, "type");
 }
 
-uint8_t getDescriptorTypeS(GDT* gdt, size_t index) {
-	SegmentDescriptor sd = gdt->segmentsInfo[index];
+uint8_t getDescriptorTypeS(SegmentDescriptor* sd) {
 
-	uint8_t S = getBits(sd.higher, DESCRIPTOR_TYPE_S, DESCRIPTOR_TYPE_S);
+	uint8_t S = getBits(sd->higher, DESCRIPTOR_TYPE_S, DESCRIPTOR_TYPE_S);
 	return S;
 }
 
-void setDescriptorTypeS(GDT* gdt, size_t index, uint8_t descriptorTypeS) {
-	SegmentDescriptor* sd = &gdt->segmentsInfo[index];
+void setDescriptorTypeS(SegmentDescriptor* sd, uint8_t descriptorTypeS) {
 
 	setBitsModify(&sd->higher, descriptorTypeS, DESCRIPTOR_TYPE_S, DESCRIPTOR_TYPE_S);
 	printBinary(descriptorTypeS, "descriptorTypeS");
 }
 
 // Descriptor Priviledge Level
-uint8_t getPriviledgeDPL(GDT* gdt, size_t index) {
-	SegmentDescriptor sd = gdt->segmentsInfo[index];
+uint8_t getPriviledgeDPL(SegmentDescriptor* sd) {
 
-	uint8_t DPL = getBits(sd.higher, DPL_END, DPL_START);
+	uint8_t DPL = getBits(sd->higher, DPL_END, DPL_START);
 	return DPL;
 }
 
 // Descriptor Priviledge Level
-void setPriviledgeDPL(GDT* gdt, size_t index, uint8_t priviledgeDPL) {
-	SegmentDescriptor* sd = &gdt->segmentsInfo[index];
+void setPriviledgeDPL(SegmentDescriptor* sd, uint8_t priviledgeDPL) {
 
 	setBitsModify(&sd->higher, priviledgeDPL, DPL_END, DPL_START);
 
 	printBinary(priviledgeDPL, "priviledgeDPL");
 }
 
-uint8_t getPresent(GDT* gdt, size_t index) {
-	SegmentDescriptor sd = gdt->segmentsInfo[index];
+uint8_t getPresent(SegmentDescriptor* sd) {
 
-	uint8_t P = getBits(sd.higher, PRESENT, PRESENT);
+	uint8_t P = getBits(sd->higher, PRESENT, PRESENT);
 	return P;
 }
 
-void setPresent(GDT* gdt, size_t index, uint8_t presentP) {
-	SegmentDescriptor* sd = &gdt->segmentsInfo[index];
+void setPresent(SegmentDescriptor* sd, uint8_t presentP) {
 
 	setBitsModify(&sd->higher, presentP, PRESENT, PRESENT);
 	printBinary(presentP, "presentP");
 }
 
-uint32_t getSegmentLimit(GDT* gdt, size_t index) {
-	SegmentDescriptor sd = gdt->segmentsInfo[index];
-	uint32_t segmentLimit_19_16 = getBits(sd.higher, SEGMENT_LIMIT_END_2, SEGMENT_LIMIT_START_2);
-	uint32_t segmentLimit_15_0 = getBits(sd.lower, SEGMENT_LIMIT_END_1, SEGMENT_LIMIT_START_1);
+uint32_t getSegmentLimit(SegmentDescriptor* sd) {
+
+	uint32_t segmentLimit_19_16 = getBits(sd->higher, SEGMENT_LIMIT_END_2, SEGMENT_LIMIT_START_2);
+	uint32_t segmentLimit_15_0 = getBits(sd->lower, SEGMENT_LIMIT_END_1, SEGMENT_LIMIT_START_1);
 
 	uint32_t segmentLimt_19_16_shifted = segmentLimit_19_16 << 16;
 	return segmentLimt_19_16_shifted | segmentLimit_15_0;
 }
 
-void setSegmentLimit(GDT* gdt, size_t index, uint32_t segmentLimit) {
-	SegmentDescriptor* sd = &gdt->segmentsInfo[index];
+void setSegmentLimit(SegmentDescriptor* sd, uint32_t segmentLimit) {
 
 	uint32_t higher_19_16 = getBits(segmentLimit, SEGMENT_LIMIT_END_2, SEGMENT_LIMIT_START_2);
 	uint32_t lower_15_0 = getBits(segmentLimit, SEGMENT_LIMIT_END_1, SEGMENT_LIMIT_START_1);
@@ -88,73 +79,63 @@ void setSegmentLimit(GDT* gdt, size_t index, uint32_t segmentLimit) {
 }
 
 // Available for system software
-uint8_t getAVL(GDT* gdt, size_t index) {
-	SegmentDescriptor sd = gdt->segmentsInfo[index];
+uint8_t getAVL(SegmentDescriptor* sd) {
 
-	uint8_t avl = getBits(sd.higher, AVL, AVL);
+	uint8_t avl = getBits(sd->higher, AVL, AVL);
 	return avl;
 }
 
-void setAVL(GDT* gdt, size_t index, uint8_t avl) {
-	SegmentDescriptor* sd = &gdt->segmentsInfo[index];
+void setAVL(SegmentDescriptor* sd, uint8_t avl) {
 
 	setBitsModify(&sd->higher, avl, AVL, AVL);
 	printBinary(avl, "avl");
 }
 
-uint8_t getLongMode(GDT* gdt, size_t index) {
-	SegmentDescriptor sd = gdt->segmentsInfo[index];
+uint8_t getLongMode(SegmentDescriptor* sd) {
 
-	uint8_t L = getBits(sd.higher, LONG_MODE, LONG_MODE);
+	uint8_t L = getBits(sd->higher, LONG_MODE, LONG_MODE);
 	return L;
 }
 
-void setLongMode(GDT* gdt, size_t index, uint8_t L) {
-	SegmentDescriptor* sd = &gdt->segmentsInfo[index];
+void setLongMode(SegmentDescriptor* sd, uint8_t L) {
 
 	setBitsModify(&sd->higher, L, LONG_MODE, LONG_MODE);
 	printBinary(L, "L");
 }
 
-uint8_t getDefaultOperationSize(GDT* gdt, size_t index) {
-	SegmentDescriptor sd = gdt->segmentsInfo[index];
+uint8_t getDefaultOperationSize(SegmentDescriptor* sd) {
 
 	// D slash B. D/B. D or B
-	uint8_t DsB = getBits(sd.higher, DEFAULT_OPERATION_SIZE, DEFAULT_OPERATION_SIZE);
+	uint8_t DsB = getBits(sd->higher, DEFAULT_OPERATION_SIZE, DEFAULT_OPERATION_SIZE);
 	return DsB;
 }
 
-void setDefaultOperationSize(GDT* gdt, size_t index, uint8_t DsB) {
-	SegmentDescriptor* sd = &gdt->segmentsInfo[index];
+void setDefaultOperationSize(SegmentDescriptor* sd, uint8_t DsB) {
 
 	setBitsModify(&sd->higher, DsB, DEFAULT_OPERATION_SIZE, DEFAULT_OPERATION_SIZE);
 	printBinary(DsB, "DsB");
 }
 
-uint8_t getGranularity(GDT* gdt, size_t index) {
-	SegmentDescriptor sd = gdt->segmentsInfo[index];
+uint8_t getGranularity(SegmentDescriptor* sd) {
 
-	uint8_t granularity = getBits(sd.higher, GRANULARITY, GRANULARITY);
+	uint8_t granularity = getBits(sd->higher, GRANULARITY, GRANULARITY);
 	return granularity;
 }
 
-void setGranularity(GDT* gdt, size_t index, uint8_t granularity) {
-	SegmentDescriptor* sd = &gdt->segmentsInfo[index];
+void setGranularity(SegmentDescriptor* sd, uint8_t granularity) {
 
 	setBitsModify(&sd->higher, granularity, GRANULARITY, GRANULARITY);
 	printBinary(granularity, "granularity");
 }
 
-uint32_t getBaseAddress(GDT* gdt, size_t index) {
+uint32_t getBaseAddress(SegmentDescriptor* sd) {
 	/*
 	Using magic values cause it somehow cleaner
 	*/
 
-	SegmentDescriptor sd = gdt->segmentsInfo[index];
-
-	uint32_t base_0_15 = getBits(sd.lower, 31, 16);
-	uint32_t base_16_23 = getBits(sd.higher, 7, 0);
-	uint32_t base_24_31 = getBits(sd.higher, 31, 24);
+	uint32_t base_0_15 = getBits(sd->lower, 31, 16);
+	uint32_t base_16_23 = getBits(sd->higher, 7, 0);
+	uint32_t base_24_31 = getBits(sd->higher, 31, 24);
 
 	uint32_t base_0_15_shifted = base_0_15 << 0; // get optimised. But i prefer clarity
 	uint32_t base_16_23_shifted = base_16_23 << 16;
@@ -165,9 +146,7 @@ uint32_t getBaseAddress(GDT* gdt, size_t index) {
 	return baseAddress;
 }
 
-void setBaseAddress(GDT* gdt, size_t index, uint32_t baseAddress) {
-
-	SegmentDescriptor* sd = &gdt->segmentsInfo[index];
+void setBaseAddress(SegmentDescriptor* sd, uint32_t baseAddress) {
 
 	uint32_t higher_31_24 = getBits(baseAddress, 31, 24);
 	uint32_t higher_7_0 = getBits(baseAddress, 23, 16);

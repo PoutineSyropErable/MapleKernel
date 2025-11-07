@@ -1,4 +1,5 @@
 #include "add16_wrapper.h"
+#include "f3_segment_descriptor_internals.h"
 #include <stddef.h>
 #include <stdint.h>
 
@@ -68,10 +69,7 @@ uint16_t get_ds_selector() {
 	return ds_value;
 }
 
-typedef struct __attribute__((packed)) {
-	uint32_t low;
-	uint32_t high;
-} GDT_ENTRY;
+typedef SegmentDescriptor GDT_ENTRY;
 
 typedef struct __attribute__((packed)) {
 	uint16_t limit;
@@ -87,4 +85,4 @@ GDT_ROOT get_gdt_root(void) {
 }
 
 extern GDT_ROOT GDT16_DESCRIPTOR;
-GDT_ROOT* GDT16_ROOT = &GDT16_DESCRIPTOR;
+GDT_ROOT* GDT16_ROOT16 = &GDT16_DESCRIPTOR;

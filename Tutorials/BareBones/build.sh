@@ -22,6 +22,10 @@ i686-elf-gcc -c string_helper.c -o "$BUILD_DIR/string_helper.o" -std=gnu99 -ffre
 i686-elf-gcc -c vga_terminal.c -o "$BUILD_DIR/vga_terminal.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 i686-elf-gcc -c pit_timer.c -o "$BUILD_DIR/pit_timer.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
+i686-elf-gcc -c f1_binary_operation.c -o "$BUILD_DIR/f1_binary_operation.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+i686-elf-gcc -c f2_string.c -o "$BUILD_DIR/f2_string.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+i686-elf-gcc -c f3_segment_descriptor_internals.c -o "$BUILD_DIR/f3_segment_descriptor_internals.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+
 ia16-elf-gcc -c ./add16.c -o "$BUILD_DIR/add16.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
 # Link the kernel and generate the final binary
@@ -32,6 +36,9 @@ i686-elf-gcc -T linker.ld -o "$BUILD_DIR/myos.bin" -ffreestanding -O2 -nostdlib 
 	"$BUILD_DIR/string_helper.o" \
 	"$BUILD_DIR/pit_timer.o" \
 	"$BUILD_DIR/vga_terminal.o" \
+	"$BUILD_DIR/f1_binary_operation.o" \
+	"$BUILD_DIR/f2_string.o" \
+	"$BUILD_DIR/f3_segment_descriptor_internals.o" \
 	"$BUILD_DIR/virtual_memory.o" \
 	"$BUILD_DIR/idt.o" \
 	"$BUILD_DIR/add16_wrapper32.o" \

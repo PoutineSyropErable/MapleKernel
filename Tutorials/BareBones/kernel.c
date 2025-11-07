@@ -2,6 +2,7 @@
 #include "address_getter.c"
 #include "kernel.h"
 #include "os_registers.c"
+#include "pit_timer.h"
 #include "string_helper.h"
 #include "vga_terminal.h"
 #include <stdbool.h>
@@ -61,21 +62,21 @@ void kernel_main(void) {
 	terminal_write_hex("gdt base address = ", (uint32_t)gdt_descriptor.base);
 	terminal_write_uint("gdt size limit = ", gdt_descriptor.limit);
 
-	terminal_write_ptr("GDT16_DESCRIPTOR = ", (void*)GDT16_ROOT);
+	// terminal_write_ptr("GDT16_DESCRIPTOR = ", (void*)GDT16_ROOT);
 	terminal_write_ptr("GDT16 = ", GDT16_DESCRIPTOR.base);
 
 	GDT_ENTRY* gdt = gdt_descriptor.base;
 	GDT_ENTRY* gdt16 = GDT16_DESCRIPTOR.base;
 	uint16_t limit16 = GDT16_DESCRIPTOR.limit;
 	terminal_writestring("\nThe gdtr values:\n");
-	terminal_write_hex("gdt16[0].low = ", gdt16[0].low);
-	terminal_write_hex("gdt16[0].high = ", gdt16[0].high);
-	terminal_write_hex("gdt16[1].low = ", gdt16[1].low);
-	terminal_write_hex("gdt16[1].high = ", gdt16[1].high);
-	terminal_write_hex("gdt16[2].low = ", gdt16[2].low);
-	terminal_write_hex("gdt16[2].high = ", gdt16[2].high);
-	terminal_write_hex("gdt16[3].low = ", gdt16[3].low);
-	terminal_write_hex("gdt16[3].high = ", gdt16[3].high);
+	terminal_write_hex("gdt16[0].lower = ", gdt16[0].lower);
+	terminal_write_hex("gdt16[0].higher = ", gdt16[0].higher);
+	terminal_write_hex("gdt16[1].lower = ", gdt16[1].lower);
+	terminal_write_hex("gdt16[1].higher = ", gdt16[1].higher);
+	terminal_write_hex("gdt16[2].lower = ", gdt16[2].lower);
+	terminal_write_hex("gdt16[2].higher = ", gdt16[2].higher);
+	terminal_write_hex("gdt16[3].lower = ", gdt16[3].lower);
+	terminal_write_hex("gdt16[3].higher = ", gdt16[3].higher);
 
 	before();
 	uint16_t result = 0;
