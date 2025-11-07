@@ -39,14 +39,14 @@ SECTIONS
 
 	.call_add16_section : ALIGN(16) 
 	{
-        add1632_start = .;
+        /* add1632_start = .; */
 		KEEP(*(.text.add1632))   /* 32-bit wrapper code */
 		add1632_end = .;
 	}
 
 	.add16_wrapper : ALIGN(16)
 	{
-        add1616_start = .;
+        /* add1616_start = .; */
 		KEEP(*(.text.add1616))   /* 32-bit wrapper code */
 		add1616_end = .;
 	}
@@ -63,6 +63,15 @@ SECTIONS
 	.resume32 : ALIGN(16)
 	{
 		KEEP(*(.text.resume32))   /* 32-bit wrapper code */
+		resume32_end = .;
+	}
+
+	misc32_s1 = .;
+	.misc32 : ALIGN(16) 
+	{
+	misc32_s2 = .;
+		*(.data.misc32.*)
+		*(.text.misc32.*)
 	}
 
 

@@ -4,10 +4,25 @@ BITS 32
 global call_add16
 global resume32
 extern add1616_start
+extern protected_16
 
 extern stack16_start
 extern stack16_end
 extern args16_start
+extern GDT16_DESCRIPTOR 
+
+section .data.misc32.1
+
+GDT16_DESCRIPTOR:
+	dw GDT_END - GDT_START - 1 ;limit/size
+	dd GDT_START ; base
+
+GDT_START: 
+	dq 0x0 
+	dq 0x0
+	dq 0xFFFF0000009A0000; code 
+	dq 0xFFFF000000930000; data 
+GDT_END:
 
 section .text.add1632
 
@@ -33,27 +48,9 @@ call_add16:
 
     cli
 
+	lgdt [GDT16_DESCRIPTOR]
+	jmp far 0x10:protected_16
 
-	; mov ax, 0
-	; mov ds, ax
-	; mov es, ax
-	; mov fs, ax
-	; mov gs, ax
-	;
- ;    ; Set up 16-bit stack
-	; mov eax, 0
- ;    mov eax, stack16_start
- ;    shr eax, 4             ; segment = address >> 4
- ;    mov ss, ax
-	; mov esp, 0x4000
-
-    ; --- Switch to 16-bit mode ---
-
-    mov eax, cr0
-    and eax, 0xFFFFFFFE
-    mov cr0, eax
-    ; Far jump to 16-bit wrapper
-	jmp far 00:add1616_start
 
 
 

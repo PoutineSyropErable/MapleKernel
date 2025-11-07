@@ -63,6 +63,16 @@ SECTIONS
 	.resume32 : ALIGN(16)
 	{
 		KEEP(*(.text.resume32))   /* 32-bit wrapper code */
+		resume32_end = .;
+	}
+
+
+	misc32_s1 = .;
+	.misc32 : ALIGN(16) 
+	{
+	misc32_s2 = .;
+		KEEP(*(.data.misc32.*))
+		KEEP(*(.text.misc32.*))
 	}
 
 

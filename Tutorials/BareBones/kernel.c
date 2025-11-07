@@ -352,6 +352,41 @@ size_t int_to_hex(uint32_t value, char* buffer, int uppercase) {
 	return (size_t)j;
 }
 
+size_t ptr_to_hex(void* ptr, char* buffer, int uppercase) {
+	const char* digits = uppercase ? "0123456789ABCDEF" : "0123456789abcdef";
+	uintptr_t value = (uintptr_t)ptr; // cast pointer to integer
+	int i;
+
+	// Handle null pointer explicitly
+	if (value == 0) {
+		buffer[0] = '0';
+		buffer[1] = '\0';
+		return 1;
+	}
+
+	char temp[2 * sizeof(void*) + 1]; // enough for pointer in hex + null
+	temp[2 * sizeof(void*)] = '\0';
+
+	// Fill from the end
+	for (i = 2 * sizeof(void*) - 1; i >= 0; i--) {
+		temp[i] = digits[value & 0xF];
+		value >>= 4;
+	}
+
+	// Skip leading zeros
+	i = 0;
+	while (temp[i] == '0')
+		i++;
+
+	int j = 0;
+	while (temp[i] != '\0') {
+		buffer[j++] = temp[i++];
+	}
+	buffer[j] = '\0';
+
+	return (size_t)j;
+}
+
 static inline void wait(float seconds) {
 
 	volatile unsigned long count;
@@ -405,6 +440,15 @@ void print_hex_var(TerminalContext* term, int var) {
 	terminal_writestring(term, res_buff);
 }
 
+void print_hex_ptr(TerminalContext* term, void* ptr) {
+
+	char res_buff[12];
+	size_t len = ptr_to_hex(ptr, res_buff, 1);
+	res_buff[len] = '\n';     // replace the null terminator with newline
+	res_buff[len + 1] = '\0'; // add new null terminator
+	terminal_writestring(term, res_buff);
+}
+
 void print_uint_var(TerminalContext* term, uint32_t var) {
 
 	char res_buff[12];
@@ -451,6 +495,12 @@ void terminal_write_hex(TerminalContext* term, char* str, uint32_t val) {
 	print_hex_var(term, (int)val);
 }
 
+void terminal_write_ptr(TerminalContext* term, char* str, void* val) {
+
+	terminal_writestring(term, str);
+	print_hex_ptr(term, val);
+}
+
 void print_extern_address16(TerminalContext* term, char* str, uint16_t func()) {
 
 	terminal_writestring(term, str);
@@ -480,10 +530,13 @@ void kernel_main(void) {
 	print_extern_address(&term, "The address of args16_start: ", get_args16_start_address);
 	print_extern_address(&term, "The address of args16_end: ", get_args16_end_address);
 
-	int* add1632_address = print_extern_address(&term, "The address of add1632: ", get_add1632_start_address);
 	int* call_add16_address = print_extern_address(&term, "The address of call_add16: ", get_call_add16_address);
 	int* add1616_address = print_extern_address(&term, "The address of add1616: ", get_add1616_start_address);
 	int* resume32_address = print_extern_address(&term, "The address of resume32: ", get_resume32_start_address);
+	int* resume32_end_address = print_extern_address(&term, "The address of resume32_end: ", get_resume32_end_address);
+
+	print_extern_address(&term, "The address of misc32_s1: ", get_misc32_s1_address);
+	print_extern_address(&term, "The address of misc32_s2: ", get_misc32_s2_address);
 
 	// terminal_writestring(&term, "\n");
 	// terminal_writestring(&term, "The value of the code at 0xb040: \n");
@@ -504,26 +557,27 @@ void kernel_main(void) {
 	print_extern_address16(&term, "\nThe value of fs: ", get_fs_selector);
 	print_extern_address16(&term, "\nThe value of gs: ", get_gs_selector);
 
-	GDT_ROOT gdt_root = get_gdt_root();
-	GDT_ENTRY* gdt = (GDT_ENTRY*)gdt_root.base;
+	GDT_ROOT gdt_descriptor = get_gdt_root();
 
-	terminal_write_hex(&term, "gdt base address = ", gdt_root.base);
-	terminal_write_uint(&term, "gdt size limit = ", gdt_root.limit);
+	// print_hex_var(&term, (int)g16);
+	terminal_write_hex(&term, "gdt base address = ", (uint32_t)gdt_descriptor.base);
+	terminal_write_uint(&term, "gdt size limit = ", gdt_descriptor.limit);
 
+	terminal_write_ptr(&term, "GDT16_DESCRIPTOR = ", (void*)GDT16_ROOT);
+	terminal_write_ptr(&term, "GDT16 = ", GDT16_DESCRIPTOR.base);
+
+	GDT_ENTRY* gdt = gdt_descriptor.base;
+	GDT_ENTRY* gdt16 = GDT16_DESCRIPTOR.base;
+	uint16_t limit16 = GDT16_DESCRIPTOR.limit;
 	terminal_writestring(&term, "\nThe gdtr values:\n");
-	terminal_write_hex(&term, "gdt[0].low = ", gdt[0].low);
-	terminal_write_hex(&term, "gdt[0].high = ", gdt[0].high);
-	terminal_write_hex(&term, "gdt[1].low = ", gdt[1].low);
-	terminal_write_hex(&term, "gdt[1].high = ", gdt[1].high);
-	terminal_write_hex(&term, "gdt[2].low = ", gdt[2].low);
-	terminal_write_hex(&term, "gdt[2].high = ", gdt[2].high);
-	terminal_write_hex(&term, "gdt[3].low = ", gdt[3].low);
-	terminal_write_hex(&term, "gdt[3].high = ", gdt[3].high);
-	// print_int_var(&term, gdtr[0]);
-	// print_int_var(&term, gdtr[1]);
-	// print_int_var(&term, gdtr[2]);
-
-	// wait(25);
+	terminal_write_hex(&term, "gdt16[0].low = ", gdt16[0].low);
+	terminal_write_hex(&term, "gdt16[0].high = ", gdt16[0].high);
+	terminal_write_hex(&term, "gdt16[1].low = ", gdt16[1].low);
+	terminal_write_hex(&term, "gdt16[1].high = ", gdt16[1].high);
+	terminal_write_hex(&term, "gdt16[2].low = ", gdt16[2].low);
+	terminal_write_hex(&term, "gdt16[2].high = ", gdt16[2].high);
+	terminal_write_hex(&term, "gdt16[3].low = ", gdt16[3].low);
+	terminal_write_hex(&term, "gdt16[3].high = ", gdt16[3].high);
 
 	before(&term);
 	uint16_t result = 0;

@@ -1,3 +1,4 @@
+#include "add16_wrapper.h"
 #include <stddef.h>
 #include <stdint.h>
 
@@ -68,8 +69,13 @@ uint16_t get_ds_selector() {
 }
 
 typedef struct __attribute__((packed)) {
+	uint32_t low;
+	uint32_t high;
+} GDT_ENTRY;
+
+typedef struct __attribute__((packed)) {
 	uint16_t limit;
-	uint32_t base;
+	GDT_ENTRY* base;
 } GDT_ROOT;
 
 GDT_ROOT get_gdt_root(void) {
@@ -80,7 +86,5 @@ GDT_ROOT get_gdt_root(void) {
 	return gdt_root;
 }
 
-typedef struct __attribute__((packed)) {
-	uint32_t low;
-	uint32_t high;
-} GDT_ENTRY;
+extern GDT_ROOT GDT16_DESCRIPTOR;
+GDT_ROOT* GDT16_ROOT = &GDT16_DESCRIPTOR;
