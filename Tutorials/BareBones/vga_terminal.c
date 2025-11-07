@@ -23,6 +23,8 @@ static inline color_char vga_entry(unsigned char uc, color_bg_fg color) {
 
 color_char terminal_big_scrollable_buffer[VGA_WIDTH * VGA_MEM_HEIGHT];
 
+TerminalContext term = {0};
+
 inline void clear_visible_terminal(TerminalContext* terminal) {
 
 	for (size_t y = 0; y < VGA_HEIGHT; y++) {
@@ -36,7 +38,9 @@ inline void clear_visible_terminal(TerminalContext* terminal) {
 	}
 }
 
-void initialize_terminal(TerminalContext* terminal) {
+void initialize_terminal() {
+
+	TerminalContext* terminal = &term;
 	terminal->current_write_row = 0;
 	terminal->current_write_column = 0;
 	terminal->color =
@@ -175,5 +179,3 @@ void terminal_writestring(TerminalContext* terminal, const char* data) {
 	// char one at a time
 	terminal_write(terminal, data, strlen(data));
 }
-
-TerminalContext term = {0};

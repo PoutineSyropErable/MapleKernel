@@ -100,10 +100,6 @@ int* print_extern_address(TerminalContext* term, char* str, int* func()) {
 	return address_value;
 }
 
-uint32_t read32(uint32_t addr) {
-	return *(volatile uint32_t*)addr;
-}
-
 void terminal_write_uint(TerminalContext* term, char* str, uint32_t val) {
 
 	terminal_writestring(term, str);
@@ -140,7 +136,7 @@ void kernel_main(void) {
 	// init_page_bitmap();
 
 	/* Initialize terminal interface */
-	initialize_terminal(&term);
+	initialize_terminal();
 	terminal_set_scroll(&term, 0);
 
 	terminal_writestring(&term, "\n\n===== Start of Kernel=====\n\n");

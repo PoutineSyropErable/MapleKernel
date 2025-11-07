@@ -43,7 +43,7 @@ typedef struct {
 
 inline void clear_visible_terminal(TerminalContext* terminal);
 
-void initialize_terminal(TerminalContext* terminal);
+void initialize_terminal();
 
 void terminal_update_vga_mem(TerminalContext* terminal);
 

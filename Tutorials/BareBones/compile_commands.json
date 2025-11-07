@@ -1,0 +1,104 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/i686-elf-gcc",
+      "-c",
+      "-std=gnu99",
+      "-ffreestanding",
+      "-O2",
+      "-Wall",
+      "-Wextra",
+      "-o",
+      "build/kernel.o",
+      "kernel.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/kernel.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/build/kernel.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/i686-elf-gcc",
+      "-c",
+      "-std=gnu99",
+      "-ffreestanding",
+      "-O2",
+      "-Wall",
+      "-Wextra",
+      "-o",
+      "build/virtual_memory.o",
+      "virtual_memory.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/virtual_memory.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/build/virtual_memory.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/i686-elf-gcc",
+      "-c",
+      "-std=gnu99",
+      "-ffreestanding",
+      "-O2",
+      "-Wall",
+      "-Wextra",
+      "-o",
+      "build/idt.o",
+      "idt.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/idt.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/build/idt.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/i686-elf-gcc",
+      "-c",
+      "-std=gnu99",
+      "-ffreestanding",
+      "-O2",
+      "-Wall",
+      "-Wextra",
+      "-o",
+      "build/string_helper.o",
+      "string_helper.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/string_helper.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/build/string_helper.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/i686-elf-gcc",
+      "-c",
+      "-std=gnu99",
+      "-ffreestanding",
+      "-O2",
+      "-Wall",
+      "-Wextra",
+      "-o",
+      "build/vga_terminal.o",
+      "vga_terminal.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/vga_terminal.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/build/vga_terminal.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/ia16-elf-gcc",
+      "-c",
+      "-std=gnu99",
+      "-ffreestanding",
+      "-O2",
+      "-Wall",
+      "-Wextra",
+      "-o",
+      "build/add16.o",
+      "./add16.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/add16.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/build/add16.o"
+  }
+]
