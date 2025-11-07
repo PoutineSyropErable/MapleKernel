@@ -1,3 +1,4 @@
+#include "add16.h"
 #include <stdint.h>
 
 /* Place this function into the custom section ".text_add16" */
@@ -20,20 +21,20 @@ add16(uint16_t a, uint16_t b) {
 	    ".att_syntax\n");
 }
 
-/* Reference version (purely for comparison) */
-__attribute__((section(".text_add16")))
-uint16_t
-add16_ref(uint16_t a, uint16_t b) {
-	uint16_t result;
-	__asm__(
-	    ".code16\n"
-	    ".intel_syntax noprefix\n"
-	    "mov ax, %1\n"
-	    "add ax, %2\n"
-	    "mov %0, ax\n"
-	    ".att_syntax\n"
-	    : "=r"(result)
-	    : "r"(a), "r"(b)
-	    : "ax");
-	return result;
-}
+// /* Reference version (purely for comparison) */
+// __attribute__((section(".text_add16")))
+// uint16_t
+// add16_ref(uint16_t a, uint16_t b) {
+// 	uint16_t result;
+// 	__asm__(
+// 	    ".code16\n"
+// 	    ".intel_syntax noprefix\n"
+// 	    "mov ax, %1\n"
+// 	    "add ax, %2\n"
+// 	    "mov %0, ax\n"
+// 	    ".att_syntax\n"
+// 	    : "=r"(result)
+// 	    : "r"(a), "r"(b)
+// 	    : "ax");
+// 	return result;
+// }

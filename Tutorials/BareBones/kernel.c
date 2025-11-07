@@ -70,7 +70,9 @@ void kernel_main(void) {
 	print_extern_address("The address of args16_end: ", get_args16_end_address);
 
 	int* call_add16_address = print_extern_address("The address of call_add16: ", get_call_add16_address);
+	int* protected16_address = print_extern_address("The address of protected16: ", get_protected16_address);
 	int* add1616_address = print_extern_address("The address of add1616: ", get_add1616_start_address);
+	int* add16_address = print_extern_address("The address of add16: ", get_add16_address);
 	int* resume32_address = print_extern_address("The address of resume32: ", get_resume32_start_address);
 	int* resume32_end_address = print_extern_address("The address of resume32_end: ", get_resume32_end_address);
 

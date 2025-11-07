@@ -42,9 +42,12 @@ call_add16:
 	; Save the stack pointer in the first 1mb (first 64kb in fact)
 	; So its accessible in 16 bit, and can be restored on the way back to 32 bit
 	mov [args16_start], esp      ; 
-	mov [args16_start +4], edi      ; 
-	mov [args16_start +8], esi      ; 
-	sgdt [args16_start + 12]
+	mov [args16_start +4], dx      ; 
+	mov [args16_start +6], cx      ; 
+	sgdt [args16_start + 10]
+
+	mov esp, 0 ; in case i can't change esp in 16 bit mode later. Don't want the high bit to fuck us over
+	mov ebp, 0 ; in case i can't change esp in 16 bit mode later. Don't want the high bit to fuck us over
 
 
     cli
@@ -76,6 +79,8 @@ resume32:
 
 
     mov esp, [args16_start]
+	mov ax, 0x18 
+	mov ss, ax
 
     pop gs
     pop fs
