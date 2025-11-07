@@ -226,10 +226,10 @@ void print_int_var(int var) {
 	terminal_writestring(res_buff);
 }
 
-void print_hex_var(int var) {
+void print_hex_var(uint32_t var) {
 
 	char res_buff[12];
-	size_t len = int_to_hex(var, res_buff, 1);
+	size_t len = uint_to_hex(var, res_buff, 1);
 	res_buff[len] = '\n';     // replace the null terminator with newline
 	res_buff[len + 1] = '\0'; // add new null terminator
 	terminal_writestring(res_buff);
@@ -269,7 +269,7 @@ int* print_extern_address(char* str, int* func()) {
 
 	terminal_writestring(str);
 	int* address_value = func();
-	print_hex_var((int)address_value);
+	print_hex_ptr((void*)address_value);
 	terminal_writestring("\n");
 	return address_value;
 }
@@ -283,7 +283,7 @@ void terminal_write_uint(char* str, uint32_t val) {
 void terminal_write_hex(char* str, uint32_t val) {
 
 	terminal_writestring(str);
-	print_hex_var((int)val);
+	print_hex_var(val);
 }
 
 void terminal_write_ptr(char* str, void* val) {

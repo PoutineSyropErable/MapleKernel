@@ -80,7 +80,7 @@ void print_array_terminal(int* arr, size_t n);
 
 void print_int_var(int var);
 
-void print_hex_var(int var);
+void print_hex_var(uint32_t var);
 
 void print_hex_ptr(void* ptr);
 

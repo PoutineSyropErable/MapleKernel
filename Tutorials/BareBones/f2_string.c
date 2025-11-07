@@ -1,4 +1,5 @@
 #include "f2_string.h"
+#include "vga_terminal.h"
 
 char* getSpacelessBitString(uint32_t a, char output[33]) {
 
@@ -39,5 +40,8 @@ void printBinary(uint32_t binaryNumber, char* variableName) {
 	getSpacelessBitString(binaryNumber, spacelessBitString);
 	char spaceSeparatedBits[40];
 	addSpacesEvery4bits(spacelessBitString, spaceSeparatedBits);
-	// printf("%s = %s = %x\n", variableName, spaceSeparatedBits, binaryNumber);
+
+	terminal_writestring(variableName);
+	terminal_writestring(" = ");
+	print_hex_var(binaryNumber);
 }

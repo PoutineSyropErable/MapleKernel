@@ -79,7 +79,7 @@ size_t uitoa(uint32_t value, char* buffer) {
 	return pos;
 }
 
-size_t int_to_hex(uint32_t value, char* buffer, int uppercase) {
+size_t uint_to_hex(uint32_t value, char* buffer, int uppercase) {
 	const char* digits = uppercase ? "0123456789ABCDEF" : "0123456789abcdef";
 	int i;
 
