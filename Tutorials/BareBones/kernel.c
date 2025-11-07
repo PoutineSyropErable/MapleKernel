@@ -10,10 +10,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-void before() {
-	terminal_writestring("Before the main execution");
-}
-
 void gdt_analize(GDT_ENTRY* gdt, size_t index) {
 
 	terminal_write_uint_no_newline("\n===== Analize of GDT[", index);
@@ -51,6 +47,10 @@ void gdt_analize(GDT_ENTRY* gdt, size_t index) {
 	terminal_write_uint("AVL = ", getAVL(sd));
 
 	terminal_writestring("\n===== End of Analize of GDT=====\n\n");
+}
+
+void before() {
+	terminal_writestring("Before the main execution\n");
 }
 
 void kernel_main(void) {
@@ -125,7 +125,6 @@ void kernel_main(void) {
 	result = call_add16(25, 56);
 	terminal_writestring("The result of add16: ");
 	print_int_var(result);
-	wait(25);
 
 	return;
 

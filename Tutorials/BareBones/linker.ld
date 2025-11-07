@@ -39,7 +39,7 @@ SECTIONS
 
 	.call_add16_section : ALIGN(16) 
 	{
-        add1632_start = .;
+        /* add1632_start = .; */
 		KEEP(*(.text.add1632))   /* 32-bit wrapper code */
 		add1632_end = .;
 	}
