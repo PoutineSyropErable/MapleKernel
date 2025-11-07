@@ -1,7 +1,5 @@
 #include "f1_binary_operation.h"
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 uint32_t generateMask(uint8_t endBig, uint8_t startSmall) {
 

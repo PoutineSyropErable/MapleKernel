@@ -1,7 +1,5 @@
 #pragma once
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 uint32_t generateMask(uint8_t endBig, uint8_t startSmall);
 uint32_t generateAntiMask(uint8_t endBig, uint8_t startSmall);

@@ -1,6 +1,4 @@
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 #include "f1_binary_operation.h"
 #include "f2_string.h"
@@ -190,15 +188,4 @@ void setBaseAddress(GDT* gdt, size_t index, uint32_t baseAddress) {
 	// printBinary(sd->higher, "sd->higher"); // 8
 
 	return;
-}
-
-void test(void) {
-	printf("0xFACEB007 should be transformed to 0xFACDB007\n");
-	uint32_t x = 0xFACEB007;
-	printf("start = %x\n", x);
-
-	setBitsModify(&x, 0xD, 19, 16);
-
-	printf("modified = %x\n", x);
-	printBinary(x, "x");
 }
