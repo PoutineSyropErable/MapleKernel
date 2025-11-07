@@ -41,10 +41,10 @@ call_add16:
 	; rsi = arg2
 	; Save the stack pointer in the first 1mb (first 64kb in fact)
 	; So its accessible in 16 bit, and can be restored on the way back to 32 bit
-	mov [args16_start], esp      ; 
-	mov [args16_start +4], dx      ; 
-	mov [args16_start +6], cx      ; 
-	sgdt [args16_start + 10]
+	sgdt [args16_start]
+	mov [args16_start + 10], esp    ; 
+	mov [args16_start +24], dx      ;  arg0
+	mov [args16_start +26], cx      ;  arg1
 
 	mov esp, 0 ; in case i can't change esp in 16 bit mode later. Don't want the high bit to fuck us over
 	mov ebp, 0 ; in case i can't change esp in 16 bit mode later. Don't want the high bit to fuck us over
@@ -78,7 +78,7 @@ resume32:
     ; Restore segment registers
 
 
-    mov esp, [args16_start]
+    mov esp, [args16_start + 10]
 	mov ax, 0x18 
 	mov ss, ax
 
@@ -93,7 +93,7 @@ resume32:
 
 
     ; Retrieve result
-    movzx eax, word [args16_start + 8]
+    movzx eax, word [args16_start + 14]
 	; mov eax, 15
 
     ret

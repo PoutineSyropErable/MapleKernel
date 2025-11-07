@@ -42,19 +42,19 @@ add1616_start:
     ; Set up real mode stack HERE
 
 
-	mov ax, [args16_start +4]     ; 
-	mov bx, [args16_start +6]     ; 
+	mov ax, [args16_start +24]     ;  arg0
+	mov bx, [args16_start +26]     ;  arg1
 	push ax 
 	push bx
 	call add16
-	mov [args16_start+8], ax
+	mov [args16_start+14], ax      ; ret1
 	pop ax 
 	pop bx
 
 
 
     ; --- Switch back to protected mode ---
-	lgdt [args16_start + 10]
+	lgdt [args16_start + 0]
     mov eax, cr0
     or  eax, 1
     mov cr0, eax
