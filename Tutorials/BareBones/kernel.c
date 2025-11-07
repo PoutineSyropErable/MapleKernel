@@ -1,5 +1,6 @@
 #include "add16_wrapper.h"
 #include "address_getter.c"
+#include "f2_string.h"
 #include "kernel.h"
 #include "os_registers.c"
 #include "pit_timer.h"
@@ -11,6 +12,45 @@
 
 void before() {
 	terminal_writestring("Before the main execution");
+}
+
+void gdt_analize(GDT_ENTRY* gdt, size_t index) {
+
+	terminal_write_uint_no_newline("\n===== Analize of GDT[", index);
+	terminal_writestring("] =====\n\n");
+	SegmentDescriptor* sd = &gdt[index];
+
+	if (false) {
+		setType(sd, 0b100);
+		setDescriptorTypeS(sd, 0b1);
+		setPriviledgeDPL(sd, 0b11); // system services. ring 2
+		setPresent(sd, 0b0);
+		setSegmentLimit(sd, 0xba2ed);
+		setAVL(sd, 0);
+		setLongMode(sd, 1);
+		setDefaultOperationSize(sd, 0);
+		setGranularity(sd, 0);
+		setBaseAddress(sd, 0xfedc1234);
+	}
+
+	printBinary(sd->higher, "higher");
+	printBinary(sd->lower, "lower");
+
+	terminal_writestring("----- Parsed Fields -----\n");
+	uint32_t baseAddress = getBaseAddress(sd);
+	printBinary(baseAddress, "Base Address");
+	printBinarySize(getSegmentLimit(sd), "SegmentLimit (bits 0-19)", 20);
+	terminal_write_uint("Granularity = ", getGranularity(sd));
+	terminal_write_uint("DefaultOperationSize = ", getDefaultOperationSize(sd));
+	terminal_write_uint("LongMode = ", getLongMode(sd));
+
+	printBinarySize(getPriviledgeDPL(sd), "DPL (bits 13-14)", 2);
+	terminal_write_uint("Present = ", getPresent(sd));
+	printBinarySize(getType(sd), "Type (bits 8-11)", 4);
+	terminal_write_uint("DescriptorTypeS = ", getDescriptorTypeS(sd));
+	terminal_write_uint("AVL = ", getAVL(sd));
+
+	terminal_writestring("\n===== End of Analize of GDT=====\n\n");
 }
 
 void kernel_main(void) {
@@ -57,17 +97,15 @@ void kernel_main(void) {
 	print_extern_address16("\nThe value of gs: ", get_gs_selector);
 
 	GDT_ROOT gdt_descriptor = get_gdt_root();
-
-	// print_hex_var(&term, (int)g16);
-	terminal_write_hex("gdt base address = ", (uint32_t)gdt_descriptor.base);
+	GDT_ENTRY* gdt = gdt_descriptor.base;
+	terminal_write_ptr("gdt base address = ", gdt_descriptor.base);
 	terminal_write_uint("gdt size limit = ", gdt_descriptor.limit);
 
-	// terminal_write_ptr("GDT16_DESCRIPTOR = ", (void*)GDT16_ROOT);
-	terminal_write_ptr("GDT16 = ", GDT16_DESCRIPTOR.base);
-
-	GDT_ENTRY* gdt = gdt_descriptor.base;
 	GDT_ENTRY* gdt16 = GDT16_DESCRIPTOR.base;
 	uint16_t limit16 = GDT16_DESCRIPTOR.limit;
+	terminal_write_ptr("GDT16_DESCRIPTOR = ", GDT16_ROOT);
+	terminal_write_ptr("GDT16 = ", GDT16_DESCRIPTOR.base);
+
 	terminal_writestring("\nThe gdtr values:\n");
 	terminal_write_hex("gdt16[0].lower = ", gdt16[0].lower);
 	terminal_write_hex("gdt16[0].higher = ", gdt16[0].higher);
@@ -77,6 +115,8 @@ void kernel_main(void) {
 	terminal_write_hex("gdt16[2].higher = ", gdt16[2].higher);
 	terminal_write_hex("gdt16[3].lower = ", gdt16[3].lower);
 	terminal_write_hex("gdt16[3].higher = ", gdt16[3].higher);
+
+	gdt_analize(gdt16, 2);
 
 	before();
 	uint16_t result = 0;

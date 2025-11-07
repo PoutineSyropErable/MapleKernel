@@ -253,6 +253,14 @@ void print_uint_var(uint32_t var) {
 	terminal_writestring(res_buff);
 }
 
+void print_uint_var_no_newline(uint32_t var) {
+
+	char res_buff[12];
+	size_t len = uitoa(var, res_buff);
+	res_buff[len] = '\0'; // replace the null terminator with newline
+	terminal_writestring(res_buff);
+}
+
 void print_something() {
 
 	char buf[12];
@@ -277,7 +285,13 @@ int* print_extern_address(char* str, int* func()) {
 void terminal_write_uint(char* str, uint32_t val) {
 
 	terminal_writestring(str);
-	print_uint_var((int)val);
+	print_uint_var(val);
+}
+
+void terminal_write_uint_no_newline(char* str, uint32_t val) {
+
+	terminal_writestring(str);
+	print_uint_var_no_newline(val);
 }
 
 void terminal_write_hex(char* str, uint32_t val) {

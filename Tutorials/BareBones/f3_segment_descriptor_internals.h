@@ -5,7 +5,7 @@
 #define SD_COUNT 5 // 2^13.
 /*in the gdtr, there's 13 bits for table index, 2 for priviledge and 1 for gdt/ldt*/
 // 8912 is 2^13
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed, aligned(4))) {
 	uint32_t lower;
 	uint32_t higher;
 } SegmentDescriptor;

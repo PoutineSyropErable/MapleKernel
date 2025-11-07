@@ -11,9 +11,8 @@ void pit_init(uint16_t divisor) {
 	outb(PIT_CH0, (divisor >> 8) & 0xFF); // High byte
 }
 
-extern inline void wait(float seconds) {
+void wait(float seconds) {
 
-	volatile unsigned long count;
 	const unsigned long loops_per_sec = 150000000UL; // tuned for ~1s per unit
 
 	// total loops = seconds * loops_per_sec

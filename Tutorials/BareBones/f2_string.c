@@ -43,5 +43,24 @@ void printBinary(uint32_t binaryNumber, char* variableName) {
 
 	terminal_writestring(variableName);
 	terminal_writestring(" = ");
+	terminal_writestring(spaceSeparatedBits);
+	terminal_writestring(" | ");
 	print_hex_var(binaryNumber);
+	terminal_writestring("\n");
+}
+
+void printBinarySize(uint32_t binaryNumber, char* variableName, size_t numberOfBits) {
+	char spacelessBitString[33];
+	getSpacelessBitString(binaryNumber, spacelessBitString);
+	char spaceSeparatedBits[40];
+	addSpacesEvery4bits(spacelessBitString, spaceSeparatedBits);
+
+	uint8_t first_index = 39 - (numberOfBits + numberOfBits / 4);
+
+	terminal_writestring(variableName);
+	terminal_writestring(" = ");
+	terminal_writestring(spaceSeparatedBits + first_index);
+	terminal_writestring(" | ");
+	print_hex_var(binaryNumber);
+	terminal_writestring("\n");
 }

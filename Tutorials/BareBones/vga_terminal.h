@@ -79,18 +79,19 @@ extern TerminalContext term;
 void print_array_terminal(int* arr, size_t n);
 
 void print_int_var(int var);
+void print_uint_var(uint32_t var);
+void print_uint_var_no_newline(uint32_t var);
 
 void print_hex_var(uint32_t var);
 
 void print_hex_ptr(void* ptr);
-
-void print_uint_var(uint32_t var);
 
 void print_something(void);
 
 int* print_extern_address(char* str, int* func(void));
 
 void terminal_write_uint(char* str, uint32_t val);
+void terminal_write_uint_no_newline(char* str, uint32_t val);
 
 void terminal_write_hex(char* str, uint32_t val);
 

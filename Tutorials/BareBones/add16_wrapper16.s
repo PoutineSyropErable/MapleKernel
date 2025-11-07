@@ -47,11 +47,11 @@ add1616_start:
 	mov ax, [args16_start +4]       ; 
 	mov bx, [args16_start +6]     ; 
 	push ax 
-	; push bx
-	; call add16
-	; mov [args16_start+8], ax
+	push bx
+	call add16
+	mov [args16_start+8], ax
 	pop ax 
-	; pop bx
+	pop bx
 
 
 	; 1024  = 0x0400 = 1.00 KB
@@ -71,6 +71,7 @@ add1616_start:
 	; 0x100000 = 1024.00 KB
 
     ; --- Switch back to protected mode ---
+	lgdt [args16_start + 12]
     mov eax, cr0
     or  eax, 1
     mov cr0, eax

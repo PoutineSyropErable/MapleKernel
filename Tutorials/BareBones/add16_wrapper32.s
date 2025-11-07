@@ -20,8 +20,8 @@ GDT16_DESCRIPTOR:
 GDT_START: 
 	dq 0x0 
 	dq 0x0
-	dq 0xFFFF0000009A0000; code 
-	dq 0xFFFF000000930000; data 
+	dq 0x00009A000000FFFF ; code 
+	dq 0x000093000000FFFF ; data
 GDT_END:
 
 section .text.add1632
@@ -44,6 +44,7 @@ call_add16:
 	mov [args16_start], esp      ; 
 	mov [args16_start +4], edi      ; 
 	mov [args16_start +8], esi      ; 
+	sgdt [args16_start + 12]
 
 
     cli
