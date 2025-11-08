@@ -10,11 +10,10 @@ extern int misc32_s1;
 extern int misc32_s2;
 
 #include "add16.h"
-#include "add16_wrapper.h"
 #include "push_var_args.h"
 
-int* get_call_add16_address(void) {
-	return (int*)&call_add16;
+int* get_to_pm16_address(void) {
+	return (int*)&to_pm16;
 }
 
 int* get_add16_address(void) {
@@ -30,7 +29,7 @@ int* get_add1616_start_address(void) {
 }
 
 int* get_add1632_start_address(void) {
-	return (int*)call_add16;
+	return (int*)to_pm16;
 }
 
 int* get_resume32_start_address(void) {

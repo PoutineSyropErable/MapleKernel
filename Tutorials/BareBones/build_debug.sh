@@ -11,12 +11,9 @@ ISO_DIR="isodir"
 mkdir -p "$BUILD_DIR" "$ISO_DIR/boot/grub"
 
 # Assemble the bootloader assembly with debug info
-nasm -f elf -g -F dwarf add16_wrapper16.s -o "$BUILD_DIR/add16_wrapper16.o"
-nasm -f elf32 -g -F dwarf add16_wrapper32.s -o "$BUILD_DIR/add16_wrapper32.o"
+nasm -f elf -g -F dwarf call_realmode_function_wrapper16.s -o "$BUILD_DIR/call_realmode_function_wrapper16.o"
+nasm -f elf32 -g -F dwarf call_realmode_function_wrapper32.s -o "$BUILD_DIR/call_realmode_function_wrapper32.o"
 nasm -f elf32 -g -F dwarf boot_intel.asm -o "$BUILD_DIR/boot.o"
-
-# ===== a raw binary that will be dd into the .bin ?
-# nasm -f bin add16_wrapper16.s -o "$BUILD_DIR/add16_wrapper16.bin"
 
 # Compile the kernel
 i686-elf-gcc -c kernel.c -o "$BUILD_DIR/kernel.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra -g
@@ -47,17 +44,13 @@ i686-elf-gcc -T linker.ld -o "$BUILD_DIR/myos.bin" -ffreestanding -O2 -nostdlib 
 	"$BUILD_DIR/f3_segment_descriptor_internals.o" \
 	"$BUILD_DIR/virtual_memory.o" \
 	"$BUILD_DIR/idt.o" \
-	"$BUILD_DIR/add16_wrapper32.o" \
-	"$BUILD_DIR/add16_wrapper16.o" \
+	"$BUILD_DIR/call_realmode_function_wrapper32.o" \
+	"$BUILD_DIR/call_realmode_function_wrapper16.o" \
 	"$BUILD_DIR/add16.o" \
 	"$BUILD_DIR/push_var_args.o" \
 	-lgcc -g
 
 printf "\n\n=======End of linking========\n\n\n"
-
-# dd if="$BUILD_DIR/add16_wrapper16.bin" \
-# 	of="$BUILD_DIR/myos.bin" \
-# 	bs=1 seek=$((0xB080)) conv=notrunc
 
 # Copy the kernel binary and GRUB configuration to the ISO directory
 cp "$BUILD_DIR/myos.bin" "$ISO_DIR/boot/myos.bin"

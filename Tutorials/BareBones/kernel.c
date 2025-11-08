@@ -1,4 +1,3 @@
-#include "add16_wrapper.h"
 #include "address_getter.c"
 #include "f2_string.h"
 #include "kernel.h"
@@ -72,7 +71,7 @@ void kernel_main(void) {
 	print_extern_address("The address of args16_start: ", get_args16_start_address);
 	print_extern_address("The address of args16_end: ", get_args16_end_address);
 
-	int* call_add16_address = print_extern_address("The address of call_add16: ", get_call_add16_address);
+	int* to_pm16_address = print_extern_address("The address of to_pm16: ", get_to_pm16_address);
 	int* protected16_address = print_extern_address("The address of protected16: ", get_protected16_address);
 	int* add1616_address = print_extern_address("The address of add1616: ", get_add1616_start_address);
 	int* add16_address = print_extern_address("The address of add16: ", get_add16_address);
@@ -124,22 +123,10 @@ void kernel_main(void) {
 	gdt_analize(gdt16, 2);
 
 	before();
-	uint16_t result = 0;
-	result = call_add16(25, 56); // This pass through 16 bit real mode. Goes to the depths of hell and come back
-	terminal_writestring("The result of add16: ");
-	print_int_var(result);
 
-	result = call_add16(42, 69);
-	terminal_writestring("The result of add16: ");
-	print_int_var(result);
-
-	print_args16_more();
-
-	// uint16_t func = 0xb010;
-	uint16_t func_cs = 0x69;
-	push_to_args16(add16, 56, 259, 4269); // argc automatically calculated
-
+	uint16_t result = call_real_mode_function(add16, 104, 201); // argc automatically calculated
 	print_args16(&args16_start);
+	terminal_write_uint("\nThe result of the real mode call is: ", result);
 
 	terminal_writestring("\n\n===== End of Kernel=====\n\n");
 

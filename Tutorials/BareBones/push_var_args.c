@@ -29,9 +29,9 @@ void* memcpy(void* dest, const void* src, size_t n) {
 struct realmode_address get_realmode_function_address(void (*func)(void));
 
 // Internal function: explicit argc
-void push_to_args16_with_count(uint32_t argc, ...) {
+uint16_t call_real_mode_function_with_argc(uint32_t argc, ...) {
 
-	bool optional = true;
+	bool optional = false;
 	if (optional) {
 		// This is done later anyway. But might as well for now
 		GDT_ROOT gdt_root = get_gdt_root();
@@ -57,6 +57,7 @@ void push_to_args16_with_count(uint32_t argc, ...) {
 	}
 
 	va_end(args);
+	return to_pm16();
 }
 
 uint32_t min(uint32_t a, uint32_t b) {

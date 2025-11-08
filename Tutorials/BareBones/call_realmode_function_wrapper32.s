@@ -1,7 +1,7 @@
 ;add16_wrapper32.s
 BITS 32
 
-global call_add16
+global to_pm16
 global resume32
 extern add1616_start
 extern protected_16
@@ -28,7 +28,7 @@ GDT_END:
 
 section .text.add1632
 
-call_add16:
+to_pm16:
 	mov eax, 0xdeadfac1
 
     ; Save 32-bit registers and flags
@@ -39,14 +39,12 @@ call_add16:
     push fs
     push gs
 
-	; rdi = arg1 
-	; rsi = arg2
 	; Save the stack pointer in the first 1mb (first 64kb in fact)
 	; So its accessible in 16 bit, and can be restored on the way back to 32 bit
 	sgdt [args16_start + GDT_ROOT_OFFSET]
 	mov [args16_start +  ESP_OFFSET], esp    ; 
-	mov [args16_start + ARG0_OFFSET], cx      ;  arg0
-	mov [args16_start + ARG1_OFFSET], dx      ;  arg1
+	; mov [args16_start + ARG0_OFFSET], cx      ;  arg0
+	; mov [args16_start + ARG1_OFFSET], dx      ;  arg1
 
 
 

@@ -42,17 +42,50 @@ add1616_start:
     mov ss, ax
     mov esp, 0x4000
     
-    ; Set up real mode stack HERE
+	;================ Copying the arguments to the stack
+	mov dx, sp                  ; save SP
 
+	mov cx, [args16_start + ARGC_OFFSET]
+	cmp cx, 0
+	je args_done
 
-	mov ax, [args16_start + ARG0_OFFSET]     ;  arg0
-	mov bx, [args16_start + ARG1_OFFSET]     ;  arg1
-	push ax 
-	push bx
-	call add16
-	mov [args16_start + RET1_OFFSET], ax      ; ret1
-	pop ax 
-	pop bx
+	mov ax, ss
+	mov es, ax
+
+	; DI points to SP
+	mov di, sp
+
+	; Move SI to last argument
+	lea si, [args16_start + FUNC_ARGS_OFFSET] ; source array
+	shl cx, 1 ; multiply by 2. So it's byte number
+
+	add si, cx ; args16_start + FUNC_ARGS_OFFSET + (argc-1)*2
+	sub si, 2  ; arg*2 -c 
+
+	sub sp, cx
+	add sp, 2
+	shr cx, 1 ; restore cx to argc
+	
+
+	; Set backward direction
+	std
+	rep movsw          ; copy argN down to arg0
+	cld                ; restore forward direction
+	
+
+args_done:
+	mov ax, [args16_start + FUNC_OFFSET]
+	call ax
+	mov [args16_start + RET1_OFFSET], ax
+	mov sp, dx          ; rest
+	; ================ Copying the arguments to the stack
+
+; rep movsw in 16 bit real mode
+; cx: Counter (Number of words to copy)
+; si: Source index (offset in ds)
+; ds: Segment of the source data
+; di: Destination index (offset in es)
+; es: Segment of the destination data
 
 
 

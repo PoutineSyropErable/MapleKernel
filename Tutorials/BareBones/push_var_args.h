@@ -59,13 +59,15 @@ void print_args16(const Args16* args);
 
 int print_args16_more(void);
 
-void push_to_args16_with_count(uint32_t argc, ...);
+uint16_t call_real_mode_function_with_argc(uint32_t argc, ...);
 
 // Macro wrapper: automatically counts number of arguments
-#define push_to_args16(...) \
-	push_to_args16_with_count(PP_NARG(__VA_ARGS__), __VA_ARGS__)
+#define call_real_mode_function(...) \
+	call_real_mode_function_with_argc(PP_NARG(__VA_ARGS__), __VA_ARGS__)
 
 struct realmode_address {
 	uint16_t func_address;
 	uint16_t func_cs;
 };
+
+extern uint16_t to_pm16();
