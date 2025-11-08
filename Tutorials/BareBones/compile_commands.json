@@ -162,12 +162,12 @@
       "-Wall",
       "-Wextra",
       "-o",
-      "build/add16.o",
-      "./add16.c"
+      "build/realmode_functions.o",
+      "./realmode_functions.c"
     ],
     "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/add16.c",
-    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/build/add16.o"
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/realmode_functions.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/build/realmode_functions.o"
   },
   {
     "arguments": [

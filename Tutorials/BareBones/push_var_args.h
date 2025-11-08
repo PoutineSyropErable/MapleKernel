@@ -47,7 +47,7 @@ typedef struct __attribute__((packed)) Args16 {
 	uint16_t func_cs;
 
 	uint16_t argc;
-	uint16_t func_args[12];
+	uint16_t func_args[13];
 
 } Args16;
 

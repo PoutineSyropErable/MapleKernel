@@ -83,7 +83,7 @@ resume32:
 
     mov esp, [args16_start + ESP_OFFSET]
 	mov ax, 0x18 
-	mov ss, ax
+	mov ss, ax ; :TODO. Put SS on the args16_start shared buffer
 
     pop gs
     pop fs
