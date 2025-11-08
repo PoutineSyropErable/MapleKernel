@@ -29,7 +29,7 @@ void* memcpy(void* dest, const void* src, size_t n) {
 struct realmode_address get_realmode_function_address(void (*func)(void));
 
 // Internal function: explicit argc
-void push_to_args16_with_count_with_custom_cs(uint32_t argc, ...) {
+void push_to_args16_with_count(uint32_t argc, ...) {
 
 	bool optional = true;
 	if (optional) {
@@ -45,12 +45,12 @@ void push_to_args16_with_count_with_custom_cs(uint32_t argc, ...) {
 	va_list args;
 	va_start(args, argc);
 
-	uint16_t func = va_arg(args, uint32_t);
-	args16_start.func = func;
-	uint16_t func_cs = va_arg(args, uint32_t);
-	args16_start.func_cs = func_cs;
+	uint32_t func = va_arg(args, uint32_t);
+	struct realmode_address rm_address = get_realmode_function_address((func_ptr_t)func);
+	args16_start.func = rm_address.func_address;
+	args16_start.func_cs = rm_address.func_cs;
 
-	args16_start.argc = argc - 2;
+	args16_start.argc = argc - 1;
 
 	for (uint32_t i = 0; i < argc; i++) {
 		args16_start.func_args[i] = va_arg(args, uint32_t); // read promoted uint32_t

@@ -137,9 +137,9 @@ void kernel_main(void) {
 
 	// uint16_t func = 0xb010;
 	uint16_t func_cs = 0x69;
-	push_to_args16(add16, func_cs, 56, 259, 4269); // argc automatically calculated
+	push_to_args16(add16, 56, 259, 4269); // argc automatically calculated
 
-	print_args16_more();
+	print_args16(&args16_start);
 
 	terminal_writestring("\n\n===== End of Kernel=====\n\n");
 

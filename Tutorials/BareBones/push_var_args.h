@@ -33,7 +33,7 @@ typedef struct __attribute__((packed, aligned(4))) {
 } GDT_ROOT;
 
 extern GDT_ROOT GDT16_DESCRIPTOR;
-typedef void (*func_ptr_t)(void);
+typedef void (*func_ptr_t)(void); // a function pointer
 
 typedef struct __attribute__((packed)) Args16 {
 	GDT_ROOT gdt_root;
@@ -59,11 +59,11 @@ void print_args16(const Args16* args);
 
 int print_args16_more(void);
 
-void push_to_args16_with_count_with_custom_cs(uint32_t argc, ...);
+void push_to_args16_with_count(uint32_t argc, ...);
 
 // Macro wrapper: automatically counts number of arguments
 #define push_to_args16(...) \
-	push_to_args16_with_count_with_custom_cs(PP_NARG(__VA_ARGS__), __VA_ARGS__)
+	push_to_args16_with_count(PP_NARG(__VA_ARGS__), __VA_ARGS__)
 
 struct realmode_address {
 	uint16_t func_address;
