@@ -11,6 +11,8 @@ extern stack16_end
 extern args16_start
 extern GDT16_DESCRIPTOR 
 
+%include "asm_constants.inc"   ; <-- include your header
+
 section .data.misc32.1
 
 GDT16_DESCRIPTOR:
@@ -41,10 +43,13 @@ call_add16:
 	; rsi = arg2
 	; Save the stack pointer in the first 1mb (first 64kb in fact)
 	; So its accessible in 16 bit, and can be restored on the way back to 32 bit
-	sgdt [args16_start]
-	mov [args16_start + 10], esp    ; 
-	mov [args16_start +24], dx      ;  arg0
-	mov [args16_start +26], cx      ;  arg1
+	sgdt [args16_start + GDT_ROOT_OFFSET]
+	mov [args16_start +  ESP_OFFSET], esp    ; 
+	mov [args16_start + ARG0_OFFSET], cx      ;  arg0
+	mov [args16_start + ARG1_OFFSET], dx      ;  arg1
+
+
+
 
 	mov esp, 0 ; in case i can't change esp in 16 bit mode later. Don't want the high bit to fuck us over
 	mov ebp, 0 ; in case i can't change esp in 16 bit mode later. Don't want the high bit to fuck us over
@@ -78,7 +83,7 @@ resume32:
     ; Restore segment registers
 
 
-    mov esp, [args16_start + 10]
+    mov esp, [args16_start + ESP_OFFSET]
 	mov ax, 0x18 
 	mov ss, ax
 
@@ -93,7 +98,7 @@ resume32:
 
 
     ; Retrieve result
-    movzx eax, word [args16_start + 14]
+    movzx eax, word [args16_start + RET1_OFFSET]
 	; mov eax, 15
 
     ret

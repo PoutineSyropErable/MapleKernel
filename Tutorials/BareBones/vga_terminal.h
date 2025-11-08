@@ -98,3 +98,5 @@ void terminal_write_hex(char* str, uint32_t val);
 void terminal_write_ptr(char* str, void* val);
 
 void print_extern_address16(char* str, uint16_t func(void));
+
+void terminal_write_uint16_array_newlines(const uint16_t* arr, char* array_name, size_t n);

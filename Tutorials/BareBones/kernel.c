@@ -4,11 +4,14 @@
 #include "kernel.h"
 #include "os_registers.c"
 #include "pit_timer.h"
+#include "push_var_args.h"
 #include "string_helper.h"
 #include "vga_terminal.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+
+GDT_ROOT* GDT16_ROOT = &GDT16_DESCRIPTOR;
 
 void gdt_analize(GDT_ENTRY* gdt, size_t index) {
 
@@ -129,6 +132,14 @@ void kernel_main(void) {
 	result = call_add16(42, 69);
 	terminal_writestring("The result of add16: ");
 	print_int_var(result);
+
+	print_args16_more();
+
+	// uint16_t func = 0xb010;
+	uint16_t func_cs = 0x69;
+	push_to_args16(add16, func_cs, 56, 259, 4269); // argc automatically calculated
+
+	print_args16_more();
 
 	terminal_writestring("\n\n===== End of Kernel=====\n\n");
 

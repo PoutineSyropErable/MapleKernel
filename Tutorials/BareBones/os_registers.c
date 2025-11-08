@@ -68,21 +68,3 @@ uint16_t get_ds_selector() {
 	);
 	return ds_value;
 }
-
-typedef SegmentDescriptor GDT_ENTRY;
-
-typedef struct __attribute__((packed)) {
-	uint16_t limit;
-	GDT_ENTRY* base;
-} GDT_ROOT;
-
-GDT_ROOT get_gdt_root(void) {
-
-	GDT_ROOT gdt_root;
-	__asm__ volatile("sgdt %0" : "=m"(gdt_root));
-
-	return gdt_root;
-}
-
-extern GDT_ROOT GDT16_DESCRIPTOR;
-GDT_ROOT* GDT16_ROOT = &GDT16_DESCRIPTOR;

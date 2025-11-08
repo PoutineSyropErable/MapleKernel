@@ -9,6 +9,9 @@ extern add16
 global add1616_start 
 global protected_16
 
+
+%include "asm_constants.inc"   ; <-- include your header
+
 section .text.add1616
 protected_16: 
 	mov ax, 0x18 
@@ -42,19 +45,19 @@ add1616_start:
     ; Set up real mode stack HERE
 
 
-	mov ax, [args16_start +24]     ;  arg0
-	mov bx, [args16_start +26]     ;  arg1
+	mov ax, [args16_start + ARG0_OFFSET]     ;  arg0
+	mov bx, [args16_start + ARG1_OFFSET]     ;  arg1
 	push ax 
 	push bx
 	call add16
-	mov [args16_start+14], ax      ; ret1
+	mov [args16_start + RET1_OFFSET], ax      ; ret1
 	pop ax 
 	pop bx
 
 
 
     ; --- Switch back to protected mode ---
-	lgdt [args16_start + 0]
+	lgdt [args16_start + GDT_ROOT_OFFSET]
     mov eax, cr0
     or  eax, 1
     mov cr0, eax

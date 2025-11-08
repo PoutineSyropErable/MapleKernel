@@ -217,6 +217,37 @@ void print_array_terminal(int* arr, size_t n) {
 	terminal_writestring("]\n"); // end bracket with newline
 }
 
+void terminal_write_uint16_array(uint16_t* arr, char* array_name, size_t n) {
+	char buf[12];
+	terminal_writestring(array_name);
+	terminal_writestring(" = ["); // start bracket
+
+	for (size_t i = 0; i < n; i++) {
+		itoa(arr[i], buf);
+		terminal_writestring(buf);
+
+		if (i != n - 1) {
+			terminal_writestring(", ");
+		}
+
+		// Insert newline every 10 elements to handle scrolling
+		if ((i + 1) % 10 == 0) {
+			terminal_writestring("\n");
+			wait(0.1);
+		}
+	}
+
+	terminal_writestring("]\n"); // end bracket with newline
+}
+
+void terminal_write_uint16_array_newlines(const uint16_t* arr, char* array_name, size_t n) {
+	for (uint32_t i = 0; i < n; i++) {
+		terminal_writestring(array_name);
+		terminal_write_uint_no_newline("[", i);
+		terminal_write_uint("] = ", arr[i]);
+	}
+}
+
 void print_int_var(int var) {
 
 	char res_buff[12];

@@ -3,7 +3,6 @@ extern int resume32_end;
 extern int protected_16;
 extern int stack16_start;
 extern int stack16_end;
-extern int args16_start;
 extern int args16_end;
 extern int add1616_start;
 
@@ -12,6 +11,7 @@ extern int misc32_s2;
 
 #include "add16.h"
 #include "add16_wrapper.h"
+#include "push_var_args.h"
 
 int* get_call_add16_address(void) {
 	return (int*)&call_add16;
