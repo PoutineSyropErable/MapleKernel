@@ -56,7 +56,7 @@ SECTIONS
     /* 16-bit wrapper + add16 function */
     .add16_function : ALIGN(16)
     {
-        KEEP(*(.text_add16))     /* add16.c */
+        KEEP(*(.text_realmode_functions))     /* add16.c */
     }
 
 
