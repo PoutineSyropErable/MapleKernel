@@ -9,8 +9,8 @@ extern int add1616_start;
 extern int misc32_s1;
 extern int misc32_s2;
 
-#include "add16.h"
 #include "push_var_args.h"
+#include "realmode_functions.h"
 
 int* get_to_pm16_address(void) {
 	return (int*)&to_pm16;

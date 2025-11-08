@@ -124,9 +124,13 @@ void kernel_main(void) {
 
 	before();
 
-	uint16_t result = call_real_mode_function(add16, 104, 201); // argc automatically calculated
+	uint16_t result = call_real_mode_function(add16_ref, 104, 201); // argc automatically calculated
 	print_args16(&args16_start);
 	terminal_write_uint("\nThe result of the real mode call is: ", result);
+
+	uint16_t result2 = call_real_mode_function(complex_operation, 104, 201, 305, 43); // argc automatically calculated
+	print_args16(&args16_start);
+	terminal_write_uint("\nThe result of the real mode call is: ", result2);
 
 	terminal_writestring("\n\n===== End of Kernel=====\n\n");
 
