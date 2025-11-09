@@ -38,6 +38,7 @@ typedef void (*func_ptr_t)(void); // a function pointer
 typedef struct __attribute__((packed)) Args16 {
 	GDT_ROOT gdt_root;
 	// uint16_t pad; // (padded due to esp wanting to)
+	uint16_t ss;
 	uint32_t esp;
 
 	uint16_t ret1;
