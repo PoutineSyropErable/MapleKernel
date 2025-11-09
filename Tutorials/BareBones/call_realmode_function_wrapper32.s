@@ -1,9 +1,8 @@
-;add16_wrapper32.s
+;call_realmode_function_wrapper32.s
 BITS 32
 
 global to_pm16
 global resume32
-extern add1616_start
 extern protected_16
 
 extern stack16_start
@@ -26,7 +25,7 @@ GDT_START:
 	dq 0x000093000000FFFF ; data
 GDT_END:
 
-section .text.add1632
+section .text.to_pm16
 
 to_pm16:
 	mov eax, 0xdeadfac1

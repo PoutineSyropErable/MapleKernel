@@ -10,7 +10,7 @@ print("Start")
 
 BIT = 16
 if BIT == 16:
-    ORIGINAL_FUNCTION = "add1616_start"
+    ORIGINAL_FUNCTION = "call_real16_function"
     CODE_START = 0xB080
 elif BIT == 32:
     ORIGINAL_FUNCTION = "resume32"

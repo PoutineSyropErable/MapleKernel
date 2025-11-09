@@ -4,7 +4,7 @@ extern int protected_16;
 extern int stack16_start;
 extern int stack16_end;
 extern int args16_end;
-extern int add1616_start;
+extern int call_real16_function;
 
 extern int misc32_s1;
 extern int misc32_s2;
@@ -24,11 +24,11 @@ int* get_protected16_address(void) {
 	return (int*)&protected_16;
 }
 
-int* get_add1616_start_address(void) {
-	return &add1616_start;
+int* get_call_real16_function_address(void) {
+	return &call_real16_function;
 }
 
-int* get_add1632_start_address(void) {
+int* get_to_pm16_start_address(void) {
 	return (int*)to_pm16;
 }
 

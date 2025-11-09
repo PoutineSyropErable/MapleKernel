@@ -39,14 +39,14 @@ SECTIONS
 
 	.to_pm16_section : ALIGN(16) 
 	{
-        /* add1632_start = .; */
-		KEEP(*(.text.add1632))   /* 32-bit wrapper code */
-		add1632_end = .;
+        /* to_pm16_start = .; */
+		KEEP(*(.text.to_pm16))   /* 32-bit wrapper code */
+		to_pm16_end = .;
 	}
 
 	.add16_wrapper : ALIGN(16)
 	{
-        /* add1616_start = .; */
+        /* call_real16_function = .; */
 		KEEP(*(.text.add1616))   /* 32-bit wrapper code */
 		add1616_end = .;
 	}

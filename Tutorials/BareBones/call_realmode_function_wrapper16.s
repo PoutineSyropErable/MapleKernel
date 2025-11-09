@@ -6,7 +6,7 @@ extern args16_start
 extern stack16_start
 extern add16
 
-global add1616_start 
+global call_real16_function 
 global protected_16
 
 
@@ -26,9 +26,9 @@ protected_16:
     and eax, 0xFFFFFFFE
     mov cr0, eax
     ; Far jump to 16-bit wrapper
-	jmp far 00:add1616_start
+	jmp far 00:call_real16_function
 
-add1616_start:
+call_real16_function:
 	; setup 16 bit data segment
 	mov ax, 0
     mov ds, ax

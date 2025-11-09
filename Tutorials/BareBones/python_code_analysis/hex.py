@@ -23,13 +23,13 @@ stack_end = stack_start + stack_size
 args16_start = stack_end + 16
 args16_end = args16_start + 16
 
-add1616_start = args16_end + 16
+call_real16_function = args16_end + 16
 
 
 simple2(stack_start, stack_end, "stack16")
 simple2(args16_start, args16_end, "args16")
 
-simple2(add1616_start, add1616_start + 2048, "add1616_start")
+simple2(call_real16_function, call_real16_function + 2048, "call_real16_function")
 # 2048 is a random size
 
 print("\n")
@@ -40,5 +40,5 @@ simple(1024 * 16, "1024*16")
 # :MEMORY_LOCATION, memory location, memoryLocation.
 # stack16         | 0x7000     - 0xafff     | 28.00 KB - 44.00 KB | 28672 - 45055
 # args16          | 0xb000     - 0xb00f     | 44.00 KB - 44.01 KB | 45056 - 45071
-# add1616_start   |      0xb010             |        44.02 KB     | 45072-?
+# call_real16_function   |      0xb010             |        44.02 KB     | 45072-?
 # That's the correct address. Nice!
