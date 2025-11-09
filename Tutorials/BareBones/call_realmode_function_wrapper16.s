@@ -12,7 +12,7 @@ global pm16_to_real16
 
 %include "asm_constants.inc"   ; <-- include your header
 
-section .text.pm16_to_real16
+section .text.pm16_and_real16_wrappers
 pm16_to_real16: 
 	mov ax, 0x18 
 	mov ds, ax 
@@ -95,12 +95,6 @@ args_done:
     or  eax, 1
     mov cr0, eax
     jmp far 0x10:resume32
-
-halt_loop3:
-; This should never be reached
-    hlt
-    jmp halt_loop3
-
 
 
 

@@ -47,7 +47,7 @@ SECTIONS
 	.add16_wrapper : ALIGN(16)
 	{
         /* call_real16_function = .; */
-		KEEP(*(.text.pm16_to_real16))   /* 32-bit wrapper code */
+		KEEP(*(.text.pm16_and_real16_wrappers))   /* 32-bit wrapper code */
 		pm16_to_real16_end = .;
 	}
 
