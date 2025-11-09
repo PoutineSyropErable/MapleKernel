@@ -17,7 +17,7 @@ ISO_DIR   := isodir
 # Sources
 C32_SOURCES := kernel.c virtual_memory.c idt.c string_helper.c vga_terminal.c pit_timer.c \
                f1_binary_operation.c f2_string.c f3_segment_descriptor_internals.c \
-               push_var_args.c
+               call_real16_wrapper.c
 
 C16_SOURCES := realmode_functions.c
 

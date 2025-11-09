@@ -47,10 +47,10 @@ i686-elf-gcc -c "$OTHER/idt.c" -o "$BUILD_DIR/idt.o" -std=gnu99 -ffreestanding -
 
 # Compile the print functions.
 i686-elf-gcc -c "$STDIO/string_helper.c" -o "$BUILD_DIR/string_helper.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-i686-elf-gcc -c "$STDIO/vga_terminal.c" -o "$BUILD_DIR/vga_terminal.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra "${SUPER_INCLUDE[@]}"
+i686-elf-gcc -c "$STDIO/vga_terminal.c" -o "$BUILD_DIR/vga_terminal.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra "-I$STDIO" "-I$OTHER"
 
 # Compile the real mode 16 code and it's wrappers
-i686-elf-gcc -c "$REAL16_WRAPPERS/push_var_args.c" -o "$BUILD_DIR/push_var_args.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra "${SUPER_INCLUDE[@]}"
+i686-elf-gcc -c "$REAL16_WRAPPERS/call_real16_wrapper.c" -o "$BUILD_DIR/call_real16_wrapper.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra "-I$STDIO" "-I$GDT_INSPECTION"
 nasm -f elf "$REAL16_WRAPPERS/call_realmode_function_wrapper16.asm" -o "$BUILD_DIR/call_realmode_function_wrapper16.o" "-I$REAL16_WRAPPERS"
 nasm -f elf32 "$REAL16_WRAPPERS/call_realmode_function_wrapper32.asm" -o "$BUILD_DIR/call_realmode_function_wrapper32.o" "-I$REAL16_WRAPPERS"
 ia16-elf-gcc -c "$REAL_FUNC/realmode_functions.c" -o "$BUILD_DIR/realmode_functions.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
@@ -75,7 +75,7 @@ i686-elf-gcc -T linker.ld -o "$BUILD_DIR/myos.bin" -ffreestanding -O2 -nostdlib 
 	"$BUILD_DIR/call_realmode_function_wrapper32.o" \
 	"$BUILD_DIR/call_realmode_function_wrapper16.o" \
 	"$BUILD_DIR/realmode_functions.o" \
-	"$BUILD_DIR/push_var_args.o" \
+	"$BUILD_DIR/call_real16_wrapper.o" \
 	-lgcc
 
 printf "\n\n====== End of Linking =====\n\n"

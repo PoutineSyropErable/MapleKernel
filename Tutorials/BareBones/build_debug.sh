@@ -29,7 +29,7 @@ i686-elf-gcc -c f2_string.c -o "$BUILD_DIR/f2_string.o" -std=gnu99 -ffreestandin
 i686-elf-gcc -c f3_segment_descriptor_internals.c -o "$BUILD_DIR/f3_segment_descriptor_internals.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra -g
 
 ia16-elf-gcc -c ./realmode_functions.c -o "$BUILD_DIR/realmode_functions.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra -g
-i686-elf-gcc -c ./push_var_args.c -o "$BUILD_DIR/push_var_args.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra -g
+i686-elf-gcc -c ./call_real16_wrapper.c -o "$BUILD_DIR/call_real16_wrapper.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra -g
 
 printf "\n\n=======Start of linking========\n\n\n"
 
@@ -47,7 +47,7 @@ i686-elf-gcc -T linker.ld -o "$BUILD_DIR/myos.bin" -ffreestanding -O2 -nostdlib 
 	"$BUILD_DIR/call_realmode_function_wrapper32.o" \
 	"$BUILD_DIR/call_realmode_function_wrapper16.o" \
 	"$BUILD_DIR/realmode_functions.o" \
-	"$BUILD_DIR/push_var_args.o" \
+	"$BUILD_DIR/call_real16_wrapper.o" \
 	-lgcc -g
 
 printf "\n\n=======End of linking========\n\n\n"

@@ -3,7 +3,7 @@
 #include "kernel.h"
 #include "os_registers.c"
 #include "pit_timer.h"
-#include "push_var_args.h"
+#include "call_real16_wrapper.h"
 #include "string_helper.h"
 #include "vga_terminal.h"
 #include <stdbool.h>

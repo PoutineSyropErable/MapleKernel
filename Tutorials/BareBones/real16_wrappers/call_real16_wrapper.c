@@ -1,5 +1,5 @@
 #include "f2_string.h"
-#include "push_var_args.h"
+#include "call_real16_wrapper.h"
 #include "vga_terminal.h"
 #include <stdarg.h>
 #include <stdbool.h>
@@ -26,39 +26,7 @@ void* memcpy(void* dest, const void* src, size_t n) {
 	return dest; // mimic standard memcpy return value
 }
 
-struct realmode_address get_realmode_function_address(void (*func)(void));
-
-// Internal function: explicit argc
-uint16_t call_real_mode_function_with_argc(uint32_t argc, ...) {
-
-	bool optional = false;
-	if (optional) {
-		// This is done later anyway. But might as well for now
-		GDT_ROOT gdt_root = get_gdt_root();
-		args16_start.gdt_root = gdt_root;
-
-		uint32_t esp_value;
-		__asm__ volatile("mov %%esp, %0" : "=r"(esp_value));
-		args16_start.esp = esp_value;
-	}
-
-	va_list args;
-	va_start(args, argc);
-
-	uint32_t func = va_arg(args, uint32_t);
-	struct realmode_address rm_address = get_realmode_function_address((func_ptr_t)func);
-	args16_start.func = rm_address.func_address;
-	args16_start.func_cs = rm_address.func_cs;
-
-	args16_start.argc = argc - 1;
-
-	for (uint32_t i = 0; i < argc; i++) {
-		args16_start.func_args[i] = va_arg(args, uint32_t); // read promoted uint32_t
-	}
-
-	va_end(args);
-	return pm32_to_pm16();
-}
+// =============== Start of mics
 
 uint32_t min(uint32_t a, uint32_t b) {
 	if (a < b) {
@@ -131,4 +99,38 @@ struct realmode_address get_realmode_function_address(void (*func)(void)) {
 
 	struct realmode_address rm = {.func_address = func_address, .func_cs = cs};
 	return rm;
+}
+
+// ==============================  End of misc
+
+// Internal function: explicit argc
+uint16_t call_real_mode_function_with_argc(uint32_t argc, ...) {
+
+	bool optional = false;
+	if (optional) {
+		// This is done later anyway. But might as well for now
+		GDT_ROOT gdt_root = get_gdt_root();
+		args16_start.gdt_root = gdt_root;
+
+		uint32_t esp_value;
+		__asm__ volatile("mov %%esp, %0" : "=r"(esp_value));
+		args16_start.esp = esp_value;
+	}
+
+	va_list args;
+	va_start(args, argc);
+
+	uint32_t func = va_arg(args, uint32_t);
+	struct realmode_address rm_address = get_realmode_function_address((func_ptr_t)func);
+	args16_start.func = rm_address.func_address;
+	args16_start.func_cs = rm_address.func_cs;
+
+	args16_start.argc = argc - 1;
+
+	for (uint32_t i = 0; i < argc; i++) {
+		args16_start.func_args[i] = va_arg(args, uint32_t); // read promoted uint32_t
+	}
+
+	va_end(args);
+	return pm32_to_pm16();
 }

@@ -9,7 +9,7 @@ extern int call_real16_function;
 extern int misc32_s1;
 extern int misc32_s2;
 
-#include "push_var_args.h"
+#include "call_real16_wrapper.h"
 #include "realmode_functions.h"
 
 int* get_call_realmode_func_with_args_address() {
