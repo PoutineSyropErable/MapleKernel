@@ -61,7 +61,7 @@ int* get_stack16_end_address(void) {
 }
 
 int* get_args16_start_address(void) {
-	return &args16_start;
+	return (int*)&args16_start;
 }
 int* get_args16_end_address(void) {
 	return &args16_end;

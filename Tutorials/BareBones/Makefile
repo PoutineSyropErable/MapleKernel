@@ -38,7 +38,8 @@ KERNEL_BIN := $(BUILD_DIR)/myos.bin
 ISO_IMAGE  := $(BUILD_DIR)/myos.iso
 
 # Compiler flags
-CFLAGS := -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+CFLAGS := -std=gnu23 -ffreestanding -O2 -Wall -Wextra
+CFLAGS16 := -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 LDFLAGS := -ffreestanding -O2 -nostdlib -lgcc
 
 # Default target
@@ -54,7 +55,7 @@ $(BUILD_DIR)/%.o: %.c | dirs
 
 # Compile 16-bit C files
 $(BUILD_DIR)/%.o: %.c | dirs
-	$(CC16) -c $< -o $@ $(CFLAGS)
+	$(CC16) -c $< -o $@ $(CFLAGS16)
 
 # Assemble 32-bit ASM
 $(BUILD_DIR)/%.o: %.asm | dirs
