@@ -9,25 +9,36 @@ ISO_DIR="isodir"
 # Create necessary directories
 mkdir -p "$BUILD_DIR" "$ISO_DIR/boot/grub"
 
+# The variable for the dirs:
+KERNEL="kernel"
+REAL16_WRAPPERS="./real16_wrappers"
+REAL_FUNC="realmode_functions"
+GDT_INSPECTION="./gdt_inspection"
+STDIO="stdio"
+OTHER="other"
+
 # Assemble the bootloader assembly
-nasm -f elf32 boot_intel.asm -o "$BUILD_DIR/boot.o"
-nasm -f elf call_realmode_function_wrapper16.asm -o "$BUILD_DIR/call_realmode_function_wrapper16.o"
-nasm -f elf32 call_realmode_function_wrapper32.asm -o "$BUILD_DIR/call_realmode_function_wrapper32.o"
+nasm -f elf32 "$KERNEL/boot_intel.asm" -o "$BUILD_DIR/boot.o"
+i686-elf-gcc -c "$KERNEL/kernel.c" -o "$BUILD_DIR/kernel.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
-# Compile the kernel
-i686-elf-gcc -c kernel.c -o "$BUILD_DIR/kernel.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-i686-elf-gcc -c virtual_memory.c -o "$BUILD_DIR/virtual_memory.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-i686-elf-gcc -c idt.c -o "$BUILD_DIR/idt.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-i686-elf-gcc -c string_helper.c -o "$BUILD_DIR/string_helper.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-i686-elf-gcc -c vga_terminal.c -o "$BUILD_DIR/vga_terminal.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-i686-elf-gcc -c pit_timer.c -o "$BUILD_DIR/pit_timer.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+# Compile the CPU functionality activation part
+i686-elf-gcc -c "$OTHER/virtual_memory.c" -o "$BUILD_DIR/virtual_memory.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+i686-elf-gcc -c "$OTHER/pit_timer.c" -o "$BUILD_DIR/pit_timer.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+i686-elf-gcc -c "$OTHER/idt.c" -o "$BUILD_DIR/idt.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
-i686-elf-gcc -c f1_binary_operation.c -o "$BUILD_DIR/f1_binary_operation.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-i686-elf-gcc -c f2_string.c -o "$BUILD_DIR/f2_string.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-i686-elf-gcc -c f3_segment_descriptor_internals.c -o "$BUILD_DIR/f3_segment_descriptor_internals.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+# Compile the print functions.
+i686-elf-gcc -c "$STDIO/string_helper.c" -o "$BUILD_DIR/string_helper.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+i686-elf-gcc -c "$STDIO/vga_terminal.c" -o "$BUILD_DIR/vga_terminal.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
-ia16-elf-gcc -c ./realmode_functions.c -o "$BUILD_DIR/realmode_functions.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-i686-elf-gcc -c ./push_var_args.c -o "$BUILD_DIR/push_var_args.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+# Compile the real mode 16 code and it's wrappers
+i686-elf-gcc -c "$REAL16_WRAPPERS/push_var_args.c" -o "$BUILD_DIR/push_var_args.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+nasm -f elf "$REAL16_WRAPPERS/call_realmode_function_wrapper16.asm" -o "$BUILD_DIR/call_realmode_function_wrapper16.o"
+nasm -f elf32 "$REAL16_WRAPPERS/realmode_functions/call_realmode_function_wrapper32.asm" -o "$BUILD_DIR/call_realmode_function_wrapper32.o"
+ia16-elf-gcc -c "$REAL_FUNC/realmode_functions.c" -o "$BUILD_DIR/realmode_functions.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+
+i686-elf-gcc -c "$GDT_INSPECTION/f1_binary_operation.c" -o "$BUILD_DIR/f1_binary_operation.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+i686-elf-gcc -c "$GDT_INSPECTION/f2_string.c" -o "$BUILD_DIR/f2_string.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+i686-elf-gcc -c "$GDT_INSPECTION/f3_segment_descriptor_internals.c" -o "$BUILD_DIR/f3_segment_descriptor_internals.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
 # Link the kernel and generate the final binary
 printf "\n\n====== Start of Linking =====\n\n"
@@ -60,7 +71,7 @@ fi
 
 # Copy the kernel binary and GRUB configuration to the ISO directory
 cp "$BUILD_DIR/myos.bin" "$ISO_DIR/boot/myos.bin"
-cp grub.cfg "$ISO_DIR/boot/grub/grub.cfg"
+cp "$ISO_DIR/grub.cfg" "$ISO_DIR/boot/grub/grub.cfg"
 
 # Create the ISO image
 grub-mkrescue -o "$BUILD_DIR/myos.iso" "$ISO_DIR"
