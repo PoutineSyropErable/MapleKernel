@@ -97,7 +97,7 @@ resume32:
 
     ; Retrieve result
     movzx eax, word [args16_start + RET1_OFFSET]
-	; mov eax, 15
+    ; movzx edx, word [args16_start + RET2_OFFSET]
 
     ret
 
