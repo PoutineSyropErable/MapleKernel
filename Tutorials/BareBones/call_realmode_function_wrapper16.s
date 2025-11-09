@@ -7,13 +7,13 @@ extern stack16_start
 extern add16
 
 global call_real16_function 
-global protected_16
+global pm16_to_real16
 
 
 %include "asm_constants.inc"   ; <-- include your header
 
-section .text.add1616
-protected_16: 
+section .text.pm16_to_real16
+pm16_to_real16: 
 	mov ax, 0x18 
 	mov ds, ax 
 	mov es, ax 

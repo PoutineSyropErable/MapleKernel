@@ -51,6 +51,42 @@ void gdt_analize(GDT_ENTRY* gdt, size_t index) {
 	terminal_writestring("\n===== End of Analize of GDT=====\n\n");
 }
 
+struct CodeAddressesToAnalyse {
+	int* pm32_to_pm16_address;
+	int* pm16_to_real16_address;
+	int* call_real16_function_address;
+	int* add16_address;
+	int* resume32_address;
+	int* resume32_end_address;
+};
+
+void analyse_code(struct CodeAddressesToAnalyse code) {
+
+	terminal_writestring("\n");
+	terminal_writestring("The value of code at pm16_to_real16_address: \n");
+	for (int i = 0; i < 50; i++) {
+		print_hex_var(code.pm32_to_pm16_address[i]);
+	}
+
+	terminal_writestring("\n");
+	terminal_writestring("The value of code at pm16_to_real16_address: \n");
+	for (int i = 0; i < 50; i++) {
+		print_hex_var(code.pm16_to_real16_address[i]);
+	}
+
+	terminal_writestring("\n");
+	terminal_writestring("The value of the code at call_real16_function_address: \n");
+	for (int i = 0; i < 50; i++) {
+		print_hex_var(code.call_real16_function_address[i]);
+	}
+
+	terminal_writestring("\n");
+	terminal_writestring("The value of the code at 0xB0A8: \n");
+	for (int i = 0; i < 50; i++) {
+		print_hex_var(code.resume32_address[i]);
+	}
+}
+
 void before() {
 	terminal_writestring("Before the main execution\n");
 }
@@ -71,9 +107,10 @@ void kernel_main(void) {
 	print_extern_address("The address of args16_start: ", get_args16_start_address);
 	print_extern_address("The address of args16_end: ", get_args16_end_address);
 
-	int* to_pm16_address = print_extern_address("The address of to_pm16: ", get_to_pm16_address);
-	int* protected16_address = print_extern_address("The address of protected16: ", get_protected16_address);
-	int* add1616_address = print_extern_address("The address of add1616: ", get_call_real16_function_address);
+	print_extern_address("The address of the nice wrapper (>2MB): ", get_call_realmode_func_with_args_address);
+	int* pm32_to_pm16_address = print_extern_address("The address of pm32_to_pm16: ", get_pm32_to_pm16_address);
+	int* pm16_to_real16_address = print_extern_address("The address of pm16_to_real16: ", get_pm16_to_real16_address);
+	int* call_real16_function_address = print_extern_address("The address of call_real16_function_address: ", get_call_real16_function_address);
 	int* add16_address = print_extern_address("The address of add16: ", get_add16_address);
 	int* resume32_address = print_extern_address("The address of resume32: ", get_resume32_start_address);
 	int* resume32_end_address = print_extern_address("The address of resume32_end: ", get_resume32_end_address);
@@ -84,7 +121,7 @@ void kernel_main(void) {
 	// terminal_writestring(&term, "\n");
 	// terminal_writestring(&term, "The value of the code at 0xb040: \n");
 	// for (int i = 0; i < 50; i++) {
-	// 	print_hex_var(&term, add1616_address[i]);
+	// 	print_hex_var(&term, pm16_to_real16_address[i]);
 	// }
 	//
 	// terminal_writestring(&term, "\n");

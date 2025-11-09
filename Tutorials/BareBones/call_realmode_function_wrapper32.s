@@ -1,9 +1,9 @@
 ;call_realmode_function_wrapper32.s
 BITS 32
 
-global to_pm16
+global pm32_to_pm16
 global resume32
-extern protected_16
+extern pm16_to_real16
 
 extern stack16_start
 extern stack16_end
@@ -25,9 +25,9 @@ GDT_START:
 	dq 0x000093000000FFFF ; data
 GDT_END:
 
-section .text.to_pm16
+section .text.pm32_to_pm16
 
-to_pm16:
+pm32_to_pm16:
 	mov eax, 0xdeadfac1
 
     ; Save 32-bit registers and flags
@@ -55,7 +55,7 @@ to_pm16:
     cli
 
 	lgdt [GDT16_DESCRIPTOR]
-	jmp far 0x10:protected_16
+	jmp far 0x10:pm16_to_real16
 
 
 

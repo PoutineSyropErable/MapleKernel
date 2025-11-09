@@ -70,4 +70,4 @@ struct realmode_address {
 	uint16_t func_cs;
 };
 
-extern uint16_t to_pm16();
+extern uint16_t pm32_to_pm16();

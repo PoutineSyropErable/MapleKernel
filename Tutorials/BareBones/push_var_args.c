@@ -57,7 +57,7 @@ uint16_t call_real_mode_function_with_argc(uint32_t argc, ...) {
 	}
 
 	va_end(args);
-	return to_pm16();
+	return pm32_to_pm16();
 }
 
 uint32_t min(uint32_t a, uint32_t b) {

@@ -37,18 +37,18 @@ SECTIONS
 
 	. += 16;
 
-	.to_pm16_section : ALIGN(16) 
+	.pm32_to_pm16_section : ALIGN(16) 
 	{
-        /* to_pm16_start = .; */
-		KEEP(*(.text.to_pm16))   /* 32-bit wrapper code */
-		to_pm16_end = .;
+        /* pm32_to_pm16_start = .; */
+		KEEP(*(.text.pm32_to_pm16))   /* 32-bit wrapper code */
+		pm32_to_pm16_end = .;
 	}
 
 	.add16_wrapper : ALIGN(16)
 	{
         /* call_real16_function = .; */
-		KEEP(*(.text.add1616))   /* 32-bit wrapper code */
-		add1616_end = .;
+		KEEP(*(.text.pm16_to_real16))   /* 32-bit wrapper code */
+		pm16_to_real16_end = .;
 	}
 
 	
