@@ -16,10 +16,29 @@ REAL_FUNC="realmode_functions"
 GDT_INSPECTION="./gdt_inspection"
 STDIO="stdio"
 OTHER="other"
+CODE_ANALYSIS="./runtime_code_analysis"
+
+INCLUDE_DIRS=(
+	"$KERNEL"
+	"$REAL16_WRAPPERS"
+	"$REAL_FUNC"
+	"$GDT_INSPECTION"
+	"$STDIO"
+	"$OTHER"
+	"$CODE_ANALYSIS"
+)
+
+# Build SUPER_INCLUDE as an array of -I arguments
+SUPER_INCLUDE=()
+for dir in "${INCLUDE_DIRS[@]}"; do
+	SUPER_INCLUDE+=("-I$dir")
+done
+
+SUPER_INCLUDE="-I$KERNEL -I$REAL16_WRAPPERS -I$REAL_FUNC -I$GDT_INSPECTION -I$STDIO -I$OTHER -I$CODE_ANALYSIS"
 
 # Assemble the bootloader assembly
 nasm -f elf32 "$KERNEL/boot_intel.asm" -o "$BUILD_DIR/boot.o"
-i686-elf-gcc -c "$KERNEL/kernel.c" -o "$BUILD_DIR/kernel.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+i686-elf-gcc -c "$KERNEL/kernel.c" -o "$BUILD_DIR/kernel.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra "${SUPER_INCLUDE[@]}"
 
 # Compile the CPU functionality activation part
 i686-elf-gcc -c "$OTHER/virtual_memory.c" -o "$BUILD_DIR/virtual_memory.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
@@ -28,17 +47,17 @@ i686-elf-gcc -c "$OTHER/idt.c" -o "$BUILD_DIR/idt.o" -std=gnu99 -ffreestanding -
 
 # Compile the print functions.
 i686-elf-gcc -c "$STDIO/string_helper.c" -o "$BUILD_DIR/string_helper.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-i686-elf-gcc -c "$STDIO/vga_terminal.c" -o "$BUILD_DIR/vga_terminal.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+i686-elf-gcc -c "$STDIO/vga_terminal.c" -o "$BUILD_DIR/vga_terminal.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra "${SUPER_INCLUDE[@]}"
 
 # Compile the real mode 16 code and it's wrappers
-i686-elf-gcc -c "$REAL16_WRAPPERS/push_var_args.c" -o "$BUILD_DIR/push_var_args.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-nasm -f elf "$REAL16_WRAPPERS/call_realmode_function_wrapper16.asm" -o "$BUILD_DIR/call_realmode_function_wrapper16.o"
-nasm -f elf32 "$REAL16_WRAPPERS/realmode_functions/call_realmode_function_wrapper32.asm" -o "$BUILD_DIR/call_realmode_function_wrapper32.o"
+i686-elf-gcc -c "$REAL16_WRAPPERS/push_var_args.c" -o "$BUILD_DIR/push_var_args.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra "${SUPER_INCLUDE[@]}"
+nasm -f elf "$REAL16_WRAPPERS/call_realmode_function_wrapper16.asm" -o "$BUILD_DIR/call_realmode_function_wrapper16.o" "-I$REAL16_WRAPPERS"
+nasm -f elf32 "$REAL16_WRAPPERS/call_realmode_function_wrapper32.asm" -o "$BUILD_DIR/call_realmode_function_wrapper32.o" "-I$REAL16_WRAPPERS"
 ia16-elf-gcc -c "$REAL_FUNC/realmode_functions.c" -o "$BUILD_DIR/realmode_functions.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
-i686-elf-gcc -c "$GDT_INSPECTION/f1_binary_operation.c" -o "$BUILD_DIR/f1_binary_operation.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-i686-elf-gcc -c "$GDT_INSPECTION/f2_string.c" -o "$BUILD_DIR/f2_string.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-i686-elf-gcc -c "$GDT_INSPECTION/f3_segment_descriptor_internals.c" -o "$BUILD_DIR/f3_segment_descriptor_internals.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+i686-elf-gcc -c "$GDT_INSPECTION/f1_binary_operation.c" -o "$BUILD_DIR/f1_binary_operation.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra "-I$STDIO" "-I$GDT_INSPECTION"
+i686-elf-gcc -c "$GDT_INSPECTION/f2_string.c" -o "$BUILD_DIR/f2_string.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra "-I$STDIO" "-I$GDT_INSPECTION"
+i686-elf-gcc -c "$GDT_INSPECTION/f3_segment_descriptor_internals.c" -o "$BUILD_DIR/f3_segment_descriptor_internals.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra "-I$STDIO" "-I$GDT_INSPECTION"
 
 # Link the kernel and generate the final binary
 printf "\n\n====== Start of Linking =====\n\n"
