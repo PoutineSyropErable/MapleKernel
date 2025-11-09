@@ -42,8 +42,8 @@ pm32_to_pm16:
 	; So its accessible in 16 bit, and can be restored on the way back to 32 bit
 	sgdt [args16_start + GDT_ROOT_OFFSET]
 	mov [args16_start +  ESP_OFFSET], esp    ; 
-	; mov [args16_start + ARG0_OFFSET], cx      ;  arg0
-	; mov [args16_start + ARG1_OFFSET], dx      ;  arg1
+	; mov ax, ss
+	; mov [args16_start +  SS_OFFSET], ax    ; 
 
 
 
@@ -81,8 +81,10 @@ resume32:
 
 
     mov esp, [args16_start + ESP_OFFSET]
-	mov ax, 0x18 
-	mov ss, ax ; :TODO. Put SS on the args16_start shared buffer
+	; mov ax,  [args16_start + SS_OFFSET]
+	; mov ss, ax 
+	mov ax, 0x18
+	mov ss, ax
 
     pop gs
     pop fs
