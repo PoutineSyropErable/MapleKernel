@@ -11,8 +11,8 @@ mkdir -p "$BUILD_DIR" "$ISO_DIR/boot/grub"
 
 # Assemble the bootloader assembly
 nasm -f elf32 boot_intel.asm -o "$BUILD_DIR/boot.o"
-nasm -f elf call_realmode_function_wrapper16.s -o "$BUILD_DIR/call_realmode_function_wrapper16.o"
-nasm -f elf32 call_realmode_function_wrapper32.s -o "$BUILD_DIR/call_realmode_function_wrapper32.o"
+nasm -f elf call_realmode_function_wrapper16.asm -o "$BUILD_DIR/call_realmode_function_wrapper16.o"
+nasm -f elf32 call_realmode_function_wrapper32.asm -o "$BUILD_DIR/call_realmode_function_wrapper32.o"
 
 # Compile the kernel
 i686-elf-gcc -c kernel.c -o "$BUILD_DIR/kernel.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
