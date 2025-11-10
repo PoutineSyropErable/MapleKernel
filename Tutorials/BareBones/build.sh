@@ -143,7 +143,7 @@ echo "ISO created successfully: $BUILD_DIR/myos.iso"
 # ===== Pick one of those two
 # -kernel "$BUILD_DIR/myos.bin" \
 # -cdrom "$BUILD_DIR/myos.iso" \
-qemu-system-i386 \
+qemu-system-x86_64 \
 	-cdrom "$BUILD_DIR/myos.iso" \
 	-no-reboot \
 	"${QEMU_DBG_FLAGS[@]}" \
