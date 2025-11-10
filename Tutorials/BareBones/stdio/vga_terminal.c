@@ -22,7 +22,7 @@ static inline color_char vga_entry(unsigned char uc, color_bg_fg color) {
 	return (uint16_t)color << 8 | (uint16_t)uc;
 }
 
-color_char terminal_big_scrollable_buffer[VGA_WIDTH * VGA_MEM_HEIGHT];
+// color_char terminal_big_scrollable_buffer[VGA_WIDTH * VGA_MEM_HEIGHT];
 
 TerminalContext term = {0};
 
@@ -52,14 +52,13 @@ void initialize_terminal() {
 
 	clear_visible_terminal();
 
-	terminal->big_scrollable_buffer = terminal_big_scrollable_buffer;
 	terminal->scroll_row = 0;
 	for (size_t y = 0; y < VGA_MEM_HEIGHT; y++) {
 		for (size_t x = 0; x < VGA_WIDTH; x++) {
 			const size_t index = y * VGA_WIDTH + x;
 			// 1 2 3 4
 			// 5 6 7 8 ---- y *4 + x
-			terminal->big_scrollable_buffer[index] =
+			terminal->big_scrollable_buffer[y][x] =
 			    vga_entry(' ', terminal->color);
 		}
 	}
@@ -75,7 +74,11 @@ void terminal_update_vga_mem() {
 			const size_t index = y * VGA_WIDTH + x;
 			// 1 2 3 4
 			// 5 6 7 8 ---- y *4 + x
-			terminal->vga_buffer[index] = terminal->big_scrollable_buffer[index + offset];
+			// y goes down
+			// terminal->vga_buffer[index] = terminal->big_scrollable_buffer[index + offset];
+			terminal->vga_buffer[index] = terminal->big_scrollable_buffer[y + term.scroll_row][x];
+			// (y0)*VGA_WIDTH + x0 + (sr*VGA_WIDTH)
+			// (y0 + sr)*VGA_WIDTH + x0
 		}
 	}
 }
@@ -109,14 +112,14 @@ pos_y: The row number,  Down v
 */
 void terminal_putentryat(char c, color_bg_fg color, size_t pos_x, size_t pos_y) {
 	const size_t index = pos_y * VGA_WIDTH + pos_x;
-	term.big_scrollable_buffer[index] = vga_entry(c, color);
+	term.big_scrollable_buffer[pos_y][pos_x] = vga_entry(c, color);
 
 	// test if the entry is currently visible.
 	if (pos_y - term.scroll_row >= VGA_HEIGHT) {
 		return;
 	}
 	size_t offset = term.scroll_row * VGA_WIDTH;
-	term.vga_buffer[index - offset] = term.big_scrollable_buffer[index];
+	term.vga_buffer[index - offset] = term.big_scrollable_buffer[pos_y - term.scroll_row][pos_x];
 }
 
 inline void terminal_increase_row() {
