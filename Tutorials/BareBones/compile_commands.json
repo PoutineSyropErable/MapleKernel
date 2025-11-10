@@ -2,19 +2,20 @@
   {
     "arguments": [
       "/usr/local/bin/i686-elf-gcc",
-      "-c",
-      "-std=gnu99",
+      "-std=gnu23",
       "-ffreestanding",
-      "-O2",
       "-Wall",
       "-Wextra",
-      "-Ikernel -I./real16_wrappers -Irealmode_functions -I./gdt_inspection -Istdio -Iother -I./runtime_code_analysis",
-      "-I./real16_wrappers",
+      "-O0",
+      "-Ikernel",
+      "-Ireal16_wrappers",
       "-Irealmode_functions",
-      "-I./gdt_inspection",
+      "-Igdt_inspection",
       "-Istdio",
+      "-Istdlib",
       "-Iother",
-      "-I./runtime_code_analysis",
+      "-Iruntime_code_analysis",
+      "-c",
       "-o",
       "build/kernel.o",
       "kernel/kernel.c"
@@ -26,12 +27,12 @@
   {
     "arguments": [
       "/usr/local/bin/i686-elf-gcc",
-      "-c",
-      "-std=gnu99",
+      "-std=gnu23",
       "-ffreestanding",
-      "-O2",
       "-Wall",
       "-Wextra",
+      "-O0",
+      "-c",
       "-o",
       "build/virtual_memory.o",
       "other/virtual_memory.c"
@@ -43,12 +44,12 @@
   {
     "arguments": [
       "/usr/local/bin/i686-elf-gcc",
-      "-c",
-      "-std=gnu99",
+      "-std=gnu23",
       "-ffreestanding",
-      "-O2",
       "-Wall",
       "-Wextra",
+      "-O0",
+      "-c",
       "-o",
       "build/pit_timer.o",
       "other/pit_timer.c"
@@ -60,12 +61,12 @@
   {
     "arguments": [
       "/usr/local/bin/i686-elf-gcc",
-      "-c",
-      "-std=gnu99",
+      "-std=gnu23",
       "-ffreestanding",
-      "-O2",
       "-Wall",
       "-Wextra",
+      "-O0",
+      "-c",
       "-o",
       "build/idt.o",
       "other/idt.c"
@@ -77,12 +78,12 @@
   {
     "arguments": [
       "/usr/local/bin/i686-elf-gcc",
-      "-c",
-      "-std=gnu99",
+      "-std=gnu23",
       "-ffreestanding",
-      "-O2",
       "-Wall",
       "-Wextra",
+      "-O0",
+      "-c",
       "-o",
       "build/string_helper.o",
       "stdio/string_helper.c"
@@ -94,12 +95,12 @@
   {
     "arguments": [
       "/usr/local/bin/i686-elf-gcc",
-      "-c",
-      "-std=gnu99",
+      "-std=gnu23",
       "-ffreestanding",
-      "-O2",
       "-Wall",
       "-Wextra",
+      "-O0",
+      "-c",
       "-Istdio",
       "-Iother",
       "-o",
@@ -113,17 +114,35 @@
   {
     "arguments": [
       "/usr/local/bin/i686-elf-gcc",
-      "-c",
-      "-std=gnu99",
+      "-std=gnu23",
       "-ffreestanding",
-      "-O2",
       "-Wall",
       "-Wextra",
+      "-O0",
+      "-c",
+      "-o",
+      "build/stdlib.o",
+      "stdlib/stdlib.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/stdlib/stdlib.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/build/stdlib.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-c",
       "-Istdio",
-      "-I./gdt_inspection",
+      "-Igdt_inspection",
+      "-Istdlib",
       "-o",
       "build/call_real16_wrapper.o",
-      "./real16_wrappers/call_real16_wrapper.c"
+      "real16_wrappers/call_real16_wrapper.c"
     ],
     "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
     "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/real16_wrappers/call_real16_wrapper.c",
@@ -132,12 +151,12 @@
   {
     "arguments": [
       "/usr/bin/ia16-elf-gcc",
-      "-c",
       "-std=gnu99",
       "-ffreestanding",
-      "-O2",
       "-Wall",
       "-Wextra",
+      "-O0",
+      "-c",
       "-o",
       "build/realmode_functions.o",
       "realmode_functions/realmode_functions.c"
@@ -149,17 +168,17 @@
   {
     "arguments": [
       "/usr/local/bin/i686-elf-gcc",
-      "-c",
-      "-std=gnu99",
+      "-std=gnu23",
       "-ffreestanding",
-      "-O2",
       "-Wall",
       "-Wextra",
+      "-O0",
+      "-c",
       "-Istdio",
-      "-I./gdt_inspection",
+      "-Igdt_inspection",
       "-o",
       "build/f1_binary_operation.o",
-      "./gdt_inspection/f1_binary_operation.c"
+      "gdt_inspection/f1_binary_operation.c"
     ],
     "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
     "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/gdt_inspection/f1_binary_operation.c",
@@ -168,17 +187,18 @@
   {
     "arguments": [
       "/usr/local/bin/i686-elf-gcc",
-      "-c",
-      "-std=gnu99",
+      "-std=gnu23",
       "-ffreestanding",
-      "-O2",
       "-Wall",
       "-Wextra",
+      "-O0",
+      "-c",
+      "-std=gnu99",
       "-Istdio",
-      "-I./gdt_inspection",
+      "-Igdt_inspection",
       "-o",
       "build/f2_string.o",
-      "./gdt_inspection/f2_string.c"
+      "gdt_inspection/f2_string.c"
     ],
     "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
     "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/gdt_inspection/f2_string.c",
@@ -187,17 +207,17 @@
   {
     "arguments": [
       "/usr/local/bin/i686-elf-gcc",
-      "-c",
-      "-std=gnu99",
+      "-std=gnu23",
       "-ffreestanding",
-      "-O2",
       "-Wall",
       "-Wextra",
+      "-O0",
+      "-c",
       "-Istdio",
-      "-I./gdt_inspection",
+      "-Igdt_inspection",
       "-o",
       "build/f3_segment_descriptor_internals.o",
-      "./gdt_inspection/f3_segment_descriptor_internals.c"
+      "gdt_inspection/f3_segment_descriptor_internals.c"
     ],
     "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
     "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/gdt_inspection/f3_segment_descriptor_internals.c",

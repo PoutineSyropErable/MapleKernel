@@ -13,8 +13,8 @@ LDFLAGS=("-ffreestanding" "-nostdlib" "-lgcc")
 NASM_FLAGS32=("-f" "elf32")
 NASM_FLAGS16=("-f" "elf")
 
-DEBUG_OPT_LVL="-O2"
-RELEASE_OPT_LVL="-O0"
+DEBUG_OPT_LVL="-O1"
+RELEASE_OPT_LVL="-O2"
 QEMU_DBG_FLAGS=()
 
 if [[ "$ARG1" == "debug" ]]; then
