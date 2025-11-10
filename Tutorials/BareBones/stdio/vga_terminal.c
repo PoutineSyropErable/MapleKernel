@@ -34,7 +34,7 @@ inline void clear_visible_terminal() {
 			const size_t index = y * VGA_WIDTH + x;
 			// 1 2 3 4
 			// 5 6 7 8 ---- y *4 + x
-			terminal->vga_buffer[index] =
+			*terminal->vga_buffer[x][y] =
 			    vga_entry(' ', terminal->color);
 		}
 	}
@@ -45,10 +45,9 @@ void initialize_terminal() {
 	TerminalContext* terminal = &term;
 	terminal->current_write_row = 0;
 	terminal->current_write_column = 0;
-	terminal->color =
-	    vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
+	terminal->color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
 
-	terminal->vga_buffer = (volatile color_char*)VGA_MMIO_BASE;
+	terminal->vga_buffer = (volatile vga_buffer_t*)VGA_MMIO_BASE;
 
 	clear_visible_terminal();
 
@@ -58,8 +57,7 @@ void initialize_terminal() {
 			const size_t index = y * VGA_WIDTH + x;
 			// 1 2 3 4
 			// 5 6 7 8 ---- y *4 + x
-			terminal->big_scrollable_buffer[y][x] =
-			    vga_entry(' ', terminal->color);
+			terminal->big_scrollable_buffer[y][x] = vga_entry(' ', terminal->color);
 		}
 	}
 }
@@ -76,7 +74,7 @@ void terminal_update_vga_mem() {
 			// 5 6 7 8 ---- y *4 + x
 			// y goes down
 			// terminal->vga_buffer[index] = terminal->big_scrollable_buffer[index + offset];
-			terminal->vga_buffer[index] = terminal->big_scrollable_buffer[y + term.scroll_row][x];
+			*terminal->vga_buffer[y][x] = terminal->big_scrollable_buffer[y + term.scroll_row][x];
 			// (y0)*VGA_WIDTH + x0 + (sr*VGA_WIDTH)
 			// (y0 + sr)*VGA_WIDTH + x0
 		}
@@ -119,7 +117,7 @@ void terminal_putentryat(char c, color_bg_fg color, size_t pos_x, size_t pos_y) 
 		return;
 	}
 	size_t offset = term.scroll_row * VGA_WIDTH;
-	term.vga_buffer[index - offset] = term.big_scrollable_buffer[pos_y - term.scroll_row][pos_x];
+	*term.vga_buffer[pos_y - term.scroll_row][pos_x] = term.big_scrollable_buffer[pos_y - term.scroll_row][pos_x];
 }
 
 inline void terminal_increase_row() {
