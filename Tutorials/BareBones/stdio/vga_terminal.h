@@ -41,9 +41,9 @@ typedef struct {
 	size_t current_write_column;
 	size_t scroll_row;
 	color_bg_fg color;
-	volatile color_char* vga_buffer; // The actual visible data
+	volatile vga_buffer_t* vga_buffer; // The actual visible data
 	// could use a type where it's
-	color_char* big_scrollable_buffer; // The memory. Doesn't need to be volatile
+	big_vga_buffer_t big_scrollable_buffer; // The memory. Doesn't need to be volatile
 } TerminalContext;
 
 void initialize_terminal();
