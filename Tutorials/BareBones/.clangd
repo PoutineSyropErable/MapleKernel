@@ -1,0 +1,10 @@
+CompileFlags:
+  Add:
+    - --target=i686-elf
+    - -m32
+    - -ffreestanding
+    - -nostdlib
+    - -fno-exceptions
+    - -fno-rtti
+    - -Wall
+    - -std=gnu23
