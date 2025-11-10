@@ -41,20 +41,19 @@ typedef struct {
 	color_char* big_scrollable_buffer; // The memory. Doesn't need to be volatile
 } TerminalContext;
 
-inline void clear_visible_terminal();
-
 void initialize_terminal();
 
 void terminal_update_vga_mem();
 
 void terminal_set_scroll(size_t row);
-inline void terminal_scroll_down(int scroll_amount);
 
 void terminal_setcolor(color_bg_fg color);
 
 void terminal_putentryat(char c, color_bg_fg color, size_t pos_x, size_t pos_y);
 
-inline void terminal_increase_row();
+extern inline void clear_visible_terminal();
+extern inline void terminal_scroll_down(int scroll_amount);
+extern inline void terminal_increase_row();
 
 /* ======= Serial std out ======== */
 

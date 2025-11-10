@@ -1,11 +1,7 @@
 #!/bin/bash
 
 set -eou pipefail
-
 ARG1="${1:-}"
-if [[ "$ARG1" == "debug" ]]; then
-	echo "Debug mode enabled"
-fi
 
 # Define directories
 BUILD_DIR="build"
@@ -17,13 +13,14 @@ LDFLAGS=("-ffreestanding" "-nostdlib" "-lgcc")
 NASM_FLAGS32=("-f" "elf32")
 NASM_FLAGS16=("-f" "elf")
 
-DEBUG_OPT_LVL="-O0"
-RELEASE_OPT_LVL="-O2"
+DEBUG_OPT_LVL="-O2"
+RELEASE_OPT_LVL="-O0"
 QEMU_DBG_FLAGS=()
 
 if [[ "$ARG1" == "debug" ]]; then
-	CFLAGS+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG")
-	CFLAGS16+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG")
+	echo "Debug mode enabled"
+	CFLAGS+=("$DEBUG_OPT_LVL" "-g")
+	CFLAGS16+=("$DEBUG_OPT_LVL" "-g")
 	LDFLAGS+=("-g")
 	NASM_FLAGS32+=("-g" "-F" "dwarf")
 	NASM_FLAGS16+=("-g" "-F" "dwarf")
@@ -67,7 +64,7 @@ done
 
 # Assemble the bootloader assembly
 nasm "${NASM_FLAGS32[@]}" "$KERNEL/boot_intel.asm" -o "$BUILD_DIR/boot.o"
-i686-elf-gcc "${CFLAGS[@]}" -c "$KERNEL/kernel.c" -o "$BUILD_DIR/kernel.o" "${SUPER_INCLUDE[@]}"
+i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/kernel.c" -o "$BUILD_DIR/kernel.o"
 
 # Compile the CPU functionality activation part
 i686-elf-gcc "${CFLAGS[@]}" -c "$OTHER/virtual_memory.c" -o "$BUILD_DIR/virtual_memory.o"
@@ -86,9 +83,9 @@ nasm "${NASM_FLAGS16[@]}" "$REAL16_WRAPPERS/call_realmode_function_wrapper16.asm
 nasm "${NASM_FLAGS32[@]}" "$REAL16_WRAPPERS/call_realmode_function_wrapper32.asm" -o "$BUILD_DIR/call_realmode_function_wrapper32.o" "-I$REAL16_WRAPPERS"
 ia16-elf-gcc "${CFLAGS16[@]}" -c "$REAL_FUNC/realmode_functions.c" -o "$BUILD_DIR/realmode_functions.o"
 
-i686-elf-gcc "${CFLAGS[@]}" -c "$GDT_INSPECTION/f1_binary_operation.c" -o "$BUILD_DIR/f1_binary_operation.o" "${CFLAGS[@]}" "-I$STDIO" "-I$GDT_INSPECTION"
-i686-elf-gcc "${CFLAGS[@]}" -c "$GDT_INSPECTION/f2_string.c" -o "$BUILD_DIR/f2_string.o" -std=gnu99 "${CFLAGS[@]}" "-I$STDIO" "-I$GDT_INSPECTION"
-i686-elf-gcc "${CFLAGS[@]}" -c "$GDT_INSPECTION/f3_segment_descriptor_internals.c" -o "$BUILD_DIR/f3_segment_descriptor_internals.o" "${CFLAGS[@]}" "-I$STDIO" "-I$GDT_INSPECTION"
+i686-elf-gcc "${CFLAGS[@]}" -c "$GDT_INSPECTION/f1_binary_operation.c" -o "$BUILD_DIR/f1_binary_operation.o" "-I$STDIO" "-I$GDT_INSPECTION"
+i686-elf-gcc "${CFLAGS[@]}" -c "$GDT_INSPECTION/f2_string.c" -o "$BUILD_DIR/f2_string.o" -std=gnu99 "-I$STDIO" "-I$GDT_INSPECTION"
+i686-elf-gcc "${CFLAGS[@]}" -c "$GDT_INSPECTION/f3_segment_descriptor_internals.c" -o "$BUILD_DIR/f3_segment_descriptor_internals.o" "-I$STDIO" "-I$GDT_INSPECTION"
 
 # Link the kernel and generate the final binary
 printf "\n\n====== Start of Linking =====\n\n"
