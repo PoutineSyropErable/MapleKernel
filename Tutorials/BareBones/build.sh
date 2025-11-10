@@ -2,15 +2,38 @@
 
 set -eou pipefail
 
+ARG1="${1:-}"
+if [[ "$ARG1" == "debug" ]]; then
+	echo "Debug mode enabled"
+fi
+
 # Define directories
 BUILD_DIR="build"
 ISO_DIR="isodir"
 
-CFLAGS=("-std=gnu23" "-ffreestanding" "-O2" "-Wall" "-Wextra")
-CFLAGS16=("-std=gnu99" "-ffreestanding" "-O2" "-Wall" "-Wextra")
-LDFLAGS=("-ffreestanding" "-O2" "-nostdlib" "-lgcc")
+CFLAGS=("-std=gnu23" "-ffreestanding" "-Wall" "-Wextra")
+CFLAGS16=("-std=gnu99" "-ffreestanding" "-Wall" "-Wextra")
+LDFLAGS=("-ffreestanding" "-nostdlib" "-lgcc")
 NASM_FLAGS32=("-f" "elf32")
 NASM_FLAGS16=("-f" "elf")
+
+DEBUG_OPT_LVL="-O0"
+RELEASE_OPT_LVL="-O2"
+QEMU_DBG_FLAGS=()
+
+if [[ "$ARG1" == "debug" ]]; then
+	CFLAGS+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG")
+	CFLAGS16+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG")
+	LDFLAGS+=("-g")
+	NASM_FLAGS32+=("-g" "-F" "dwarf")
+	NASM_FLAGS16+=("-g" "-F" "dwarf")
+	QEMU_DBG_FLAGS+=("-s" "-S")
+else
+	echo "In normal mode, $RELEASE_OPT_LVL optimisation"
+	CFLAGS+=("$RELEASE_OPT_LVL")
+	CFLAGS16+=("$RELEASE_OPT_LVL")
+	LDFLAGS+=("$RELEASE_OPT_LVL")
+fi
 
 # Create necessary directories
 mkdir -p "$BUILD_DIR" "$ISO_DIR/boot/grub"
@@ -126,6 +149,7 @@ echo "ISO created successfully: $BUILD_DIR/myos.iso"
 qemu-system-i386 \
 	-cdrom "$BUILD_DIR/myos.iso" \
 	-no-reboot \
+	"${QEMU_DBG_FLAGS[@]}" \
 	-d in_asm,int,cpu_reset \
 	-D qemu_instr.log \
 	-serial stdio &
