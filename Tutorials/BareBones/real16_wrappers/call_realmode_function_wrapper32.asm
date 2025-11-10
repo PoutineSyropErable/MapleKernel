@@ -27,6 +27,7 @@ GDT_END:
 
 section .text.pm32_to_pm16
 
+# debugable? 
 pm32_to_pm16:
 	mov eax, 0xdeadfac1
 

@@ -125,7 +125,6 @@ echo "ISO created successfully: $BUILD_DIR/myos.iso"
 # -cdrom "$BUILD_DIR/myos.iso" \
 qemu-system-i386 \
 	-cdrom "$BUILD_DIR/myos.iso" \
-	-s -S \
 	-no-reboot \
 	-d in_asm,int,cpu_reset \
 	-D qemu_instr.log \

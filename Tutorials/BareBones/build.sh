@@ -6,18 +6,24 @@ set -eou pipefail
 BUILD_DIR="build"
 ISO_DIR="isodir"
 
+CFLAGS=("-std=gnu23" "-ffreestanding" "-O2" "-Wall" "-Wextra")
+CFLAGS16=("-std=gnu99" "-ffreestanding" "-O2" "-Wall" "-Wextra")
+LDFLAGS=("-ffreestanding" "-O2" "-nostdlib" "-lgcc")
+NASM_FLAGS32=("-f" "elf32")
+NASM_FLAGS16=("-f" "elf")
+
 # Create necessary directories
 mkdir -p "$BUILD_DIR" "$ISO_DIR/boot/grub"
 
 # The variable for the dirs:
 KERNEL="kernel"
-REAL16_WRAPPERS="./real16_wrappers"
+REAL16_WRAPPERS="real16_wrappers"
 REAL_FUNC="realmode_functions"
-GDT_INSPECTION="./gdt_inspection"
+GDT_INSPECTION="gdt_inspection"
 STDIO="stdio"
 STDLIB="stdlib"
 OTHER="other"
-CODE_ANALYSIS="./runtime_code_analysis"
+CODE_ANALYSIS="runtime_code_analysis"
 
 INCLUDE_DIRS=(
 	"$KERNEL"
@@ -37,30 +43,29 @@ for dir in "${INCLUDE_DIRS[@]}"; do
 done
 
 # Assemble the bootloader assembly
-nasm -f elf32 "$KERNEL/boot_intel.asm" -o "$BUILD_DIR/boot.o"
-i686-elf-gcc -c "$KERNEL/kernel.c" -o "$BUILD_DIR/kernel.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra "${SUPER_INCLUDE[@]}"
+nasm "${NASM_FLAGS32[@]}" "$KERNEL/boot_intel.asm" -o "$BUILD_DIR/boot.o"
+i686-elf-gcc "${CFLAGS[@]}" -c "$KERNEL/kernel.c" -o "$BUILD_DIR/kernel.o" "${SUPER_INCLUDE[@]}"
 
 # Compile the CPU functionality activation part
-i686-elf-gcc -c "$OTHER/virtual_memory.c" -o "$BUILD_DIR/virtual_memory.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-i686-elf-gcc -c "$OTHER/pit_timer.c" -o "$BUILD_DIR/pit_timer.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-i686-elf-gcc -c "$OTHER/idt.c" -o "$BUILD_DIR/idt.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-
+i686-elf-gcc "${CFLAGS[@]}" -c "$OTHER/virtual_memory.c" -o "$BUILD_DIR/virtual_memory.o"
+i686-elf-gcc "${CFLAGS[@]}" -c "$OTHER/pit_timer.c" -o "$BUILD_DIR/pit_timer.o"
+i686-elf-gcc "${CFLAGS[@]}" -c "$OTHER/idt.c" -o "$BUILD_DIR/idt.o"
 # Compile the print functions.
-i686-elf-gcc -c "$STDIO/string_helper.c" -o "$BUILD_DIR/string_helper.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-i686-elf-gcc -c "$STDIO/vga_terminal.c" -o "$BUILD_DIR/vga_terminal.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra "-I$STDIO" "-I$OTHER"
+i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/string_helper.c" -o "$BUILD_DIR/string_helper.o"
+i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/vga_terminal.c" -o "$BUILD_DIR/vga_terminal.o" "-I$STDIO" "-I$OTHER"
 
 #compile misc helper functions
-i686-elf-gcc -c "$STDLIB/stdlib.c" -o "$BUILD_DIR/stdlib.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+i686-elf-gcc "${CFLAGS[@]}" -c "$STDLIB/stdlib.c" -o "$BUILD_DIR/stdlib.o"
 
 # Compile the real mode 16 code and it's wrappers
-i686-elf-gcc -c "$REAL16_WRAPPERS/call_real16_wrapper.c" -o "$BUILD_DIR/call_real16_wrapper.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra "-I$STDIO" "-I$GDT_INSPECTION" "-I$STDLIB"
-nasm -f elf "$REAL16_WRAPPERS/call_realmode_function_wrapper16.asm" -o "$BUILD_DIR/call_realmode_function_wrapper16.o" "-I$REAL16_WRAPPERS"
-nasm -f elf32 "$REAL16_WRAPPERS/call_realmode_function_wrapper32.asm" -o "$BUILD_DIR/call_realmode_function_wrapper32.o" "-I$REAL16_WRAPPERS"
-ia16-elf-gcc -c "$REAL_FUNC/realmode_functions.c" -o "$BUILD_DIR/realmode_functions.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+i686-elf-gcc "${CFLAGS[@]}" -c "$REAL16_WRAPPERS/call_real16_wrapper.c" -o "$BUILD_DIR/call_real16_wrapper.o" "-I$STDIO" "-I$GDT_INSPECTION" "-I$STDLIB"
+nasm "${NASM_FLAGS16[@]}" "$REAL16_WRAPPERS/call_realmode_function_wrapper16.asm" -o "$BUILD_DIR/call_realmode_function_wrapper16.o" "-I$REAL16_WRAPPERS"
+nasm "${NASM_FLAGS32[@]}" "$REAL16_WRAPPERS/call_realmode_function_wrapper32.asm" -o "$BUILD_DIR/call_realmode_function_wrapper32.o" "-I$REAL16_WRAPPERS"
+ia16-elf-gcc "${CFLAGS16[@]}" -c "$REAL_FUNC/realmode_functions.c" -o "$BUILD_DIR/realmode_functions.o"
 
-i686-elf-gcc -c "$GDT_INSPECTION/f1_binary_operation.c" -o "$BUILD_DIR/f1_binary_operation.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra "-I$STDIO" "-I$GDT_INSPECTION"
-i686-elf-gcc -c "$GDT_INSPECTION/f2_string.c" -o "$BUILD_DIR/f2_string.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra "-I$STDIO" "-I$GDT_INSPECTION"
-i686-elf-gcc -c "$GDT_INSPECTION/f3_segment_descriptor_internals.c" -o "$BUILD_DIR/f3_segment_descriptor_internals.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra "-I$STDIO" "-I$GDT_INSPECTION"
+i686-elf-gcc "${CFLAGS[@]}" -c "$GDT_INSPECTION/f1_binary_operation.c" -o "$BUILD_DIR/f1_binary_operation.o" "${CFLAGS[@]}" "-I$STDIO" "-I$GDT_INSPECTION"
+i686-elf-gcc "${CFLAGS[@]}" -c "$GDT_INSPECTION/f2_string.c" -o "$BUILD_DIR/f2_string.o" -std=gnu99 "${CFLAGS[@]}" "-I$STDIO" "-I$GDT_INSPECTION"
+i686-elf-gcc "${CFLAGS[@]}" -c "$GDT_INSPECTION/f3_segment_descriptor_internals.c" -o "$BUILD_DIR/f3_segment_descriptor_internals.o" "${CFLAGS[@]}" "-I$STDIO" "-I$GDT_INSPECTION"
 
 # Link the kernel and generate the final binary
 printf "\n\n====== Start of Linking =====\n\n"
@@ -88,7 +93,7 @@ BUILD_OBJECTS=(
 	"$BUILD_DIR/call_real16_wrapper.o"
 )
 
-i686-elf-gcc -T linker.ld -o "$BUILD_DIR/myos.bin" -ffreestanding -O2 -nostdlib -lgcc "${BUILD_OBJECTS[@]}"
+i686-elf-gcc -T linker.ld -o "$BUILD_DIR/myos.bin" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}"
 
 printf "\n\n====== End of Linking =====\n\n"
 
