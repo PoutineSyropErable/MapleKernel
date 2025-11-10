@@ -15,6 +15,7 @@ REAL16_WRAPPERS="./real16_wrappers"
 REAL_FUNC="realmode_functions"
 GDT_INSPECTION="./gdt_inspection"
 STDIO="stdio"
+STDLIB="stdlib"
 OTHER="other"
 CODE_ANALYSIS="./runtime_code_analysis"
 
@@ -24,6 +25,7 @@ INCLUDE_DIRS=(
 	"$REAL_FUNC"
 	"$GDT_INSPECTION"
 	"$STDIO"
+	"$STDLIB"
 	"$OTHER"
 	"$CODE_ANALYSIS"
 )
@@ -33,8 +35,6 @@ SUPER_INCLUDE=()
 for dir in "${INCLUDE_DIRS[@]}"; do
 	SUPER_INCLUDE+=("-I$dir")
 done
-
-SUPER_INCLUDE="-I$KERNEL -I$REAL16_WRAPPERS -I$REAL_FUNC -I$GDT_INSPECTION -I$STDIO -I$OTHER -I$CODE_ANALYSIS"
 
 # Assemble the bootloader assembly
 nasm -f elf32 "$KERNEL/boot_intel.asm" -o "$BUILD_DIR/boot.o"
@@ -49,8 +49,11 @@ i686-elf-gcc -c "$OTHER/idt.c" -o "$BUILD_DIR/idt.o" -std=gnu99 -ffreestanding -
 i686-elf-gcc -c "$STDIO/string_helper.c" -o "$BUILD_DIR/string_helper.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 i686-elf-gcc -c "$STDIO/vga_terminal.c" -o "$BUILD_DIR/vga_terminal.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra "-I$STDIO" "-I$OTHER"
 
+#compile misc helper functions
+i686-elf-gcc -c "$STDLIB/stdlib.c" -o "$BUILD_DIR/stdlib.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+
 # Compile the real mode 16 code and it's wrappers
-i686-elf-gcc -c "$REAL16_WRAPPERS/call_real16_wrapper.c" -o "$BUILD_DIR/call_real16_wrapper.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra "-I$STDIO" "-I$GDT_INSPECTION"
+i686-elf-gcc -c "$REAL16_WRAPPERS/call_real16_wrapper.c" -o "$BUILD_DIR/call_real16_wrapper.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra "-I$STDIO" "-I$GDT_INSPECTION" "-I$STDLIB"
 nasm -f elf "$REAL16_WRAPPERS/call_realmode_function_wrapper16.asm" -o "$BUILD_DIR/call_realmode_function_wrapper16.o" "-I$REAL16_WRAPPERS"
 nasm -f elf32 "$REAL16_WRAPPERS/call_realmode_function_wrapper32.asm" -o "$BUILD_DIR/call_realmode_function_wrapper32.o" "-I$REAL16_WRAPPERS"
 ia16-elf-gcc -c "$REAL_FUNC/realmode_functions.c" -o "$BUILD_DIR/realmode_functions.o" -std=gnu99 -ffreestanding -O2 -Wall -Wextra
@@ -61,22 +64,31 @@ i686-elf-gcc -c "$GDT_INSPECTION/f3_segment_descriptor_internals.c" -o "$BUILD_D
 
 # Link the kernel and generate the final binary
 printf "\n\n====== Start of Linking =====\n\n"
-i686-elf-gcc -T linker.ld -o "$BUILD_DIR/myos.bin" -ffreestanding -O2 -nostdlib \
-	"$BUILD_DIR/boot.o" \
-	"$BUILD_DIR/kernel.o" \
-	"$BUILD_DIR/string_helper.o" \
-	"$BUILD_DIR/pit_timer.o" \
-	"$BUILD_DIR/vga_terminal.o" \
-	"$BUILD_DIR/f1_binary_operation.o" \
-	"$BUILD_DIR/f2_string.o" \
-	"$BUILD_DIR/f3_segment_descriptor_internals.o" \
-	"$BUILD_DIR/virtual_memory.o" \
-	"$BUILD_DIR/idt.o" \
-	"$BUILD_DIR/call_realmode_function_wrapper32.o" \
-	"$BUILD_DIR/call_realmode_function_wrapper16.o" \
-	"$BUILD_DIR/realmode_functions.o" \
-	"$BUILD_DIR/call_real16_wrapper.o" \
-	-lgcc
+
+BUILD_OBJECTS=(
+	"$BUILD_DIR/boot.o"
+	"$BUILD_DIR/kernel.o"
+
+	"$BUILD_DIR/stdlib.o"
+
+	"$BUILD_DIR/string_helper.o"
+	"$BUILD_DIR/vga_terminal.o"
+
+	"$BUILD_DIR/virtual_memory.o"
+	"$BUILD_DIR/pit_timer.o"
+	"$BUILD_DIR/idt.o"
+
+	"$BUILD_DIR/f1_binary_operation.o"
+	"$BUILD_DIR/f2_string.o"
+	"$BUILD_DIR/f3_segment_descriptor_internals.o"
+
+	"$BUILD_DIR/call_realmode_function_wrapper32.o"
+	"$BUILD_DIR/call_realmode_function_wrapper16.o"
+	"$BUILD_DIR/realmode_functions.o"
+	"$BUILD_DIR/call_real16_wrapper.o"
+)
+
+i686-elf-gcc -T linker.ld -o "$BUILD_DIR/myos.bin" -ffreestanding -O2 -nostdlib -lgcc "${BUILD_OBJECTS[@]}"
 
 printf "\n\n====== End of Linking =====\n\n"
 

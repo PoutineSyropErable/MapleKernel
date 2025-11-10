@@ -1,5 +1,6 @@
-#include "f2_string.h"
 #include "call_real16_wrapper.h"
+#include "f2_string.h"
+#include "stdlib.h"
 #include "vga_terminal.h"
 #include <stdarg.h>
 #include <stdbool.h>
@@ -12,18 +13,6 @@ GDT_ROOT get_gdt_root(void) {
 	__asm__ volatile("sgdt %0" : "=m"(gdt_root));
 
 	return gdt_root;
-}
-
-void* memcpy(void* dest, const void* src, size_t n) {
-	// Cast to unsigned char pointers for byte-wise copy
-	unsigned char* d = (unsigned char*)dest;
-	const unsigned char* s = (const unsigned char*)src;
-
-	for (size_t i = 0; i < n; i++) {
-		d[i] = s[i];
-	}
-
-	return dest; // mimic standard memcpy return value
 }
 
 // =============== Start of mics
