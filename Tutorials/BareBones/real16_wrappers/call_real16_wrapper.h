@@ -33,7 +33,8 @@ typedef struct __attribute__((packed, aligned(4))) {
 } GDT_ROOT;
 
 extern GDT_ROOT GDT16_DESCRIPTOR;
-typedef void (*func_ptr_t)(void); // a function pointer
+typedef void(function_t)(void);                // a function pointer
+typedef int*(address_getter_function_t)(void); // a function pointer
 
 typedef struct __attribute__((packed)) Args16 {
 	GDT_ROOT gdt_root;

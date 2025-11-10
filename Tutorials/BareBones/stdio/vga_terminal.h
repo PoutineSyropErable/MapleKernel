@@ -32,12 +32,17 @@ typedef uint16_t color_char;
 #define VGA_HEIGHT 25
 #define VGA_MEM_HEIGHT 1000
 
+// Option 1: typedef for a 2D VGA buffer
+typedef color_char vga_buffer_t[VGA_HEIGHT][VGA_WIDTH];
+typedef color_char big_vga_buffer_t[VGA_MEM_HEIGHT][VGA_WIDTH];
+
 typedef struct {
 	size_t current_write_row;
 	size_t current_write_column;
 	size_t scroll_row;
 	color_bg_fg color;
-	volatile color_char* vga_buffer;   // The actual visible data
+	volatile color_char* vga_buffer; // The actual visible data
+	// could use a type where it's
 	color_char* big_scrollable_buffer; // The memory. Doesn't need to be volatile
 } TerminalContext;
 

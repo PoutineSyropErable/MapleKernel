@@ -1,9 +1,9 @@
 #include "address_getter.c"
+#include "call_real16_wrapper.h"
 #include "f2_string.h"
 #include "kernel.h"
 #include "os_registers.c"
 #include "pit_timer.h"
-#include "call_real16_wrapper.h"
 #include "string_helper.h"
 #include "vga_terminal.h"
 #include <stdbool.h>
@@ -107,28 +107,27 @@ void kernel_main(void) {
 	print_extern_address("The address of args16_start: ", get_args16_start_address);
 	print_extern_address("The address of args16_end: ", get_args16_end_address);
 
-	print_extern_address("The address of the nice wrapper (>2MB): ", get_call_realmode_func_with_args_address);
-	int* pm32_to_pm16_address = print_extern_address("The address of pm32_to_pm16: ", get_pm32_to_pm16_address);
-	int* pm16_to_real16_address = print_extern_address("The address of pm16_to_real16: ", get_pm16_to_real16_address);
-	int* call_real16_function_address = print_extern_address("The address of call_real16_function_address: ", get_call_real16_function_address);
-	int* add16_address = print_extern_address("The address of add16: ", get_add16_address);
-	int* resume32_address = print_extern_address("The address of resume32: ", get_resume32_start_address);
+	print_extern_address("The address of the nice wrapper (>2MB): ", (address_getter_function_t*)get_call_realmode_func_with_args_address);
+	int* pm32_to_pm16_address = print_extern_address("The address of pm32_to_pm16: ", (address_getter_function_t*)get_pm32_to_pm16_address);
+	int* pm16_to_real16_address = print_extern_address("The address of pm16_to_real16: ", (address_getter_function_t*)get_pm16_to_real16_address);
+	int* call_real16_function_address = print_extern_address("The address of call_real16_function_address: ", (address_getter_function_t*)get_call_real16_function_address);
+	int* add16_address = print_extern_address("The address of add16: ", (address_getter_function_t*)get_add16_address);
+	int* resume32_address = print_extern_address("The address of resume32: ", (address_getter_function_t*)get_resume32_start_address);
 	int* resume32_end_address = print_extern_address("The address of resume32_end: ", get_resume32_end_address);
+
+#define ANALIZE_CODE
+#ifdef ANALIZE_CODE
+	analyse_code((struct CodeAddressesToAnalyse){
+	    .pm32_to_pm16_address = pm32_to_pm16_address,
+	    .pm16_to_real16_address = pm16_to_real16_address,
+	    .call_real16_function_address = call_real16_function_address,
+	    .add16_address = add16_address,
+	    .resume32_address = resume32_address,
+	    .resume32_end_address = resume32_end_address});
+#endif
 
 	print_extern_address("The address of misc32_s1: ", get_misc32_s1_address);
 	print_extern_address("The address of misc32_s2: ", get_misc32_s2_address);
-
-	// terminal_writestring(&term, "\n");
-	// terminal_writestring(&term, "The value of the code at 0xb040: \n");
-	// for (int i = 0; i < 50; i++) {
-	// 	print_hex_var(&term, pm16_to_real16_address[i]);
-	// }
-	//
-	// terminal_writestring(&term, "\n");
-	// terminal_writestring(&term, "The value of the code at 0xB0A8: \n");
-	// for (int i = 0; i < 50; i++) {
-	// 	print_hex_var(&term, resume32_address[i]);
-	// }
 
 	print_extern_address16("\nThe value of cs: ", get_cs_selector);
 	print_extern_address16("\nThe value of ss: ", get_ss_selector);

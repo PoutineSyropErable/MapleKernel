@@ -110,7 +110,7 @@ uint16_t call_real_mode_function_with_argc(uint32_t argc, ...) {
 	va_start(args, argc);
 
 	uint32_t func = va_arg(args, uint32_t);
-	struct realmode_address rm_address = get_realmode_function_address((func_ptr_t)func);
+	struct realmode_address rm_address = get_realmode_function_address((function_t*)func);
 	args16_start.func = rm_address.func_address;
 	args16_start.func_cs = rm_address.func_cs;
 

@@ -1,6 +1,0 @@
-cc
--m32
--g
--ffreestanding
--nostdlib
--fno-builtin
