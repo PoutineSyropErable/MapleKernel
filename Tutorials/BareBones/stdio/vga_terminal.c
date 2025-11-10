@@ -26,46 +26,44 @@ static inline color_char vga_entry(unsigned char uc, color_bg_fg color) {
 
 TerminalContext term = {0};
 
+static inline void set_vga_element(uint8_t pos_x, uint8_t pos_y, color_char c) {
+	(*term.vga_buffer)[pos_y][pos_x] = c;
+}
+
 inline void clear_visible_terminal() {
-	TerminalContext* terminal = &term;
 
 	for (size_t y = 0; y < VGA_HEIGHT; y++) {
 		for (size_t x = 0; x < VGA_WIDTH; x++) {
 			const size_t index = y * VGA_WIDTH + x;
 			// 1 2 3 4
 			// 5 6 7 8 ---- y *4 + x
-			*terminal->vga_buffer[x][y] =
-			    vga_entry(' ', terminal->color);
+			set_vga_element(x, y, vga_entry_color(' ', term.color));
 		}
 	}
 }
 
 void initialize_terminal() {
 
-	TerminalContext* terminal = &term;
-	terminal->current_write_row = 0;
-	terminal->current_write_column = 0;
-	terminal->color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
+	term.current_write_row = 0;
+	term.current_write_column = 0;
+	term.color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
 
-	terminal->vga_buffer = (volatile vga_buffer_t*)VGA_MMIO_BASE;
+	term.vga_buffer = (volatile vga_buffer_t*)VGA_MMIO_BASE;
 
 	clear_visible_terminal();
 
-	terminal->scroll_row = 0;
+	term.scroll_row = 0;
 	for (size_t y = 0; y < VGA_MEM_HEIGHT; y++) {
 		for (size_t x = 0; x < VGA_WIDTH; x++) {
 			const size_t index = y * VGA_WIDTH + x;
 			// 1 2 3 4
 			// 5 6 7 8 ---- y *4 + x
-			terminal->big_scrollable_buffer[y][x] = vga_entry(' ', terminal->color);
+			term.big_scrollable_buffer[y][x] = vga_entry(' ', term.color);
 		}
 	}
 }
 
 void terminal_update_vga_mem() {
-	TerminalContext* terminal = &term;
-	size_t offset = terminal->scroll_row * VGA_WIDTH;
-
 	// need to set the memory value properly now
 	for (size_t y = 0; y < VGA_HEIGHT; y++) {
 		for (size_t x = 0; x < VGA_WIDTH; x++) {
@@ -73,8 +71,8 @@ void terminal_update_vga_mem() {
 			// 1 2 3 4
 			// 5 6 7 8 ---- y *4 + x
 			// y goes down
-			// terminal->vga_buffer[index] = terminal->big_scrollable_buffer[index + offset];
-			*terminal->vga_buffer[y][x] = terminal->big_scrollable_buffer[y + term.scroll_row][x];
+			// term.vga_buffer[index] = term.big_scrollable_buffer[index + offset];
+			set_vga_element(x, y, term.big_scrollable_buffer[y + term.scroll_row][x]);
 			// (y0)*VGA_WIDTH + x0 + (sr*VGA_WIDTH)
 			// (y0 + sr)*VGA_WIDTH + x0
 		}
@@ -83,19 +81,17 @@ void terminal_update_vga_mem() {
 
 void terminal_set_scroll(size_t row) {
 
-	TerminalContext* terminal = &term;
 	size_t max = VGA_MEM_HEIGHT - VGA_HEIGHT;
 	if (row > max)
 		row = max;
-	terminal->scroll_row = row;
+	term.scroll_row = row;
 
 	terminal_update_vga_mem();
 }
 
 inline void terminal_scroll_down(int scroll_amount) {
 
-	TerminalContext* terminal = &term;
-	size_t current_scroll = terminal->scroll_row;
+	size_t current_scroll = term.scroll_row;
 	terminal_set_scroll(current_scroll + scroll_amount);
 }
 
@@ -117,18 +113,18 @@ void terminal_putentryat(char c, color_bg_fg color, size_t pos_x, size_t pos_y) 
 		return;
 	}
 	size_t offset = term.scroll_row * VGA_WIDTH;
-	*term.vga_buffer[pos_y - term.scroll_row][pos_x] = term.big_scrollable_buffer[pos_y - term.scroll_row][pos_x];
+	color_char colored_c = term.big_scrollable_buffer[pos_y - term.scroll_row][pos_x];
+	set_vga_element(pos_x, pos_y - term.scroll_row, colored_c);
 }
 
 inline void terminal_increase_row() {
-	TerminalContext* terminal = &term;
-	terminal->current_write_row++;
-	if (terminal->current_write_row - terminal->scroll_row > VGA_HEIGHT) {
+	term.current_write_row++;
+	if (term.current_write_row - term.scroll_row > VGA_HEIGHT) {
 		terminal_scroll_down(1);
 	}
-	if (terminal->current_write_row >= VGA_MEM_HEIGHT) {
-		terminal->current_write_row = 0;
-		terminal->current_write_column = 0;
+	if (term.current_write_row >= VGA_MEM_HEIGHT) {
+		term.current_write_row = 0;
+		term.current_write_column = 0;
 		terminal_set_scroll(0);
 		clear_visible_terminal();
 	}
@@ -164,24 +160,22 @@ void serial_write_string(const char* str) {
 }
 
 void terminal_putchar(char c) {
-	TerminalContext* terminal = &term;
 
 	serial_write_char(c);
 	if (c == '\n') {
-		terminal->current_write_column = 0;
+		term.current_write_column = 0;
 		terminal_increase_row();
 
 		return;
 	}
-	terminal_putentryat(c, terminal->color, terminal->current_write_column, terminal->current_write_row);
-	terminal->current_write_column++;
-	if (terminal->current_write_column == VGA_WIDTH) {
+	terminal_putentryat(c, term.color, term.current_write_column, term.current_write_row);
+	term.current_write_column++;
+	if (term.current_write_column == VGA_WIDTH) {
 		terminal_increase_row();
 	}
 }
 
 void terminal_write(const char* data, size_t size) {
-	TerminalContext* terminal = &term;
 
 	for (size_t i = 0; i < size; i++)
 		terminal_putchar(data[i]);
