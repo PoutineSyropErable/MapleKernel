@@ -1,4 +1,4 @@
-#!/usr/env/bin python
+#!/usr/bin/env python
 from typing import List, Dict, Tuple, Optional
 from enum import Enum
 
@@ -363,6 +363,9 @@ print(data)
 print(data.hex_qword_colored())
 print()
 
+
+print(data.present)
+print(data.dpl)
 
 # c = 12 = 8 + 4
 # c = 0000 1100

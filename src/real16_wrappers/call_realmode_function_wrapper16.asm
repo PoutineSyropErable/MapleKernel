@@ -14,12 +14,14 @@ global pm16_to_real16
 
 section .text.pm16_and_real16_wrappers
 pm16_to_real16: 
-	mov ax, 0x18 
+	mov ax, DATA_SEL
 	mov ds, ax 
 	mov es, ax 
 	mov fs, ax 
 	mov gs, ax 
 	mov ss, ax
+	; This sets up the Segments for pm16. But we don't do much with pm 16. 
+	; So these segments are never used
 
 
     mov eax, cr0
@@ -29,7 +31,7 @@ pm16_to_real16:
 	jmp far 00:call_real16_function
 
 call_real16_function:
-	; setup 16 bit data segment
+	; setup 16 bit, real mode data segment
 	mov ax, 0
     mov ds, ax
     mov es, ax

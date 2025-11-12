@@ -14,18 +14,59 @@ extern GDT16_DESCRIPTOR
 
 section .data.misc32.1
 
-GDT16_DESCRIPTOR:
-	dw GDT_END - GDT_START - 1 ;limit/size
-	dd GDT_START ; base
+; Access bits
+PRESENT        	equ 1 << 7
+DPL2			equ 1 << 6 ; That's for DPL, we don't use it. 
+DPL1 			equ 1 << 5 ; DPL1 | DPL2 = 2 + 1 = 3: DPL = 3. Since it's DPL0 
+NOT_SYS        	equ 1 << 4
+EXEC           	equ 1 << 3 ; If exec, then it's code. Otherwise it's data 
+DC             	equ 1 << 2 ; Conforming for code, expand down for data. (We want non conforming, non expand down)
+RW             	equ 1 << 1 ; Read for Code, Write for Data
+ACCESSED     	equ 1 << 0
 
-GDT_START: 
-	dq 0x0 
-	dq 0x0
-	dq 0x00009A000000FFFF ; code 
-	dq 0x000093000000FFFF ; data
-GDT_END:
+; Flags bits
+GRAN_4K       	equ 1 << 7
+SZ_32         	equ 1 << 6
+LONG_MODE     	equ 1 << 5
+AVAIL 			equ 1 << 5 ; That's for system available. Not using it right now
+; sement limit high is <<[0,4]
+
+
+
+
+GDT16_DESCRIPTOR:
+	dw GDT16_END - GDT16_START - 1 ;limit/size
+	dd GDT16_START ; base
+GDT16_START: 
+	.NULL: equ $ - GDT16_START
+		dq 0x0
+	.NULL2: equ $ - GDT16_START ; A grub detail
+		dq 0x0
+	.CODE: equ $ - GDT16_START
+		.CODE.limit_low: dw 0xFFFF
+		.CODE.base_low: dw 0
+		.CODE.base_mid: db 0
+		.CODE.access: db PRESENT | NOT_SYS | EXEC | RW
+		.CODE.flags: db 0
+		.CODE.base_high: db 0
+	.DATA: equ $ - GDT16_START
+		.DATA.limit_low: dw 0xFFFF
+		.DATA.base_low: dw 0
+		.DATA.base_mid: db 0
+		.DATA.access: db PRESENT | NOT_SYS | RW
+		.DATA.flags: db 0
+		.DATA.base_high: db 0 
+	; dq 0x00009A000000FFFF ; code 
+	; dq 0x000093000000FFFF ; data
+GDT16_END:
+
 
 section .text.pm32_to_pm16
+
+
+pm32_to_pm32_fixed: 
+	; Write code to switch to a fixed CS, SS, DS PM32
+
 
 ; debugable? 
 pm32_to_pm16:
@@ -43,6 +84,9 @@ pm32_to_pm16:
 	mov [args16_start +  ESP_OFFSET], esp    ; 
 	mov ax, ss
 	mov [args16_start +  SS_OFFSET], ax    ; 
+	push cs
+	pop ax 
+	mov [args16_start +  CS_OFFSET], ax    ; 
 
 
 
@@ -53,8 +97,9 @@ pm32_to_pm16:
 
     cli
 
+	; Note this is a direct jump to a CS=(Index=2, GDT, RPL=0)
 	lgdt [GDT16_DESCRIPTOR]
-	jmp far 0x10:pm16_to_real16
+	jmp far CODE_SEL:pm16_to_real16
 
 
 

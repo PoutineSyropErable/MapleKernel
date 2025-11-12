@@ -91,7 +91,9 @@ compile_flags_txt = [
 	"-g",             # debug symbols
 	"-F", "dwarf",    # DWARF format
 	"-Wall",           # enable warnings
-	"-o", "/tmp/boot.o"
+	"-o", "/tmp/boot.o",
+	"-I", "src/real16_wrappers",  # add include directory
+	"-I", "real16_wrappers",  # add include directory
 ]
 
 

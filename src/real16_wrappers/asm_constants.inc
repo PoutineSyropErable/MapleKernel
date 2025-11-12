@@ -24,6 +24,6 @@ ARG0_OFFSET equ 26
 ARG1_OFFSET equ 28 
 
 ; GDT selectors
-CODE_SEL equ 0x08
-DATA_SEL equ 0x10
+CODE_SEL equ 0x10
+DATA_SEL equ 0x18
 
