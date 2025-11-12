@@ -35,8 +35,10 @@ void print_args16(const Args16* args) {
 	terminal_writestring("\n");
 
 	if (args->gdt_root.base) {
-		printBinarySize((uint32_t)args->gdt_root.base->lower, "Base Descriptor Lower (bits 0-32)", 32);
-		printBinarySize((uint32_t)args->gdt_root.base->higher, "Base Descriptor Higher (bits 33-64)", 32);
+		printBinarySize((uint32_t)args->gdt_root.base[2].lower, "Code Base Descriptor Lower (bits 0-32)", 32);
+		printBinarySize((uint32_t)args->gdt_root.base[2].higher, "Code Base Descriptor Higher (bits 33-64)", 32);
+		printBinarySize((uint32_t)args->gdt_root.base[3].lower, "Data Base Descriptor Lower (bits 0-32)", 32);
+		printBinarySize((uint32_t)args->gdt_root.base[3].higher, "Data Base Descriptor Higher (bits 33-64)", 32);
 		terminal_writestring("\n");
 	}
 

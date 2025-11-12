@@ -14,22 +14,22 @@ GDT_ROOT* GDT16_ROOT = &GDT16_DESCRIPTOR;
 
 void gdt_analize(GDT_ENTRY* gdt, size_t index) {
 
-	terminal_write_uint_no_newline("\n===== Analize of GDT[", index);
-	terminal_writestring("] =====\n\n");
+	// terminal_write_uint_no_newline("\n===== Analize of GDT[", index);
+	// terminal_writestring("] =====\n\n");
 	SegmentDescriptor* sd = &gdt[index];
 
-	if (false) {
-		setType(sd, 0b100);
-		setDescriptorTypeS(sd, 0b1);
-		setPriviledgeDPL(sd, 0b11); // system services. ring 2
-		setPresent(sd, 0b0);
-		setSegmentLimit(sd, 0xba2ed);
-		setAVL(sd, 0);
-		setLongMode(sd, 1);
-		setDefaultOperationSize(sd, 0);
-		setGranularity(sd, 0);
-		setBaseAddress(sd, 0xfedc1234);
-	}
+#ifdef SET_TEST
+	setType(sd, 0b100);
+	setDescriptorTypeS(sd, 0b1);
+	setPriviledgeDPL(sd, 0b11); // system services. ring 2
+	setPresent(sd, 0b0);
+	setSegmentLimit(sd, 0xba2ed);
+	setAVL(sd, 0);
+	setLongMode(sd, 1);
+	setDefaultOperationSize(sd, 0);
+	setGranularity(sd, 0);
+	setBaseAddress(sd, 0xfedc1234);
+#endif
 
 	printBinary(sd->higher, "higher");
 	printBinary(sd->lower, "lower");
@@ -48,7 +48,7 @@ void gdt_analize(GDT_ENTRY* gdt, size_t index) {
 	terminal_write_uint("DescriptorTypeS = ", getDescriptorTypeS(sd));
 	terminal_write_uint("AVL = ", getAVL(sd));
 
-	terminal_writestring("\n===== End of Analize of GDT=====\n\n");
+	// terminal_writestring("\n===== End of Analize of GDT=====\n\n");
 }
 
 struct CodeAddressesToAnalyse {
@@ -108,14 +108,14 @@ void kernel_main(void) {
 	print_extern_address("The address of args16_end: ", get_args16_end_address);
 
 	print_extern_address("The address of the nice wrapper (>2MB): ", (address_getter_function_t*)get_call_realmode_func_with_args_address);
-	int* pm32_to_pm16_address = print_extern_address("The address of pm32_to_pm16: ", (address_getter_function_t*)get_pm32_to_pm16_address);
-	int* pm16_to_real16_address = print_extern_address("The address of pm16_to_real16: ", (address_getter_function_t*)get_pm16_to_real16_address);
-	int* call_real16_function_address = print_extern_address("The address of call_real16_function_address: ", (address_getter_function_t*)get_call_real16_function_address);
-	int* add16_address = print_extern_address("The address of add16: ", (address_getter_function_t*)get_add16_address);
-	int* resume32_address = print_extern_address("The address of resume32: ", (address_getter_function_t*)get_resume32_start_address);
-	int* resume32_end_address = print_extern_address("The address of resume32_end: ", get_resume32_end_address);
+	[[maybe_unused]] int* pm32_to_pm16_address = print_extern_address("The address of pm32_to_pm16: ", (address_getter_function_t*)get_pm32_to_pm16_address);
+	[[maybe_unused]] int* pm16_to_real16_address = print_extern_address("The address of pm16_to_real16: ", (address_getter_function_t*)get_pm16_to_real16_address);
+	[[maybe_unused]] int* call_real16_function_address = print_extern_address("The address of call_real16_function_address: ", (address_getter_function_t*)get_call_real16_function_address);
+	[[maybe_unused]] int* add16_address = print_extern_address("The address of add16: ", (address_getter_function_t*)get_add16_address);
+	[[maybe_unused]] int* resume32_address = print_extern_address("The address of resume32: ", (address_getter_function_t*)get_resume32_start_address);
+	[[maybe_unused]] int* resume32_end_address = print_extern_address("The address of resume32_end: ", get_resume32_end_address);
 
-#define ANALIZE_CODE
+// #define ANALIZE_CODE
 #ifdef ANALIZE_CODE
 	analyse_code((struct CodeAddressesToAnalyse){
 	    .pm32_to_pm16_address = pm32_to_pm16_address,
@@ -137,7 +137,7 @@ void kernel_main(void) {
 	print_extern_address16("\nThe value of gs: ", get_gs_selector);
 
 	GDT_ROOT gdt_descriptor = get_gdt_root();
-	GDT_ENTRY* gdt = gdt_descriptor.base;
+	GDT_ENTRY* gdt32 = gdt_descriptor.base;
 	terminal_write_ptr("gdt base address = ", gdt_descriptor.base);
 	terminal_write_uint("gdt size limit = ", gdt_descriptor.limit);
 
@@ -146,17 +146,39 @@ void kernel_main(void) {
 	terminal_write_ptr("GDT16_DESCRIPTOR = ", GDT16_ROOT);
 	terminal_write_ptr("GDT16 = ", GDT16_DESCRIPTOR.base);
 
-	terminal_writestring("\nThe gdtr values:\n");
-	terminal_write_hex("gdt16[0].lower = ", gdt16[0].lower);
-	terminal_write_hex("gdt16[0].higher = ", gdt16[0].higher);
-	terminal_write_hex("gdt16[1].lower = ", gdt16[1].lower);
-	terminal_write_hex("gdt16[1].higher = ", gdt16[1].higher);
-	terminal_write_hex("gdt16[2].lower = ", gdt16[2].lower);
-	terminal_write_hex("gdt16[2].higher = ", gdt16[2].higher);
-	terminal_write_hex("gdt16[3].lower = ", gdt16[3].lower);
-	terminal_write_hex("gdt16[3].higher = ", gdt16[3].higher);
+	// terminal_writestring("\nThe gdt32 values:\n");
+	// terminal_write_hex("gdt[0].lower = ", gdt32[0].lower);
+	// terminal_write_hex("gdt[0].higher = ", gdt32[0].higher);
+	// terminal_write_hex("gdt[1].lower = ", gdt32[1].lower);
+	// terminal_write_hex("gdt[1].higher = ", gdt32[1].higher);
+	// terminal_write_hex("gdt[2].lower = ", gdt32[2].lower);
+	// terminal_write_hex("gdt[2].higher = ", gdt32[2].higher);
+	// terminal_write_hex("gdt[3].lower = ", gdt32[3].lower);
+	// terminal_write_hex("gdt[3].higher = ", gdt32[3].higher);
 
+	terminal_writestring("\n\n====== Start of GDT32 ======\n");
+	terminal_writestring("\n-------Code Segment: \n");
+	gdt_analize(gdt32, 2);
+	terminal_writestring("\n-------Data Segment: \n");
+	gdt_analize(gdt32, 3);
+	terminal_writestring("\n====== End of GDT32 ======\n\n");
+
+	// terminal_writestring("\n\nThe gdt16 values:\n");
+	// terminal_write_hex("gdt16[0].lower = ", gdt16[0].lower);
+	// terminal_write_hex("gdt16[0].higher = ", gdt16[0].higher);
+	// terminal_write_hex("gdt16[1].lower = ", gdt16[1].lower);
+	// terminal_write_hex("gdt16[1].higher = ", gdt16[1].higher);
+	// terminal_write_hex("gdt16[2].lower = ", gdt16[2].lower);
+	// terminal_write_hex("gdt16[2].higher = ", gdt16[2].higher);
+	// terminal_write_hex("gdt16[3].lower = ", gdt16[3].lower);
+	// terminal_write_hex("gdt16[3].higher = ", gdt16[3].higher);
+
+	terminal_writestring("\n\n====== Start of GDT16 ======\n");
+	terminal_writestring("\n-------Code Segment: \n");
 	gdt_analize(gdt16, 2);
+	terminal_writestring("\n-------Data Segment: \n");
+	gdt_analize(gdt16, 3);
+	terminal_writestring("\n====== End of GDT16 ======\n\n");
 
 	before();
 
