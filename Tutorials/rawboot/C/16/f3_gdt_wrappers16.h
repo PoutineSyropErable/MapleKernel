@@ -12,8 +12,8 @@ typedef struct __attribute__((packed)) {
 
 	// high 32
 	uint8_t baseAddressMiddle8;
-	uint8_t p_dpl_s_type; // access information
-	uint8_t g_db_l_avl_segmentHigh;
+	uint8_t p_dpl_s_type;           // access
+	uint8_t g_db_l_avl_segmentHigh; // flags + segmentHigh
 	uint8_t baseAddressHigh8;
 } SegmentDescriptor;
 // Low is for 16 bit. Lower, Middle and Higher is for 8 bit

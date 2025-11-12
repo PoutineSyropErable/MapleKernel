@@ -10,6 +10,18 @@ typedef struct __attribute__((packed, aligned(4))) {
 	uint32_t higher;
 } SegmentDescriptor;
 
+typedef struct __attribute__((packed, aligned(4))) {
+	// low 32
+	uint16_t segmentLimitLow16;
+	uint16_t baseAddressLow16;
+
+	// high 32
+	uint8_t baseAddressMiddle8;
+	uint8_t p_dpl_s_type;                // access
+	uint8_t g_db_l_avl_segmentLimitHigh; // flags + segmentLimitHigh
+	uint8_t baseAddressHigh8;
+} SegmentDescriptorNice;
+
 typedef struct {
 	SegmentDescriptor segmentsInfo[SD_COUNT];
 } GDT;
@@ -95,3 +107,30 @@ static const uint8_t BASE_ADDRESS_INDEX_START_2 = 16;
 static const uint8_t BASE_ADDRESS_INDEX_END_2 = 23;
 static const uint8_t BASE_ADDRESS_INDEX_START_3 = 24;
 static const uint8_t BASE_ADDRESS_INDEX_END_3 = 31;
+
+/*Extra interprets*/
+
+// Access
+#define PRESENT 1 << 7
+#define DPL2 1 << 6
+#define DPL1 1 << 5
+#define NOT_SYS 1 << 4
+#define EXEC 1 << 3
+#define DC 1 << 2
+#define RW 1 << 1
+#define ACCESSED 1 << 0
+
+// Flags bits
+#define GRAN_4K 1 << 7
+#define SZ_32 1 << 6
+#define LONG_MODE 1 << 5
+#define AVAIL 1 << 4
+// segment limit high is << [0,3]
+
+#define INTERPRET_STR_LEN 128
+
+void interpret_flags(uint8_t flags, char* output);
+void interpret_access(uint8_t access, char* output);
+
+void printFlags(SegmentDescriptor* sd);
+void printAccess(SegmentDescriptor* sd);

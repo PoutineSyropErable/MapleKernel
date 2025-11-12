@@ -1,6 +1,7 @@
 #include "address_getter.c"
 #include "call_real16_wrapper.h"
 #include "f2_string.h"
+#include "f3_segment_descriptor_internals.h"
 #include "kernel.h"
 #include "os_registers.c"
 #include "pit_timer.h"
@@ -38,15 +39,22 @@ void gdt_analize(GDT_ENTRY* gdt, size_t index) {
 	uint32_t baseAddress = getBaseAddress(sd);
 	printBinary(baseAddress, "Base Address");
 	printBinarySize(getSegmentLimit(sd), "SegmentLimit (bits 0-19)", 20);
+
+	terminal_writestring("\n");
+	printFlags(sd);
+	printAccess(sd);
+	terminal_writestring("\n");
+
 	terminal_write_uint("Granularity = ", getGranularity(sd));
 	terminal_write_uint("DefaultOperationSize = ", getDefaultOperationSize(sd));
 	terminal_write_uint("LongMode = ", getLongMode(sd));
-
-	printBinarySize(getPriviledgeDPL(sd), "DPL (bits 13-14)", 2);
-	terminal_write_uint("Present = ", getPresent(sd));
-	printBinarySize(getType(sd), "Type (bits 8-11)", 4);
-	terminal_write_uint("DescriptorTypeS = ", getDescriptorTypeS(sd));
 	terminal_write_uint("AVL = ", getAVL(sd));
+
+	terminal_writestring("\n");
+	terminal_write_uint("Present = ", getPresent(sd));
+	printBinarySize(getPriviledgeDPL(sd), "DPL (bits 13-14)", 2);
+	terminal_write_uint("DescriptorTypeS = ", getDescriptorTypeS(sd));
+	printBinarySize(getType(sd), "Type (bits 8-11)", 4);
 
 	// terminal_writestring("\n===== End of Analize of GDT=====\n\n");
 }

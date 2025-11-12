@@ -47,17 +47,15 @@ GDT16_START:
 		.CODE.base_low: dw 0
 		.CODE.base_mid: db 0
 		.CODE.access: db PRESENT | NOT_SYS | EXEC | RW
-		.CODE.flags: db 0
+		.CODE.flags_LimitHigh: db 0 | 0
 		.CODE.base_high: db 0
 	.DATA: equ $ - GDT16_START
 		.DATA.limit_low: dw 0xFFFF
 		.DATA.base_low: dw 0
 		.DATA.base_mid: db 0
 		.DATA.access: db PRESENT | NOT_SYS | RW
-		.DATA.flags: db 0
+		.DATA.flags_limitHigh: db 0 | 0 
 		.DATA.base_high: db 0 
-	; dq 0x00009A000000FFFF ; code 
-	; dq 0x000093000000FFFF ; data
 GDT16_END:
 
 

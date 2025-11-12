@@ -20,9 +20,9 @@
       "build/kernel.o",
       "kernel/kernel.c"
     ],
-    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/kernel/kernel.c",
-    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/build/kernel.o"
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/kernel/kernel.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/kernel.o"
   },
   {
     "arguments": [
@@ -37,9 +37,9 @@
       "build/virtual_memory.o",
       "other/virtual_memory.c"
     ],
-    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/other/virtual_memory.c",
-    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/build/virtual_memory.o"
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/other/virtual_memory.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/virtual_memory.o"
   },
   {
     "arguments": [
@@ -54,9 +54,9 @@
       "build/pit_timer.o",
       "other/pit_timer.c"
     ],
-    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/other/pit_timer.c",
-    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/build/pit_timer.o"
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/other/pit_timer.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/pit_timer.o"
   },
   {
     "arguments": [
@@ -71,9 +71,9 @@
       "build/idt.o",
       "other/idt.c"
     ],
-    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/other/idt.c",
-    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/build/idt.o"
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/other/idt.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/idt.o"
   },
   {
     "arguments": [
@@ -88,9 +88,9 @@
       "build/string_helper.o",
       "stdio/string_helper.c"
     ],
-    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/stdio/string_helper.c",
-    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/build/string_helper.o"
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/stdio/string_helper.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/string_helper.o"
   },
   {
     "arguments": [
@@ -107,9 +107,9 @@
       "build/vga_terminal.o",
       "stdio/vga_terminal.c"
     ],
-    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/stdio/vga_terminal.c",
-    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/build/vga_terminal.o"
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/stdio/vga_terminal.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/vga_terminal.o"
   },
   {
     "arguments": [
@@ -124,9 +124,9 @@
       "build/stdlib.o",
       "stdlib/stdlib.c"
     ],
-    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/stdlib/stdlib.c",
-    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/build/stdlib.o"
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/stdlib/stdlib.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/stdlib.o"
   },
   {
     "arguments": [
@@ -144,9 +144,9 @@
       "build/call_real16_wrapper.o",
       "real16_wrappers/call_real16_wrapper.c"
     ],
-    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/real16_wrappers/call_real16_wrapper.c",
-    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/build/call_real16_wrapper.o"
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/real16_wrappers/call_real16_wrapper.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/call_real16_wrapper.o"
   },
   {
     "arguments": [
@@ -161,9 +161,9 @@
       "build/realmode_functions.o",
       "realmode_functions/realmode_functions.c"
     ],
-    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/realmode_functions/realmode_functions.c",
-    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/build/realmode_functions.o"
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/realmode_functions/realmode_functions.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/realmode_functions.o"
   },
   {
     "arguments": [
@@ -180,9 +180,9 @@
       "build/f1_binary_operation.o",
       "gdt_inspection/f1_binary_operation.c"
     ],
-    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/gdt_inspection/f1_binary_operation.c",
-    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/build/f1_binary_operation.o"
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/gdt_inspection/f1_binary_operation.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/f1_binary_operation.o"
   },
   {
     "arguments": [
@@ -200,9 +200,9 @@
       "build/f2_string.o",
       "gdt_inspection/f2_string.c"
     ],
-    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/gdt_inspection/f2_string.c",
-    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/build/f2_string.o"
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/gdt_inspection/f2_string.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/f2_string.o"
   },
   {
     "arguments": [
@@ -219,8 +219,8 @@
       "build/f3_segment_descriptor_internals.o",
       "gdt_inspection/f3_segment_descriptor_internals.c"
     ],
-    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/gdt_inspection/f3_segment_descriptor_internals.c",
-    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/Tutorials/BareBones/build/f3_segment_descriptor_internals.o"
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/gdt_inspection/f3_segment_descriptor_internals.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/f3_segment_descriptor_internals.o"
   }
 ]
