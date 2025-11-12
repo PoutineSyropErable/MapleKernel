@@ -168,6 +168,17 @@ void terminal_putchar(char c) {
 
 		return;
 	}
+	if (c == '\t') {
+		uint8_t spaceToAdd = 4;
+		uint8_t diff = VGA_WIDTH - term.current_write_column;
+		if (4 > diff) {
+			spaceToAdd = diff;
+		}
+		for (uint8_t i = 0; i < spaceToAdd; i++) {
+			terminal_putchar(' ');
+		}
+		return;
+	}
 	terminal_putentryat(c, term.color, term.current_write_column, term.current_write_row);
 	term.current_write_column++;
 	if (term.current_write_column == VGA_WIDTH) {
