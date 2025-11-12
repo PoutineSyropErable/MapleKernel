@@ -145,10 +145,14 @@ static inline uint8_t inb(uint16_t port) {
 	return ret;
 }
 
+static inline int serial_is_transmit_ready() {
+	return inb(COM1 + 5) & 0x20;
+}
+
 void serial_write_char(char c) {
 
 	// Wait until the transmit buffer is empty
-	while (!(inb(COM1 + 5) & 0x20))
+	while (!serial_is_transmit_ready())
 		;
 	outb(COM1, c);
 }

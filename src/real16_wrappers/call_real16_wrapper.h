@@ -39,8 +39,9 @@ typedef int*(address_getter_function_t)(void); // a function pointer
 typedef struct __attribute__((packed)) Args16 {
 	GDT_ROOT gdt_root;
 	// uint16_t pad; // (padded due to esp wanting to)
-	uint16_t ss;
 	uint32_t esp;
+	uint16_t ss;
+	uint16_t cs;
 
 	uint16_t ret1;
 	uint16_t ret2;
@@ -49,7 +50,7 @@ typedef struct __attribute__((packed)) Args16 {
 	uint16_t func_cs;
 
 	uint16_t argc;
-	uint16_t func_args[13];
+	uint16_t func_args[11];
 
 } Args16;
 

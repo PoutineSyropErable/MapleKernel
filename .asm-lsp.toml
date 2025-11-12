@@ -43,7 +43,7 @@ compile_flags_txt = [
 
 # 2️⃣ GCC Intel syntax projects (e.g., kernel, boot headers)
 [[project]]
-path = "src"
+path = "src_old"
 assembler = "gas"
 instruction_set = "x86/x86-64"
 
@@ -77,6 +77,22 @@ compile_flags_txt = [
 	"-o", "/tmp/boot.o"
 ]
 
+
+
+[[project]]
+path = "src/"
+assembler = "nasm"
+instruction_set = "x86/x86-64"
+
+[project.opts]
+compiler = "nasm"
+compile_flags_txt = [
+	"-f", "elf32",    # generate 64-bit ELF object files
+	"-g",             # debug symbols
+	"-F", "dwarf",    # DWARF format
+	"-Wall",           # enable warnings
+	"-o", "/tmp/boot.o"
+]
 
 
 

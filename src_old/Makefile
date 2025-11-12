@@ -25,11 +25,18 @@ $(ISO): $(KERNEL)
 	grub-mkrescue -o $@ $(ISO_DIR)
 
 run: $(ISO)
-	qemu-system-x86_64 -cdrom $(ISO) -nographic -serial mon:stdio
+	qemu-system-x86_64 -cdrom $(ISO) -serial stdio &
+	QEMU_PID=$!
+	vncviewer localhost:5900
+	kill $QEMU_PID 2>/dev/null
+
 
 
 debug: $(ISO)
-	qemu-system-x86_64 -cdrom $(ISO) -nographic -serial mon:stdio -s -S
+	qemu-system-x86_64 -cdrom $(ISO) -serial stdio -s -S &
+	QEMU_PID=$!
+	vncviewer localhost:5900
+	kill $QEMU_PID 2>/dev/null
 
 clean:
 	rm -f *.o *.bin *.iso

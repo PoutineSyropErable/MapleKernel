@@ -8,8 +8,8 @@
 | 5  | ret1    | 16  (2)     | `[args16_start + 16]`    |
 | 8  | ret2    | 16  (2)     | `[args16_start + 18]`    |
 | 9  | *fun    | 16  (2)     | `[args16_start + 20]`    |
-| 10  | fun_cs  | 16  (2)    | `[args16_start + 22]`    |
-| 11  | argc    | 16  (2)    | `[args16_start + 24]`    |
+| 10 | fun_cs  | 16  (2)     | `[args16_start + 22]`    |
+| 11 | argc    | 16  (2)     | `[args16_start + 24]`    |
 | 12 | arg_0   | 16  (2)     | `[args16_start + 26]`    |
 | 13 | arg_1   | 16  (2)     | `[args16_start + 28]`    |
 | 14 | arg_2   | 16  (2)     | `[args16_start + 30]`    |
