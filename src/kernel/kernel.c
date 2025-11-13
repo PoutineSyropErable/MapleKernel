@@ -5,6 +5,7 @@
 #include "kernel.h"
 #include "os_registers.c"
 #include "pit_timer.h"
+#include "stdio.h"
 #include "string_helper.h"
 #include "vga_terminal.h"
 #include <stdbool.h>
@@ -109,6 +110,10 @@ void kernel_main(void) {
 	terminal_set_scroll(0);
 
 	terminal_writestring("\n\n===== Start of Kernel=====\n\n");
+
+	printf("abc %d %e %f %g", 1, 23, 39);
+
+	return;
 
 	print_extern_address("The address of stack16_start: ", get_stack16_start_address);
 	print_extern_address("The address of stack16_end: ", get_stack16_end_address);

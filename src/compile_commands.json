@@ -120,6 +120,26 @@
       "-Wextra",
       "-O2",
       "-c",
+      "-Istdio",
+      "-Iother",
+      "-Istdlib",
+      "-o",
+      "build/stdio.o",
+      "stdio/stdio.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/stdio/stdio.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/stdio.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O2",
+      "-c",
       "-o",
       "build/stdlib.o",
       "stdlib/stdlib.c"

@@ -77,7 +77,7 @@ pm32_to_pm16:
     push gs
 
 	; Save the stack pointer in the first 1mb (first 64kb in fact)
-	; So its accessible in 16 bit, and can be restored on the way back to 32 bit
+	;  1So its accessible in 16 bit, and can be restored on the way back to 32 bit
 	sgdt [args16_start + GDT_ROOT_OFFSET]
 	mov [args16_start +  ESP_OFFSET], esp    ; 
 	mov ax, ss
