@@ -92,9 +92,11 @@ uint8_t char_to_uint(const char c) {
 }
 
 uint32_t string_to_uint(const char* str) {
-	uint8_t digit_index = 0;
 	uint32_t power = 1;
 	uint32_t sum = 0;
+
+	uint8_t str_length = strlen(str);
+	str += str_length - 1;
 
 	while (*str) {
 		uint8_t digit = char_to_uint(*str);
@@ -103,7 +105,7 @@ uint32_t string_to_uint(const char* str) {
 		}
 		sum += digit * power;
 		power *= 10;
-		str++;
+		str--;
 	}
 	return sum;
 }

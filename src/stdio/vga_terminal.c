@@ -263,12 +263,28 @@ void print_int_var(int var) {
 	terminal_writestring(res_buff);
 }
 
+void print_int_var_no_newline(int var) {
+
+	char res_buff[12];
+	size_t len = itoa(var, res_buff);
+	res_buff[len] = '\0'; // add new null terminator
+	terminal_writestring(res_buff);
+}
+
 void print_hex_var(uint32_t var) {
 
 	char res_buff[12];
 	size_t len = uint_to_hex(var, res_buff, 1);
 	res_buff[len] = '\n';     // replace the null terminator with newline
 	res_buff[len + 1] = '\0'; // add new null terminator
+	terminal_writestring(res_buff);
+}
+
+void print_hex_var_no_newline(uint32_t var) {
+
+	char res_buff[12];
+	size_t len = uint_to_hex(var, res_buff, 1);
+	res_buff[len] = '\0'; // add new null terminator
 	terminal_writestring(res_buff);
 }
 

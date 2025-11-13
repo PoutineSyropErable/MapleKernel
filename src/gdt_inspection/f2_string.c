@@ -69,3 +69,19 @@ void printBinarySize(uint32_t binaryNumber, char* variableName, size_t numberOfB
 	print_hex_var(binaryNumber);
 	// terminal_writestring("\n");
 }
+
+void print_binary_var_no_newline(uint32_t binaryNumber, size_t numberOfBits) {
+	char spacelessBitString[33];
+	getSpacelessBitString(binaryNumber, spacelessBitString);
+	char spaceSeparatedBits[40];
+	addSpacesEvery4bits(spacelessBitString, spaceSeparatedBits);
+
+	uint8_t first_index;
+	if (numberOfBits >= 32) {
+		first_index = 0;
+	} else {
+		first_index = 39 - (numberOfBits + numberOfBits / 4);
+	}
+
+	terminal_writestring(spaceSeparatedBits + first_index);
+}

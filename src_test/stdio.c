@@ -208,36 +208,43 @@ void kprintf_argc(uint32_t argc, const char* fmt, ...) {
 		switch (types_and_positions[i].type) {
 		case PRINTF_TAG_CHAR: {
 			char arg_i = (char)va_arg(args, int); // read promoted int, cast to char
+			printf("%c", arg_i);
 			break;
 		}
 
 		case PRINTF_TAG_STRING: {
 			const char* arg_i = va_arg(args, const char*); // pointer stays pointer
+			printf("%s", arg_i);
 			break;
 		}
 
 		case PRINTF_TAG_INT: {
 			int arg_i = va_arg(args, int); // int is passed as int
+			printf("%d", arg_i);
 			break;
 		}
 
 		case PRINTF_TAG_UINT32_T: {
 			uint32_t arg_i = (uint32_t)va_arg(args, uint32_t); // uint32_t promoted to unsigned int
+			printf("%u", arg_i);
 			break;
 		}
 
 		case PRINTF_TAG_FLOAT: {
 			float arg_i = (float)va_arg(args, double); // float promoted to double
+			printf("%f", arg_i);
 			break;
 		}
 
 		case PRINTF_TAG_HEX: {
 			uint32_t arg_i = (uint32_t)va_arg(args, unsigned int); // same as UINT32_T
+			printf("%p", (void*)arg_i);
 			break;
 		}
 
 		case PRINTF_TAG_BINARY: {
 			uint32_t arg_i = (uint32_t)va_arg(args, unsigned int); // same as UINT32_T
+			printf("%p", (void*)arg_i);
 			break;
 		}
 

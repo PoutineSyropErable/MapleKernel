@@ -123,6 +123,7 @@
       "-Istdio",
       "-Iother",
       "-Istdlib",
+      "-Igdt_inspection",
       "-o",
       "build/stdio.o",
       "stdio/stdio.c"

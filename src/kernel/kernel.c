@@ -111,7 +111,7 @@ void kernel_main(void) {
 
 	terminal_writestring("\n\n===== Start of Kernel=====\n\n");
 
-	printf("abc %d %e %f %g", 1, 23, 39);
+	kprintf("abc %d %e %f %g", 1, 23, 39);
 
 	return;
 
