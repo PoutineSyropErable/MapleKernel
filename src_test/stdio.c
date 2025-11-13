@@ -132,19 +132,20 @@ struct PRINTF_FIELD_PROPERTIES get_single_format_properties(const char* fmt) {
 		return properties;
 	}
 
-	const char* option_number = fmt + 3; // ("%p:2")
-	if (!is_digit(*option_number)) {
+	const char* option_number_char_ptr = fmt + 3; // ("%p:2")
+	if (!is_digit(*option_number_char_ptr)) {
 		properties.option = FMT_OPTION_NOT_IMPLEMENTED;
 	} else {
 		uint8_t len = 3;
 		char len_char[8] = {0};
-		while (is_digit(*option_number)) {
-			len_char[len - 3] = *option_number;
-			option_number++;
+		while (is_digit(*option_number_char_ptr)) {
+			len_char[len - 3] = *option_number_char_ptr;
+			option_number_char_ptr++;
 			len++;
 		}
 		properties.len = len;
 		len_char[len - 3] = '\0';
+
 		uint32_t len32 = string_to_uint(len_char);
 		if (len32 == (uint32_t)-1) {
 			properties.option = FMT_OPTION_COULD_NOT_CONVERT;
@@ -172,6 +173,7 @@ void set_types_and_pos(const char* fmt, struct PRINTF_FIELD_PROPERTIES* printf_a
 			printf_args_properties[count].len = properties.len;
 			printf_args_properties[count].option = properties.option;
 			printf_args_properties[count].type = properties.type;
+			printf_args_properties[count].option_num = properties.option_num;
 			printf_args_properties[count].pos = offset;
 			count++;
 		}
