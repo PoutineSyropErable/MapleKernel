@@ -176,6 +176,11 @@ void set_types_and_pos(const char* fmt, struct PRINTF_FIELD_PROPERTIES* printf_a
 	while (char_array[offset]) {
 		if (char_array[offset] == '%') {
 
+			if (percent_count == count) {
+				// weird behavior
+				return;
+			}
+
 			const char* this_format = &char_array[offset];
 			struct PRINTF_FIELD_PROPERTIES properties = get_single_format_properties(this_format);
 			printf_args_properties[count].len = properties.len;
@@ -188,10 +193,6 @@ void set_types_and_pos(const char* fmt, struct PRINTF_FIELD_PROPERTIES* printf_a
 		if (in_type) {
 		}
 		offset++;
-	}
-
-	if (percent_count != count) {
-		// weird behavior
 	}
 }
 
@@ -209,42 +210,59 @@ void kprintf_argc(uint32_t argc, const char* fmt, ...) {
 		terminal_write_uint("len = ", len);
 		terminal_write_uint("len_check = ", len_check);
 	}
-	struct PRINTF_FIELD_PROPERTIES types_and_positions[len];
-	set_types_and_pos(fmt, (struct PRINTF_FIELD_PROPERTIES*)&types_and_positions, len);
+	struct PRINTF_FIELD_PROPERTIES printf_information[len];
+	set_types_and_pos(fmt, (struct PRINTF_FIELD_PROPERTIES*)&printf_information, len);
+
+	terminal_writestring("\n==Start of info===\n");
+	for (uint8_t i = 0; i < len; i++) {
+		print_info(printf_information[i]);
+		terminal_writestring("--------\n");
+	}
+	terminal_writestring("\n===End of info==\n");
 
 	va_list args;
 	va_start(args, fmt);
 
 	for (uint8_t i = 0; i < len; i++) {
 
-		switch (types_and_positions[i].type) {
+		switch (printf_information[i].type) {
 		case PRINTF_TAG_CHAR: {
 			char arg_i = (char)va_arg(args, int); // read promoted int, cast to char
+			terminal_writestring("char: ");
 			terminal_putchar(arg_i);
+			terminal_writestring("\n");
 			break;
 		}
 
 		case PRINTF_TAG_STRING: {
 			const char* arg_i = va_arg(args, const char*); // pointer stays pointer
+			terminal_writestring("string: ");
 			terminal_writestring(arg_i);
+			terminal_writestring("\n");
 			break;
 		}
 
 		case PRINTF_TAG_INT: {
 			int arg_i = va_arg(args, int); // int is passed as int
+			terminal_writestring("int: ");
 			print_int_var_no_newline(arg_i);
+			terminal_writestring("\n");
 			break;
 		}
 
 		case PRINTF_TAG_UINT32_T: {
 			uint32_t arg_i = (uint32_t)va_arg(args, uint32_t); // uint32_t promoted to unsigned int
+			terminal_writestring("uint: ");
 			print_uint_var_no_newline(arg_i);
+			terminal_writestring("\n");
 			break;
 		}
 
 		case PRINTF_TAG_FLOAT: {
-			float arg_i = (float)va_arg(args, double); // float promoted to double
-			// printf("%f", arg_i);
+			volatile double arg_i = va_arg(args, double); // float promoted to double
+			terminal_writestring("float: ");
+			print_float_var_no_newline(arg_i);
+			terminal_writestring("\n");
 			break;
 		}
 
@@ -255,9 +273,16 @@ void kprintf_argc(uint32_t argc, const char* fmt, ...) {
 		}
 
 		case PRINTF_TAG_BINARY: {
-			uint32_t arg_i = (uint32_t)va_arg(args, unsigned int); // same as UINT32_T
+			uint32_t arg_i = (uint32_t)va_arg(args, uint32_t); // same as UINT32_T
 			struct PRINTF_FIELD_PROPERTIES information;
-			print_binary_var_no_newline(arg_i, information.option_num);
+			if (information.option == FMT_OPTION_PAD) {
+				print_binary_var_no_newline(arg_i, information.option_num);
+			} else {
+
+				terminal_writestring("binary:");
+				print_binary_var_no_newline(arg_i, 0);
+				terminal_writestring("\n");
+			}
 
 			break;
 		}
@@ -268,9 +293,6 @@ void kprintf_argc(uint32_t argc, const char* fmt, ...) {
 			break;
 		}
 		}
-
-		print_info(types_and_positions[i]);
-		terminal_writestring("====\n");
 	}
 
 	va_end(args);

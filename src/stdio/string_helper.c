@@ -79,6 +79,45 @@ size_t uitoa(uint32_t value, char* buffer) {
 	return pos;
 }
 
+size_t ftoa(float value, char* buffer, uint32_t precision) {
+	uint32_t pos = 0;
+
+	// Handle sign
+	if (value < 0.0f) {
+		buffer[pos++] = '-';
+		value = -value;
+	}
+
+	// Extract integer part
+	uint32_t integer_part = (uint32_t)value;
+
+	// Extract fractional part
+	float fractional = value - (float)integer_part;
+
+	// Convert integer part
+	pos += uitoa(integer_part, buffer + pos);
+
+	// If no requested precision, stop
+	if (precision == 0) {
+		buffer[pos] = '\0';
+		return pos;
+	}
+
+	// Add decimal point
+	buffer[pos++] = '.';
+
+	// Convert fractional digits
+	for (uint32_t i = 0; i < precision; i++) {
+		fractional *= 10.0f;
+		uint32_t digit = (uint32_t)fractional;
+		buffer[pos++] = '0' + digit;
+		fractional -= digit; // remove the digit we just printed
+	}
+
+	buffer[pos] = '\0';
+	return pos;
+}
+
 static inline int is_digit(char c) {
 	return (c >= '0' && c <= '9');
 }

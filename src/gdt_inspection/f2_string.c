@@ -70,11 +70,33 @@ void printBinarySize(uint32_t binaryNumber, char* variableName, size_t numberOfB
 	// terminal_writestring("\n");
 }
 
+uint8_t binary_size(uint32_t binary_number) {
+	if (binary_number == 0)
+		return 1;
+
+	unsigned bits = 0;
+	while (binary_number > 0) {
+		bits++;
+		binary_number >>= 1;
+	}
+	return bits;
+}
+
+uint8_t max(uint8_t a, uint8_t b) {
+	if (a > b) {
+		return a;
+	}
+	return b;
+}
+
 void print_binary_var_no_newline(uint32_t binaryNumber, size_t numberOfBits) {
 	char spacelessBitString[33];
 	getSpacelessBitString(binaryNumber, spacelessBitString);
 	char spaceSeparatedBits[40];
 	addSpacesEvery4bits(spacelessBitString, spaceSeparatedBits);
+
+	uint8_t bitSize = binary_size(binaryNumber);
+	numberOfBits = max(bitSize, numberOfBits);
 
 	uint8_t first_index;
 	if (numberOfBits >= 32) {

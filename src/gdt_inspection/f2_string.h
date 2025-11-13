@@ -9,3 +9,5 @@ void printBinary(uint32_t binaryNumber, char* variableName);
 void printBinarySize(uint32_t binaryNumber, char* variableName, size_t numberOfBits);
 
 void print_binary_var_no_newline(uint32_t binaryNumber, size_t numberOfBits);
+
+uint8_t binSize(uint32_t number);

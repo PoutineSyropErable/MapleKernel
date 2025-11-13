@@ -92,6 +92,8 @@ void print_int_var_no_newline(int var);
 void print_uint_var(uint32_t var);
 void print_uint_var_no_newline(uint32_t var);
 
+void print_float_var_no_newline(float var);
+
 void print_hex_var(uint32_t var);
 void print_hex_var_no_newline(uint32_t var);
 

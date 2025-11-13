@@ -311,6 +311,16 @@ void print_uint_var_no_newline(uint32_t var) {
 	char res_buff[12];
 	size_t len = uitoa(var, res_buff);
 	res_buff[len] = '\0'; // replace the null terminator with newline
+
+	terminal_writestring(res_buff);
+}
+
+void print_float_var_no_newline(float var) {
+
+	char res_buff[20];
+	size_t len = ftoa(var, res_buff, 6);
+	res_buff[len] = '\0'; // replace the null terminator with newline
+
 	terminal_writestring(res_buff);
 }
 

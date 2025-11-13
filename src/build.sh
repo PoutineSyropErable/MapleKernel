@@ -13,7 +13,7 @@ LDFLAGS=("-ffreestanding" "-nostdlib" "-lgcc")
 NASM_FLAGS32=("-f" "elf32")
 NASM_FLAGS16=("-f" "elf")
 
-DEBUG_OPT_LVL="-O1"
+DEBUG_OPT_LVL="-O0"
 RELEASE_OPT_LVL="-O2"
 QEMU_DBG_FLAGS=()
 
@@ -145,7 +145,7 @@ echo "ISO created successfully: $BUILD_DIR/myos.iso"
 # ===== Pick one of those two
 # -kernel "$BUILD_DIR/myos.bin" \
 # -cdrom "$BUILD_DIR/myos.iso" \
-qemu-system-x86_64 \
+qemu-system-i386 \
 	-cdrom "$BUILD_DIR/myos.iso" \
 	-no-reboot \
 	"${QEMU_DBG_FLAGS[@]}" \
