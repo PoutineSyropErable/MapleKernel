@@ -3,7 +3,6 @@
 #include "string_helper.h"
 #include "vga_terminal.h"
 #include <stdarg.h>
-#include <stdio.h>
 
 /*
 %f : float
@@ -32,7 +31,7 @@ static inline int is_digit(char c) {
 	return (c >= '0' && c <= '9');
 }
 
-static inline int is_alnum(char c) {
+[[maybe_unused]] static inline int is_alnum(char c) {
 	return is_alpha(c) || is_digit(c);
 }
 
@@ -177,8 +176,9 @@ void set_types_and_pos(const char* fmt, struct PRINTF_FIELD_PROPERTIES* printf_a
 		if (char_array[offset] == '%') {
 
 			if (percent_count == count) {
-				// weird behavior
-				return;
+				terminal_write_uint("percent_count = ", percent_count);
+				terminal_write_uint("count = ", count);
+				abort();
 			}
 
 			const char* this_format = &char_array[offset];
@@ -198,6 +198,22 @@ void set_types_and_pos(const char* fmt, struct PRINTF_FIELD_PROPERTIES* printf_a
 
 static inline void nop() {}
 
+struct startAndEnd {
+	uint16_t start;
+	uint16_t end;
+};
+
+/* end not included */
+void terminal_write_offsets(const char* str, uint16_t start, uint16_t end) {
+	if (end <= start)
+		return; // sanity check
+
+	for (uint16_t i = start; i < end; i++) {
+		char c = str[i];
+		terminal_putchar(str[i]);
+	}
+}
+
 void kprintf_argc(uint32_t argc, const char* fmt, ...) {
 
 	uint8_t len = argc - 1;
@@ -209,16 +225,52 @@ void kprintf_argc(uint32_t argc, const char* fmt, ...) {
 		terminal_writestring("len check failed\n");
 		terminal_write_uint("len = ", len);
 		terminal_write_uint("len_check = ", len_check);
+		abort();
 	}
 	struct PRINTF_FIELD_PROPERTIES printf_information[len];
 	set_types_and_pos(fmt, (struct PRINTF_FIELD_PROPERTIES*)&printf_information, len);
 
+	uint16_t format_len = strlen(fmt);
+	uint16_t last_fmt_end = printf_information[len - 1].pos + printf_information[len - 1].len;
+	if (format_len == last_fmt_end) {
+		// Then,  "abc %d %f" <- Finish with format specifier
+		// Else, "abc, %d %f\n" <- something else after
+	}
+
+	struct startAndEnd start_and_ends[argc];
+	start_and_ends[0].start = 0;
+	start_and_ends[0].end = printf_information[0].pos - 1;
+
+	for (uint8_t i = 1; i < len; i++) {
+		start_and_ends[i].start = printf_information[i - 1].pos + printf_information[i - 1].len;
+		start_and_ends[i].end = printf_information[i].pos - 1;
+	}
+
+	start_and_ends[len].start = printf_information[len - 1].pos + printf_information[len - 1].len;
+	start_and_ends[len].end = format_len - 1;
+
+#ifdef TEST_PRINTF
 	terminal_writestring("\n==Start of info===\n");
 	for (uint8_t i = 0; i < len; i++) {
 		print_info(printf_information[i]);
 		terminal_writestring("--------\n");
 	}
 	terminal_writestring("\n===End of info==\n");
+
+	for (uint8_t i = 0; i < argc; i++) {
+		terminal_write_uint("i = ", i);
+		terminal_write_uint("start = ", start_and_ends[i].start);
+		terminal_write_uint("end = ", start_and_ends[i].end);
+		terminal_putchar('|');
+		terminal_write_offsets(fmt, start_and_ends[i].start, start_and_ends[i].end + 1);
+		terminal_putchar('|');
+		terminal_writestring("\n======\n");
+	}
+#endif
+
+	// terminal_writestring("\n==Showing the real text==\n");
+
+	terminal_write_offsets(fmt, start_and_ends[0].start, start_and_ends[0].end + 1);
 
 	va_list args;
 	va_start(args, fmt);
@@ -228,41 +280,52 @@ void kprintf_argc(uint32_t argc, const char* fmt, ...) {
 		switch (printf_information[i].type) {
 		case PRINTF_TAG_CHAR: {
 			char arg_i = (char)va_arg(args, int); // read promoted int, cast to char
-			terminal_writestring("char: ");
+			// terminal_writestring("char: ");
 			terminal_putchar(arg_i);
-			terminal_writestring("\n");
+			// terminal_writestring("\n");
 			break;
 		}
 
 		case PRINTF_TAG_STRING: {
 			const char* arg_i = va_arg(args, const char*); // pointer stays pointer
-			terminal_writestring("string: ");
+			// terminal_writestring("string: ");
 			terminal_writestring(arg_i);
-			terminal_writestring("\n");
+			// terminal_writestring("\n");
 			break;
 		}
 
 		case PRINTF_TAG_INT: {
 			int arg_i = va_arg(args, int); // int is passed as int
-			terminal_writestring("int: ");
+			// terminal_writestring("int: ");
 			print_int_var_no_newline(arg_i);
-			terminal_writestring("\n");
+			// terminal_writestring("\n");
 			break;
 		}
 
 		case PRINTF_TAG_UINT32_T: {
 			uint32_t arg_i = (uint32_t)va_arg(args, uint32_t); // uint32_t promoted to unsigned int
-			terminal_writestring("uint: ");
-			print_uint_var_no_newline(arg_i);
-			terminal_writestring("\n");
+			struct PRINTF_FIELD_PROPERTIES information = printf_information[i];
+
+			if (information.option == FMT_OPTION_PAD) {
+			} else {
+				print_uint_var_no_newline(arg_i);
+			}
 			break;
 		}
 
 		case PRINTF_TAG_FLOAT: {
-			volatile double arg_i = va_arg(args, double); // float promoted to double
-			terminal_writestring("float: ");
-			print_float_var_no_newline(arg_i);
-			terminal_writestring("\n");
+			float arg_i = (float)va_arg(args, double); // float promoted to double
+			struct PRINTF_FIELD_PROPERTIES information = printf_information[i];
+
+			if (information.option == FMT_OPTION_PRECISION) {
+				// terminal_writestring("float: ");
+				print_float_var_no_newline_precision(arg_i, information.option_num);
+				// terminal_writestring("\n");
+			} else {
+				// terminal_writestring("float: ");
+				print_float_var_no_newline(arg_i);
+				// terminal_writestring("\n");
+			}
 			break;
 		}
 
@@ -274,14 +337,16 @@ void kprintf_argc(uint32_t argc, const char* fmt, ...) {
 
 		case PRINTF_TAG_BINARY: {
 			uint32_t arg_i = (uint32_t)va_arg(args, uint32_t); // same as UINT32_T
-			struct PRINTF_FIELD_PROPERTIES information;
+			struct PRINTF_FIELD_PROPERTIES information = printf_information[i];
 			if (information.option == FMT_OPTION_PAD) {
+				// terminal_writestring("binary_padded:");
 				print_binary_var_no_newline(arg_i, information.option_num);
+				// terminal_writestring("\n");
 			} else {
 
-				terminal_writestring("binary:");
+				// terminal_writestring("binary:");
 				print_binary_var_no_newline(arg_i, 0);
-				terminal_writestring("\n");
+				// terminal_writestring("\n");
 			}
 
 			break;
@@ -293,6 +358,8 @@ void kprintf_argc(uint32_t argc, const char* fmt, ...) {
 			break;
 		}
 		}
+
+		terminal_write_offsets(fmt, start_and_ends[i + 1].start, start_and_ends[i + 1].end + 1);
 	}
 
 	va_end(args);

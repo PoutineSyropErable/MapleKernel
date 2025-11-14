@@ -14,7 +14,7 @@ NASM_FLAGS32=("-f" "elf32")
 NASM_FLAGS16=("-f" "elf")
 
 DEBUG_OPT_LVL="-O0"
-RELEASE_OPT_LVL="-O2"
+RELEASE_OPT_LVL="-O0"
 QEMU_DBG_FLAGS=()
 
 if [[ "$ARG1" == "debug" ]]; then
@@ -85,8 +85,8 @@ nasm "${NASM_FLAGS32[@]}" "$REAL16_WRAPPERS/call_realmode_function_wrapper32.asm
 ia16-elf-gcc "${CFLAGS16[@]}" -c "$REAL_FUNC/realmode_functions.c" -o "$BUILD_DIR/realmode_functions.o"
 
 i686-elf-gcc "${CFLAGS[@]}" -c "$GDT_INSPECTION/f1_binary_operation.c" -o "$BUILD_DIR/f1_binary_operation.o" "-I$STDIO" "-I$GDT_INSPECTION"
-i686-elf-gcc "${CFLAGS[@]}" -c "$GDT_INSPECTION/f2_string.c" -o "$BUILD_DIR/f2_string.o" -std=gnu99 "-I$STDIO" "-I$GDT_INSPECTION"
-i686-elf-gcc "${CFLAGS[@]}" -c "$GDT_INSPECTION/f3_segment_descriptor_internals.c" -o "$BUILD_DIR/f3_segment_descriptor_internals.o" "-I$STDIO" "-I$GDT_INSPECTION"
+i686-elf-gcc "${CFLAGS[@]}" -c "$GDT_INSPECTION/f2_string.c" -o "$BUILD_DIR/f2_string.o" -std=gnu99 "-I$STDIO" "-I$GDT_INSPECTION" "-I$STDLIB"
+i686-elf-gcc "${CFLAGS[@]}" -c "$GDT_INSPECTION/f3_segment_descriptor_internals.c" -o "$BUILD_DIR/f3_segment_descriptor_internals.o" "-I$STDIO" "-I$GDT_INSPECTION" "-I$STDLIB"
 
 # Link the kernel and generate the final binary
 printf "\n\n====== Start of Linking =====\n\n"

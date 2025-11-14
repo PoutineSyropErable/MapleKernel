@@ -57,9 +57,9 @@ void terminal_setcolor(color_bg_fg color);
 
 void terminal_putentryat(char c, color_bg_fg color, size_t pos_x, size_t pos_y);
 
-inline void clear_visible_terminal();
-inline void terminal_scroll_down(int scroll_amount);
-inline void terminal_increase_row();
+// inline void clear_visible_terminal();
+// inline void terminal_scroll_down(int scroll_amount);
+// inline void terminal_increase_row();
 
 // extern inline void clear_visible_terminal();
 // extern inline void terminal_scroll_down(int scroll_amount);
@@ -93,6 +93,7 @@ void print_uint_var(uint32_t var);
 void print_uint_var_no_newline(uint32_t var);
 
 void print_float_var_no_newline(float var);
+void print_float_var_no_newline_precision(float var, uint8_t precision);
 
 void print_hex_var(uint32_t var);
 void print_hex_var_no_newline(uint32_t var);
