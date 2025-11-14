@@ -1,9 +1,8 @@
-Start of my micro kernel project in C, using Qemu.
+Start of my kernel project in C, using Qemu.
 
 
-Well, gonna get better at c before i do this
-Might even need to start doing assembly shit
 
+got better at assembly. Will write bad C code, as long as it works
 
 need a cross gcc and cross gdb
 ```
