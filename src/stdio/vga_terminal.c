@@ -345,11 +345,13 @@ static inline uint8_t min(uint8_t a, uint8_t b) {
 
 void print_float_var_no_newline_precision(float var, uint8_t precision) {
 
-	const uint8_t max_float_exponent = 38;
-	const uint8_t safety_and_dot_char = 3 + 1;
 	const uint8_t max_precision = 6;
 	precision = min(precision, max_precision);
-	char res_buff[max_float_exponent + safety_and_dot_char + max_precision];
+	const uint8_t max_float_exponent = 38;
+	const uint8_t safety_and_dot_char = 3 + 1;
+
+	const uint8_t bounded_size = max_float_exponent + safety_and_dot_char + max_precision;
+	char res_buff[bounded_size];
 	size_t len = ftoa(var, res_buff, precision);
 	res_buff[len] = '\0'; // replace the null terminator with newline
 
