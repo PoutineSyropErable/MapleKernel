@@ -102,20 +102,23 @@ void before() {
 
 void kernel_main(void) {
 
-// init_paging();
-// init_page_bitmap();
+	// init_paging();
+	// init_page_bitmap();
 
-/* Initialize terminal interface */
-#ifndef DDEBUG
-	// wait(5);
+	/* Initialize terminal interface */
+	char message[] = "Not Debugging\n";
+#ifndef DEBUG
+	wait(5);
+#else
+	message[0] = '\0';
 #endif
 	initialize_terminal();
 	terminal_set_scroll(0);
 
 	terminal_writestring("\n\n===== Start of Kernel=====\n\n");
+	kprintf("%s", message);
 
-	// kprintf("int = %d, uint = %u, float = %f.2, bin = %b:4, hex = %h:6-final text\n", 1, 2, 3.0, 0b1101, 0x123bcd);
-	print_hex_f(0x123, 6);
+	kprintf("int = %d, uint = %u, float = %f.2, bin = %b:7, hex = %h:9-final text|\n", 1, 2, 3.0, 0b11011, 0x123bcd);
 	return;
 
 	print_extern_address("The address of stack16_start: ", get_stack16_start_address);

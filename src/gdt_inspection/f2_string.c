@@ -170,7 +170,7 @@ void print_hex_f(uint32_t hex_number, uint8_t numberOfHex) {
 
 		uint8_t j = number_of_hex_char_to_print - i;
 		j -= number_of_leading_zeros;
-		if ((j - 1) % 4 == 0) {
+		if ((j - 1) % 4 == 0 && i != (len - 1)) {
 			terminal_putchar(' ');
 		}
 		// "1234 abcd 5678 fedc"
