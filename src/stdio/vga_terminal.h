@@ -57,13 +57,9 @@ void terminal_setcolor(color_bg_fg color);
 
 void terminal_putentryat(char c, color_bg_fg color, size_t pos_x, size_t pos_y);
 
-// inline void clear_visible_terminal();
-// inline void terminal_scroll_down(int scroll_amount);
-// inline void terminal_increase_row();
-
-// extern inline void clear_visible_terminal();
-// extern inline void terminal_scroll_down(int scroll_amount);
-// extern inline void terminal_increase_row();
+void clear_visible_terminal();
+void terminal_scroll_down(int scroll_amount);
+void terminal_increase_row();
 
 /* ======= Serial std out ======== */
 

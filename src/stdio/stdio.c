@@ -246,9 +246,12 @@ void kprintf_argc(uint32_t argc, const char* fmt, ...) {
 		start_and_ends[i].end = printf_information[i].pos - 1;
 	}
 
-	start_and_ends[len].start = printf_information[len - 1].pos + printf_information[len - 1].len;
-	start_and_ends[len].end = format_len - 1;
+	if (len != 0) {
+		start_and_ends[len].start = printf_information[len - 1].pos + printf_information[len - 1].len;
+		start_and_ends[len].end = format_len - 1;
+	}
 
+// #define TEST_PRINTF
 #ifdef TEST_PRINTF
 	terminal_writestring("\n==Start of info===\n");
 	for (uint8_t i = 0; i < len; i++) {

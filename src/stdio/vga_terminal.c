@@ -30,7 +30,7 @@ static inline void set_vga_element(uint8_t pos_x, uint8_t pos_y, color_char c) {
 	(*term.vga_buffer)[pos_y][pos_x] = c;
 }
 
-static inline void clear_visible_terminal() {
+void clear_visible_terminal() {
 
 	for (size_t y = 0; y < VGA_HEIGHT; y++) {
 		for (size_t x = 0; x < VGA_WIDTH; x++) {
@@ -89,7 +89,7 @@ void terminal_set_scroll(size_t row) {
 	terminal_update_vga_mem();
 }
 
-static inline void terminal_scroll_down(int scroll_amount) {
+void terminal_scroll_down(int scroll_amount) {
 
 	size_t current_scroll = term.scroll_row;
 	terminal_set_scroll(current_scroll + scroll_amount);
@@ -117,7 +117,7 @@ void terminal_putentryat(char c, color_bg_fg color, size_t pos_x, size_t pos_y) 
 	set_vga_element(pos_x, pos_y - term.scroll_row, colored_c);
 }
 
-static inline void terminal_increase_row() {
+void terminal_increase_row() {
 
 	term.current_write_column = 0;
 	// should it do it here? or next to the caller? Can a row increase without changing the columns work?
