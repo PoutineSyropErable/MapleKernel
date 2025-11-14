@@ -14,13 +14,13 @@ NASM_FLAGS32=("-f" "elf32")
 NASM_FLAGS16=("-f" "elf")
 
 DEBUG_OPT_LVL="-O0"
-RELEASE_OPT_LVL="-O0"
+RELEASE_OPT_LVL="-O2"
 QEMU_DBG_FLAGS=()
 
 if [[ "$ARG1" == "debug" ]]; then
 	echo "Debug mode enabled"
-	CFLAGS+=("$DEBUG_OPT_LVL" "-g")
-	CFLAGS16+=("$DEBUG_OPT_LVL" "-g")
+	CFLAGS+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG")
+	CFLAGS16+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG")
 	LDFLAGS+=("-g")
 	NASM_FLAGS32+=("-g" "-F" "dwarf")
 	NASM_FLAGS16+=("-g" "-F" "dwarf")

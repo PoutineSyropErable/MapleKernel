@@ -102,24 +102,21 @@ void before() {
 
 void kernel_main(void) {
 
-	// init_paging();
-	// init_page_bitmap();
+// init_paging();
+// init_page_bitmap();
 
-	/* Initialize terminal interface */
-	wait(5);
+/* Initialize terminal interface */
+#ifndef DDEBUG
+	// wait(5);
+#endif
 	initialize_terminal();
 	terminal_set_scroll(0);
 
 	terminal_writestring("\n\n===== Start of Kernel=====\n\n");
 
-	// kprintf("abc_%d-%f.3xx%u-__-%b:8\n", 1, 23.0, 39, 14);
-	kprintf("int = %d, uint = %u, float = %f, bin = %b, final text\n", 1, 2, 3.0, 4);
-	kprintf("int = %d, uint = %u, float = %f.2, bin =%b:4, hex = %h:6\n", 1, 2, 3.0, 4, 0x123bcd);
-	// kprintf("int = %d, uint = %u, float = %f, bin = %b", 1, 2, 3.0, 4);
-	// kprintf_argc(5, "abc %d %f %u %b", 1, (double)23.0, 39, 14);
-
-	// print_binary_var_no_newline(14, 0);
-	// kprintf("%d %u %b", 1, 39, 23);
+	// kprintf("int = %d, uint = %u, float = %f.2, bin = %b:4, hex = %h:6-final text\n", 1, 2, 3.0, 0b1101, 0x123bcd);
+	print_hex_f(0x123, 6);
+	return;
 
 	print_extern_address("The address of stack16_start: ", get_stack16_start_address);
 	print_extern_address("The address of stack16_end: ", get_stack16_end_address);

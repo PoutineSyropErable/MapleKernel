@@ -136,11 +136,11 @@ static inline uint32_t hex_len(uint32_t i) {
 	// So at 5, 9, 13, (4n+1), space for ' ' is added
 }
 
-void print_hex_f(uint32_t hex_number, uint8_t number_of_hex_char_to_print) {
-	assert(number_of_hex_char_to_print <= 16, "Not designed for too big hex (Bounded)");
+void print_hex_f(uint32_t hex_number, uint8_t numberOfHex) {
+	assert(numberOfHex <= 16, "Not designed for too big hex (Bounded)");
 
 	uint8_t hex_size = hexSize(hex_number);
-	number_of_hex_char_to_print = max(hex_size, number_of_hex_char_to_print);
+	uint8_t number_of_hex_char_to_print = max(hex_size, numberOfHex);
 
 	char output_array[number_of_hex_char_to_print + 1];
 	size_t len = uint_to_hex(hex_number, output_array, false);
@@ -152,22 +152,27 @@ void print_hex_f(uint32_t hex_number, uint8_t number_of_hex_char_to_print) {
 
 	terminal_writestring("0x");
 	uint8_t number_of_leading_zeros = number_of_hex_char_to_print - len;
+	if (number_of_hex_char_to_print < len) {
+		number_of_leading_zeros = 0;
+	}
 	for (uint8_t i = 0; i < number_of_leading_zeros; i++) {
 		terminal_putchar('0');
-		if ((i + 1) % 4 == 0) {
+		uint8_t number_of_char_left_to_print = number_of_hex_char_to_print - (i + 1);
+		if (number_of_char_left_to_print % 4 == 0) {
 			terminal_putchar(' ');
 		}
 	}
 
 	for (uint8_t i = 0; i < len; i++) {
 
-		uint8_t j = (number_of_hex_char_to_print + 1) - i;
-		j += number_of_leading_zeros;
-		if ((j + 1) % 4 == 0) {
-			terminal_putchar(' ');
-		}
 		char c_to_print = output_array[i];
 		terminal_putchar(c_to_print);
+
+		uint8_t j = number_of_hex_char_to_print - i;
+		j -= number_of_leading_zeros;
+		if ((j - 1) % 4 == 0) {
+			terminal_putchar(' ');
+		}
 		// "1234 abcd 5678 fedc"
 	}
 }

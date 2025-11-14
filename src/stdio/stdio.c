@@ -307,12 +307,8 @@ void kprintf_argc(uint32_t argc, const char* fmt, ...) {
 
 		case PRINTF_TAG_UINT32_T: {
 			uint32_t arg_i = (uint32_t)va_arg(args, uint32_t); // uint32_t promoted to unsigned int
-			struct PRINTF_FIELD_PROPERTIES information = printf_information[i];
 
-			if (information.option == FMT_OPTION_PAD) {
-			} else {
-				print_uint_var_no_newline(arg_i);
-			}
+			print_uint_var_no_newline(arg_i);
 			break;
 		}
 
@@ -334,7 +330,12 @@ void kprintf_argc(uint32_t argc, const char* fmt, ...) {
 
 		case PRINTF_TAG_HEX: {
 			uint32_t arg_i = (uint32_t)va_arg(args, unsigned int); // same as UINT32_T
-			print_hex_var(arg_i);
+			struct PRINTF_FIELD_PROPERTIES information = printf_information[i];
+			if (information.option == FMT_OPTION_PAD) {
+				print_hex_f(arg_i, information.option_num);
+			} else {
+				print_hex_f(arg_i, 0);
+			}
 			break;
 		}
 
