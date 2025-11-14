@@ -169,6 +169,7 @@ void terminal_putchar(char c) {
 	if (c == '\0') {
 		return;
 	}
+	serial_write_char(c);
 
 	// serial_write_char(c);
 	if (c == '\n') {
@@ -188,21 +189,12 @@ void terminal_putchar(char c) {
 		}
 		return;
 	}
+
 	terminal_putentryat(c, term.color, term.current_write_column, term.current_write_row);
 	term.current_write_column++;
-
-	char o[12];
-	size_t len = uitoa(term.current_write_column, o);
-	o[len] = '\n';
-	o[len + 1] = '\0';
-	serial_write_string(o);
-
 	if (term.current_write_column == VGA_WIDTH) {
 		term.current_write_column = 0;
 		terminal_increase_row();
-		serial_write_string("increased row on char: ");
-		serial_write_char(c);
-		serial_write_string("\n");
 	}
 }
 
