@@ -200,7 +200,7 @@ uint8_t get_flags(SegmentDescriptor* sd) {
 void printFlags(SegmentDescriptor* sd) {
 	uint8_t flags = get_flags(sd);
 	char flagsOutput[INTERPRET_STR_LEN];
-	printBinarySize(flags, "flags = ", 4);
+	printBinarySize(flags, "flags", 4);
 	interpret_flags(flags, flagsOutput);
 	terminal_writestring(flagsOutput);
 }
@@ -208,7 +208,7 @@ void printFlags(SegmentDescriptor* sd) {
 void printAccess(SegmentDescriptor* sd) {
 	uint8_t access = get_access(sd);
 	char accessOutput[INTERPRET_STR_LEN];
-	printBinarySize(access, "access = ", 8);
+	printBinarySize(access, "access", 8);
 	interpret_access(access, accessOutput);
 	terminal_writestring(accessOutput);
 }
