@@ -100,16 +100,9 @@ void before() {
 	terminal_writestring("Before the main execution\n");
 }
 
-void kernel_main(void) {
+void kernel_test() {
 
-	// init_paging();
-	// init_page_bitmap();
-
-	/* Initialize terminal interface */
-	initialize_terminal();
-	terminal_set_scroll(0);
-
-	terminal_writestring("\n\n===== Start of Kernel=====\n\n");
+	terminal_writestring("\n\n===== Start of Kernel Test=====\n\n");
 
 	kprintf("int = %d, uint = %u, float = %f.2, bin = %b:7, hex = %h:9-final text|\n", 1, 2, 3.0, 0b11011, 0x123bcd);
 
@@ -201,7 +194,23 @@ void kernel_main(void) {
 	print_args16(&args16_start);
 	terminal_write_uint("\nThe result of the real mode call is: ", result2);
 
-	terminal_writestring("\n\n===== End of Kernel=====\n\n");
+	terminal_writestring("\n\n===== End of Kernel Test=====\n\n");
+}
+
+void kernel_main(void) {
+
+	// init_paging();
+	// init_page_bitmap();
+
+	/* Initialize terminal interface */
+	initialize_terminal();
+	terminal_set_scroll(0);
+
+	kernel_test();
+
+	while (true) {
+		// kernel main loop
+	}
 
 	return;
 

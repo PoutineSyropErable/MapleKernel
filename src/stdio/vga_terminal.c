@@ -336,9 +336,20 @@ void print_float_var_no_newline(float var) {
 	terminal_writestring(res_buff);
 }
 
+static inline uint8_t min(uint8_t a, uint8_t b) {
+	if (a < b) {
+		return a;
+	}
+	return b;
+}
+
 void print_float_var_no_newline_precision(float var, uint8_t precision) {
 
-	char res_buff[20];
+	const uint8_t max_float_exponent = 38;
+	const uint8_t safety_and_dot_char = 3 + 1;
+	const uint8_t max_precision = 6;
+	precision = min(precision, max_precision);
+	char res_buff[max_float_exponent + safety_and_dot_char + max_precision];
 	size_t len = ftoa(var, res_buff, precision);
 	res_buff[len] = '\0'; // replace the null terminator with newline
 
