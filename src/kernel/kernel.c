@@ -223,7 +223,10 @@ void kernel_main(void) {
 	// test_printf();
 
 	idt_init();
-	test_all_ints();
+	// test_all_ints();
+
+	// kprintf("Calling interrupt handler %d\n", 34);
+	__int(69);
 	return;
 
 	kernel_test();

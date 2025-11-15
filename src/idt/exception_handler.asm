@@ -6,6 +6,7 @@ section .rodata
 argc dd 2
 NEWLINE equ 10
 interrupt_printf_fmt db "In Interrupt handler: %d", NEWLINE, NEWLINE, 0
+interrupt_69_fmt db NEWLINE, "Hello from Inside the Interrupt handler %d, nice!", NEWLINE, NEWLINE, 0
 
 section .text
 
@@ -27,10 +28,11 @@ isr_stub_%+%1:
 	push interrupt_printf_fmt  
 	push [argc] 
 	call kprintf_argc
-	add esp, 12
+	; add esp, 12 ; needed if i don't do the prologue and epilogue
 
 	mov esp, ebp
 	pop ebp
+	mov eax, 1
 	iret
 %endmacro
 
@@ -78,3 +80,55 @@ isr_stub_table:
 %endrep
 
 
+global interrupt_34_handler 
+interrupt_34_handler: 
+	push ebp
+	mov ebp, esp
+
+	push 34 
+	push interrupt_printf_fmt  
+	push [argc] 
+	call kprintf_argc
+	add esp, 12
+
+	mov esp, ebp
+	pop ebp
+	mov eax, 1
+	iret
+
+
+global interrupt_69_handler 
+interrupt_69_handler: 
+	push ebp
+	mov ebp, esp
+
+	push 69
+	push interrupt_69_fmt
+	push [argc] 
+	call kprintf_argc
+	add esp, 12
+
+	mov esp, ebp
+	pop ebp
+	mov eax, 1
+	iret
+
+
+
+interrupt_8_fmt db "In Interrupt handler: %d, DOUBLE_FAULT", NEWLINE, NEWLINE, 0
+
+global interrupt_8_handler 
+interrupt_8_handler: 
+	push ebp
+	mov ebp, esp
+
+	push 8
+	push interrupt_8_fmt
+	push [argc] 
+	call kprintf_argc
+	add esp, 12
+
+	mov esp, ebp
+	pop ebp
+	mov eax, 1
+	iret

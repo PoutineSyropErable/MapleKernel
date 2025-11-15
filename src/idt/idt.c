@@ -2,6 +2,7 @@
 #include "gdt.h"
 #include "idt.h"
 #include "more_types.h"
+#include "stdio.h"
 
 #define IDT_MAX_VECTOR_COUNT 256
 
@@ -18,8 +19,9 @@ __attribute__((noreturn)) void exception_handler(void) {
 	}
 }
 
-extern function_t* interrupt_handler_34;
-extern void test_printf(void);
+extern function_t interrupt_8_handler;  // not a function pointer. It's value is therefor the first few bytes of code
+extern function_t interrupt_34_handler; // not a function pointer. It's value is therefor the first few bytes of code
+extern function_t interrupt_69_handler; // not a function pointer. It's value is therefor the first few bytes of code
 
 void idt_set_descriptor(uint8_t vector, void* isr, enum gate_type32_t gate_type, uint8_t dpl, bool present) {
 	assert(is_valid_gate_type32(gate_type), "Gate type is not valid");
@@ -46,11 +48,21 @@ void idt_init() {
 		vectors[vector] = true;
 	}
 
-	// idt_set_descriptor(34, interrupt_handler_34, GT32_IG32, 0, true);
+	idt_set_descriptor(34, &interrupt_34_handler, GT32_IG32, 0, true);
+	vectors[34] = true;
+
+	idt_set_descriptor(69, &interrupt_69_handler, GT32_IG32, 0, true);
+	vectors[69] = true;
+
+	idt_set_descriptor(8, &interrupt_8_handler, GT32_IG32, 0, true);
+	vectors[8] = true;
 
 	// __asm__ volatile("lidt %0" : : "m"(idtr)); // load the new IDT
 	// __asm__ volatile("sti");                   // set the interrupt flag
 
 	__lidt(idtr);
 	__sti();
+
+	kprintf("The address of interrupt_31_handler %h\n", isr_stub_table[31]);
+	kprintf("The address of interrupt_34_handler %h\n", &interrupt_34_handler);
 }
