@@ -33,58 +33,6 @@
       "-Wextra",
       "-O2",
       "-c",
-      "-Igdt",
-      "-o",
-      "build/idt.o",
-      "idt/idt.c"
-    ],
-    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/idt/idt.c",
-    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/idt.o"
-  },
-  {
-    "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
-      "-std=gnu23",
-      "-ffreestanding",
-      "-Wall",
-      "-Wextra",
-      "-O2",
-      "-c",
-      "-o",
-      "build/virtual_memory.o",
-      "other/virtual_memory.c"
-    ],
-    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/other/virtual_memory.c",
-    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/virtual_memory.o"
-  },
-  {
-    "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
-      "-std=gnu23",
-      "-ffreestanding",
-      "-Wall",
-      "-Wextra",
-      "-O2",
-      "-c",
-      "-o",
-      "build/pit_timer.o",
-      "other/pit_timer.c"
-    ],
-    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/other/pit_timer.c",
-    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/pit_timer.o"
-  },
-  {
-    "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
-      "-std=gnu23",
-      "-ffreestanding",
-      "-Wall",
-      "-Wextra",
-      "-O2",
-      "-c",
       "-o",
       "build/string_helper.o",
       "stdio/string_helper.c"
@@ -168,6 +116,100 @@
     "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
     "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/stdlib/stdlib.c",
     "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/stdlib.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O2",
+      "-c",
+      "-Istdlib",
+      "-Istdio",
+      "-o",
+      "build/assert.o",
+      "stdlib/assert.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/stdlib/assert.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/assert.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O2",
+      "-c",
+      "-Igdt",
+      "-Istdlib",
+      "-Istdio",
+      "-o",
+      "build/idt.o",
+      "idt/idt.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/idt/idt.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/idt.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O2",
+      "-c",
+      "-o",
+      "build/virtual_memory.o",
+      "other/virtual_memory.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/other/virtual_memory.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/virtual_memory.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O2",
+      "-c",
+      "-o",
+      "build/pit_timer.o",
+      "other/pit_timer.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/other/pit_timer.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/pit_timer.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O2",
+      "-c",
+      "-Irealmode_functions",
+      "-Ireal16_wrappers",
+      "-Igdt",
+      "-Istdlib",
+      "-o",
+      "build/address_getter.o",
+      "runtime_code_analysis/address_getter.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/runtime_code_analysis/address_getter.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/address_getter.o"
   },
   {
     "arguments": [

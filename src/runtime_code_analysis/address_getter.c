@@ -1,15 +1,4 @@
-#include "call_real16_wrapper.h"
-#include "realmode_functions.h"
-extern int stack16_start;
-extern int stack16_end;
-extern int args16_end;
-extern function_t pm16_to_real16;
-extern function_t call_real16_function;
-extern function_t resume32;
-extern int resume32_end;
-
-extern int misc32_s1;
-extern int misc32_s2;
+#include "address_getter.h"
 
 int* get_stack16_start_address(void) {
 	return &stack16_start;

@@ -363,22 +363,49 @@ Gate Type: A 4 bit value which define the type of the gate this *Interupt Descip
 DPL: A 2 bit value which define the CPU Priviledge level which are allowed to access this interrupt via the INT instructions. Hardware interrupts ignore this mechanism.
 P: Present bit, must be set (1) for the descriptor to be valid.
 */
+enum gate_type32_t {
+	GT32_TASK_GATE = 0x5,
+	GT32_IG16 = 0x6,
+	GT32_TG16 = 0x7,
+	GT32_IG32 = 0xe,
+	GT32_TG32 = 0xf
+};
+
+static inline bool is_valid_gate_type32(enum gate_type32_t gt) {
+	switch (gt) {
+	case GT32_TASK_GATE:
+	case GT32_IG16:
+	case GT32_TG16:
+	case GT32_IG32:
+	case GT32_TG32:
+		return true;
+	default:
+		return false;
+	}
+}
+
 typedef struct PACKED idt32_entry {
-	uint16_t offset_low;
-	segment_selector_t segment_selector;
+	uint16_t isr_offset_low;
+	segment_selector_t kernel_cs;
 	uint8_t reserved;
 
 	// This is 1byte
-	uint8_t gate_type : 4;
+	enum gate_type32_t gate_type : 4;
 	bool bit_44_is_zero : 1;
 	uint8_t dpl : 2;
 	bool present : 1;
 
-	uint16_t offset_high;
+	uint16_t isr_offset_high;
 
 } idt32_entry_t;
 
+typedef struct __attribute__((packed)) idtr {
+	uint16_t gdt_size;                // the size is the byte count -1, not the number of element
+	segment_selector_t* base_address; // 32 bit adddress
+} idtr_t;
+
 _Static_assert(sizeof(idt32_entry_t) == 8, "IDT entry must be 8 bytes (64 bits) long");
+_Static_assert(sizeof(idtr_t) == 6, "idtr entry must be 6 bytes (48 bits) long");
 
 /*
 see `idt32_entry_t` for the other fields
@@ -412,3 +439,8 @@ _Static_assert(sizeof(idt64_entry_t) == 16, "IDT64 entry must be 16 bytes (128 b
 // iret  is used in 16 bit interrupt handlers
 // iretd is used in 32 bit interrupt handlers
 // iretq is used in 64 bit interupts handlers.
+
+static inline void __lidt(idtr_t* idt) {
+
+	__asm__ volatile("lidt %0" : : "m"(*idt));
+}

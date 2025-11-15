@@ -1,3 +1,4 @@
+#include "assert.h"
 #include "bit_hex_string.h"
 #include "stdio.h"
 #include "string_helper.h"

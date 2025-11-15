@@ -1,4 +1,4 @@
-#include "address_getter.c"
+#include "address_getter.h"
 #include "bit_hex_string.h"
 #include "call_real16_wrapper.h"
 #include "f3_segment_descriptor_internals.h"
