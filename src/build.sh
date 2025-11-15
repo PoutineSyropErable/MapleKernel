@@ -51,6 +51,7 @@ INCLUDE_DIRS=(
 	"$REAL16_WRAPPERS"
 	"$REAL_FUNC"
 	"$GDT"
+	"$IDT"
 	"$STDIO"
 	"$STDLIB"
 	"$OTHER"
@@ -75,10 +76,15 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/stdio.c" -o "$BUILD_DIR/stdio.o" "-I$STDI
 
 #compile misc helper functions
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDLIB/stdlib.c" -o "$BUILD_DIR/stdlib.o"
-i686-elf-gcc "${CFLAGS[@]}" -c "$STDLIB/assert.c" -o "$BUILD_DIR/assert.o" "-I$STDLIB" "-I$STDIO"
+
+i686-elf-gcc "${CFLAGS[@]}" -c "$GDT/f1_binary_operation.c" -o "$BUILD_DIR/f1_binary_operation.o" "-I$STDIO" "-I$GDT"
+i686-elf-gcc "${CFLAGS[@]}" -c "$GDT/f3_segment_descriptor_internals.c" -o "$BUILD_DIR/f3_segment_descriptor_internals.o" "-I$STDIO" "-I$GDT" "-I$STDLIB"
+i686-elf-gcc "${CFLAGS[@]}" -c "$GDT/gdt.c" -o "$BUILD_DIR/gdt.o" "-I$STDIO" "-I$GDT" "-I$STDLIB"
 
 # Compile the CPU functionality activation part
-i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/idt.c" -o "$BUILD_DIR/idt.o" "-I$GDT" "-I$STDLIB" "-I$STDIO"
+i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/idt.c" -o "$BUILD_DIR/idt.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO"
+nasm "${NASM_FLAGS32[@]}" "$IDT/exception_handler.asm" -o "$BUILD_DIR/exception_handler.o"
+
 i686-elf-gcc "${CFLAGS[@]}" -c "$OTHER/virtual_memory.c" -o "$BUILD_DIR/virtual_memory.o"
 i686-elf-gcc "${CFLAGS[@]}" -c "$OTHER/pit_timer.c" -o "$BUILD_DIR/pit_timer.o"
 
@@ -90,9 +96,6 @@ nasm "${NASM_FLAGS16[@]}" "$REAL16_WRAPPERS/call_realmode_function_wrapper16.asm
 nasm "${NASM_FLAGS32[@]}" "$REAL16_WRAPPERS/call_realmode_function_wrapper32.asm" -o "$BUILD_DIR/call_realmode_function_wrapper32.o" "-I$REAL16_WRAPPERS"
 ia16-elf-gcc "${CFLAGS16[@]}" -c "$REAL_FUNC/realmode_functions.c" -o "$BUILD_DIR/realmode_functions.o"
 
-i686-elf-gcc "${CFLAGS[@]}" -c "$GDT/f1_binary_operation.c" -o "$BUILD_DIR/f1_binary_operation.o" "-I$STDIO" "-I$GDT"
-i686-elf-gcc "${CFLAGS[@]}" -c "$GDT/f3_segment_descriptor_internals.c" -o "$BUILD_DIR/f3_segment_descriptor_internals.o" "-I$STDIO" "-I$GDT" "-I$STDLIB"
-
 # Link the kernel and generate the final binary
 printf "\n\n====== Start of Linking =====\n\n"
 
@@ -101,21 +104,23 @@ BUILD_OBJECTS=(
 	"$BUILD_DIR/kernel.o"
 
 	"$BUILD_DIR/stdlib.o"
-	"$BUILD_DIR/assert.o"
 
 	"$BUILD_DIR/address_getter.o"
 
 	"$BUILD_DIR/string_helper.o"
+	"$BUILD_DIR/bit_hex_string.o"
 	"$BUILD_DIR/vga_terminal.o"
 	"$BUILD_DIR/stdio.o"
 
+	"$BUILD_DIR/idt.o"
+	"$BUILD_DIR/exception_handler.o"
+
 	"$BUILD_DIR/virtual_memory.o"
 	"$BUILD_DIR/pit_timer.o"
-	"$BUILD_DIR/idt.o"
 
 	"$BUILD_DIR/f1_binary_operation.o"
-	"$BUILD_DIR/bit_hex_string.o"
 	"$BUILD_DIR/f3_segment_descriptor_internals.o"
+	"$BUILD_DIR/gdt.o"
 
 	"$BUILD_DIR/call_realmode_function_wrapper32.o"
 	"$BUILD_DIR/call_realmode_function_wrapper16.o"

@@ -1,10 +1,36 @@
 CompileFlags:
   Add:
+    # Target and architecture
     - --target=i686-elf
     - -m32
+
+    # Freestanding / kernel-specific
     - -ffreestanding
     - -nostdlib
     - -fno-exceptions
     - -fno-rtti
     - -Wall
+    - -Wextra
     - -std=gnu23
+    - -fno-builtin
+    - -fno-stack-protector
+    - -fno-common
+
+    # Include directories (match your build script)
+    - -Ikernel
+    - -Ireal16_wrappers
+    - -Irealmode_functions
+    - -Igdt
+    - -Iidt
+    - -Istdio
+    - -Istdlib
+    - -Iother
+    - -Iruntime_code_analysis
+
+# Optional per-file overrides for 16-bit realmode code
+If:
+  PathMatch: "realmode_functions/.*\\.c"
+CompileFlags:
+  Add:
+    - -std=gnu99
+

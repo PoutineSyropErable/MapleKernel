@@ -1,5 +1,6 @@
 #pragma once
 #include "f3_segment_descriptor_internals.h"
+#include "more_types.h"
 #include "ppnargs.h"
 #include <stddef.h>
 #include <stdint.h>
@@ -17,7 +18,6 @@ typedef struct __attribute__((packed, aligned(4))) {
 } GDT_ROOT;
 
 extern GDT_ROOT GDT16_DESCRIPTOR;
-typedef void(function_t)(void);                // a function pointer
 typedef int*(address_getter_function_t)(void); // a function pointer
 
 typedef struct __attribute__((packed)) Args16 {

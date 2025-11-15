@@ -26,10 +26,10 @@ typedef struct {
 	SegmentDescriptor segmentsInfo[SD_COUNT];
 } GDT;
 
-typedef struct __attribute__((packed)) GDTR32 {
-	uint16_t idt_size;
-	uint32_t base_address;
-} gdtr32_t;
+// typedef struct __attribute__((packed)) GDTR32 {
+// 	uint16_t idt_size;
+// 	uint32_t base_address;
+// } gdtr32_t;
 
 // #define BIT64_LONGMODE
 #ifdef BIT64_LONGMODE

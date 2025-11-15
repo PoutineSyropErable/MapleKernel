@@ -1,3 +1,4 @@
+#pragma once
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -38,10 +39,10 @@ typedef struct PACKED segment_descriptor {
 } segment_descriptor_t;
 _Static_assert(sizeof(segment_descriptor_t) == 8, "Segment descriptor must be 8 bytes");
 
-struct __attribute__((packed)) GDTR32 {
+typedef struct __attribute__((packed)) GDTR32 {
 	uint16_t gdt_size;                // the size is the byte count -1, not the number of element
 	segment_selector_t* base_address; // 32 bit adddress
-};
+} gdtr32_t;
 
 static inline uint32_t get_segment_descriptor_base(segment_descriptor_t* desc) {
 	return ((uint32_t)desc->base_high << 24) |

@@ -11,6 +11,7 @@
       "-Ireal16_wrappers",
       "-Irealmode_functions",
       "-Igdt",
+      "-Iidt",
       "-Istdio",
       "-Istdlib",
       "-Iother",
@@ -145,6 +146,66 @@
       "-Wextra",
       "-O2",
       "-c",
+      "-Istdio",
+      "-Igdt",
+      "-o",
+      "build/f1_binary_operation.o",
+      "gdt/f1_binary_operation.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/gdt/f1_binary_operation.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/f1_binary_operation.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O2",
+      "-c",
+      "-Istdio",
+      "-Igdt",
+      "-Istdlib",
+      "-o",
+      "build/f3_segment_descriptor_internals.o",
+      "gdt/f3_segment_descriptor_internals.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/gdt/f3_segment_descriptor_internals.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/f3_segment_descriptor_internals.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O2",
+      "-c",
+      "-Istdio",
+      "-Igdt",
+      "-Istdlib",
+      "-o",
+      "build/gdt.o",
+      "gdt/gdt.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/gdt/gdt.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/gdt.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O2",
+      "-c",
+      "-Iidt",
       "-Igdt",
       "-Istdlib",
       "-Istdio",
@@ -247,44 +308,5 @@
     "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
     "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/realmode_functions/realmode_functions.c",
     "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/realmode_functions.o"
-  },
-  {
-    "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
-      "-std=gnu23",
-      "-ffreestanding",
-      "-Wall",
-      "-Wextra",
-      "-O2",
-      "-c",
-      "-Istdio",
-      "-Igdt",
-      "-o",
-      "build/f1_binary_operation.o",
-      "gdt/f1_binary_operation.c"
-    ],
-    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/gdt/f1_binary_operation.c",
-    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/f1_binary_operation.o"
-  },
-  {
-    "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
-      "-std=gnu23",
-      "-ffreestanding",
-      "-Wall",
-      "-Wextra",
-      "-O2",
-      "-c",
-      "-Istdio",
-      "-Igdt",
-      "-Istdlib",
-      "-o",
-      "build/f3_segment_descriptor_internals.o",
-      "gdt/f3_segment_descriptor_internals.c"
-    ],
-    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/gdt/f3_segment_descriptor_internals.c",
-    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/f3_segment_descriptor_internals.o"
   }
 ]

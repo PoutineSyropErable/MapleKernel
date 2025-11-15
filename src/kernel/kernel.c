@@ -2,6 +2,8 @@
 #include "bit_hex_string.h"
 #include "call_real16_wrapper.h"
 #include "f3_segment_descriptor_internals.h"
+#include "idt.h"
+#include "idt_test.h"
 #include "kernel.h"
 #include "os_registers.c"
 #include "pit_timer.h"
@@ -197,6 +199,10 @@ void kernel_test() {
 	terminal_writestring("\n\n===== End of Kernel Test=====\n\n");
 }
 
+extern void test_printf(void);
+
+// Macro to call all interrupts in the X-Macro
+
 void kernel_main(void) {
 
 	// init_paging();
@@ -205,6 +211,20 @@ void kernel_main(void) {
 	/* Initialize terminal interface */
 	initialize_terminal();
 	terminal_set_scroll(0);
+
+	// kprintf("first test var = %d\n", 23);
+	/*
+	0x002007ae <+27>:    push   0x17
+	0x002007b0 <+29>:    push   0x20553e
+	0x002007b5 <+34>:    push   0x2
+	0x002007b7 <+36>:    call   0x2025e2 <kprintf_argc>
+   */
+
+	// test_printf();
+
+	idt_init();
+	test_all_ints();
+	return;
 
 	kernel_test();
 

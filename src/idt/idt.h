@@ -268,7 +268,7 @@ _Static_assert(sizeof(interrupt_information_64_error_t) == 48, "64-bit LM with e
 
 /* =============32-bit PM,  tss process=============== */
 
-#define C_TEST
+// #define C_TEST
 
 #ifdef C_TEST
 
@@ -400,8 +400,8 @@ typedef struct PACKED idt32_entry {
 } idt32_entry_t;
 
 typedef struct __attribute__((packed)) idtr {
-	uint16_t gdt_size;                // the size is the byte count -1, not the number of element
-	segment_selector_t* base_address; // 32 bit adddress
+	uint16_t limit;              // the size is the byte count -1, not the number of element
+	idt32_entry_t* base_address; // 32 bit adddress
 } idtr_t;
 
 _Static_assert(sizeof(idt32_entry_t) == 8, "IDT entry must be 8 bytes (64 bits) long");
@@ -440,7 +440,23 @@ _Static_assert(sizeof(idt64_entry_t) == 16, "IDT64 entry must be 16 bytes (128 b
 // iretd is used in 32 bit interrupt handlers
 // iretq is used in 64 bit interupts handlers.
 
-static inline void __lidt(idtr_t* idt) {
+static inline void __lidt(idtr_t idt) {
 
-	__asm__ volatile("lidt %0" : : "m"(*idt));
+	__asm__ volatile("lidt %0" : : "m"(idt));
 }
+
+static inline void __sti() {
+
+	__asm__ volatile("sti"); // set the interrupt flag
+}
+
+static inline void __cli() {
+
+	__asm__ volatile("cli"); // set the interrupt flag
+}
+
+static inline void __int(uint8_t int_vector) {
+	__asm__ volatile("int %0" : : "i"(int_vector) : "memory");
+}
+
+void idt_init();
