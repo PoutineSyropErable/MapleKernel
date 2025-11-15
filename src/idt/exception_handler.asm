@@ -20,11 +20,17 @@ hlt_loop:
 ; if writing for 64-bit, use iretq instead
 %macro isr_stub 1
 isr_stub_%+%1:
+	push ebp
+	mov ebp, esp
+
 	push %1 
 	push interrupt_printf_fmt  
 	push [argc] 
 	call kprintf_argc
 	add esp, 12
+
+	mov esp, ebp
+	pop ebp
 	iret
 %endmacro
 
