@@ -1,4 +1,4 @@
-#include "f2_string.h"
+#include "bit_hex_string.h"
 #include "stdio.h"
 #include "string_helper.h"
 #include "vga_terminal.h"

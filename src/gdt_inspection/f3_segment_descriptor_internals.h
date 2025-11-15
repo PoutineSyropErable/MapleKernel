@@ -26,6 +26,19 @@ typedef struct {
 	SegmentDescriptor segmentsInfo[SD_COUNT];
 } GDT;
 
+typedef struct __attribute__((packed)) GDTR32 {
+	uint16_t idt_size;
+	uint32_t base_address;
+} gdtr32_t;
+
+// #define BIT64_LONGMODE
+#ifdef BIT64_LONGMODE
+struct [[gnu::packed]] GDTR64 {
+	uint16_t idt_size;
+	uint64_t base_address;
+};
+#endif
+
 // Type field
 uint8_t getType(SegmentDescriptor* sd);
 void setType(SegmentDescriptor* sd, uint8_t type);
