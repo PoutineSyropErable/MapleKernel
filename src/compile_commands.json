@@ -10,7 +10,7 @@
       "-Ikernel",
       "-Ireal16_wrappers",
       "-Irealmode_functions",
-      "-Igdt_inspection",
+      "-Igdt",
       "-Istdio",
       "-Istdlib",
       "-Iother",
@@ -33,7 +33,7 @@
       "-Wextra",
       "-O2",
       "-c",
-      "-Igdt_inspection",
+      "-Igdt",
       "-o",
       "build/idt.o",
       "idt/idt.c"
@@ -180,7 +180,7 @@
       "-c",
       "-Istdio",
       "-Istdlib",
-      "-Igdt_inspection",
+      "-Igdt",
       "-o",
       "build/call_real16_wrapper.o",
       "real16_wrappers/call_real16_wrapper.c"
@@ -216,13 +216,13 @@
       "-O2",
       "-c",
       "-Istdio",
-      "-Igdt_inspection",
+      "-Igdt",
       "-o",
       "build/f1_binary_operation.o",
-      "gdt_inspection/f1_binary_operation.c"
+      "gdt/f1_binary_operation.c"
     ],
     "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/gdt_inspection/f1_binary_operation.c",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/gdt/f1_binary_operation.c",
     "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/f1_binary_operation.o"
   },
   {
@@ -235,14 +235,14 @@
       "-O2",
       "-c",
       "-Istdio",
-      "-Igdt_inspection",
+      "-Igdt",
       "-Istdlib",
       "-o",
       "build/f3_segment_descriptor_internals.o",
-      "gdt_inspection/f3_segment_descriptor_internals.c"
+      "gdt/f3_segment_descriptor_internals.c"
     ],
     "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/gdt_inspection/f3_segment_descriptor_internals.c",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/gdt/f3_segment_descriptor_internals.c",
     "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/f3_segment_descriptor_internals.o"
   }
 ]
