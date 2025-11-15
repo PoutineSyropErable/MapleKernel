@@ -43,6 +43,7 @@ GDT_INSPECTION="gdt_inspection"
 STDIO="stdio"
 STDLIB="stdlib"
 OTHER="other"
+IDT="idt"
 CODE_ANALYSIS="runtime_code_analysis"
 
 INCLUDE_DIRS=(
@@ -67,25 +68,25 @@ nasm "${NASM_FLAGS32[@]}" "$KERNEL/boot_intel.asm" -o "$BUILD_DIR/boot.o"
 i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/kernel.c" -o "$BUILD_DIR/kernel.o"
 
 # Compile the CPU functionality activation part
+i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/idt.c" -o "$BUILD_DIR/idt.o"
 i686-elf-gcc "${CFLAGS[@]}" -c "$OTHER/virtual_memory.c" -o "$BUILD_DIR/virtual_memory.o"
 i686-elf-gcc "${CFLAGS[@]}" -c "$OTHER/pit_timer.c" -o "$BUILD_DIR/pit_timer.o"
-i686-elf-gcc "${CFLAGS[@]}" -c "$OTHER/idt.c" -o "$BUILD_DIR/idt.o"
 # Compile the print functions.
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/string_helper.c" -o "$BUILD_DIR/string_helper.o"
+i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/bit_hex_string.c" -o "$BUILD_DIR/bit_hex_string.o" -std=gnu99 "-I$STDIO" "-I$STDLIB"
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/vga_terminal.c" -o "$BUILD_DIR/vga_terminal.o" "-I$STDIO" "-I$OTHER"
-i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/stdio.c" -o "$BUILD_DIR/stdio.o" "-I$STDIO" "-I$OTHER" "-I$STDLIB" "-I$GDT_INSPECTION"
+i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/stdio.c" -o "$BUILD_DIR/stdio.o" "-I$STDIO" "-I$OTHER" "-I$STDLIB"
 
 #compile misc helper functions
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDLIB/stdlib.c" -o "$BUILD_DIR/stdlib.o"
 
 # Compile the real mode 16 code and it's wrappers
-i686-elf-gcc "${CFLAGS[@]}" -c "$REAL16_WRAPPERS/call_real16_wrapper.c" -o "$BUILD_DIR/call_real16_wrapper.o" "-I$STDIO" "-I$GDT_INSPECTION" "-I$STDLIB"
+i686-elf-gcc "${CFLAGS[@]}" -c "$REAL16_WRAPPERS/call_real16_wrapper.c" -o "$BUILD_DIR/call_real16_wrapper.o" "-I$STDIO" "-I$STDLIB" "-I$GDT_INSPECTION"
 nasm "${NASM_FLAGS16[@]}" "$REAL16_WRAPPERS/call_realmode_function_wrapper16.asm" -o "$BUILD_DIR/call_realmode_function_wrapper16.o" "-I$REAL16_WRAPPERS"
 nasm "${NASM_FLAGS32[@]}" "$REAL16_WRAPPERS/call_realmode_function_wrapper32.asm" -o "$BUILD_DIR/call_realmode_function_wrapper32.o" "-I$REAL16_WRAPPERS"
 ia16-elf-gcc "${CFLAGS16[@]}" -c "$REAL_FUNC/realmode_functions.c" -o "$BUILD_DIR/realmode_functions.o"
 
 i686-elf-gcc "${CFLAGS[@]}" -c "$GDT_INSPECTION/f1_binary_operation.c" -o "$BUILD_DIR/f1_binary_operation.o" "-I$STDIO" "-I$GDT_INSPECTION"
-i686-elf-gcc "${CFLAGS[@]}" -c "$GDT_INSPECTION/f2_string.c" -o "$BUILD_DIR/f2_string.o" -std=gnu99 "-I$STDIO" "-I$GDT_INSPECTION" "-I$STDLIB"
 i686-elf-gcc "${CFLAGS[@]}" -c "$GDT_INSPECTION/f3_segment_descriptor_internals.c" -o "$BUILD_DIR/f3_segment_descriptor_internals.o" "-I$STDIO" "-I$GDT_INSPECTION" "-I$STDLIB"
 
 # Link the kernel and generate the final binary
@@ -106,7 +107,7 @@ BUILD_OBJECTS=(
 	"$BUILD_DIR/idt.o"
 
 	"$BUILD_DIR/f1_binary_operation.o"
-	"$BUILD_DIR/f2_string.o"
+	"$BUILD_DIR/bit_hex_string.o"
 	"$BUILD_DIR/f3_segment_descriptor_internals.o"
 
 	"$BUILD_DIR/call_realmode_function_wrapper32.o"

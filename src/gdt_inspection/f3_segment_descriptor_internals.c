@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 #include "f1_binary_operation.h"
-#include "f2_string.h"
+#include "bit_hex_string.h"
 #include "f3_segment_descriptor_internals.h"
 #include "vga_terminal.h"
 #include <stdbool.h>

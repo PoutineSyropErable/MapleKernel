@@ -1,6 +1,6 @@
 #include "address_getter.c"
+#include "bit_hex_string.h"
 #include "call_real16_wrapper.h"
-#include "f2_string.h"
 #include "f3_segment_descriptor_internals.h"
 #include "kernel.h"
 #include "os_registers.c"
@@ -104,7 +104,7 @@ void kernel_test() {
 
 	terminal_writestring("\n\n===== Start of Kernel Test=====\n\n");
 
-	kprintf("int = %d, uint = %u, float = %f.2, bin = %b:7, hex = %h:9-final text|\n", 1, 2, 3.0, 0b11011, 0x123bcd);
+	kprintf("int = %d, uint = %u, float = %f.2, bin = %b:7, hex = %h:9-final text|\n\n", 1, 2, 3.0, 0b11011, 0x123bcd);
 
 	print_extern_address("The address of stack16_start: ", get_stack16_start_address);
 	print_extern_address("The address of stack16_end: ", get_stack16_end_address);

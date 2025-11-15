@@ -1,5 +1,5 @@
+#include "bit_hex_string.h"
 #include "call_real16_wrapper.h"
-#include "f2_string.h"
 #include "stdlib.h"
 #include "vga_terminal.h"
 #include <stdarg.h>
