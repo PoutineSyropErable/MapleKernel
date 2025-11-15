@@ -12,6 +12,7 @@ section .text
 
 
 hlt_loop:
+	mov eax, 0x1234abcd
 	cli
 	hlt
 	jmp hlt_loop
@@ -32,7 +33,7 @@ isr_stub_%+%1:
 
 	mov esp, ebp
 	pop ebp
-	mov eax, 1
+	; mov eax, 1
 	iret
 %endmacro
 
@@ -93,7 +94,7 @@ interrupt_34_handler:
 
 	mov esp, ebp
 	pop ebp
-	mov eax, 1
+	; mov eax, 1
 	iret
 
 
@@ -110,25 +111,54 @@ interrupt_69_handler:
 
 	mov esp, ebp
 	pop ebp
-	mov eax, 1
+	; mov eax, 1
 	iret
 
 
 
-interrupt_8_fmt db "In Interrupt handler: %d, DOUBLE_FAULT", NEWLINE, NEWLINE, 0
+interrupt_8_fmt db "In Interrupt handler: %d, DOUBLE_FAULT", NEWLINE, 0
+err_inf_fmt db "Error Code = %u, EIP = %u, CS = %u, Eflags = %b" , NEWLINE, 0
 
 global interrupt_8_handler 
 interrupt_8_handler: 
 	push ebp
 	mov ebp, esp
 
-	push 8
-	push interrupt_8_fmt
-	push [argc] 
+	pusha 
+	push ds 
+	push es 
+	push fs 
+	push gs 
+
+	push 8 ; %d
+	push interrupt_8_fmt ; fmt
+	push 2 ; argc
 	call kprintf_argc
 	add esp, 12
 
+	;; argc = number of % + 1; 
+	mov eax, [bp +4]   ; error code
+	mov ebx, [bp + 8]  ; EIP 
+	mov ecx, [bp + 12] ; CS
+	mov edx, [bp + 16] ; Eflags
+
+
+	push edx
+	push ecx
+	push ebx
+	push eax
+	push err_inf_fmt 
+	push 5 ; argc 
+	call kprintf_argc
+	add esp, 24
+
+	pop gs 
+	pop fs 
+	pop es
+	pop ds 
+	popa
+
+
 	mov esp, ebp
 	pop ebp
-	mov eax, 1
 	iret

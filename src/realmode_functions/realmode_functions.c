@@ -26,6 +26,12 @@ __attribute__((section(".text.realmode_functions"))) uint16_t add16_ref(uint16_t
 }
 
 /* Reference version (purely for comparison) */
+__attribute__((section(".text.realmode_functions"))) uint16_t ret_5() {
+
+	return 5;
+}
+
+/* Reference version (purely for comparison) */
 __attribute__((section(".text.realmode_functions"))) int16_t complex_operation(uint16_t a, uint16_t b, uint16_t c, uint16_t d) {
 
 	return 2 * a + b - c + 3 * d;

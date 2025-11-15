@@ -44,6 +44,11 @@ SECTIONS
 		pm32_to_pm16_end = .;
 	}
 
+	.saved_sp16 :
+	{
+		KEEP(*(.bss.saved_sp16))
+	}
+
 	.pm16_and_real16_wrappers : ALIGN(16)
 	{
         /* call_real16_function = .; */

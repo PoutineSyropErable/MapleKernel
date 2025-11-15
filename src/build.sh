@@ -132,6 +132,8 @@ i686-elf-gcc -T linker.ld -o "$BUILD_DIR/myos.bin" "${LDFLAGS[@]}" "${BUILD_OBJE
 
 printf "\n\n====== End of Linking =====\n\n"
 
+objdump -D -h "$BUILD_DIR/myos.bin" >"$BUILD_DIR/myos.dump"
+
 # Check if the kernel is multiboot-compliant
 if grub-file --is-x86-multiboot "$BUILD_DIR/myos.bin"; then
 	echo "Multiboot confirmed"

@@ -62,7 +62,7 @@ GDT16_END:
 section .text.pm32_to_pm16
 
 
-pm32_to_pm32_fixed: 
+; pm32_to_pm32_fixed: 
 	; Write code to switch to a fixed CS, SS, DS PM32
 
 
@@ -102,15 +102,6 @@ pm32_to_pm16:
 
 
 
-halt_loop: 
-	hlt 
-	jmp halt_loop
-;
-; reset:
-; 	cli                     ; disable interrupts
-; 	xor eax, eax
-; 	lidt [eax]              ; load IDT base = 0, limit = 0 (invalid)
-; 	int 3                   ; trigger interrupt -> #GP -> #DF -> triple fault
 
 
 

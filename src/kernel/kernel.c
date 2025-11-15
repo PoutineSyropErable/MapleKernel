@@ -188,6 +188,12 @@ void kernel_test() {
 
 	before();
 
+	// uint16_t result5 = call_real_mode_function(ret_5); // argc automatically calculated
+	print_args16(&args16_start);
+	terminal_writestring("\n====ok====\n");
+
+	return;
+
 	uint16_t result = call_real_mode_function(add16_ref, 104, 201); // argc automatically calculated
 	print_args16(&args16_start);
 	terminal_write_uint("\nThe result of the real mode call is: ", result);
@@ -226,10 +232,11 @@ void kernel_main(void) {
 	// test_all_ints();
 
 	// kprintf("Calling interrupt handler %d\n", 34);
-	__int(69);
-	return;
+	// __int(69);
 
 	kernel_test();
+
+	terminal_writestring("\n====kernel main entering loop====\n");
 
 	while (true) {
 		// kernel main loop

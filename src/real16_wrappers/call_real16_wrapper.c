@@ -57,9 +57,12 @@ void print_args16(const Args16* args) {
 	terminal_writestring("\n");
 
 	terminal_writestring("Function Arguments:\n");
-	terminal_write_uint16_array_newlines(args->func_args, "    arg", min(args->argc, 12));
-
-	// printf("========================\n");
+	if (args->argc == 0) {
+		terminal_writestring("\tNone\n");
+	} else {
+		terminal_write_uint16_array_newlines(args->func_args, "    arg", min(args->argc, 12));
+	}
+	return;
 }
 
 int print_args16_more(void) {

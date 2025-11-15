@@ -12,6 +12,9 @@ global pm16_to_real16
 
 %include "asm_constants.inc"   ; <-- include your header
 
+section .bss.saved_sp16
+saved_sp16: resw 1
+
 section .text.pm16_and_real16_wrappers
 pm16_to_real16: 
 	mov ax, DATA_SEL
@@ -38,17 +41,22 @@ call_real16_function:
     mov fs, ax  
     mov gs, ax
 
-	mov ax, stack16_start
-	shr ax, 4
+	; this will break if the stack is not in the first 64kb
+	; Hopefully using eax will help and solve this
+	; normally, you'd want linktime computation: 
+	; mov ax, stack16_start >> 4
+	mov eax, stack16_start
+	shr eax, 4
 	mov ss, ax
     mov ss, ax
     mov esp, 0x4000
     
 	;================ Copying the arguments to the stack
-	mov dx, sp                  ; save SP
+	mov [saved_sp16], sp                  ; save SP
 
 	mov cx, [args16_start + ARGC_OFFSET]
 	cmp cx, 0
+	jmp after_call
 	je args_done
 
 	mov ax, ss
@@ -78,8 +86,9 @@ call_real16_function:
 args_done:
 	mov ax, [args16_start + FUNC_OFFSET]
 	call ax
+after_call:
 	mov [args16_start + RET1_OFFSET], ax
-	mov sp, dx          ; rest
+	mov sp, [saved_sp16]          ; rest
 	; ================ Copying the arguments to the stack
 
 ; rep movsw in 16 bit real mode
