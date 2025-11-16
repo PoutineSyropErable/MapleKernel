@@ -254,6 +254,8 @@ EFLAGS_Of3 equ 16
 
 
 
+scancode_fmt db "|%u,%h,%b|",0
+extern keyboard_handler
 extern PIC_sendEOI 
 global interrupt_33_handler
 interrupt_33_handler:
@@ -266,25 +268,10 @@ interrupt_33_handler:
     push fs
     push gs
 
-	; push 33 
-	; push interrupt_printf_fmt  
-	; push [argc] 
-	; call kprintf_argc
-	; add esp, 12 ; needed if i don't do the prologue and epilogue
-
-	mov ah, 0xf4
+	mov eax, 0
 	in al, 0x60
-
-RED_ON_BLACK_ZERO equ 0x430
-VGA_MMIO_BASE equ 0xB8000
-	mov ebx, [saved_i]
-	mov word [VGA_MMIO_BASE + ebx*2], ax  ; write value
-	add ebx, 1 
-	mov [saved_i], ebx
-
-
-	push 1 
-	call PIC_sendEOI
+	push ax 
+	call keyboard_handler 
 	add esp, 4
 
 	pop gs

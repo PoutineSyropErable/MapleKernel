@@ -83,8 +83,9 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$GDT/gdt.c" -o "$BUILD_DIR/gdt.o" "-I$STDIO" "-I
 
 # Compile the CPU functionality activation part
 i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/idt.c" -o "$BUILD_DIR/idt.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO"
-i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/pic.c" -o "$BUILD_DIR/pic.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO"
 nasm "${NASM_FLAGS32[@]}" "$IDT/exception_handler.asm" -o "$BUILD_DIR/exception_handler.o"
+i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/pic.c" -o "$BUILD_DIR/pic.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO"
+i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/keyboard_handler.c" -o "$BUILD_DIR/keyboard_handler.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO"
 
 i686-elf-gcc "${CFLAGS[@]}" -c "$OTHER/virtual_memory.c" -o "$BUILD_DIR/virtual_memory.o"
 i686-elf-gcc "${CFLAGS[@]}" -c "$OTHER/pit_timer.c" -o "$BUILD_DIR/pit_timer.o"
@@ -116,6 +117,7 @@ BUILD_OBJECTS=(
 	"$BUILD_DIR/idt.o"
 	"$BUILD_DIR/exception_handler.o"
 	"$BUILD_DIR/pic.o"
+	"$BUILD_DIR/keyboard_handler.o"
 
 	"$BUILD_DIR/virtual_memory.o"
 	"$BUILD_DIR/pit_timer.o"
