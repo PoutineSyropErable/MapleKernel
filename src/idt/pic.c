@@ -2,15 +2,6 @@
 
 #include "pic.h"
 
-#define PIC_EOI 0x20 /* End-of-interrupt command code */
-
-void PIC_sendEOI(uint8_t irq) {
-	if (irq >= 8)
-		__outb(PIC2_COMMAND, PIC_EOI);
-
-	__outb(PIC1_COMMAND, PIC_EOI);
-}
-
 static inline void io_wait(void) {
 	__outb(0x80, 0);
 }
@@ -64,6 +55,15 @@ void PIC_remap(int offset1, int offset2) {
 	__outb(PIC2_DATA, 0);
 }
 
+#define PIC_EOI 0x20 /* End-of-interrupt command code */
+
+void PIC_sendEOI(uint8_t irq) {
+	if (irq >= 8)
+		__outb(PIC2_COMMAND, PIC_EOI);
+
+	__outb(PIC1_COMMAND, PIC_EOI);
+}
+
 void IRQ_set_mask(uint8_t IRQline) {
 	uint16_t port;
 	uint8_t value;
@@ -90,4 +90,16 @@ void IRQ_clear_mask(uint8_t IRQline) {
 	}
 	value = __inb(port) & ~(1 << IRQline);
 	__outb(port, value);
+}
+
+void PIC_disable(void) {
+	__outb(PIC1_DATA, 0xff);
+	__outb(PIC2_DATA, 0xff);
+}
+
+void initialize_irqs() {
+
+	for (int i = 0; i < 16; i++) {
+		IRQ_set_mask(i);
+	}
 }

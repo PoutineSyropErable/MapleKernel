@@ -82,7 +82,7 @@ void terminal_update_vga_mem() {
 
 void terminal_set_scroll(size_t row) {
 
-	size_t max = VGA_MEM_HEIGHT - VGA_HEIGHT;
+	const size_t max = VGA_MEM_HEIGHT - VGA_HEIGHT;
 	if (row > max)
 		row = max;
 	term.scroll_row = row;

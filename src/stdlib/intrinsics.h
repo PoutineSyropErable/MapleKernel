@@ -29,6 +29,10 @@ static inline void __cli() {
 	__asm__ volatile("cli"); // set the interrupt flag
 }
 
-static inline void __int(uint8_t int_vector) {
+// only works in 01 and more
+static inline void __int(const uint8_t int_vector) {
 	__asm__ volatile("int %0" : : "i"(int_vector) : "memory");
 }
+
+#define __int_O0(n) \
+	__asm__ volatile("int %0" : : "i"(n) : "memory")

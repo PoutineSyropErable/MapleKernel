@@ -4,6 +4,7 @@
 #include "f3_segment_descriptor_internals.h"
 #include "idt.h"
 #include "idt_test.h"
+#include "intrinsics.h"
 #include "kernel.h"
 #include "os_registers.c"
 #include "pic.h"
@@ -214,8 +215,8 @@ void kernel_main(void) {
 	// init_page_bitmap();
 
 	/* Initialize terminal interface */
-	// initialize_terminal();
-	// terminal_set_scroll(0);
+	initialize_terminal();
+	terminal_set_scroll(0);
 
 	// kprintf("first test var = %d\n", 23);
 	/*
@@ -233,12 +234,20 @@ void kernel_main(void) {
 	// __int(69);
 
 	// kernel_test();
+	color_char_nice_t c = {.c = '0', .bg = VGA_COLOR_BLACK, .fg = VGA_COLOR_RED};
+	// kprintf("the color 16 bit value, %h\n", c);
 
+	// terminal_writestring("======Initiating IDT=======\n\n");
 	idt_init();
-	// PIC_remap(32, 40);
-	// IRQ_clear_mask(1);
+	PIC_remap(32, 40);
+	initialize_irqs();
+	IRQ_clear_mask(1);
+	// IRQ_clear_mask(12);
+	// IRQ_clear_mask(2);
 
-	terminal_writestring("\n====kernel main entering loop====\n");
+	// __int_O0(33);
+
+	// terminal_writestring("\n====kernel main entering loop====\n");
 
 	while (true) {
 		// kernel main loop

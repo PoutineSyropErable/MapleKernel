@@ -20,7 +20,9 @@ __attribute__((noreturn)) void exception_handler(void) {
 }
 
 extern function_t interrupt_8_handler;  // not a function pointer. It's value is therefor the first few bytes of code
-extern function_t interrupt_34_handler; // not a function pointer. It's value is therefor the first few bytes of code
+extern function_t interrupt_13_handler; // not a function pointer. It's value is therefor the first few bytes of code
+extern function_t interrupt_33_handler; // not a function pointer. It's value is therefor the first few bytes of code
+extern function_t interrupt_44_handler; // not a function pointer. It's value is therefor the first few bytes of code
 extern function_t interrupt_69_handler; // not a function pointer. It's value is therefor the first few bytes of code
 
 // typedef struct PACKED {
@@ -54,19 +56,24 @@ void idt_init() {
 		vectors[vector] = true;
 	}
 
-	for (uint8_t vector = 33; vector < 50; vector++) {
-		idt_set_descriptor(vector, &interrupt_34_handler, GT32_IG32, 0, true);
-		vectors[vector] = true;
+	for (uint8_t vector = 32; vector < 50; vector++) {
+		if (vector != 34) {
+			idt_set_descriptor(vector, isr_stub_table[vector], GT32_IG32, 0, true);
+			vectors[vector] = true;
+		}
 	}
-
-	// idt_set_descriptor(34, &interrupt_34_handler, GT32_IG32, 0, true);
-	// vectors[34] = true;
-	//
-	// idt_set_descriptor(69, &interrupt_69_handler, GT32_IG32, 0, true);
-	// vectors[69] = true;
 
 	idt_set_descriptor(8, &interrupt_8_handler, GT32_IG32, 0, true);
 	vectors[8] = true;
+
+	idt_set_descriptor(13, &interrupt_13_handler, GT32_IG32, 0, true);
+	vectors[13] = true;
+
+	idt_set_descriptor(33, &interrupt_33_handler, GT32_IG32, 0, true);
+	vectors[33] = true;
+
+	idt_set_descriptor(44, &interrupt_44_handler, GT32_IG32, 0, true);
+	vectors[44] = true;
 
 	// __asm__ volatile("lidt %0" : : "m"(idtr)); // load the new IDT
 	// __asm__ volatile("sti");                   // set the interrupt flag
