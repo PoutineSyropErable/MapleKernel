@@ -5287,13 +5287,13 @@ Disassembly of section .text:
   203616:	06                   	push   %es
   203617:	0f a0                	push   %fs
   203619:	0f a8                	push   %gs
-  20361b:	e4 60                	in     $0x60,%al
-  20361d:	a1 20 6b 20 00       	mov    0x206b20,%eax
-  203622:	66 c7 84 00 00 80 0b 	movw   $0x430,0xb8000(%eax,%eax,1)
-  203629:	00 30 04 
-  20362c:	83 c0 01             	add    $0x1,%eax
-  20362f:	a3 20 6b 20 00       	mov    %eax,0x206b20
-  203634:	e4 64                	in     $0x64,%al
+  20361b:	b4 f4                	mov    $0xf4,%ah
+  20361d:	e4 60                	in     $0x60,%al
+  20361f:	8b 1d 20 6b 20 00    	mov    0x206b20,%ebx
+  203625:	66 89 84 1b 00 80 0b 	mov    %ax,0xb8000(%ebx,%ebx,1)
+  20362c:	00 
+  20362d:	83 c3 01             	add    $0x1,%ebx
+  203630:	89 1d 20 6b 20 00    	mov    %ebx,0x206b20
   203636:	6a 01                	push   $0x1
   203638:	e8 52 01 00 00       	call   20378f <PIC_sendEOI>
   20363d:	83 c4 04             	add    $0x4,%esp

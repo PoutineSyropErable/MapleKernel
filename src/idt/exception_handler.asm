@@ -257,39 +257,46 @@ EFLAGS_Of3 equ 16
 extern PIC_sendEOI 
 global interrupt_33_handler
 interrupt_33_handler:
-    push ebp
-    mov ebp, esp
-    pusha
+	push ebp
+	mov ebp, esp
+
+	pusha               ; save registers
     push ds
     push es
     push fs
     push gs
 
+	; push 33 
+	; push interrupt_printf_fmt  
+	; push [argc] 
+	; call kprintf_argc
+	; add esp, 12 ; needed if i don't do the prologue and epilogue
+
+	mov ah, 0xf4
+	in al, 0x60
+
 RED_ON_BLACK_ZERO equ 0x430
 VGA_MMIO_BASE equ 0xB8000
-; .read_byte:
-    in al, 0x60
-    mov eax, [saved_i]
-    mov word [VGA_MMIO_BASE + eax*2], 0x430
-    add eax, 1
-    mov [saved_i], eax
+	mov ebx, [saved_i]
+	mov word [VGA_MMIO_BASE + ebx*2], ax  ; write value
+	add ebx, 1 
+	mov [saved_i], ebx
 
-    in al, 0x64        ; status port
-    ; test al, 1         ; output buffer full?
-; jnz .read_byte     ; yes, read another byte
 
-    push 1
-    call PIC_sendEOI
-    add esp, 4
+	push 1 
+	call PIC_sendEOI
+	add esp, 4
 
-    pop gs
+	pop gs
     pop fs
     pop es
     pop ds
     popa
-    mov esp, ebp
-    pop ebp
-    iret
+
+	mov esp, ebp
+	pop ebp
+
+	iret
 
 
 global interrupt_44_handler
