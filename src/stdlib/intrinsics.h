@@ -17,12 +17,7 @@ static inline uint8_t __inb(uint16_t port) {
 	return ret;
 }
 
-#ifdef HAVE_IDTR_T
-static inline void __lidt(idtr_t idt) {
-
-	__asm__ volatile("lidt %0" : : "m"(idt));
-}
-#endif
+// idt.h has __sti
 
 static inline void __sti() {
 

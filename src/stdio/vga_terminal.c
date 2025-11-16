@@ -35,7 +35,7 @@ void clear_visible_terminal() {
 
 	for (size_t y = 0; y < VGA_HEIGHT; y++) {
 		for (size_t x = 0; x < VGA_WIDTH; x++) {
-			const size_t index = y * VGA_WIDTH + x;
+			[[gnu::unused]] const size_t index = y * VGA_WIDTH + x;
 			// 1 2 3 4
 			// 5 6 7 8 ---- y *4 + x
 			set_vga_element(x, y, vga_entry_color(' ', term.color));
@@ -56,7 +56,7 @@ void initialize_terminal() {
 	term.scroll_row = 0;
 	for (size_t y = 0; y < VGA_MEM_HEIGHT; y++) {
 		for (size_t x = 0; x < VGA_WIDTH; x++) {
-			const size_t index = y * VGA_WIDTH + x;
+			[[gnu::unused]] const size_t index = y * VGA_WIDTH + x;
 			// 1 2 3 4
 			// 5 6 7 8 ---- y *4 + x
 			term.big_scrollable_buffer[y][x] = vga_entry(' ', term.color);
@@ -68,7 +68,7 @@ void terminal_update_vga_mem() {
 	// need to set the memory value properly now
 	for (size_t y = 0; y < VGA_HEIGHT; y++) {
 		for (size_t x = 0; x < VGA_WIDTH; x++) {
-			const size_t index = y * VGA_WIDTH + x;
+			[[gnu::unused]] const size_t index = y * VGA_WIDTH + x;
 			// 1 2 3 4
 			// 5 6 7 8 ---- y *4 + x
 			// y goes down
@@ -106,14 +106,14 @@ pos_x: The column number, Right ->,
 pos_y: The row number,  Down v
 */
 void terminal_putentryat(char c, color_bg_fg color, size_t pos_x, size_t pos_y) {
-	const size_t index = pos_y * VGA_WIDTH + pos_x;
+	[[gnu::unused]] const size_t index = pos_y * VGA_WIDTH + pos_x;
 	term.big_scrollable_buffer[pos_y][pos_x] = vga_entry(c, color);
 
 	// test if the entry is currently visible.
 	if (pos_y - term.scroll_row >= VGA_HEIGHT) {
 		return;
 	}
-	size_t offset = term.scroll_row * VGA_WIDTH;
+	[[gnu::unused]] size_t offset = term.scroll_row * VGA_WIDTH;
 	color_char colored_c = term.big_scrollable_buffer[pos_y - term.scroll_row][pos_x];
 	set_vga_element(pos_x, pos_y - term.scroll_row, colored_c);
 }

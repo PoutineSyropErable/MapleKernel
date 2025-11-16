@@ -19,11 +19,11 @@
 uint32_t page_directory[1024] __attribute__((aligned(4096)));
 uint32_t first_page_table[1024] __attribute__((aligned(4096)));
 
-#define PAGE_SIZE 0x1000                        // 4 KB
-#define TOTAL_MEMORY (4UL * 1024 * 1024 * 1024) // 4 GB
+#define PAGE_SIZE 0x1000                         // 4 KB
+#define TOTAL_MEMORY (4ULL * 1024 * 1024 * 1024) // 4 GB, must use ull for unsigned long long. So, the host machine can use 64 bit. (Cause it's a 64->32 cross compiler)
 #define NUM_PAGES (TOTAL_MEMORY / PAGE_SIZE)
 #define BITMAP_SIZE (NUM_PAGES / 8)
-uint8_t page_bitmap[BITMAP_SIZE];
+uint8_t page_bitmap[BITMAP_SIZE]; // a 500kb page bitmap. Oof
 
 /* Page bitmap helpers */
 static inline uint32_t page_index(uint32_t addr) { return addr / PAGE_SIZE; }

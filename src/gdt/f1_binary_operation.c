@@ -66,7 +66,7 @@ uint32_t setBits(uint32_t a_dest, uint32_t b_value, uint8_t endBig, uint8_t star
 	uint32_t b_shifted = b_value << startSmall;
 	uint32_t a_reverse_mask = generateAntiMask(endBig, startSmall);
 
-	return a_dest & a_reverse_mask | b_shifted;
+	return (a_dest & a_reverse_mask) | b_shifted;
 }
 
 /*

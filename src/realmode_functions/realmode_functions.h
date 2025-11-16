@@ -1,7 +1,5 @@
 #include <stdint.h>
 
-__attribute__((naked, section(".text.realmode_functions"))) uint16_t add16(uint16_t a, uint16_t b);
-
 __attribute__((optimize("O1"), section(".text.realmode_functions"))) uint16_t add16_ref(uint16_t a, uint16_t b);
 __attribute__((optimize("O1"), section(".text.realmode_functions"))) uint16_t ret_5();
 

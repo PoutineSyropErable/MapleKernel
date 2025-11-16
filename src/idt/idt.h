@@ -2,7 +2,6 @@
 #include "gdt.h"
 #include <stdbool.h>
 #include <stdint.h>
-#define HAVE_IDTR_T
 
 /*
 The TSS segment selectors points to an entry in the GDT.
@@ -442,3 +441,8 @@ _Static_assert(sizeof(idt64_entry_t) == 16, "IDT64 entry must be 16 bytes (128 b
 // iretq is used in 64 bit interupts handlers.
 
 void idt_init();
+
+static inline void __lidt(idtr_t idt) {
+
+	__asm__ volatile("lidt %0" : : "m"(idt));
+}

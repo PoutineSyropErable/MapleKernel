@@ -47,4 +47,3 @@ function_t* get_resume32_start_address(void);
 
 function_t* get_call_realmode_func_with_args_address(void);
 function_t* get_pm32_to_pm16_address(void);
-function_t* get_add16_address(void);

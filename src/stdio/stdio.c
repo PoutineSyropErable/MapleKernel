@@ -123,7 +123,7 @@ void print_info(struct PRINTF_FIELD_PROPERTIES properties) {
 }
 
 struct PRINTF_FIELD_PROPERTIES get_single_format_properties(const char* fmt) {
-	uint8_t size = 0;
+	[[gnu::unused]] uint8_t size = 0;
 
 	const char* fmt_start = fmt + 1;
 	// after the %
@@ -210,7 +210,7 @@ void terminal_write_offsets(const char* str, uint16_t start, uint16_t end) {
 		return; // sanity check
 
 	for (uint16_t i = start; i < end; i++) {
-		char c = str[i];
+		[[gnu::unused]] char c = str[i];
 		terminal_putchar(str[i]);
 	}
 }

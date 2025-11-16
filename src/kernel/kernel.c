@@ -117,7 +117,6 @@ void kernel_test() {
 	[[maybe_unused]] int* pm32_to_pm16_address = print_extern_address("The address of pm32_to_pm16: ", (address_getter_function_t*)get_pm32_to_pm16_address);
 	[[maybe_unused]] int* pm16_to_real16_address = print_extern_address("The address of pm16_to_real16: ", (address_getter_function_t*)get_pm16_to_real16_address);
 	[[maybe_unused]] int* call_real16_function_address = print_extern_address("The address of call_real16_function_address: ", (address_getter_function_t*)get_call_real16_function_address);
-	[[maybe_unused]] int* add16_address = print_extern_address("The address of add16: ", (address_getter_function_t*)get_add16_address);
 	[[maybe_unused]] int* resume32_address = print_extern_address("The address of resume32: ", (address_getter_function_t*)get_resume32_start_address);
 	[[maybe_unused]] int* resume32_end_address = print_extern_address("The address of resume32_end: ", get_resume32_end_address);
 
@@ -127,7 +126,6 @@ void kernel_test() {
 	    .pm32_to_pm16_address = pm32_to_pm16_address,
 	    .pm16_to_real16_address = pm16_to_real16_address,
 	    .call_real16_function_address = call_real16_function_address,
-	    .add16_address = add16_address,
 	    .resume32_address = resume32_address,
 	    .resume32_end_address = resume32_end_address});
 #endif

@@ -46,7 +46,3 @@ function_t* get_call_realmode_func_with_args_address() {
 function_t* get_pm32_to_pm16_address(void) {
 	return (function_t*)&pm32_to_pm16;
 }
-
-function_t* get_add16_address(void) {
-	return (function_t*)&add16;
-}
