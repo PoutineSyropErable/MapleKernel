@@ -130,17 +130,13 @@ interrupt_8_handler:
 	push fs 
 	push gs 
 
-	push 8 ; %d
-	push interrupt_8_fmt ; fmt
-	push 2 ; argc
-	call kprintf_argc
-	add esp, 12
 
 	;; argc = number of % + 1; 
-	mov eax, [bp +4]   ; error code
-	mov ebx, [bp + 8]  ; EIP 
-	mov ecx, [bp + 12] ; CS
-	mov edx, [bp + 16] ; Eflags
+	mov eax, [ebp +4]   ; error code
+	mov ebx, [ebp + 8]  ; EIP 
+	mov ecx, 0
+	mov cx, word [ebp + 12] ; CS
+	mov edx, [ebp + 16] ; Eflags
 
 
 	push edx
@@ -151,6 +147,13 @@ interrupt_8_handler:
 	push 5 ; argc 
 	call kprintf_argc
 	add esp, 24
+
+	push 8 ; %d
+	push interrupt_8_fmt ; fmt
+	push 2 ; argc
+	call kprintf_argc
+	add esp, 12
+
 
 	pop gs 
 	pop fs 

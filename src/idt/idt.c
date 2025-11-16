@@ -54,6 +54,11 @@ void idt_init() {
 		vectors[vector] = true;
 	}
 
+	for (uint8_t vector = 33; vector < 50; vector++) {
+		idt_set_descriptor(vector, &interrupt_34_handler, GT32_IG32, 0, true);
+		vectors[vector] = true;
+	}
+
 	// idt_set_descriptor(34, &interrupt_34_handler, GT32_IG32, 0, true);
 	// vectors[34] = true;
 	//

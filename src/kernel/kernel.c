@@ -6,6 +6,7 @@
 #include "idt_test.h"
 #include "kernel.h"
 #include "os_registers.c"
+#include "pic.h"
 #include "pit_timer.h"
 #include "stdio.h"
 #include "string_helper.h"
@@ -213,8 +214,8 @@ void kernel_main(void) {
 	// init_page_bitmap();
 
 	/* Initialize terminal interface */
-	initialize_terminal();
-	terminal_set_scroll(0);
+	// initialize_terminal();
+	// terminal_set_scroll(0);
 
 	// kprintf("first test var = %d\n", 23);
 	/*
@@ -226,13 +227,16 @@ void kernel_main(void) {
 
 	// test_printf();
 
-	idt_init();
 	// test_all_ints();
 
 	// kprintf("Calling interrupt handler %d\n", 34);
 	// __int(69);
 
-	kernel_test();
+	// kernel_test();
+
+	idt_init();
+	// PIC_remap(32, 40);
+	// IRQ_clear_mask(1);
 
 	terminal_writestring("\n====kernel main entering loop====\n");
 
