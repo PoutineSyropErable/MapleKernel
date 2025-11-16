@@ -20,7 +20,7 @@ typedef struct __attribute__((packed, aligned(4))) {
 extern GDT_ROOT GDT16_DESCRIPTOR;
 typedef int*(address_getter_function_t)(void); // a function pointer
 
-typedef struct __attribute__((packed)) Args16 {
+typedef struct __attribute__((packed, aligned(4))) Args16 {
 	GDT_ROOT gdt_root;
 	// uint16_t pad; // (padded due to esp wanting to)
 	uint32_t esp;

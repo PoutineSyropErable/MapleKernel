@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-void kprintf_argc(uint32_t argc, const char* fmt, ...);
+void kprintf_argc(const uint32_t argc, const char* fmt, ...);
 
 // Macro wrapper: automatically counts number of arguments
 #define kprintf(...) \

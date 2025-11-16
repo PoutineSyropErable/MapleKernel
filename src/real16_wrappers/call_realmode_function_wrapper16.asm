@@ -47,16 +47,15 @@ call_real16_function:
 	; mov ax, stack16_start >> 4
 	mov eax, stack16_start
 	shr eax, 4
-	mov ss, ax
     mov ss, ax
     mov esp, 0x4000
     
 	;================ Copying the arguments to the stack
 	mov [saved_sp16], sp                  ; save SP
+; 	mov sp, [saved_sp16]          ; restore (quick check)
 
 	mov cx, [args16_start + ARGC_OFFSET]
 	cmp cx, 0
-	jmp after_call
 	je args_done
 
 	mov ax, ss
@@ -97,6 +96,11 @@ after_call:
 ; ds: Segment of the source data
 ; di: Destination index (offset in es)
 ; es: Segment of the destination data
+
+
+; done:
+; 	hlt 
+; 	jmp done
 
 
 

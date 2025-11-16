@@ -1,9 +1,8 @@
 #include "assert.h"
 #include "gdt.h"
 #include "idt.h"
+#include "intrinsics.h"
 #include "more_types.h"
-#include "stdio.h"
-#include <stdarg.h>
 
 #define IDT_MAX_VECTOR_COUNT 256
 

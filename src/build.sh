@@ -14,7 +14,7 @@ NASM_FLAGS32=("-f" "elf32")
 NASM_FLAGS16=("-f" "elf")
 
 DEBUG_OPT_LVL="-O0"
-RELEASE_OPT_LVL="-O2"
+RELEASE_OPT_LVL="-O0"
 QEMU_DBG_FLAGS=()
 
 if [[ "$ARG1" == "debug" ]]; then
@@ -71,7 +71,7 @@ i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/kernel.c" -o "$BUI
 # Compile the print functions.
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/string_helper.c" -o "$BUILD_DIR/string_helper.o"
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/bit_hex_string.c" -o "$BUILD_DIR/bit_hex_string.o" -std=gnu99 "-I$STDIO" "-I$STDLIB"
-i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/vga_terminal.c" -o "$BUILD_DIR/vga_terminal.o" "-I$STDIO" "-I$OTHER"
+i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/vga_terminal.c" -o "$BUILD_DIR/vga_terminal.o" "-I$STDIO" "-I$OTHER" "-I$STDLIB"
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/stdio.c" -o "$BUILD_DIR/stdio.o" "-I$STDIO" "-I$OTHER" "-I$STDLIB"
 
 #compile misc helper functions

@@ -1,0 +1,85 @@
+
+build/realmode_functions.o:     file format elf32-i386
+
+
+Disassembly of section .text.realmode_functions:
+
+00000000 <add16>:
+   0:	55                   	push   %bp
+   1:	89 e5                	mov    %sp,%bp
+   3:	55                   	push   %bp
+   4:	89 e5                	mov    %sp,%bp
+   6:	8b 46 04             	mov    0x4(%bp),%ax
+   9:	03 46 06             	add    0x6(%bp),%ax
+   c:	5d                   	pop    %bp
+   d:	c3                   	ret
+   e:	90                   	nop
+   f:	89 c0                	mov    %ax,%ax
+  11:	5d                   	pop    %bp
+  12:	16                   	push   %ss
+  13:	1f                   	pop    %ds
+  14:	c3                   	ret
+
+00000015 <add16_ref>:
+  15:	55                   	push   %bp
+  16:	89 e5                	mov    %sp,%bp
+  18:	8b 46 04             	mov    0x4(%bp),%ax
+  1b:	89 c0                	mov    %ax,%ax
+  1d:	d1 e0                	shl    %ax
+  1f:	89 c2                	mov    %ax,%dx
+  21:	8b 46 06             	mov    0x6(%bp),%ax
+  24:	01 d0                	add    %dx,%ax
+  26:	89 c0                	mov    %ax,%ax
+  28:	89 c0                	mov    %ax,%ax
+  2a:	5d                   	pop    %bp
+  2b:	16                   	push   %ss
+  2c:	1f                   	pop    %ds
+  2d:	c3                   	ret
+
+0000002e <ret_5>:
+  2e:	55                   	push   %bp
+  2f:	89 e5                	mov    %sp,%bp
+  31:	b8 05 00             	mov    $0x5,%ax
+  34:	89 c0                	mov    %ax,%ax
+  36:	89 c0                	mov    %ax,%ax
+  38:	5d                   	pop    %bp
+  39:	16                   	push   %ss
+  3a:	1f                   	pop    %ds
+  3b:	c3                   	ret
+
+0000003c <complex_operation>:
+  3c:	55                   	push   %bp
+  3d:	89 e5                	mov    %sp,%bp
+  3f:	8b 46 04             	mov    0x4(%bp),%ax
+  42:	89 c0                	mov    %ax,%ax
+  44:	d1 e0                	shl    %ax
+  46:	89 c2                	mov    %ax,%dx
+  48:	8b 46 06             	mov    0x6(%bp),%ax
+  4b:	01 c2                	add    %ax,%dx
+  4d:	8b 46 08             	mov    0x8(%bp),%ax
+  50:	29 c2                	sub    %ax,%dx
+  52:	89 d1                	mov    %dx,%cx
+  54:	8b 56 0a             	mov    0xa(%bp),%dx
+  57:	89 d0                	mov    %dx,%ax
+  59:	d1 e0                	shl    %ax
+  5b:	89 c0                	mov    %ax,%ax
+  5d:	01 d0                	add    %dx,%ax
+  5f:	01 c8                	add    %cx,%ax
+  61:	89 c0                	mov    %ax,%ax
+  63:	89 c0                	mov    %ax,%ax
+  65:	89 c0                	mov    %ax,%ax
+  67:	5d                   	pop    %bp
+  68:	16                   	push   %ss
+  69:	1f                   	pop    %ds
+  6a:	c3                   	ret
+
+Disassembly of section .comment:
+
+00000000 <.comment>:
+   0:	00 47 43             	add    %al,0x43(%bx)
+   3:	43                   	inc    %bx
+   4:	3a 20                	cmp    (%bx,%si),%ah
+   6:	28 47 4e             	sub    %al,0x4e(%bx)
+   9:	55                   	push   %bp
+   a:	29 20                	sub    %sp,(%bx,%si)
+   c:	36 2e 33 2e 30 00    	ss xor %cs:0x30,%bp

@@ -1,6 +1,17 @@
 #include "realmode_functions.h"
 #include <stdint.h>
 
+/*
+
+Warning, -O0 can add
+push ss
+pop ds
+
+at the end of the function, which breaks since i have it so ss != ds.
+This will make it so there's a weird bug where things don't work. And a tripple fault is caused on long jump to resume32
+
+*/
+
 /* Place this function into the custom section ".text.realmode_functions" */
 __attribute__((naked, section(".text.realmode_functions"))) uint16_t add16(uint16_t a, uint16_t b) {
 	__asm__(
@@ -20,13 +31,13 @@ __attribute__((naked, section(".text.realmode_functions"))) uint16_t add16(uint1
 }
 
 /* Reference version (purely for comparison) */
-__attribute__((section(".text.realmode_functions"))) uint16_t add16_ref(uint16_t a, uint16_t b) {
+__attribute__((optimize("O1"), section(".text.realmode_functions"))) uint16_t add16_ref(uint16_t a, uint16_t b) {
 
 	return 2 * a + b;
 }
 
 /* Reference version (purely for comparison) */
-__attribute__((section(".text.realmode_functions"))) uint16_t ret_5() {
+__attribute__((optimize("O1"), section(".text.realmode_functions"))) uint16_t ret_5() {
 
 	return 5;
 }

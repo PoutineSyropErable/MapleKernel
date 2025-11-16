@@ -148,9 +148,10 @@ void kernel_test() {
 	terminal_write_uint("gdt size limit = ", gdt_descriptor.limit);
 
 	GDT_ENTRY* gdt16 = GDT16_DESCRIPTOR.base;
-	uint16_t limit16 = GDT16_DESCRIPTOR.limit;
+	[[maybe_unused]] uint16_t limit16 = GDT16_DESCRIPTOR.limit;
 	terminal_write_ptr("GDT16_DESCRIPTOR = ", GDT16_ROOT);
 	terminal_write_ptr("GDT16 = ", GDT16_DESCRIPTOR.base);
+	terminal_write_uint("GDT16 = ", GDT16_DESCRIPTOR.limit);
 
 	// terminal_writestring("\nThe gdt32 values:\n");
 	// terminal_write_hex("gdt[0].lower = ", gdt32[0].lower);
@@ -188,11 +189,10 @@ void kernel_test() {
 
 	before();
 
-	// uint16_t result5 = call_real_mode_function(ret_5); // argc automatically calculated
-	print_args16(&args16_start);
-	terminal_writestring("\n====ok====\n");
+	[[gnu::unused]] uint16_t result5 = call_real_mode_function(ret_5); // argc automatically calculated
 
-	return;
+	print_args16(&args16_start);
+	kprintf("\n====ok====\n");
 
 	uint16_t result = call_real_mode_function(add16_ref, 104, 201); // argc automatically calculated
 	print_args16(&args16_start);

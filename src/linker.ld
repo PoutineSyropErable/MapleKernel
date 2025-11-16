@@ -44,7 +44,7 @@ SECTIONS
 		pm32_to_pm16_end = .;
 	}
 
-	.saved_sp16 :
+	.saved_sp16 : ALIGN(16)
 	{
 		KEEP(*(.bss.saved_sp16))
 	}

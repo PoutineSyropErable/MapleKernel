@@ -1,3 +1,4 @@
+#include "intrinsics.h"
 #include "pit_timer.h"
 #include "string_helper.h"
 #include "vga_terminal.h"
@@ -134,27 +135,12 @@ void terminal_increase_row() {
 	}
 }
 
-static inline void outb(uint16_t port, uint8_t val) {
-	/*
-
-	%0 = val : Value to output
-	%1 = port: The io port
-	*/
-	__asm__ volatile("outb %0, %1" : : "a"(val), "Nd"(port));
-}
-
-static inline uint8_t inb(uint16_t port) {
-	uint8_t ret;
-	__asm__ volatile("inb %1, %0" : "=a"(ret) : "Nd"(port));
-	return ret;
-}
-
 void serial_write_char(char c) {
 
 	// Wait until the transmit buffer is empty
-	while (!(inb(COM1 + 5) & 0x20))
+	while (!(__inb(COM1 + 5) & 0x20))
 		;
-	outb(COM1, c);
+	__outb(COM1, c);
 }
 
 void serial_write_string(const char* str) {

@@ -215,10 +215,11 @@ void terminal_write_offsets(const char* str, uint16_t start, uint16_t end) {
 	}
 }
 
-void kprintf_argc(uint32_t argc, const char* fmt, ...) {
+void kprintf_argc(const uint32_t argc, const char* fmt, ...) {
 
 	uint8_t len = argc - 1;
 	// we don't count the format
+	// This represent the number of %
 
 	uint8_t len_check = count_char(fmt, '%');
 
@@ -228,6 +229,11 @@ void kprintf_argc(uint32_t argc, const char* fmt, ...) {
 		terminal_write_uint("len_check = ", len_check);
 		abort();
 	}
+
+	if (len == 0) {
+		return terminal_writestring(fmt);
+	}
+
 	struct PRINTF_FIELD_PROPERTIES printf_information[len];
 	set_types_and_pos(fmt, (struct PRINTF_FIELD_PROPERTIES*)&printf_information, len);
 
