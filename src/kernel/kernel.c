@@ -110,6 +110,8 @@ void kernel_test() {
 
 	kprintf("int = %d, uint = %u, float = %f.2, bin = %b:7, hex = %h:9-final text|\n\n", 1, 2, 3.0, 0b11011, 0x123bcd);
 
+	return;
+
 	print_extern_address("The address of stack16_start: ", get_stack16_start_address);
 	print_extern_address("The address of stack16_end: ", get_stack16_end_address);
 	print_extern_address("The address of args16_start: ", get_args16_start_address);
@@ -233,9 +235,9 @@ void kernel_main(void) {
 	// kprintf("Calling interrupt handler %d\n", 34);
 	// __int(69);
 
-	// kernel_test();
 	color_char_nice_t c = {.c = '0', .bg = VGA_COLOR_BLACK, .fg = VGA_COLOR_RED};
-	// kprintf("the color 16 bit value, %h\n", c);
+	kprintf("the color 16 bit value, %h\n", c);
+	kernel_test();
 
 	// terminal_writestring("======Initiating IDT=======\n\n");
 	idt_init();

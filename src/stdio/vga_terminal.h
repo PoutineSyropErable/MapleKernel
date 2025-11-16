@@ -27,12 +27,13 @@ enum vga_color {
 typedef uint8_t color_bg_fg;
 typedef uint16_t color_char;
 
-[[gnu::packed]] typedef struct color_char_nice {
+__attribute__((packed)) typedef struct color_char_nice {
 	unsigned char c;
-	enum vga_color fg : 4;
-	enum vga_color bg : 4;
-
+	uint8_t fg : 4;
+	uint8_t bg : 4;
 } color_char_nice_t;
+
+_Static_assert(sizeof(color_char_nice_t) == 2, "Segment selector must be 2 bytes");
 
 #define VGA_MMIO_BASE 0xB8000
 #define VGA_WIDTH 80

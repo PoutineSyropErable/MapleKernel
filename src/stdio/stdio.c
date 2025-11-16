@@ -306,16 +306,26 @@ void kprintf_argc(const uint32_t argc, const char* fmt, ...) {
 
 		case PRINTF_TAG_INT: {
 			int arg_i = va_arg(args, int); // int is passed as int
-			// terminal_writestring("int: ");
-			print_int_var_no_newline(arg_i);
-			// terminal_writestring("\n");
+			struct PRINTF_FIELD_PROPERTIES information = printf_information[i];
+
+			if (information.option == FMT_OPTION_PAD) {
+				print_hex_f(arg_i, information.option_num);
+			} else {
+				print_int_var_no_newline(arg_i);
+			}
 			break;
 		}
 
 		case PRINTF_TAG_UINT32_T: {
 			uint32_t arg_i = (uint32_t)va_arg(args, uint32_t); // uint32_t promoted to unsigned int
+			struct PRINTF_FIELD_PROPERTIES information = printf_information[i];
 
-			print_uint_var_no_newline(arg_i);
+			if (information.option == FMT_OPTION_PAD) {
+				print_uint_f(arg_i, information.option_num);
+			} else {
+				print_uint_f(arg_i, 0);
+			}
+
 			break;
 		}
 

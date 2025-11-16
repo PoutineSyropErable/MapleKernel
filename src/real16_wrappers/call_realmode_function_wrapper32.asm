@@ -89,8 +89,8 @@ pm32_to_pm16:
 
 
 
-	mov esp, 0 ; in case i can't change esp in 16 bit mode later. Don't want the high bit to fuck us over
-	mov ebp, 0 ; in case i can't change esp in 16 bit mode later. Don't want the high bit to fuck us over
+	; mov esp, 0 ; in case i can't change esp in 16 bit mode later. Don't want the high bit to fuck us over
+	; mov ebp, 0 ; in case i can't change esp in 16 bit mode later. Don't want the high bit to fuck us over
 
 
     cli
@@ -116,7 +116,6 @@ resume32:
     mov esp, [args16_start + ESP_OFFSET]
 	mov ax,  [args16_start + SS_OFFSET]
 	mov ss, ax 
-	mov ss, ax
 
     pop gs
     pop fs

@@ -1,6 +1,7 @@
 BITS 32
 extern exception_handler
 extern kprintf_argc
+extern PIC_sendEOI 
 
 section .rodata
 argc dd 2
@@ -254,9 +255,9 @@ EFLAGS_Of3 equ 16
 
 
 
-scancode_fmt db "|%u,%h,%b|",0
+
+; =========================== interrupt 33 handler: Keyboard Handler ========================
 extern keyboard_handler
-extern PIC_sendEOI 
 global interrupt_33_handler
 interrupt_33_handler:
 	push ebp
@@ -270,8 +271,54 @@ interrupt_33_handler:
 
 	mov eax, 0
 	in al, 0x60
-	push ax 
+	push eax 
 	call keyboard_handler 
+	add esp, 4
+
+
+	pop gs
+    pop fs
+    pop es
+    pop ds
+    popa
+
+	mov esp, ebp
+	pop ebp
+
+	iret
+
+
+
+global interrupt_33_handler_1
+interrupt_33_handler_1:
+	push ebp
+	mov ebp, esp
+
+	pusha               ; save registers
+    push ds
+    push es
+    push fs
+    push gs
+
+	; push 33 
+	; push interrupt_printf_fmt  
+	; push [argc] 
+	; call kprintf_argc
+	; add esp, 12 ; needed if i don't do the prologue and epilogue
+
+	mov ah, 0xf4
+	in al, 0x60
+
+RED_ON_BLACK_ZERO equ 0x430
+VGA_MMIO_BASE equ 0xB8000
+	mov ebx, [saved_i]
+	mov word [VGA_MMIO_BASE + ebx*2], ax  ; write value
+	add ebx, 1 
+	mov [saved_i], ebx
+
+
+	push 1 
+	call PIC_sendEOI
 	add esp, 4
 
 	pop gs
@@ -284,6 +331,10 @@ interrupt_33_handler:
 	pop ebp
 
 	iret
+
+
+
+
 
 
 global interrupt_44_handler

@@ -100,6 +100,15 @@ uint8_t max(uint8_t a, uint8_t b) {
 	return b;
 }
 
+/*
+ */
+int16_t max16i(int16_t a, int16_t b) {
+	if (a > b) {
+		return a;
+	}
+	return b;
+}
+
 void print_binary_var_no_newline(uint32_t binaryNumber, size_t numberOfBits) {
 	char spacelessBitString[33];
 	getSpacelessBitString(binaryNumber, spacelessBitString);
@@ -175,5 +184,43 @@ void print_hex_f(uint32_t hex_number, uint8_t numberOfHex) {
 			terminal_putchar(' ');
 		}
 		// "1234 abcd 5678 fedc"
+	}
+}
+
+void print_uint_f(uint32_t number, uint8_t padsize) {
+	assert(padsize <= 16, "Not designed for too big uint32_t (Bounded)");
+
+	char res_buff[20];
+	size_t len = uitoa(number, res_buff);
+	res_buff[len] = '\0'; // replace the null terminator with newline
+
+	uint8_t more_pad = max16i(0, (int16_t)padsize - (int16_t)len);
+	for (uint8_t i = 0; i < more_pad; i++) {
+		terminal_putchar(' ');
+	}
+	terminal_writestring(res_buff);
+}
+
+void print_int_f(int32_t number, uint8_t padsize) {
+	assert(padsize <= 16, "Not designed for too big uint32_t (Bounded)");
+
+	char res_buff[20];
+	size_t len = itoa(number, res_buff);
+	res_buff[len] = '\0'; // replace the null terminator with newline
+
+	if (number < 0) {
+		terminal_putchar('-');
+		uint8_t more_pad = max16i(0, (int16_t)padsize - (int16_t)(len + 1));
+		for (uint8_t i = 0; i < more_pad; i++) {
+			terminal_putchar(' ');
+		}
+		terminal_writestring(res_buff + 1);
+	} else {
+
+		uint8_t more_pad = max16i(0, padsize - len);
+		for (uint8_t i = 0; i < more_pad; i++) {
+			terminal_putchar(' ');
+		}
+		terminal_writestring(res_buff);
 	}
 }

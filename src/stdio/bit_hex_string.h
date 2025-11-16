@@ -13,3 +13,6 @@ void print_binary_var_no_newline(uint32_t binaryNumber, size_t numberOfBits);
 
 uint8_t binSize(uint32_t number);
 void print_hex_f(uint32_t hex_number, uint8_t numberOfHex);
+
+void print_uint_f(uint32_t number, uint8_t padsize);
+void print_int_f(int32_t number, uint8_t padsize);
