@@ -324,7 +324,7 @@ void test_command_array(void) {
 
 	int errors = 0;
 	for (size_t i = 0; i < sizeof(checks) / sizeof(checks[0]); i++) {
-		enum PS2_ResponseType actual = command_has_return[checks[i].index];
+		enum PS2_ResponseType actual = command_to_response_type[checks[i].index];
 		if (actual != checks[i].expected) {
 			kprintf("Error: %h:02 expected %s, got %s\n",
 			        checks[i].index,
