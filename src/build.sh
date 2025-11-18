@@ -82,6 +82,7 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$GDT/f3_segment_descriptor_internals.c" -o "$BUI
 i686-elf-gcc "${CFLAGS[@]}" -c "$GDT/gdt.c" -o "$BUILD_DIR/gdt.o" "-I$STDIO" "-I$GDT" "-I$STDLIB"
 
 # Compile the CPU functionality activation part
+i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/ps2.c" -o "$BUILD_DIR/ps2.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO"
 i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/idt.c" -o "$BUILD_DIR/idt.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO"
 nasm "${NASM_FLAGS32[@]}" "$IDT/exception_handler.asm" -o "$BUILD_DIR/exception_handler.o"
 i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/pic.c" -o "$BUILD_DIR/pic.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO"
@@ -114,9 +115,10 @@ BUILD_OBJECTS=(
 	"$BUILD_DIR/vga_terminal.o"
 	"$BUILD_DIR/stdio.o"
 
+	"$BUILD_DIR/ps2.o"
+	"$BUILD_DIR/pic.o"
 	"$BUILD_DIR/idt.o"
 	"$BUILD_DIR/exception_handler.o"
-	"$BUILD_DIR/pic.o"
 	"$BUILD_DIR/keyboard_handler.o"
 
 	"$BUILD_DIR/virtual_memory.o"
