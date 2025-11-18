@@ -18,3 +18,5 @@ void IRQ_clear_mask(uint8_t IRQline);
 void IRQ_set_mask(uint8_t IRQline);
 
 void initialize_irqs();
+
+void enable_mouse();

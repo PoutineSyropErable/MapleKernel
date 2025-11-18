@@ -244,6 +244,7 @@ void kernel_main(void) {
 	PIC_remap(32, 40);
 	initialize_irqs();
 	IRQ_clear_mask(1);
+	// enable_mouse();
 	// IRQ_clear_mask(12);
 	// IRQ_clear_mask(2);
 

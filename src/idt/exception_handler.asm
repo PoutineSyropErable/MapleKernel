@@ -354,8 +354,13 @@ interrupt_44_handler:
 	call kprintf_argc
 	add esp, 12 ; needed if i don't do the prologue and epilogue
 
+
+	mov eax, 0
+	in al, 0x60
+
 	push 12 
 	call PIC_sendEOI
+	;  sends 0x20 to 0x20 and a0
 	add esp, 4
 
 	pop gs
