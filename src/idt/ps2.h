@@ -22,18 +22,30 @@ typedef struct [[gnu::packed]] {
 	// 0 = data written to input buffer is for data for PS/2 device
 	// =====
 	bool unknown_4 : 1;     // more likely unused on modern systems
-	bool unknown_5 : 1;     // may ne recieve time-out, or second PS/2 port output buffer full
+	bool unknown_5 : 1;     // may be recieve time-out, or second PS/2 port output buffer full
 	bool timeout_error : 1; // 1 = timeout error, 0 = no error
 	bool parity_error : 1;  // 1 = parity error, 0 = no parity error
 
+	// because it has parity/timeout error, then error handling on a read should be done too.
+
 } PS2_StatusRegister_t;
 _Static_assert(sizeof(PS2_StatusRegister_t) == 1, "ps2_satus_register_t must be of size: 1 byte");
+
+static inline bool PS2_verify_status_parity(PS2_StatusRegister_t status) {
+	return !status.parity_error;
+}
+
+static inline bool PS2_verify_status_timeout(PS2_StatusRegister_t status) {
+	return !status.timeout_error;
+}
 
 typedef union {
 	uint8_t raw;
 	PS2_StatusRegister_t bits;
 } ps2_status_register_uts_t;
 _Static_assert(sizeof(ps2_status_register_uts_t) == 1, "ps2_satus_register_t must be of size: 1 byte");
+
+// TODO: ? Add a verify status register for it?
 
 /* ==================================================================================================================================================*/
 // PS/2 Controller Commands
@@ -114,6 +126,18 @@ typedef union ps2_configuration_byte_uts {
 } ps2_configuration_byte_uts_t;
 _Static_assert(sizeof(ps2_configuration_byte_uts_t) == 1, "ps2_configuration_byte_uts_t must be of size: 1 byte");
 
+static inline bool PS2_verify_configuration_byte_response(ps2_configuration_byte_uts_t configuration_byte) {
+	// TODO: Check if there is any impossible responses?
+	PS2_ConfigurationByte_t bits = configuration_byte.bits;
+	if (bits.zero1 != 0 || bits.zero1 != 0 || bits.system_flag_passed_post_one == 0) {
+		// Maybe the system flag can be 0 at the absolute start.
+		// Then, the software must set it to one once?
+		// If such an error happen, then debug it, and use a static state.
+		return false;
+	}
+	return true;
+}
+
 /* ==================================================================================================================================================*/
 // PS2_CB_test_second_ps2_port = 0xA9,    // response byte type: (passed = 0x00, 0x01 = clock line stuck low, 0x02 = clock line stuck high,  0x03 = data line stuck low, 0x04 = data line stuck high)
 
@@ -125,16 +149,31 @@ typedef enum PS2_TestPortResponse {
 	PS2_TPR_data_stuck_high = 0x04,
 } PS2_TestPortResponse_t;
 
+static inline bool PS2_verify_test_port_response(enum PS2_TestPortResponse response) {
+	if (response >= 0x00 && response <= 0x04) {
+		return true;
+	}
+	return false;
+}
+
 typedef enum PS2_TestControllerResponse {
 	PS2_TCR_passed = 0xFF,
 	PS2_TCR_clock_stuck_low = 0xFE,
 } PS2_TestControllerResponse_t;
 
+static inline bool PS2_verify_test_controler_response(enum PS2_TestControllerResponse response) {
+	if (response == 0xFF || response == 0xFE) {
+		// || optimizable to |, no short cirtcuit needed
+		return true;
+	}
+	return false;
+}
+
 /* ==================================================================================================================================================*/
 
 typedef struct [[gnu::packed]] PS2_ControllerOutputPort {
 	bool system_reset_dont_set_infinite_loop : 1; // Must be
-	bool A20_gate : 1;
+	bool A20_gate : 1;                            // If 1, then we have less then one megabyte
 	bool second_ps2_port_clock : 1;
 	bool second_ps2_port_data : 1;
 	bool connected_to_irq1 : 1;  // Output buffer full with byte from first PS/2 port
@@ -144,20 +183,42 @@ typedef struct [[gnu::packed]] PS2_ControllerOutputPort {
 } PS2_ControllerOutputPort_t;
 _Static_assert(sizeof(PS2_ControllerOutputPort_t) == 1, "PS2_ControllerOutputPort_t must be of size: 1 byte");
 
-typedef union {
+typedef union ps2_controller_output_port_uts {
 	uint8_t raw;
 	PS2_ControllerOutputPort_t bits;
-} ps2_controller_output_port_uts;
+} ps2_controller_output_port_uts_t;
+
+bool static inline PS2_verify_controller_output_port(PS2_ControllerOutputPort_t output_port) {
+	return !output_port.A20_gate;
+}
 
 /* ==================================================================================================================================================*/
 
-enum PS2_PORT_NUMBER {
+enum PS2_PortNumber {
 	// For devices
 	PS2_PN_port_one = 1,
-	PS2_PN_port_2 = 2,
+	PS2_PN_port_two = 2,
 };
 
-enum PS2_ReponseType {
+static inline bool PS2_verify_port_number(enum PS2_PortNumber port_number) {
+	if (port_number == 1 || port_number == 2) {
+		return true;
+	}
+	return false;
+}
+
+static inline const char* PS2_PortNumber_to_string(enum PS2_PortNumber port_number) {
+	switch (port_number) {
+	case PS2_PN_port_one:
+		return "1: PS2_PN_port_one";
+	case PS2_PN_port_two:
+		return "2: PS2_PN_port_two";
+	default:
+		return "Invalid Port Number!";
+	}
+}
+
+enum PS2_ResponseType {
 	PS2_RT_not_a_command = 0,
 	PS2_RT_none = 1,
 	PS2_RT_unknown = 2,
@@ -167,41 +228,112 @@ enum PS2_ReponseType {
 	PS2_RT_controller_output_port = 6,
 };
 
+static inline bool PS2_verify_response_type(enum PS2_ResponseType response) {
+	if (response >= 0 && response <= 6) {
+		// && optimizable to &, no short circuit needed
+		return true;
+	}
+	return false;
+}
+
+static inline const char* PS2_ResponseType_to_string(enum PS2_ResponseType response_type) {
+	// The string is located inside the .data section, this return a pointer to that section
+	switch (response_type) {
+	case PS2_RT_not_a_command:
+		return "Not a command";
+	case PS2_RT_none:
+		return "None";
+	case PS2_RT_unknown:
+		return "Unknown";
+	case PS2_RT_controller_configuration_byte:
+		return "Controller config";
+	case PS2_RT_test_port:
+		return "Test port";
+	case PS2_RT_test_controller:
+		return "Test controller";
+	case PS2_RT_controller_output_port:
+		return "Controller output";
+	default:
+		return "Invalid Response Type!";
+	}
+}
+
 /*
 This struct should never appear in code. Only it's individual field should be used.
 And even then, the polymorphic solution shouldn't be used. It's too slow.
 We'll end up with a low level function, and high level at the same time.
 It's purely there to have the types of all response type written next to another real quick
 */
-union _anon1 {
-	uint8_t not_a_command;                                    // Can't and shouldn't even send it! This case should never be inside a tagged response, an error should have happened.
-	uint8_t none;                                             // Send the command, but don't even read the answer.
-	uint8_t unknown;                                          // Get an answer, but don't do anything with it.
-	union ps2_configuration_byte_uts configuration_byte;      // usable answer
-	enum PS2_TestPortResponse test_port_response;             // usable answer
-	enum PS2_TestControllerResponse test_controller_response; // usable anser
-	struct PS2_ControllerOutputPort controller_output_port;   // usable answer
+union ___anon1 {
+	// The first three are present in the union,
+	// so it's the same order as the enum.
+	// But these fields should never be accessed
+	// Hence ___ for bad, g_ for good
+	__attribute__((unused)) uint8_t ___not_a_command;              // Can't and shouldn't even send it! This case should never be inside a tagged response, an error should have happened.
+	__attribute__((unused)) uint8_t ___none;                       // Send the command, but don't even read the answer.
+	__attribute__((unused)) uint8_t ___unknown;                    // Get an answer, but don't do anything with it.
+	union ps2_configuration_byte_uts g_configuration_byte;         // usable answer. uint8_t typed wrapper. 8 bit size
+	enum PS2_TestPortResponse g_test_port_response;                // usable answer. Enum use int internally.
+	enum PS2_TestControllerResponse g_test_controller_response;    // usable answer. Enum use int internally.
+	union ps2_controller_output_port_uts g_controller_output_port; // usable answer. uint8_t typed wrapper. 8 bit sized
 };
 
 struct PS2_Tagged_Reponse {
-	enum PS2_ReponseType type;
-	union _anon1 value;
+	enum PS2_ResponseType type;
+	union ___anon1 value;
 };
 
 enum ps2_os_error_code_t {
-	PS2_ERR_NONE = 0,
-	PS2_ERR_INVALID_PORT_NUMBER = -1,
-	PS2_ERR_WAIT_MAX_ITT_IN = 1,
-	PS2_ERR_WAIT_MAX_ITT_OUT = 2,
-	PS2_ERR_WAIT_MAX_ITT2 = 3,
+	PS2_ERR_none = 0,
+	PS2_ERR_invalid_port_number = -1,
+	PS2_ERR_wait_max_itt_in = 1,
+	PS2_ERR_wait_max_itt_out = 2,
+	PS2_ERR_wait_maxx_itt_in2 = 3,
+	PS2_ERR_invalid_test_port_response,
+	PS2_ERR_invalid_test_controller_response,
+	PS2_ERR_invalid_configuration_byte,
+	PS2_ERR_A20_line_not_set, // Not really an error. More like an a state that can only happen once
+	PS2_ERR_status_parity,
+	PS2_ERR_status_timeout,
 
 };
+
+static inline const char* PS2_OS_Error_to_string(enum ps2_os_error_code_t err) {
+	switch (err) {
+	case PS2_ERR_none:
+		return "PS2_ERR_NONE";
+	case PS2_ERR_invalid_port_number:
+		return "PS2_ERR_INVALID_PORT_NUMBER";
+	case PS2_ERR_wait_max_itt_in:
+		return "PS2_ERR_WAIT_MAX_ITT_IN";
+	case PS2_ERR_wait_max_itt_out:
+		return "PS2_ERR_WAIT_MAX_ITT_OUT";
+	case PS2_ERR_wait_maxx_itt_in2:
+		return "PS2_ERR_WAIT_MAX_ITT2";
+	default:
+		return "Invalid error code!";
+	}
+}
 
 typedef struct ps2_return_type_generic {
 	uint8_t ret;
 	bool has_ret; // some of them have no return
 	enum ps2_os_error_code_t err;
 } ps2_os_ret_generic_t;
+
+/*
+This is the most generic, runtime type for all ps2 returns.
+It says what is the return type, and if there's an error.
+This is too powerful and abstract! It should not be used.
+
+However, each independant send command functions can use a response and error code as a return.
+The Inner internals return an error code.
+The Wrapped both sends the commands, and gets the answer back, which returns both.
+*/
+struct ___ps2_typeless_return {
+	struct PS2_Tagged_Reponse tagged_response;
+	enum ps2_os_error_code_t err;
+};
 
 /* ==================================================================================================================================================*/
 
@@ -240,6 +372,8 @@ typedef struct ps2_return_type_generic {
     - Other search Keywords. (Which that too is a keyword for simply unknown words)
 
     ```
+5. ___ means bad, g_ means good. And g_ allow for easier autocomplete.
+    - Since autocomplete don't start until you write the first letter. And that put you to 1/26 choices.
 
 
 */
@@ -259,28 +393,6 @@ then the response byte needs to be read from IO Port 0x60 after making sure it h
 
 /*=================== Type and Enum -> String Function ===============*/
 
-static inline const char* PS2_ResponseType_to_string(enum PS2_ReponseType response_type) {
-	// The string is located inside the .data section, this return a pointer to that section
-	switch (response_type) {
-	case PS2_RT_none:
-		return "None";
-	case PS2_RT_unknown:
-		return "Unknown";
-	case PS2_RT_controller_configuration_byte:
-		return "Controller config";
-	case PS2_RT_test_port:
-		return "Test port";
-	case PS2_RT_test_controller:
-		return "Test controller";
-	case PS2_RT_controller_output_port:
-		return "Controller output";
-	case PS2_RT_not_a_command:
-		return "Not a command";
-	default:
-		return "Invalid";
-	}
-}
-
 /*==================GLOBAL FUNCTIONS===================== */
 static inline void
 io_wait(void) {
@@ -294,8 +406,8 @@ __attribute__((optimize("O3"))) static inline PS2_StatusRegister_t read_ps2_stat
 	return u.bits;
 }
 
-enum ps2_os_error_code_t ps2_wait_till_ready_for_more_input();
-enum ps2_os_error_code_t send_data_to_ps2_port(enum PS2_PORT_NUMBER port_number, uint8_t data);
+enum ps2_os_error_code_t wait_till_ready_for_more_input();
+enum ps2_os_error_code_t send_data_to_ps2_port(enum PS2_PortNumber port_number, uint8_t data);
 enum ps2_os_error_code_t send_command_to_ps2_controller(enum PS2_CommandByte command);
 
 void ps2_detect_devices_type();
