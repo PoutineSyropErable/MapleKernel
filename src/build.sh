@@ -46,6 +46,13 @@ STDLIB="stdlib"
 OTHER="other"
 CODE_ANALYSIS="runtime_code_analysis"
 
+# Unused. but moved stuff there eventually
+DRIVERS="./drivers"
+DRIVERS_PS2="./drivers/ps2"
+DRIVERS_PS2_KEYBOARD="./drivers/ps2/keyboard"
+DRIVERS_PS2_MOUSE="./drivers/ps2/mouse"
+DRIVERS_PS2_CONTROLLER="./drivers/ps2/controller"
+
 INCLUDE_DIRS=(
 	"$KERNEL"
 	"$REAL16_WRAPPERS"

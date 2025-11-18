@@ -60,7 +60,7 @@ static inline uint8_t recieve_raw_response() {
 /* =================================== Internals Functions ================================ */
 
 /* For the PS2 Device to be ready for more inputs. So, wait for the ps2 controller to be ready for the OS to send the next output */
-enum ps2_os_error_code_t wait_till_ready_for_more_input() {
+enum ps2_os_error_code wait_till_ready_for_more_input() {
 
 	for (uint32_t i = 0; i < MAX_PS2_WAIT_LOOP; i++) {
 		io_wait();
@@ -80,7 +80,7 @@ enum ps2_os_error_code_t wait_till_ready_for_more_input() {
 }
 
 /* For the PS2 Device, who is currently calculating the next output to be done with the result ready. So for the OS to read the response */
-enum ps2_os_error_code_t wait_till_ready_for_response() {
+enum ps2_os_error_code wait_till_ready_for_response() {
 
 	for (uint32_t i = 0; i < MAX_PS2_WAIT_LOOP; i++) {
 		io_wait();
@@ -93,9 +93,9 @@ enum ps2_os_error_code_t wait_till_ready_for_response() {
 	return PS2_ERR_wait_max_itt_out;
 }
 
-enum ps2_os_error_code_t send_data_to_first_ps2_port(uint8_t data) {
+enum ps2_os_error_code send_data_to_first_ps2_port(uint8_t data) {
 
-	enum ps2_os_error_code_t err = wait_till_ready_for_more_input();
+	enum ps2_os_error_code err = wait_till_ready_for_more_input();
 	if (err) {
 		return err;
 	}
@@ -105,9 +105,9 @@ enum ps2_os_error_code_t send_data_to_first_ps2_port(uint8_t data) {
 	return PS2_ERR_none;
 }
 
-enum ps2_os_error_code_t send_data_to_second_ps2_port(uint8_t data) {
+enum ps2_os_error_code send_data_to_second_ps2_port(uint8_t data) {
 
-	enum ps2_os_error_code_t err = wait_till_ready_for_more_input();
+	enum ps2_os_error_code err = wait_till_ready_for_more_input();
 	if (err) {
 		return err;
 	}
@@ -123,7 +123,7 @@ enum ps2_os_error_code_t send_data_to_second_ps2_port(uint8_t data) {
 }
 
 // This is used to send data to the first or second ps2 device. Port 1 = Keyboard, Port 2 = mouse
-enum ps2_os_error_code_t send_data_to_ps2_port(enum PS2_PortNumber port_number, uint8_t data) {
+enum ps2_os_error_code send_data_to_ps2_port(enum PS2_PortNumber port_number, uint8_t data) {
 
 	switch (port_number) {
 	case 1:
@@ -135,8 +135,8 @@ enum ps2_os_error_code_t send_data_to_ps2_port(enum PS2_PortNumber port_number, 
 	}
 }
 
-enum ps2_os_error_code_t send_command_to_ps2_controller(enum PS2_CommandByte command) {
-	enum ps2_os_error_code_t err = wait_till_ready_for_more_input();
+enum ps2_os_error_code send_command_to_ps2_controller(enum PS2_CommandByte command) {
+	enum ps2_os_error_code err = wait_till_ready_for_more_input();
 	if (err) {
 		return err;
 	}
@@ -213,7 +213,7 @@ struct ___ps2_typeless_return recieve_generic_verified_response(enum PS2_Respons
 	case PS2_RT_test_controller:
 		enum PS2_TestControllerResponse response_tc = raw_response;
 		tagged_response.value.g_test_controller_response = response_tc;
-		valid = PS2_verify_test_controler_response(response_tc);
+		valid = PS2_verify_test_controller_response(response_tc);
 		if (!valid) {
 			ret.tagged_response = tagged_response;
 			ret.err = PS2_ERR_invalid_test_controller_response;
@@ -239,7 +239,7 @@ struct ___ps2_typeless_return recieve_generic_verified_response(enum PS2_Respons
 	case PS2_RT_controller_output_port:
 		union ps2_controller_output_port_uts response_op = {.raw = raw_response};
 		tagged_response.value.g_controller_output_port = response_op;
-		valid = PS2_verify_controller_output_port(response_op.bits);
+		valid = PS2_verify_controller_output_port_response(response_op.bits);
 		if (!valid) {
 			ret.tagged_response = tagged_response;
 			ret.err = PS2_ERR_A20_line_not_set;
@@ -269,7 +269,7 @@ struct ___ps2_typeless_return send_command_and_recieve_response(enum PS2_Command
 	assert(response_type != PS2_RT_not_a_command, "Sending an invalid command");
 	ret.tagged_response.type = response_type;
 
-	enum ps2_os_error_code_t err = send_command_to_ps2_controller(command);
+	enum ps2_os_error_code err = send_command_to_ps2_controller(command);
 	if (err) {
 		ret.err = err;
 		return ret;
@@ -294,6 +294,144 @@ struct ___ps2_typeless_return send_command_and_recieve_response(enum PS2_Command
 /* ================================= Specific Functions ============================================= */
 // Here, I will implement the functions to recieve a specific type of response. These functions will need their own unique output types of (err, value)
 // These are really concrete wrapper, used as atomic functions.
+
+// None response
+enum ps2_os_error_code send_command_none_response(enum PS2_CommandByte command) {
+	return send_command_to_ps2_controller(command);
+}
+
+// Unknown response
+ps2_verified_unknown_response_t send_command_unknown_response(enum PS2_CommandByte command) {
+	ps2_verified_unknown_response_t ret;
+
+	enum ps2_os_error_code err = send_command_to_ps2_controller(command);
+	if (err) {
+		ret.err = err;
+		return ret;
+	}
+
+	err = wait_till_ready_for_response();
+	if (err) {
+		ret.err = err;
+		return ret;
+	}
+
+	uint8_t raw_response = recieve_raw_response();
+	ret.response = raw_response;
+	return ret;
+}
+
+// Configuration Byte response
+ps2_verified_response_configuration_byte_t send_command_configuration_byte_response(enum PS2_CommandByte command) {
+	ps2_verified_response_configuration_byte_t ret;
+
+	enum ps2_os_error_code err = send_command_to_ps2_controller(command);
+	if (err) {
+		ret.err = err;
+		return ret;
+	}
+
+	err = wait_till_ready_for_response();
+	if (err) {
+		ret.err = err;
+		return ret;
+	}
+
+	uint8_t raw_response = recieve_raw_response();
+	ret.response.raw = raw_response;
+	bool valid = PS2_verify_configuration_byte_response(ret.response);
+	if (!valid) {
+		ret.err = PS2_ERR_invalid_configuration_byte;
+		return ret;
+	}
+
+	ret.err = PS2_ERR_none;
+	return ret;
+}
+
+// Test Port response
+ps2_verified_response_test_port_t send_command_test_port_response(enum PS2_CommandByte command) {
+	ps2_verified_response_test_port_t ret;
+
+	enum ps2_os_error_code err = send_command_to_ps2_controller(command);
+	if (err) {
+		ret.err = err;
+		return ret;
+	}
+
+	err = wait_till_ready_for_response();
+	if (err) {
+		ret.err = err;
+		return ret;
+	}
+
+	uint8_t raw_response = recieve_raw_response();
+	ret.response = raw_response;
+	bool valid = PS2_verify_test_port_response(ret.response);
+	if (!valid) {
+		ret.err = PS2_ERR_invalid_test_port_response;
+		return ret;
+	}
+
+	ret.err = PS2_ERR_none;
+	return ret;
+}
+
+// Test controller Response
+ps2_verified_response_test_controller_t send_command_test_controller_response(enum PS2_CommandByte command) {
+	ps2_verified_response_test_controller_t ret;
+
+	enum ps2_os_error_code err = send_command_to_ps2_controller(command);
+	if (err) {
+		ret.err = err;
+		return ret;
+	}
+
+	err = wait_till_ready_for_response();
+	if (err) {
+		ret.err = err;
+		return ret;
+	}
+
+	uint8_t raw_response = recieve_raw_response();
+	ret.response = raw_response;
+	bool valid = PS2_verify_test_controller_response(ret.response);
+	if (!valid) {
+		ret.err = PS2_ERR_invalid_test_controller_response;
+		return ret;
+	}
+
+	ret.err = PS2_ERR_none;
+	return ret;
+}
+
+// Test controller Output Port Response
+ps2_verified_response_controller_output_port_t send_command_test_controller_output_port_response(enum PS2_CommandByte command) {
+	ps2_verified_response_controller_output_port_t ret;
+
+	enum ps2_os_error_code err = send_command_to_ps2_controller(command);
+	if (err) {
+		ret.err = err;
+		return ret;
+	}
+
+	err = wait_till_ready_for_response();
+	if (err) {
+		ret.err = err;
+		return ret;
+	}
+
+	uint8_t raw_response = recieve_raw_response();
+	ret.response.raw = raw_response;
+	bool valid = PS2_verify_controller_output_port_response(ret.response.bits);
+	if (!valid) {
+		ret.err = PS2_ERR_A20_line_not_set;
+		return ret;
+	}
+
+	ret.err = PS2_ERR_none;
+	return ret;
+}
 
 /* ========================================= steps functions =================================== */
 // These are functions that represent concrete steps. They might actually be better put in another file, I do not know.
