@@ -45,11 +45,11 @@ Input buffer = What my os write to the controller. | */
 typedef enum PS2_CommandByte {
 	PS2_CB_read_byte_0 = 0x20,       // response byte type : Controller configuration byte. (2nd type of response)
 	PS2_CB_read_byte_N_start = 0x21, // response byte type :unknown (1st reponse type)
-	PS2_CB_read_byte_N_end = 0x3F,   // response byte type: unknown (0th response type)
+	PS2_CB_read_byte_N_end = 0x3F,   // response byte type: unknown
 
-	PS2_CB_write_next_to_byte_0 = 0x60,       // response byte type: None
+	PS2_CB_write_next_to_byte_0 = 0x60,       // response byte type: None (0th response type)
 	PS2_CB_write_next_to_byte_N_start = 0x61, // response byte type: None
-	PS2_CB_write_next_to_byte_N_end = 0x62,   // response byte type: None
+	PS2_CB_write_next_to_byte_N_end = 0x7F,   // response byte type: None
 
 	PS2_CB_disable_second_ps2_port = 0xA7, // response byte type: None
 	PS2_CB_enable_second_ps2_port = 0xA8,  // response byte type: None
@@ -108,7 +108,7 @@ typedef struct [[gnu::packed]] PS2_ConfigurationByte {
 } PS2_ConfigurationByte_t;
 _Static_assert(sizeof(PS2_ConfigurationByte_t) == 1, "PS2_ConfigurationByte_t must be of size: 1 byte");
 
-typedef union {
+typedef union ps2_configuration_byte_uts {
 	uint8_t raw;
 	PS2_ConfigurationByte_t bits;
 } ps2_configuration_byte_uts_t;
@@ -158,13 +158,34 @@ enum PS2_PORT_NUMBER {
 };
 
 enum PS2_ReponseType {
-	PS2_RT_none = 0,
-	PS2_RT_unknown = 1,
-	PS2_RT_controller_configuration_byte = 1,
-	PS2_RT_test_port = 2,
-	PS2_RT_test_controller = 3,
-	PS2_RT_controller_output_port = 4,
-	PS2_RT_not_a_command = 8
+	PS2_RT_not_a_command = 0,
+	PS2_RT_none = 1,
+	PS2_RT_unknown = 2,
+	PS2_RT_controller_configuration_byte = 3,
+	PS2_RT_test_port = 4,
+	PS2_RT_test_controller = 5,
+	PS2_RT_controller_output_port = 6,
+};
+
+/*
+This struct should never appear in code. Only it's individual field should be used.
+And even then, the polymorphic solution shouldn't be used. It's too slow.
+We'll end up with a low level function, and high level at the same time.
+It's purely there to have the types of all response type written next to another real quick
+*/
+union _anon1 {
+	uint8_t not_a_command;                                    // Can't and shouldn't even send it! This case should never be inside a tagged response, an error should have happened.
+	uint8_t none;                                             // Send the command, but don't even read the answer.
+	uint8_t unknown;                                          // Get an answer, but don't do anything with it.
+	union ps2_configuration_byte_uts configuration_byte;      // usable answer
+	enum PS2_TestPortResponse test_port_response;             // usable answer
+	enum PS2_TestControllerResponse test_controller_response; // usable anser
+	struct PS2_ControllerOutputPort controller_output_port;   // usable answer
+};
+
+struct PS2_Tagged_Reponse {
+	enum PS2_ReponseType type;
+	union _anon1 value;
 };
 
 enum ps2_os_error_code_t {
@@ -236,6 +257,30 @@ then the response byte needs to be read from IO Port 0x60 after making sure it h
 
 */
 
+/*=================== Type and Enum -> String Function ===============*/
+
+static inline const char* PS2_ResponseType_to_string(enum PS2_ReponseType response_type) {
+	// The string is located inside the .data section, this return a pointer to that section
+	switch (response_type) {
+	case PS2_RT_none:
+		return "None";
+	case PS2_RT_unknown:
+		return "Unknown";
+	case PS2_RT_controller_configuration_byte:
+		return "Controller config";
+	case PS2_RT_test_port:
+		return "Test port";
+	case PS2_RT_test_controller:
+		return "Test controller";
+	case PS2_RT_controller_output_port:
+		return "Controller output";
+	case PS2_RT_not_a_command:
+		return "Not a command";
+	default:
+		return "Invalid";
+	}
+}
+
 /*==================GLOBAL FUNCTIONS===================== */
 static inline void
 io_wait(void) {
@@ -254,3 +299,6 @@ enum ps2_os_error_code_t send_data_to_ps2_port(enum PS2_PORT_NUMBER port_number,
 enum ps2_os_error_code_t send_command_to_ps2_controller(enum PS2_CommandByte command);
 
 void ps2_detect_devices_type();
+
+/*============= TESTS ============ */
+void test_command_array(void);

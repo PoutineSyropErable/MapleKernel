@@ -309,9 +309,9 @@ void kprintf_argc(const uint32_t argc, const char* fmt, ...) {
 			struct PRINTF_FIELD_PROPERTIES information = printf_information[i];
 
 			if (information.option == FMT_OPTION_PAD) {
-				print_hex_f(arg_i, information.option_num);
+				print_int_f(arg_i, information.option_num);
 			} else {
-				print_int_var_no_newline(arg_i);
+				print_int_f(arg_i, 0);
 			}
 			break;
 		}

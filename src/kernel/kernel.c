@@ -9,6 +9,7 @@
 #include "os_registers.c"
 #include "pic.h"
 #include "pit_timer.h"
+#include "ps2.h"
 #include "stdio.h"
 #include "string_helper.h"
 #include "vga_terminal.h"
@@ -250,7 +251,8 @@ void kernel_main(void) {
 
 	// __int_O0(33);
 
-	// terminal_writestring("\n====kernel main entering loop====\n");
+	test_command_array();
+	terminal_writestring("\n====kernel main entering loop====\n");
 
 	while (true) {
 		// kernel main loop
