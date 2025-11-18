@@ -306,6 +306,9 @@ void test_command_array(void) {
 		enum PS2_ResponseType val = command_to_response_type[i];
 		const char* str = PS2_ResponseType_to_string(val);
 		kprintf("%h:03 -> Value: %s\n", i, str); // :03 pads to 3 digits
+
+		// maybe create a function that takes a command, and returns a command name.
+		// TODO:
 	}
 
 	// Check known important values
