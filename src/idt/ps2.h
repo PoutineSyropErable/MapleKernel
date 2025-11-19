@@ -218,6 +218,10 @@ static inline const char* PS2_PortNumber_to_string(enum PS2_PortNumber port_numb
 	}
 }
 
+/*
+I'm the one who created these, so they will never be
+send to hardware, so they can be signed and ints
+*/
 enum ps2_os_error_code {
 	PS2_ERR_none = 0,
 	PS2_ERR_invalid_port_number = -1,
@@ -230,6 +234,7 @@ enum ps2_os_error_code {
 	PS2_ERR_A20_line_not_set, // Not really an error. More like an a state that can only happen once
 	PS2_ERR_status_parity,
 	PS2_ERR_status_timeout,
+	PS2_ERR_n_is_zero,
 
 };
 
@@ -244,11 +249,12 @@ enum PS2_ResponseType {
 };
 
 // When none, just return an err
+typedef enum ps2_os_error_code ps2_verified_response_none_t;
 
 typedef struct ps2_verified_response_unknown {
 	uint8_t response;
 	enum ps2_os_error_code err;
-} ps2_verified_unknown_response_t;
+} ps2_verified_response_unknown_t;
 
 typedef struct ps2_verified_response_configuration_byte {
 	union ps2_configuration_byte_uts response;

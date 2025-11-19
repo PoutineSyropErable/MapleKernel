@@ -301,8 +301,8 @@ enum ps2_os_error_code send_command_none_response(enum PS2_CommandByte command) 
 }
 
 // Unknown response
-ps2_verified_unknown_response_t send_command_unknown_response(enum PS2_CommandByte command) {
-	ps2_verified_unknown_response_t ret;
+ps2_verified_response_unknown_t send_command_unknown_response(enum PS2_CommandByte command) {
+	ps2_verified_response_unknown_t ret;
 
 	enum ps2_os_error_code err = send_command_to_ps2_controller(command);
 	if (err) {
@@ -435,6 +435,27 @@ ps2_verified_response_controller_output_port_t send_command_test_controller_outp
 
 /* ========================================= steps functions =================================== */
 // These are functions that represent concrete steps. They might actually be better put in another file, I do not know.
+
+ps2_verified_response_configuration_byte_t ps2_read_byte_0_from_internal_ram() {
+	return send_command_configuration_byte_response(PS2_CB_read_byte_0);
+}
+
+ps2_verified_response_unknown_t ps2_read_byte_n_from_internal_ram(uint8_t byte_index) {
+	// should I allow reading byte 0? Let's allow it, but return an error.
+	// But this may return an error, depending on hardware?
+	assert(byte_index < (PS2_CB_read_byte_N_end - PS2_CB_read_byte_0), "must be in allowed byte range!\n");
+	assert(byte_index != 0, "0 byte might cause errors?");
+
+	ps2_verified_response_unknown_t ret;
+	enum PS2_CommandByte command_byte = PS2_CB_read_byte_0 + byte_index;
+	ret = send_command_unknown_response(command_byte);
+
+	if (byte_index == 0) {
+		// Maybe remove this?
+		ret.err = PS2_ERR_n_is_zero;
+	}
+	return ret;
+}
 
 /* ============ TESTS  =============== */
 void test_command_array(void) {
