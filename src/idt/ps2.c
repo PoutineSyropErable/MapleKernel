@@ -1,6 +1,8 @@
+#include "acpi.h"
 #include "assert.h"
 #include "ps2.h"
 #include "stdio.h"
+#include "usb_controller.h"
 
 #define MAX_PS2_WAIT_LOOP 1000
 

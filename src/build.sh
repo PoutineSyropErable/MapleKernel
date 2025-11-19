@@ -53,6 +53,9 @@ DRIVERS_PS2_KEYBOARD="./drivers/ps2/keyboard"
 DRIVERS_PS2_MOUSE="./drivers/ps2/mouse"
 DRIVERS_PS2_CONTROLLER="./drivers/ps2/controller"
 
+DRIVERS_USB_CONTROLLER="./drivers/usb/controller"
+ACPI="./acpi"
+
 INCLUDE_DIRS=(
 	"$KERNEL"
 	"$REAL16_WRAPPERS"
@@ -63,6 +66,9 @@ INCLUDE_DIRS=(
 	"$STDLIB"
 	"$OTHER"
 	"$CODE_ANALYSIS"
+
+	"$ACPI"
+	"$DRIVERS_USB_CONTROLLER"
 )
 
 # Build SUPER_INCLUDE as an array of -I arguments
@@ -88,16 +94,22 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$GDT/f1_binary_operation.c" -o "$BUILD_DIR/f1_bi
 i686-elf-gcc "${CFLAGS[@]}" -c "$GDT/f3_segment_descriptor_internals.c" -o "$BUILD_DIR/f3_segment_descriptor_internals.o" "-I$STDIO" "-I$GDT" "-I$STDLIB"
 i686-elf-gcc "${CFLAGS[@]}" -c "$GDT/gdt.c" -o "$BUILD_DIR/gdt.o" "-I$STDIO" "-I$GDT" "-I$STDLIB"
 
-# Compile the CPU functionality activation part
-i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/ps2.c" -o "$BUILD_DIR/ps2.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO"
+# Compile Drivers CPU structures
 i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/idt.c" -o "$BUILD_DIR/idt.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO"
-nasm "${NASM_FLAGS32[@]}" "$IDT/exception_handler.asm" -o "$BUILD_DIR/exception_handler.o"
 i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/pic.c" -o "$BUILD_DIR/pic.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO"
+nasm "${NASM_FLAGS32[@]}" "$IDT/exception_handler.asm" -o "$BUILD_DIR/exception_handler.o"
+
+# Compile Drivers
+i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/ps2.c" -o "$BUILD_DIR/ps2.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$DRIVERS_USB_CONTROLLER"
 i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/keyboard_handler.c" -o "$BUILD_DIR/keyboard_handler.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO"
 
+# Temporary stuff. Will properly program them one day.
+i686-elf-gcc "${CFLAGS[@]}" -c "$DRIVERS_USB_CONTROLLER/usb_controller.c" -o "$BUILD_DIR/usb_controller.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "-I$DRIVERS_USB_CONTROLLER"
+i686-elf-gcc "${CFLAGS[@]}" -c "$ACPI/acpi.c" -o "$BUILD_DIR/acpi.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "-I$ACPI"
 i686-elf-gcc "${CFLAGS[@]}" -c "$OTHER/virtual_memory.c" -o "$BUILD_DIR/virtual_memory.o"
 i686-elf-gcc "${CFLAGS[@]}" -c "$OTHER/pit_timer.c" -o "$BUILD_DIR/pit_timer.o"
 
+# Just another thing
 i686-elf-gcc "${CFLAGS[@]}" -c "$CODE_ANALYSIS/address_getter.c" -o "$BUILD_DIR/address_getter.o" "-I$REAL_FUNC" "-I$REAL16_WRAPPERS" "-I$GDT" "-I$STDLIB"
 
 # Compile the real mode 16 code and it's wrappers
@@ -128,6 +140,8 @@ BUILD_OBJECTS=(
 	"$BUILD_DIR/exception_handler.o"
 	"$BUILD_DIR/keyboard_handler.o"
 
+	"$BUILD_DIR/usb_controller.o"
+	"$BUILD_DIR/acpi.o"
 	"$BUILD_DIR/virtual_memory.o"
 	"$BUILD_DIR/pit_timer.o"
 

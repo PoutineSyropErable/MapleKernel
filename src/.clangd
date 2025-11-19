@@ -27,6 +27,10 @@ CompileFlags:
     - -Iother
     - -Iruntime_code_analysis
 
+
+    - -Idrivers/usb/controller
+    - -Iacpi
+
 # Optional per-file overrides for 16-bit realmode code
 If:
   PathMatch: "realmode_functions/.*\\.c"
