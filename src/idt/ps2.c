@@ -93,49 +93,7 @@ enum ps2_os_error_code wait_till_ready_for_response() {
 	return PS2_ERR_wait_max_itt_out;
 }
 
-enum ps2_os_error_code send_data_to_first_ps2_port(uint8_t data) {
-
-	enum ps2_os_error_code err = wait_till_ready_for_more_input();
-	if (err) {
-		return err;
-	}
-
-	__outb(PS2_DATA_PORT_RW, data);
-
-	return PS2_ERR_none;
-}
-
-enum ps2_os_error_code send_data_to_second_ps2_port(uint8_t data) {
-
-	enum ps2_os_error_code err = wait_till_ready_for_more_input();
-	if (err) {
-		return err;
-	}
-	__outb(PS2_COMMAND_PORT_W, PS2_CB_write_next_byte_to_second_ps2_input_buffer);
-
-	err = wait_till_ready_for_more_input();
-	if (err) {
-		return PS2_ERR_wait_maxx_itt_in2;
-	}
-	__outb(PS2_DATA_PORT_RW, data);
-
-	return PS2_ERR_none;
-}
-
-// This is used to send data to the first or second ps2 device. Port 1 = Keyboard, Port 2 = mouse
-enum ps2_os_error_code send_data_to_ps2_port(enum PS2_PortNumber port_number, uint8_t data) {
-
-	switch (port_number) {
-	case 1:
-		return send_data_to_first_ps2_port(data);
-	case 2:
-		return send_data_to_second_ps2_port(data);
-	default:
-		return PS2_ERR_invalid_port_number;
-	}
-}
-
-enum ps2_os_error_code send_command_to_ps2_controller(enum PS2_CommandByte command) {
+static inline enum ps2_os_error_code send_command_to_ps2_controller(enum PS2_CommandByte command) {
 	enum ps2_os_error_code err = wait_till_ready_for_more_input();
 	if (err) {
 		return err;
@@ -242,7 +200,7 @@ struct ___ps2_typeless_return recieve_generic_verified_response(enum PS2_Respons
 		valid = PS2_verify_controller_output_port_response(response_op.bits);
 		if (!valid) {
 			ret.tagged_response = tagged_response;
-			ret.err = PS2_ERR_A20_line_not_set;
+			ret.err = PS2_WARN_A20_line_not_set;
 			return ret;
 		}
 		ret.tagged_response = tagged_response;
@@ -296,7 +254,8 @@ struct ___ps2_typeless_return send_command_and_recieve_response(enum PS2_Command
 // These are really concrete wrapper, used as atomic functions.
 
 // None response
-enum ps2_os_error_code send_command_none_response(enum PS2_CommandByte command) {
+static inline enum ps2_os_error_code
+send_command_none_response(enum PS2_CommandByte command) {
 	return send_command_to_ps2_controller(command);
 }
 
@@ -322,7 +281,8 @@ ps2_verified_response_unknown_t send_command_unknown_response(enum PS2_CommandBy
 }
 
 // Configuration Byte response
-ps2_verified_response_configuration_byte_t send_command_configuration_byte_response(enum PS2_CommandByte command) {
+static inline ps2_verified_response_configuration_byte_t
+send_command_configuration_byte_response(enum PS2_CommandByte command) {
 	ps2_verified_response_configuration_byte_t ret;
 
 	enum ps2_os_error_code err = send_command_to_ps2_controller(command);
@@ -378,7 +338,8 @@ ps2_verified_response_test_port_t send_command_test_port_response(enum PS2_Comma
 }
 
 // Test controller Response
-ps2_verified_response_test_controller_t send_command_test_controller_response(enum PS2_CommandByte command) {
+static inline ps2_verified_response_test_controller_t
+send_command_test_controller_response(enum PS2_CommandByte command) {
 	ps2_verified_response_test_controller_t ret;
 
 	enum ps2_os_error_code err = send_command_to_ps2_controller(command);
@@ -406,7 +367,8 @@ ps2_verified_response_test_controller_t send_command_test_controller_response(en
 }
 
 // Test controller Output Port Response
-ps2_verified_response_controller_output_port_t send_command_test_controller_output_port_response(enum PS2_CommandByte command) {
+static inline ps2_verified_response_controller_output_port_t
+send_command_test_controller_output_port_response(enum PS2_CommandByte command) {
 	ps2_verified_response_controller_output_port_t ret;
 
 	enum ps2_os_error_code err = send_command_to_ps2_controller(command);
@@ -425,7 +387,7 @@ ps2_verified_response_controller_output_port_t send_command_test_controller_outp
 	ret.response.raw = raw_response;
 	bool valid = PS2_verify_controller_output_port_response(ret.response.bits);
 	if (!valid) {
-		ret.err = PS2_ERR_A20_line_not_set;
+		ret.err = PS2_WARN_A20_line_not_set;
 		return ret;
 	}
 
@@ -436,25 +398,237 @@ ps2_verified_response_controller_output_port_t send_command_test_controller_outp
 /* ========================================= steps functions =================================== */
 // These are functions that represent concrete steps. They might actually be better put in another file, I do not know.
 
-ps2_verified_response_configuration_byte_t ps2_read_byte_0_from_internal_ram() {
+static inline ps2_verified_response_configuration_byte_t ps2_read_byte_0_from_internal_ram() {
 	return send_command_configuration_byte_response(PS2_CB_read_byte_0);
 }
 
-ps2_verified_response_unknown_t ps2_read_byte_n_from_internal_ram(uint8_t byte_index) {
+static inline ps2_verified_response_unknown_t ps2_read_byte_n_from_internal_ram(uint8_t byte_index) {
 	// should I allow reading byte 0? Let's allow it, but return an error.
 	// But this may return an error, depending on hardware?
 	assert(byte_index < (PS2_CB_read_byte_N_end - PS2_CB_read_byte_0), "must be in allowed byte range!\n");
 	assert(byte_index != 0, "0 byte might cause errors?");
+	// no, if byte index is 0, it will just send the above command
 
 	ps2_verified_response_unknown_t ret;
 	enum PS2_CommandByte command_byte = PS2_CB_read_byte_0 + byte_index;
 	ret = send_command_unknown_response(command_byte);
 
-	if (byte_index == 0) {
-		// Maybe remove this?
-		ret.err = PS2_ERR_n_is_zero;
+	if (byte_index == 0 && ret.err == PS2_ERR_none) {
+		// Not a dangerous error. Maybe create a warning type?
+		// Error are low values. Warning are high values going down?
+		ret.err = PS2_WARN_n_is_zero;
 	}
 	return ret;
+}
+
+ps2_verified_response_configuration_byte_t ps2_get_configuration_byte() {
+	return send_command_configuration_byte_response(PS2_CB_read_byte_0);
+}
+
+//=======
+static inline enum ps2_os_error_code write_next_to_byte_0_of_interal_ram() {
+	return send_command_none_response(PS2_CB_write_next_to_byte_0);
+}
+
+[[maybe_unused]] static inline enum ps2_os_error_code
+write_next_to_byte_n_of_interal_ram(uint8_t byte_index) {
+	assert(byte_index < (PS2_CB_write_next_to_byte_N_end - PS2_CB_write_next_to_byte_0), "must be in allowed byte range!\n");
+
+	enum ps2_os_error_code err;
+	enum PS2_CommandByte command_byte = PS2_CB_write_next_to_byte_0 + byte_index;
+	err = send_command_none_response(command_byte);
+
+	if (byte_index == 0 && err == PS2_ERR_none) {
+		// Not a dangerous error. Maybe create a warning type?
+		// Error are low values. Warning are high values going down?
+		err = PS2_WARN_n_is_zero;
+	}
+	return err;
+}
+
+// Should the public api allow these functions? If so, maybe use verifed response none, rather then error code?
+enum ps2_os_error_code ps2_set_configuration_byte(PS2_ConfigurationByte_t config_byte) {
+	union ps2_configuration_byte_uts config_byte_uts = {.bits = config_byte};
+
+	enum ps2_os_error_code err = write_next_to_byte_0_of_interal_ram();
+	if (err) {
+		return err;
+	}
+	err = wait_till_ready_for_more_input();
+	if (err) {
+		return err;
+	}
+	__outb(PS2_DATA_PORT_RW, config_byte_uts.raw);
+	err = PS2_ERR_none;
+	return err;
+}
+//==========
+
+enum ps2_os_error_code ps2_disable_first_ps2_port() {
+	return send_command_to_ps2_controller(PS2_CB_disable_first_ps2_port);
+}
+
+enum ps2_os_error_code ps2_enable_first_ps2_port() {
+	return send_command_to_ps2_controller(PS2_CB_enable_first_ps2_port);
+}
+
+/* Only if 2 PS/2 port are supported. Do not use this function for the test. Use the configuration byte
+Set a configuration byte with it enabled, and read it back. check if it's enabled.
+*/
+enum ps2_os_error_code ps2_disable_second_ps2_port() {
+	return send_command_to_ps2_controller(PS2_CB_disable_second_ps2_port);
+}
+
+/* Only if 2 PS/2 port are supported. Do not use this function for the test. Use the configuration byte
+Set a configuration byte with it enabled, and read it back. check if it's enabled.
+*/
+enum ps2_os_error_code ps2_enable_second_ps2_port() {
+	return send_command_to_ps2_controller(PS2_CB_enable_second_ps2_port);
+}
+// ===============
+
+struct ps2_verified_response_test_port test_first_ps2_port() {
+	return send_command_test_port_response(PS2_CB_test_first_ps2_port);
+}
+
+/* Only if 2 PS/2 port are supported. Do not use this function for the test. Use the configuration byte
+Set a configuration byte with it enabled, and read it back. check if it's enabled.
+*/
+struct ps2_verified_response_test_port test_second_ps2_port() {
+	return send_command_test_port_response(PS2_CB_test_second_ps2_port);
+}
+// ===============
+struct ps2_verified_response_test_controller ps2_test_controller() {
+	return send_command_test_controller_response(PS2_CB_test_ps2_controller);
+}
+// ===============
+// diagnostic dump, idk how to implement it. A loop that reads?
+
+// ===============
+
+// This function is only used by manifucaturer to check if the things work.
+// It shouldn't even be implemented or used
+enum ps2_os_error_code ps2_copy_input_port_to_status() {
+	enum ps2_os_error_code err;
+	err = send_command_none_response(PS2_CB_copy_high_input_to_status);
+	if (err) {
+		kprintf("Failed during high copy\n");
+		return err;
+	}
+	err = send_command_none_response(PS2_CB_copy_low_input_to_status);
+	if (err) {
+		kprintf("Failed during low copy\n");
+		return err;
+	}
+	return PS2_ERR_none;
+}
+// ===============
+
+struct ps2_verified_response_unknown ps2_read_controller_input_port() {
+	return send_command_unknown_response(PS2_CB_read_controller_input_port);
+}
+struct ps2_verified_response_controller_output_port ps2_read_controller_output_port() {
+	return send_command_test_controller_output_port_response(PS2_CB_read_controller_output_port);
+}
+// ===============
+static inline enum ps2_os_error_code
+ps2_write_next_byte_to_controller_output_port() {
+	return send_command_none_response(PS2_CB_write_next_byte_to_controller_output_port);
+}
+
+enum ps2_os_error_code ps2_set_controller_output_port(PS2_ControllerOutputPort_t output_port) {
+	union ps2_controller_output_port_uts output_port_uts = {.bits = output_port};
+	enum ps2_os_error_code err;
+	err = ps2_write_next_byte_to_controller_output_port();
+	if (err) {
+		return err;
+	}
+
+	// Special case here, since we write to the controller output port.
+	// We need to check if we can write to output port.
+	// The function name here is just, wait till output buffer is empty.
+	// But since it's the only case where it's not for a response, I won't change the function name to the more general case
+	err = wait_till_ready_for_response();
+	if (err) {
+		return err;
+	}
+
+	__outb(PS2_DATA_PORT_RW, output_port_uts.raw);
+	return PS2_ERR_none;
+}
+
+// ===============
+// Fake ps2 keyboard and mouse (port 1 and port 2) outputs.
+enum ps2_os_error_code write_next_byte_to_first_ps2_output_port() {
+	return send_command_none_response(PS2_CB_write_next_byte_to_first_ps2_output_buffer);
+}
+
+enum ps2_os_error_code write_next_byte_to_second_ps2_output_port() {
+	return send_command_none_response(PS2_CB_write_next_byte_to_second_ps2_output_buffer);
+}
+enum ps2_os_error_code fake_ps2_keyboard_byte(uint8_t byte) {
+	enum ps2_os_error_code err;
+	err = write_next_byte_to_first_ps2_output_port();
+	if (err) {
+		return err;
+	}
+
+	__outb(PS2_DATA_PORT_RW, byte);
+	return PS2_ERR_none;
+}
+enum ps2_os_error_code fake_ps2_mouse_byte(uint8_t byte) {
+	enum ps2_os_error_code err;
+	err = write_next_byte_to_second_ps2_output_port();
+	if (err) {
+		return err;
+	}
+
+	__outb(PS2_DATA_PORT_RW, byte);
+	return PS2_ERR_none;
+}
+
+// ===============
+enum ps2_os_error_code
+send_data_to_first_ps2_port(uint8_t data) {
+
+	enum ps2_os_error_code err = wait_till_ready_for_more_input();
+	if (err) {
+		return err;
+	}
+
+	__outb(PS2_DATA_PORT_RW, data);
+
+	return PS2_ERR_none;
+}
+
+enum ps2_os_error_code send_data_to_second_ps2_port(uint8_t data) {
+
+	enum ps2_os_error_code err = wait_till_ready_for_more_input();
+	if (err) {
+		return err;
+	}
+	__outb(PS2_COMMAND_PORT_W, PS2_CB_write_next_byte_to_second_ps2_input_buffer);
+
+	err = wait_till_ready_for_more_input();
+	if (err) {
+		return err;
+	}
+	__outb(PS2_DATA_PORT_RW, data);
+
+	return PS2_ERR_none;
+}
+
+// This is used to send data to the first or second ps2 device. Port 1 = Keyboard, Port 2 = mouse
+enum ps2_os_error_code send_data_to_ps2_port(enum PS2_PortNumber port_number, uint8_t data) {
+
+	switch (port_number) {
+	case 1:
+		return send_data_to_first_ps2_port(data);
+	case 2:
+		return send_data_to_second_ps2_port(data);
+	default:
+		return PS2_ERR_invalid_port_number;
+	}
 }
 
 /* ============ TESTS  =============== */

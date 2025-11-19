@@ -253,6 +253,7 @@ void kernel_main(void) {
 
 	test_command_array();
 	terminal_writestring("\n====kernel main entering loop====\n");
+	fake_ps2_keyboard_byte(23);
 
 	while (true) {
 		// kernel main loop

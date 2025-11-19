@@ -1,4 +1,5 @@
 #pragma once
+#include "assert.h"
 #include "intrinsics.h"
 
 // Compile-time check for little-endian
@@ -14,15 +15,15 @@
 
 /* ==================================================================================================================================================*/
 typedef struct [[gnu::packed]] {
-	bool output_buffer_full_not_empty : 1;
-	bool input_buffer_full_not_empty : 1;
-	bool system_flag : 1; // cleared by reset, and set by firmare
-	bool command_not_data : 1;
+	bool output_buffer_full_not_empty : 1; // bit 0
+	bool input_buffer_full_not_empty : 1;  // bit 1
+	bool system_flag : 1;                  // bit 2, cleared by reset, and set by firmare
+	bool command_not_data : 1;             // bit 3
 	// 1 = data written to input buffer is data for the PS/2 controller command.
 	// 0 = data written to input buffer is for data for PS/2 device
 	// =====
-	bool unknown_4 : 1;     // more likely unused on modern systems
-	bool unknown_5 : 1;     // may be recieve time-out, or second PS/2 port output buffer full
+	bool unknown_4 : 1;     // bit 4, more likely unused on modern systems
+	bool unknown_5 : 1;     // bit 5, may be recieve time-out, or second PS/2 port output buffer full
 	bool timeout_error : 1; // 1 = timeout error, 0 = no error
 	bool parity_error : 1;  // 1 = parity error, 0 = no parity error
 
@@ -113,8 +114,8 @@ typedef struct [[gnu::packed]] PS2_ConfigurationByte {
 	bool second_ps2_port_enabled : 1;
 	bool system_flag_passed_post_one : 1; // 0 should be impossible. If post wasn't pasted, then it failed to boot.
 	bool zero1 : 1;                       // should be 0.
-	bool first_ps2_port_clock_enabled : 1;
-	bool second_ps2_port_clock_enabled : 1;
+	bool first_ps2_port_clock_disabled : 1;
+	bool second_ps2_port_clock_disabled : 1;
 	bool first_ps2_port_translation_enabled : 1;
 	bool zero2 : 1; // must be zero.
 } PS2_ConfigurationByte_t;
@@ -221,20 +222,22 @@ static inline const char* PS2_PortNumber_to_string(enum PS2_PortNumber port_numb
 /*
 I'm the one who created these, so they will never be
 send to hardware, so they can be signed and ints
+TODO:? Maybe use a warning type? but that seems overkill
 */
 enum ps2_os_error_code {
 	PS2_ERR_none = 0,
 	PS2_ERR_invalid_port_number = -1,
 	PS2_ERR_wait_max_itt_in = 1,
 	PS2_ERR_wait_max_itt_out = 2,
-	PS2_ERR_wait_maxx_itt_in2 = 3,
-	PS2_ERR_invalid_test_port_response,
-	PS2_ERR_invalid_test_controller_response,
-	PS2_ERR_invalid_configuration_byte,
-	PS2_ERR_A20_line_not_set, // Not really an error. More like an a state that can only happen once
-	PS2_ERR_status_parity,
-	PS2_ERR_status_timeout,
-	PS2_ERR_n_is_zero,
+	PS2_ERR_invalid_test_port_response = 3,
+	PS2_ERR_invalid_test_controller_response = 4,
+	PS2_ERR_invalid_configuration_byte = 5,
+	PS2_ERR_status_parity = 6,
+	PS2_ERR_status_timeout = 7,
+
+	// Warnings
+	PS2_WARN_A20_line_not_set = 1000,
+	PS2_WARN_n_is_zero = 999,
 
 };
 
@@ -357,8 +360,6 @@ static inline const char* PS2_OS_Error_to_string(enum ps2_os_error_code err) {
 		return "PS2_ERR_WAIT_MAX_ITT_IN";
 	case PS2_ERR_wait_max_itt_out:
 		return "PS2_ERR_WAIT_MAX_ITT_OUT";
-	case PS2_ERR_wait_maxx_itt_in2:
-		return "PS2_ERR_WAIT_MAX_ITT2";
 	default:
 		return "Invalid error code!";
 	}
@@ -435,10 +436,12 @@ __attribute__((optimize("O3"))) static inline PS2_StatusRegister_t read_ps2_stat
 	return u.bits;
 }
 
-enum ps2_os_error_code wait_till_ready_for_more_input();
-enum ps2_os_error_code send_data_to_ps2_port(enum PS2_PortNumber port_number, uint8_t data);
-enum ps2_os_error_code send_command_to_ps2_controller(enum PS2_CommandByte command);
+// enum ps2_os_error_code wait_till_ready_for_more_input();
+// enum ps2_os_error_code send_data_to_ps2_port(enum PS2_PortNumber port_number, uint8_t data);
+// static inline enum ps2_os_error_code send_command_to_ps2_controller(enum PS2_CommandByte command);
 
+enum ps2_os_error_code fake_ps2_keyboard_byte(uint8_t byte);
+enum ps2_os_error_code fake_ps2_mouse_byte(uint8_t byte);
 void ps2_detect_devices_type();
 
 /*============= TESTS ============ */
