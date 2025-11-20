@@ -80,10 +80,21 @@ INCLUDE_DIRS=(
 	"$DRIVERS_USB_CONTROLLER"
 )
 
+PS2_INCLUDE_DIRS=(
+	"$DRIVERS_PS2_CONTROLLER"
+	"$DRIVERS_PS2_KEYBOARD"
+	"$DRIVERS_PS2_MOUSE"
+)
+
 # Build SUPER_INCLUDE as an array of -I arguments
 SUPER_INCLUDE=()
 for dir in "${INCLUDE_DIRS[@]}"; do
 	SUPER_INCLUDE+=("-I$dir")
+done
+
+PS2_SUPER_INCLUDE=()
+for dir in "${PS2_INCLUDE_DIRS[@]}"; do
+	PS2_SUPER_INCLUDE+=("-I$dir")
 done
 
 # Assemble the bootloader assembly
@@ -104,9 +115,10 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$GDT/f3_segment_descriptor_internals.c" -o "$BUI
 i686-elf-gcc "${CFLAGS[@]}" -c "$GDT/gdt.c" -o "$BUILD_DIR/gdt.o" "-I$STDIO" "-I$GDT" "-I$STDLIB"
 
 # Compile Drivers CPU structures
-i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/idt.c" -o "$BUILD_DIR/idt.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO"
+i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/idt.c" -o "$BUILD_DIR/idt.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "${PS2_SUPER_INCLUDE[@]}"
 i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/pic.c" -o "$BUILD_DIR/pic.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO"
 nasm "${NASM_FLAGS32[@]}" "$IDT/exception_handler.asm" -o "$BUILD_DIR/exception_handler.o"
+nasm "${NASM_FLAGS32[@]}" "$IDT/ps2_handlers.asm" -o "$BUILD_DIR/ps2_handlers.o"
 
 # Compile Drivers
 i686-elf-gcc "${CFLAGS[@]}" -c "$DRIVERS_PS2_CONTROLLER/ps2.c" -o "$BUILD_DIR/ps2.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$DRIVERS_USB_CONTROLLER"
@@ -154,6 +166,7 @@ BUILD_OBJECTS=(
 	"$BUILD_DIR/ps2_mouse.o"
 	"$BUILD_DIR/ps2_keyboard_handler.o"
 	"$BUILD_DIR/ps2_mouse_handler.o"
+	"$BUILD_DIR/ps2_handlers.o"
 
 	"$BUILD_DIR/usb_controller.o"
 	"$BUILD_DIR/acpi.o"

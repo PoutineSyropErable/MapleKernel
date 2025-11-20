@@ -3,6 +3,7 @@
 #include "call_real16_wrapper.h"
 #include "f3_segment_descriptor_internals.h"
 #include "idt.h"
+#include "idt_ps2.h"
 #include "idt_test.h"
 #include "intrinsics.h"
 #include "kernel.h"
@@ -213,7 +214,17 @@ extern void test_printf(void);
 
 // Macro to call all interrupts in the X-Macro
 
-void handle_ps2_setup() {
+enum handle_ps2_setup_errors {
+	PS2_HS_ERR_none = 0,
+	PS2_HS_ERR_no_port = 1,
+	PS2_HS_ERR_two_keyboard = 2,
+	PS2_HS_ERR_two_mouse = 3,
+	PS2_HS_ERR_one_port_only = 4,
+	PS2_HS_ERR_unrecognized_device1 = 5,
+	PS2_HS_ERR_unrecognized_device2 = 6,
+};
+
+enum handle_ps2_setup_errors handle_ps2_setup() {
 	struct ps2_initialize_device_state device_sates = setup_ps2_controller();
 	kprintf("\n ===== Handling Result ===== \n");
 
@@ -250,21 +261,49 @@ void handle_ps2_setup() {
 
 one_keyboard_one_mouse:
 	kprintf("One Keyboard, One Mouse\n");
-	int keyboard_port = device_sates.port_of_keyboard;
-	int mouse_port = device_sates.port_of_mouse;
+	enum ps2_device_type port1_type = device_sates.port_one_device_type;
+	enum ps2_device_type port2_type = device_sates.port_two_device_type;
 
+	enum ps2_device_super_type port1_super_type = get_device_super_type(port1_type);
+	enum ps2_device_super_type port2_super_type = get_device_super_type(port2_type);
+	if (port1_super_type == PS2_DST_unknown) {
+		abort_msg("Not treated for now!, treat as a bug!\n");
+		return PS2_HS_ERR_unrecognized_device1;
+	}
+	if (port2_super_type == PS2_DST_unknown) {
+		abort_msg("Not treated for now!, treat as a bug!\n");
+		return PS2_HS_ERR_unrecognized_device2;
+	}
+	// Assert because this is a logic bug that created an impossible scenario.
+	// It should not be handled. The code should be change so it never happens
+	assert(port1_super_type != port2_super_type, "It should be one keyboard, one mouse. Both can't be the same!\n");
+
+	uint8_t keyboard_port, mouse_port;
+	enum ps2_device_type mouse_type;
+	enum ps2_device_type keyboard_type;
 	uint8_t keyboard_interrupt_vector;
 	uint8_t mouse_interrupt_vector;
-	if (keyboard_port == 1 && mouse_port == 2) {
-		// TODO: Use math for this, And #define variable.
-		// Not the magic numbers.
+
+	if (port1_super_type == PS2_DST_keyboard && port2_super_type == PS2_DST_mouse) {
+		keyboard_port = 1;
+		mouse_port = 2;
+
+		keyboard_type = port1_type;
+		mouse_type = port2_type;
+
 		keyboard_interrupt_vector = PS2_PORT1_INTERUPT_VECTOR;
 		mouse_interrupt_vector = PS2_PORT2_INTERUPT_VECTOR;
-	} else if (mouse_port == 1 && keyboard_port == 2) {
+	} else if (port1_super_type == PS2_DST_mouse && port2_super_type == PS2_DST_keyboard) {
+		mouse_port = 1;
+		keyboard_port = 2;
+
+		mouse_type = port1_type;
+		keyboard_type = port2_type;
+
 		mouse_interrupt_vector = PS2_PORT1_INTERUPT_VECTOR;
 		keyboard_interrupt_vector = PS2_PORT2_INTERUPT_VECTOR;
 	} else {
-		abort_msg("Impossible scenario\n");
+		abort_msg("Impossible scenario! Should be bug fixed and prevented\n!");
 	}
 
 	// TODO: replace the quick enable mouse by the actual enable mouse that will be implemented
@@ -273,34 +312,63 @@ one_keyboard_one_mouse:
 	// extra keyboard_interrupt_vector, extra mouse_interrupt_vector
 	// no mouse, or no keyboard.
 	quick_enable_mouse();
-	idt_init(keyboard_interrupt_vector, mouse_interrupt_vector);
+	// idt_init();
 	PIC_remap(PIC_1_OFFSET, PIC_2_OFFSET);
 	initialize_irqs();
 	IRQ_clear_mask(PS2_PORT1_IRQ);        // port 1
 	IRQ_clear_mask(PS2_PORT2_BRIDGE_IRQ); // port 2->pic
 	IRQ_clear_mask(PS2_PORT2_IRQ);        // port 2
 	kprintf("Normally set the stuff\n");
-	return;
+	return PS2_HS_ERR_none;
 
 one_port_only:
-	// TODO
 	kprintf("One Port only\n");
-	return;
+
+	enum ps2_device_type only_port_type = device_sates.port_one_device_type;
+	enum ps2_device_super_type only_port_super_type = get_device_super_type(only_port_type);
+	if (only_port_super_type == PS2_DST_unknown) {
+		abort_msg("Not treated for now!, treat as a bug!\n");
+		return PS2_HS_ERR_unrecognized_device1;
+	}
+	switch (only_port_super_type) {
+	case PS2_DST_keyboard:
+		break;
+	case PS2_DST_mouse:
+		break;
+	case PS2_DST_unknown:
+		abort_msg("Not treated for now!, treat as a bug!\n");
+		return PS2_HS_ERR_unrecognized_device1;
+	}
+
+	// TODO
+	return PS2_HS_ERR_one_port_only;
 
 two_keyboard:
-	// TODO
+
 	kprintf("Two keyboards\n");
-	return;
+	enum ps2_device_type keyboard_1_type = device_sates.port_one_device_type;
+	enum ps2_device_type keyboard_2_type = device_sates.port_one_device_type;
+	enum ps2_device_super_type keyboard_1_super_type = get_device_super_type(keyboard_1_type);
+	enum ps2_device_super_type keyboard_2_super_type = get_device_super_type(keyboard_2_type);
+	assert(keyboard_1_super_type == keyboard_2_super_type && keyboard_1_super_type == PS2_DST_keyboard,
+	       "Inconsistent super types. Should be two keyboard. Not treated for now, assumed as a bug!\n");
+	// TODO
+	return PS2_HS_ERR_two_keyboard;
 
 two_mouse:
-	// TODO
 	kprintf("Two Mouse\n");
-	return;
+	enum ps2_device_type mouse_1_type = device_sates.port_one_device_type;
+	enum ps2_device_type mouse_2_type = device_sates.port_one_device_type;
+	enum ps2_device_super_type mouse_1_super_type = get_device_super_type(mouse_1_type);
+	enum ps2_device_super_type mouse_2_super_type = get_device_super_type(mouse_2_type);
+	assert(mouse_1_super_type == mouse_2_super_type && mouse_1_super_type == PS2_DST_keyboard,
+	       "Inconsistent super types. Should be two mouse. Not treated for now, assumed as a bug!\n");
+	return PS2_HS_ERR_two_mouse;
 
 no_port:
 	// Already done, no need for a todo
 	kprintf("No PS2 Devices\n");
-	return;
+	return PS2_HS_ERR_no_port;
 }
 
 void kernel_main(void) {
@@ -315,8 +383,9 @@ void kernel_main(void) {
 	kernel_test();
 
 	// terminal_writestring("======Initiating IDT=======\n\n");
-
-	handle_ps2_setup();
+	[[gnu::unused]] enum handle_ps2_setup_errors
+	    err_discard = handle_ps2_setup();
+	/* Some day the future, it might be important to know the state here. But today is not that day*/
 
 	// __int_O0(33);
 

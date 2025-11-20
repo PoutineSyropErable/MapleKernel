@@ -440,8 +440,6 @@ _Static_assert(sizeof(idt64_entry_t) == 16, "IDT64 entry must be 16 bytes (128 b
 // iretd is used in 32 bit interrupt handlers
 // iretq is used in 64 bit interupts handlers.
 
-void idt_init(uint8_t keyboard_interrupt_vector, uint8_t mouse_interrupt_vector);
-
 static inline void __lidt(idtr_t idt) {
 
 	__asm__ volatile("lidt %0" : : "m"(idt));

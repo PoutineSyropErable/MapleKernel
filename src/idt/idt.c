@@ -1,8 +1,10 @@
 #include "assert.h"
 #include "gdt.h"
 #include "idt.h"
+#include "idt_ps2.h"
 #include "intrinsics.h"
 #include "more_types.h"
+#include "ps2.h"
 
 #define IDT_MAX_VECTOR_COUNT 256
 
@@ -19,11 +21,13 @@ __attribute__((noreturn)) void exception_handler(void) {
 	}
 }
 
-extern function_t interrupt_8_handler;        // not a function pointer. It's value is therefor the first few bytes of code
-extern function_t interrupt_13_handler;       // not a function pointer. It's value is therefor the first few bytes of code
-extern function_t keyboard_interrupt_handler; // not a function pointer. It's value is therefor the first few bytes of code
-extern function_t mouse_interrupt_handler;    // not a function pointer. It's value is therefor the first few bytes of code
-extern function_t interrupt_69_handler;       // not a function pointer. It's value is therefor the first few bytes of code
+extern function_t interrupt_8_handler;              // not a function pointer. It's value is therefor the first few bytes of code
+extern function_t interrupt_13_handler;             // not a function pointer. It's value is therefor the first few bytes of code
+extern function_t keyboard_interrupt_handler_port1; // not a function pointer. It's value is therefor the first few bytes of code
+extern function_t keyboard_interrupt_handler_port2; // not a function pointer. It's value is therefor the first few bytes of code
+extern function_t mouse_interrupt_handler_port1;    // not a function pointer. It's value is therefor the first few bytes of code
+extern function_t mouse_interrupt_handler_port2;    // not a function pointer. It's value is therefor the first few bytes of code
+extern function_t interrupt_69_handler;             // not a function pointer. It's value is therefor the first few bytes of code
 
 // typedef struct PACKED {
 //     uint32_t eip;
@@ -47,7 +51,7 @@ void idt_set_descriptor(uint8_t vector, void* isr, enum gate_type32_t gate_type,
 	descriptor->bit_44_is_zero = 0;
 }
 
-void idt_init(uint8_t keyboard_interrupt, uint8_t mouse_interrupt) {
+void idt_init(struct idt_init_fields args) {
 	// Or, i could have simply, port_1_type, port_2_type.
 	idtr.base_address = idt;
 	idtr.limit = (uint16_t)sizeof(idt32_entry_t) * IDT_MAX_VECTOR_COUNT - 1;
@@ -64,17 +68,35 @@ void idt_init(uint8_t keyboard_interrupt, uint8_t mouse_interrupt) {
 		}
 	}
 
+	const uint16_t bad_interrupt = 257;
+	uint16_t interrupt_of_irq = {bad_interrupt};
+
+	switch (args.type) {
+	case ITT_one_keyboard_one_mouse:
+		// idt_set_descriptor(keyboard_interrupt, &keyboard_interrupt_handler, GT32_IG32, 0, true);
+		// vectors[keyboard_interrupt] = true;
+		//
+		// idt_set_descriptor(mouse_interrupt, &mouse_interrupt_handler, GT32_IG32, 0, true);
+		// vectors[mouse_interrupt] = true;
+		break;
+	case ITT_two_keyboard:
+		break;
+	case ITT_two_mouse:
+		break;
+	case ITT_one_keyboard:
+		break;
+	case ITT_one_mouse:
+		break;
+	case ITT_no_ps2_device:
+		// do nothing
+		break;
+	}
+
 	idt_set_descriptor(8, &interrupt_8_handler, GT32_IG32, 0, true);
 	vectors[8] = true;
 
 	idt_set_descriptor(13, &interrupt_13_handler, GT32_IG32, 0, true);
 	vectors[13] = true;
-
-	idt_set_descriptor(keyboard_interrupt, &keyboard_interrupt_handler, GT32_IG32, 0, true);
-	vectors[keyboard_interrupt] = true;
-
-	idt_set_descriptor(mouse_interrupt, &mouse_interrupt_handler, GT32_IG32, 0, true);
-	vectors[mouse_interrupt] = true;
 
 	// __asm__ volatile("lidt %0" : : "m"(idtr)); // load the new IDT
 	// __asm__ volatile("sti");                   // set the interrupt flag

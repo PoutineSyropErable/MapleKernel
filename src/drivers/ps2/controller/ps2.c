@@ -70,6 +70,35 @@ static inline enum ps2_os_error_code PS2_verify_configuration_byte_response(ps2_
 	return PS2_ERR_none;
 }
 
+/* ========================================== Other Helpers that should be in the header file, but not static =========================== */
+enum ps2_device_super_type get_device_super_type(enum ps2_device_type dt) {
+	switch (dt) {
+
+	// --- KEYBOARDS ---
+	case PS2_DT_ancient_at_keyboard:
+	case PS2_DT_mf2_keyboard_1:
+	case PS2_DT_mf2_keyboard_2:
+	case PS2_DT_short_keyboard:
+	case PS2_DT_122_key_host_connected:
+	case PS2_DT_122_key:
+	case PS2_DT_japanese_g_keyboard:
+	case PS2_DT_japanese_p_keyboard:
+	case PS2_DT_japanese_a_keyboard:
+	case PS2_DT_ncd_sun_layout_keyboard:
+		return PS2_DST_keyboard;
+
+	// --- MICE ---
+	case PS2_DT_standard_mouse:
+	case PS2_DT_mouse_with_scroll_wheel:
+	case PS2_DT_mouse_with_5_button:
+		return PS2_DST_mouse;
+
+	default:
+		// Unknown device → decide how you want to handle it
+		return PS2_DST_unknown;
+	}
+}
+
 /* =================================== Internals Functions ================================ */
 
 /* For the PS2 Device to be ready for more inputs. So, wait for the ps2 controller to be ready for the OS to send the next output */
@@ -686,7 +715,7 @@ struct ps2_device_type_uts reset_port_and_get_device_type(enum PS2_PortNumber po
 		// Kinda weird that the error is the expected behavior
 		// But I guess that's what it's all about, they need to be handled eventually.
 		// WIth something different then just return error one layer deeper or abort os.
-		ret.device_type = PS2_DT_ancient_at_keyboard;
+		ret.type = PS2_DT_ancient_at_keyboard;
 		ret.mouse_or_keyboard = PS2_DST_keyboard;
 		ret.err = PS2_ERR_none;
 		return ret;
@@ -704,19 +733,19 @@ struct ps2_device_type_uts reset_port_and_get_device_type(enum PS2_PortNumber po
 		ret.mouse_or_keyboard = PS2_DST_mouse;
 		switch (rep3) {
 		case STANDARD_PS2_MOUSE:
-			ret.device_type = PS2_DT_standard_mouse;
+			ret.type = PS2_DT_standard_mouse;
 			ret.err = PS2_ERR_none;
 			return ret;
 		case MOUSE_WITH_SCROLL_WHEEL:
-			ret.device_type = PS2_DT_mouse_with_scroll_wheel;
+			ret.type = PS2_DT_mouse_with_scroll_wheel;
 			ret.err = PS2_ERR_none;
 			return ret;
 		case FIVE_BUTTON_MOUSE:
-			ret.device_type = PS2_DT_mouse_with_5_button;
+			ret.type = PS2_DT_mouse_with_5_button;
 			ret.err = PS2_ERR_none;
 			return ret;
 		default:
-			ret.device_type = rep3;
+			ret.type = rep3;
 			ret.err = PS2_ERR_device_rep3_invalid;
 			return ret;
 		}
@@ -749,57 +778,57 @@ struct ps2_device_type_uts reset_port_and_get_device_type(enum PS2_PortNumber po
 	ret.mouse_or_keyboard = PS2_DST_keyboard;
 	switch (rep4) {
 	case MF2_KEYBOARD_1:
-		ret.device_type = PS2_DT_mf2_keyboard_1;
+		ret.type = PS2_DT_mf2_keyboard_1;
 		ret.err = PS2_ERR_none;
 		return ret;
 	case MF2_KEYBOARD_1_TRANSLATED:
-		ret.device_type = PS2_DT_mf2_keyboard_1;
+		ret.type = PS2_DT_mf2_keyboard_1;
 		ret.err = PS2_ERR_none;
 		return ret;
 
 	case MF2_KEYBOARD_2:
-		ret.device_type = PS2_DT_mf2_keyboard_2;
+		ret.type = PS2_DT_mf2_keyboard_2;
 		ret.err = PS2_ERR_none;
 		return ret;
 
 	case SHORT_KEYBOARD:
-		ret.device_type = PS2_DT_short_keyboard;
+		ret.type = PS2_DT_short_keyboard;
 		ret.err = PS2_ERR_none;
 		return ret;
 	case SHORT_KEYBOARD_TRANSLATED:
-		ret.device_type = PS2_DT_short_keyboard;
+		ret.type = PS2_DT_short_keyboard;
 		ret.err = PS2_ERR_none;
 		return ret;
 
 	case KEY122_HOST_CONNECTED:
-		ret.device_type = PS2_DT_122_key_host_connected;
+		ret.type = PS2_DT_122_key_host_connected;
 		ret.err = PS2_ERR_none;
 		return ret;
 	case KEY122:
-		ret.device_type = PS2_DT_122_key;
+		ret.type = PS2_DT_122_key;
 		ret.err = PS2_ERR_none;
 		return ret;
 
 	case JAPANESE_G:
-		ret.device_type = PS2_DT_japanese_g_keyboard;
+		ret.type = PS2_DT_japanese_g_keyboard;
 		ret.err = PS2_ERR_none;
 		return ret;
 	case JAPANESE_P:
-		ret.device_type = PS2_DT_japanese_p_keyboard;
+		ret.type = PS2_DT_japanese_p_keyboard;
 		ret.err = PS2_ERR_none;
 		return ret;
 	case JAPANESE_A:
-		ret.device_type = PS2_DT_japanese_a_keyboard;
+		ret.type = PS2_DT_japanese_a_keyboard;
 		ret.err = PS2_ERR_none;
 		return ret;
 
 	case NCD_SUN:
-		ret.device_type = PS2_DT_ncd_sun_layout_keyboard;
+		ret.type = PS2_DT_ncd_sun_layout_keyboard;
 		ret.err = PS2_ERR_none;
 		return ret;
 
 	default:
-		ret.device_type = rep4;
+		ret.type = rep4;
 		ret.err = PS2_ERR_device_rep4_invalid;
 		return ret;
 	}
@@ -1076,30 +1105,26 @@ struct ps2_initialize_device_state setup_ps2_controller() {
 	}
 
 	// Step 10: Reset devices:
-	struct ps2_device_type_uts device_1_type = reset_port_and_get_device_type(PS2_PN_port_one);
-	if (device_1_type.err) {
+	struct ps2_device_type_uts device_1 = reset_port_and_get_device_type(PS2_PN_port_one);
+	if (device_1.err) {
 		kprintf("\n[PANIC] Error in Step 10 of initializing the PS2 Controller. Could not reset port 1\n");
 		kprintf("The error value: %u\n", err);
-		kprintf("The error: %s\n", PS2_OS_Error_to_string(device_1_type.err));
+		kprintf("The error: %s\n", PS2_OS_Error_to_string(device_1.err));
 		ret.ps2_state_err = PS2_ID_ERR_could_not_reset_device1;
-		ret.internal_err = device_1_type.err;
+		ret.internal_err = device_1.err;
 		return ret;
 	}
 
 	uint8_t keyboard_count = 0;
 	uint8_t mouse_count = 0;
-	switch (device_1_type.mouse_or_keyboard) {
+	switch (device_1.mouse_or_keyboard) {
 	case PS2_DST_keyboard:
 		keyboard_count++;
-		ret.keyboard_type = device_1_type.device_type;
-		ret.port_of_keyboard = 1;
-		ret.port_of_mouse = 0; // put an invalid port. Kinda hacky, but for handler/caller of this function to check
+		ret.port_one_device_type = device_1.type;
 		break;
 	case PS2_DST_mouse:
 		mouse_count++;
-		ret.mouse_type = device_1_type.device_type;
-		ret.port_of_mouse = 1;
-		ret.port_of_keyboard = 0; // put an invalid port.
+		ret.port_one_device_type = device_1.type;
 		break;
 	default:
 		abort_msg("Device 1: Impossible device super type!\n");
@@ -1125,13 +1150,11 @@ struct ps2_initialize_device_state setup_ps2_controller() {
 	switch (device_2_type.mouse_or_keyboard) {
 	case PS2_DST_keyboard:
 		keyboard_count++;
-		ret.keyboard_type = device_2_type.device_type;
-		ret.port_of_keyboard = 2;
+		ret.port_two_device_type = device_2_type.type;
 		break;
 	case PS2_DST_mouse:
 		mouse_count++;
-		ret.mouse_type = device_1_type.device_type;
-		ret.port_of_mouse = 2;
+		ret.port_two_device_type = device_2_type.type;
 		break;
 	default:
 		abort_msg("Device 2: Impossible device super type!\n");

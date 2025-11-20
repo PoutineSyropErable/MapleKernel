@@ -527,9 +527,12 @@ enum ps2_device_type {
 	PS2_DT_ncd_sun_layout_keyboard,
 };
 enum ps2_device_super_type {
+	PS2_DST_unknown = 0,
 	PS2_DST_keyboard = 1,
 	PS2_DST_mouse = 2,
 };
+
+enum ps2_device_super_type get_device_super_type(enum ps2_device_type dt);
 
 enum ps2_initialize_device_errors {
 	PS2_ID_ERR_none,
@@ -549,17 +552,15 @@ enum ps2_initialize_device_errors {
 
 struct ps2_device_type_uts {
 	enum ps2_os_error_code err;
-	enum ps2_device_type device_type;
+	enum ps2_device_type type;
 	enum ps2_device_super_type mouse_or_keyboard;
 };
 
 struct ps2_initialize_device_state {
 	enum ps2_os_error_code internal_err;
 	enum ps2_initialize_device_errors ps2_state_err;
-	enum ps2_device_type keyboard_type;
-	enum ps2_device_type mouse_type;
-	enum PS2_PortNumber port_of_keyboard;
-	enum PS2_PortNumber port_of_mouse;
+	enum ps2_device_type port_one_device_type;
+	enum ps2_device_type port_two_device_type;
 };
 
 struct ps2_initialize_device_state setup_ps2_controller();
