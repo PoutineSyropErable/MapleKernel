@@ -21,6 +21,9 @@
 #define PS2_STATUS_PORT_R 0x64  // read.
 #define PS2_COMMAND_PORT_W 0x64 // write
 
+#define DEVICE_COMMAND_ACKNOLEDGED 0xFA
+#define DEVICE_COMMAND_SELF_TEST_PASSED 0xAA
+
 /* ==================================================================================================================================================*/
 typedef struct [[gnu::packed]] {
 	bool output_buffer_full_not_empty : 1; // bit 0
@@ -262,6 +265,11 @@ enum ps2_os_error_code {
 	PS2_ERR_invalid_configuration_byte = 5,
 	PS2_ERR_status_parity = 6,
 	PS2_ERR_status_timeout = 7,
+
+	PS2_ERR_device_command_failed_to_acknowledge = 8,
+	PS2_ERR_device_command_failed_self_test = 9,
+	PS2_ERR_device_rep3_invalid = 10,
+	PS2_ERR_device_rep4_invalid = 10,
 
 	// Warnings
 	PS2_WARN_A20_line_not_set = 1000,
@@ -512,11 +520,15 @@ enum ps2_device_type {
 	PS2_DT_mf2_keyboard_2,      // 0xAB, 0xC1
 	PS2_DT_short_keyboard,
 	PS2_DT_122_key_host_connected,
-	PS2_DT_122_Key,
+	PS2_DT_122_key,
 	PS2_DT_japanese_g_keyboard,
 	PS2_DT_japanese_p_keyboard,
 	PS2_DT_japanese_a_keyboard,
 	PS2_DT_ncd_sun_layout_keyboard,
+};
+enum ps2_device_super_type {
+	PS2_DST_keyboard = 1,
+	PS2_DST_mouse = 2,
 };
 
 enum ps2_initialize_device_errors {
@@ -528,13 +540,26 @@ enum ps2_initialize_device_errors {
 	PS2_ID_ERR_controller_self_test_failed,
 	PS2_ID_ERR_first_port_self_test_failed,
 	PS2_ID_ERR_second_port_self_test_failed,
+
+	PS2_ID_ERR_could_not_reset_device1,
+	PS2_ID_ERR_could_not_reset_device2,
+	PS2_ID_ERR_two_keyboard,
+	PS2_ID_ERR_two_mouse,
+};
+
+struct ps2_device_type_uts {
+	enum ps2_os_error_code err;
+	enum ps2_device_type device_type;
+	enum ps2_device_super_type mouse_or_keyboard;
 };
 
 struct ps2_initialize_device_state {
 	enum ps2_os_error_code internal_err;
 	enum ps2_initialize_device_errors ps2_state_err;
-	enum ps2_device_type first_device_type;
-	enum ps2_device_type second_device_type;
+	enum ps2_device_type keyboard_type;
+	enum ps2_device_type mouse_type;
+	enum PS2_PortNumber port_of_keyboard;
+	enum PS2_PortNumber port_of_mouse;
 };
 
 struct ps2_initialize_device_state setup_ps2_controller();

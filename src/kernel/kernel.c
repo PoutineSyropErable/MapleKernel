@@ -213,6 +213,19 @@ extern void test_printf(void);
 
 // Macro to call all interrupts in the X-Macro
 
+void handle_ps2_setup() {
+	struct ps2_initialize_device_state device_sates = setup_ps2_controller();
+	device_sates;
+
+	quick_enable_mouse();
+	idt_init();
+	PIC_remap(32, 40);
+	initialize_irqs();
+	IRQ_clear_mask(1);
+	IRQ_clear_mask(12);
+	IRQ_clear_mask(2);
+}
+
 void kernel_main(void) {
 
 	// init_paging();
@@ -225,16 +238,8 @@ void kernel_main(void) {
 	kernel_test();
 
 	// terminal_writestring("======Initiating IDT=======\n\n");
-	setup_ps2_controller();
-	quick_enable_mouse();
 
-	idt_init();
-	PIC_remap(32, 40);
-	initialize_irqs();
-	IRQ_clear_mask(1);
-	// enable_mouse();
-	IRQ_clear_mask(12);
-	IRQ_clear_mask(2);
+	handle_ps2_setup();
 
 	// __int_O0(33);
 
