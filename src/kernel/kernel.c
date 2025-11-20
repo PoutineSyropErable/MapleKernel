@@ -225,7 +225,7 @@ void kernel_main(void) {
 	kernel_test();
 
 	// terminal_writestring("======Initiating IDT=======\n\n");
-	setup_ps2_controller_no_error_check();
+	setup_ps2_controller();
 	quick_enable_mouse();
 
 	idt_init();

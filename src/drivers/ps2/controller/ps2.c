@@ -56,6 +56,20 @@ static inline bool is_ps2_controller_ready_for_response(PS2_StatusRegister_t sta
 	return status.output_buffer_full_not_empty;
 }
 
+static inline enum ps2_os_error_code PS2_verify_configuration_byte_response(ps2_configuration_byte_uts_t configuration_byte) {
+	// TODO: Check if there is any impossible responses?
+	PS2_ConfigurationByte_t bits = configuration_byte.bits;
+	if (bits.zero1 != 0 || bits.zero1 != 0) {
+		return PS2_ERR_invalid_configuration_byte;
+	} else if (bits.system_flag_passed_post_one == 0) {
+		// Maybe the system flag can be 0 at the absolute start.
+		// Then, the software must set it to one once?
+		// If such an error happen, then debug it, and use a static state.
+		return PS2_WARN_invalid_configuration_byte_post_is_zero;
+	}
+	return PS2_ERR_none;
+}
+
 /* =================================== Internals Functions ================================ */
 
 /* For the PS2 Device to be ready for more inputs. So, wait for the ps2 controller to be ready for the OS to send the next output */
@@ -183,10 +197,10 @@ struct ___ps2_typeless_return recieve_generic_verified_response(enum PS2_Respons
 	case PS2_RT_controller_configuration_byte:
 		union ps2_configuration_byte_uts response_cb = {.raw = raw_response};
 		tagged_response.value.g_configuration_byte = response_cb;
-		valid = PS2_verify_configuration_byte_response(response_cb);
-		if (!valid) {
+		enum ps2_os_error_code valid_err = PS2_verify_configuration_byte_response(response_cb);
+		if (valid_err) {
 			ret.tagged_response = tagged_response;
-			ret.err = PS2_ERR_invalid_configuration_byte;
+			ret.err = valid_err;
 			return ret;
 		}
 		ret.tagged_response = tagged_response;
@@ -298,9 +312,9 @@ send_command_configuration_byte_response(enum PS2_CommandByte command) {
 
 	uint8_t raw_response = recieve_raw_response();
 	ret.response.raw = raw_response;
-	bool valid = PS2_verify_configuration_byte_response(ret.response);
-	if (!valid) {
-		ret.err = PS2_ERR_invalid_configuration_byte;
+	enum ps2_os_error_code valid_err = PS2_verify_configuration_byte_response(ret.response);
+	if (valid_err) {
+		ret.err = valid_err;
 		return ret;
 	}
 
@@ -486,14 +500,14 @@ enum ps2_os_error_code ps2_enable_second_ps2_port() {
 }
 // ===============
 
-struct ps2_verified_response_test_port test_first_ps2_port() {
+struct ps2_verified_response_test_port ps2_test_first_ps2_port() {
 	return send_command_test_port_response(PS2_CB_test_first_ps2_port);
 }
 
 /* Only if 2 PS/2 port are supported. Do not use this function for the test. Use the configuration byte
 Set a configuration byte with it enabled, and read it back. check if it's enabled.
 */
-struct ps2_verified_response_test_port test_second_ps2_port() {
+struct ps2_verified_response_test_port ps2_test_second_ps2_port() {
 	return send_command_test_port_response(PS2_CB_test_second_ps2_port);
 }
 // ===============
@@ -644,33 +658,76 @@ void print_ps2_configuration_byte(PS2_ConfigurationByte_t config) {
 
 // ================================================= The main important ones, Like setting it up, and enabling mouse ================
 
-void setup_ps2_controller() {
+struct ps2_initialize_device_state setup_ps2_controller() {
+
+	struct ps2_initialize_device_state ret;
 
 	// Step 1:
 	enum usb_cont_error_code usb_ret;
 	usb_ret = initialize_usb_controllers();
-	assert(!usb_ret, "This should be done properly!\n");
+	if (usb_ret) {
+		ret.ps2_state_err = PS2_ID_ERR_usb_error;
+		return ret;
+	}
 	usb_ret = disable_legacy_usb_support();
-	assert(!usb_ret, "This should be done properly!\n");
+	if (usb_ret) {
+		ret.ps2_state_err = PS2_ID_ERR_usb_error;
+		return ret;
+	}
 
 	// Step 2:
 	bool exist = does_ps2_controller_exist();
-	assert(exist, "If it doesn't exist, then we are fucked!\n");
+	if (!exist) {
+		ret.ps2_state_err = PS2_ID_ERR_ps2_controller_does_not_exist;
+		return ret;
+	}
 
 	// Step 3:
 	enum ps2_os_error_code err;
 	err = ps2_disable_first_ps2_port();
+	if (err) {
+		kprintf("\n[PANIC] Error in Step 3 of initializing the PS2 Controller. Could not disable first ps2 port.\n");
+		kprintf("The error value: %u\n", err);
+		kprintf("The error: %s\n", PS2_OS_Error_to_string(err));
+		ret.ps2_state_err = PS2_ID_ERR_could_not_init;
+		ret.internal_err = err;
+		return ret;
+	}
 	err = ps2_disable_second_ps2_port();
+	if (err) {
+		kprintf("\n[PANIC] Error in Step 3 of initializing the PS2 Controller. Could not disable second ps2 port.\n");
+		kprintf("The error value: %u\n", err);
+		kprintf("The error: %s\n", PS2_OS_Error_to_string(err));
+		ret.ps2_state_err = PS2_ID_ERR_could_not_init;
+		ret.internal_err = err;
+		return ret;
+	}
 
-	// Step 4:
-	[[gnu::unused]] uint8_t discard = __inb(PS2_DATA_PORT_RW);
+	// Step 4: Flush the Output Buffer (by reading from the data port == recieving a response)
+	[[gnu::unused]] uint8_t discard = __inb(PS2_DATA_PORT_RW); // Also recieve_raw_response. Idk which i prefer here.
 
-	// Step 5:
+	// Step 5: Set the configuration Byte
 	ps2_verified_response_configuration_byte_t vr_cb = ps2_get_configuration_byte();
 	if (vr_cb.err) {
+		if (vr_cb.err == PS2_WARN_invalid_configuration_byte_post_is_zero) {
+
+#ifndef QEMU // assuming this is a qemu bug, then if not in qemu, we must treat it accordingly
+			kprintf("\n[PANIC] Error in Step 5 of initializing the PS2 Controller. Could not get the configuration byte - failed to post?\n");
+			kprintf("The error value: %u\n", vr_cb.err);
+			kprintf("The error: %s\n", PS2_OS_Error_to_string(vr_cb.err));
+			ret.ps2_state_err = PS2_ID_ERR_could_not_init;
+			ret.internal_err = vr_cb.err;
+			return ret;
+#endif
+			kprintf("It seems a qemu bug happned where the configuration byte POST bit hasn't been set\n");
+			kprintf("Maybe this is a catastrophic state on a regular machine\n");
+		}
+		kprintf("\n[PANIC] Error in Step 5 of initializing the PS2 Controller. Could not get the configuration byte\n");
 		kprintf("The error value: %u\n", vr_cb.err);
 		kprintf("The error: %s\n", PS2_OS_Error_to_string(vr_cb.err));
-		kprintf("If it's just system past post one, then it's not bad, this happen once!\n");
+		ret.ps2_state_err = PS2_ID_ERR_could_not_init;
+		ret.internal_err = vr_cb.err;
+		return ret;
 	}
 
 	PS2_ConfigurationByte_t config_byte = vr_cb.response.bits;
@@ -678,90 +735,226 @@ void setup_ps2_controller() {
 	print_ps2_configuration_byte(config_byte);
 	kprintf("\n\n");
 
-	config_byte.system_flag_passed_post_one = true;         // qemu bug
+#ifdef QEMU
+	config_byte.system_flag_passed_post_one = true; // qemu bug
+#endif
 	config_byte.first_ps2_port_enabled = false;             // disable first
-	config_byte.first_ps2_port_translation_enabled = false; // disable first irq
+	config_byte.first_ps2_port_translation_enabled = false; // disable first irq, this also set the keyboard to scanset 2. So, we must set it back with the keyboard driver
 	config_byte.first_ps2_port_clock_disabled = false;      // enable clock signal
 
 	err = ps2_set_configuration_byte(config_byte);
 	if (err) {
+		kprintf("\n[PANIC] Error in Step 5 of initializing the PS2 Controller. Could not set the configuration byte\n");
 		kprintf("The error value: %u\n", err);
 		kprintf("The error: %s\n", PS2_OS_Error_to_string(err));
+		ret.ps2_state_err = PS2_ID_ERR_could_not_init;
+		ret.internal_err = err;
+		return ret;
 	}
-
-	vr_cb = ps2_get_configuration_byte();
-	if (vr_cb.err) {
-		kprintf("The error value: %u\n", vr_cb.err);
-		kprintf("The error: %s\n", PS2_OS_Error_to_string(vr_cb.err));
-		kprintf("If it's just system past post one, then it's not bad, this happen once!\n");
-	} else {
-		kprintf("\nNo error in getting the configuration_byte\n\n");
-	}
-	kprintf("\n\n");
-	print_ps2_configuration_byte(config_byte);
-	kprintf("\n\n");
 
 	// Step 6: Perform controller self test
 	struct ps2_verified_response_test_controller tc_vr = ps2_perform_controller_self_test();
 	if (tc_vr.err) {
-		kprintf("The error value: %u\n", err);
-		kprintf("The error: %s\n", PS2_OS_Error_to_string(err));
+		kprintf("\n[PANIC] Error in Step 6 of initializing the PS2 Controller. The PS2 Controler could not perform self test\n");
+		kprintf("The error value: %u\n", tc_vr.err);
+		kprintf("The error: %s\n", PS2_OS_Error_to_string(tc_vr.err));
+		ret.ps2_state_err = PS2_ID_ERR_could_not_init;
+		ret.internal_err = tc_vr.err;
+		return ret;
 	}
 	if (tc_vr.response != PS2_TCR_passed) {
-		kprintf("The self test didn't pass!\n");
-	} else {
-		kprintf("\nSelf test passed!\n\n");
-	}
+		kprintf("\n[PANIC] Error in Step 6 of initializing the PS2 Controller. The PS2 Controler self test didn't pass\n");
 
+		ret.ps2_state_err = PS2_ID_ERR_controller_self_test_failed;
+		return ret;
+	}
 	// Step 7: Determine if there are two channels.
 	err = ps2_enable_second_ps2_port();
 	if (err) {
-		kprintf("Error enabling the second ps2_port");
+		kprintf("\n[PANIC] Error in Step 7 of initializing the PS2 Controller. Could not enable second ps2 port\n");
 		kprintf("The error value: %u\n", err);
 		kprintf("The error: %s\n", PS2_OS_Error_to_string(err));
+		ret.ps2_state_err = PS2_ID_ERR_could_not_init;
+		ret.internal_err = err;
+		return ret;
 	}
+
 	vr_cb = ps2_get_configuration_byte();
 	config_byte = vr_cb.response.bits;
 	if (vr_cb.err) {
+		kprintf("\n[PANIC] Error in Step 7 of initializing the PS2 Controller. Could not get configuration byte\n");
 		kprintf("\nThe error value: %u\n", vr_cb.err);
 		kprintf("The error: %s\n", PS2_OS_Error_to_string(vr_cb.err));
-		kprintf("If it's just system past post one, then it's not bad, this happen once!\n");
-	} else {
-		kprintf("\nNo error in getting the configuration_byte\n\n");
+		ret.ps2_state_err = PS2_ID_ERR_could_not_init;
+		ret.internal_err = vr_cb.err;
+		return ret;
 	}
 	print_ps2_configuration_byte(config_byte);
-	[[maybe_unused]] bool two = config_byte.second_ps2_port_enabled; // bit 1
-	bool no_two = config_byte.second_ps2_port_clock_disabled;        // bit 5
-	// OS Dev say to check bit 5
-	bool second_port_supported = false;
-	if (!no_two)
-		second_port_supported = true;
+
+	// OS Dev say to check bit 5, not bit 1
+	bool second_port_supported = !config_byte.second_ps2_port_clock_disabled;
+
 	err = ps2_disable_second_ps2_port();
 	if (err) {
+		kprintf("\n[PANIC] Error in Step 7 of initializing the PS2 Controller. Could not disable second ps2 port\n");
 		kprintf("\nError disabling the second ps2_port");
 		kprintf("The error value: %u\n", err);
 		kprintf("The error: %s\n", PS2_OS_Error_to_string(err));
-	} else {
-		kprintf("\nNo error disabling the second ps2_port\n\n");
+		ret.ps2_state_err = PS2_ID_ERR_could_not_init;
+		ret.internal_err = err;
+		return ret;
 	}
 
 	if (second_port_supported) {
 		vr_cb = ps2_get_configuration_byte();
+		if (vr_cb.err) {
+			kprintf("\n[PANIC] Error in Step 7 of initializing the PS2 Controller. Could not get configuration byte for cleanup\n");
+			kprintf("\nThe error value: %u\n", vr_cb.err);
+			kprintf("The error: %s\n", PS2_OS_Error_to_string(vr_cb.err));
+			ret.ps2_state_err = PS2_ID_ERR_could_not_init;
+			ret.internal_err = vr_cb.err;
+			return ret;
+		}
+
 		config_byte = vr_cb.response.bits;
 		config_byte.second_ps2_port_clock_disabled = false;
 		config_byte.second_ps2_port_enabled = false;
-		err = ps2_set_configuration_byte(config_byte);
 
-		kprintf("\n");
-		vr_cb = ps2_get_configuration_byte();
-		config_byte = vr_cb.response.bits;
-		print_ps2_configuration_byte(config_byte);
+		err = ps2_set_configuration_byte(config_byte);
+		if (err) {
+			kprintf("\n[PANIC] Error in Step 7 of initializing the PS2 Controller. Could not set configuration byte for cleanup\n");
+			kprintf("\nError disabling the second ps2_port");
+			kprintf("The error value: %u\n", err);
+			kprintf("The error: %s\n", PS2_OS_Error_to_string(err));
+			ret.ps2_state_err = PS2_ID_ERR_could_not_init;
+			ret.internal_err = err;
+			return ret;
+		}
 	}
 
 	// Step 8: Perform interface test
+	struct ps2_verified_response_test_port test_port_vr;
+
+	test_port_vr = ps2_test_first_ps2_port();
+	if (test_port_vr.err) {
+		kprintf("\n[PANIC] Error in Step 8 of initializing the PS2 Controller. First port errored during self test\n");
+		kprintf("The error value: %u\n", test_port_vr.err);
+		kprintf("The error: %s\n", PS2_OS_Error_to_string(test_port_vr.err));
+		ret.ps2_state_err = PS2_ID_ERR_could_not_init;
+		ret.internal_err = test_port_vr.err;
+		return ret;
+	}
+	if (test_port_vr.response != PS2_TPR_passed) {
+		kprintf("\n[PANIC] Error in Step 8 of initializing the PS2 Controller. First port couldn't pass test\n");
+		kprintf("The reponse value: %u\n", test_port_vr.response);
+		kprintf("The response name: %s\n", PS2_TestPortResponse_to_string(test_port_vr.response));
+		ret.ps2_state_err = PS2_ID_ERR_first_port_self_test_failed;
+		return ret;
+	}
+
+	test_port_vr = ps2_test_second_ps2_port();
+	if (test_port_vr.err) {
+		kprintf("\n[PANIC] Error in Step 8 of initializing the PS2 Controller. Second port errored during self test\n");
+		kprintf("The error value: %u\n", test_port_vr.err);
+		kprintf("The error: %s\n", PS2_OS_Error_to_string(test_port_vr.err));
+		ret.ps2_state_err = PS2_ID_ERR_could_not_init;
+		ret.internal_err = test_port_vr.err;
+		return ret;
+	}
+	if (test_port_vr.response != PS2_TPR_passed) {
+		kprintf("\n[PANIC] Error in Step 8 of initializing the PS2 Controller. Second port couldn't pass test\n");
+		kprintf("The reponse value: %u\n", test_port_vr.response);
+		kprintf("The response name: %s\n", PS2_TestPortResponse_to_string(test_port_vr.response));
+		ret.ps2_state_err = PS2_ID_ERR_second_port_self_test_failed;
+		return ret;
+	}
+
+	// Step 9: Enable devices:
+	err = ps2_enable_first_ps2_port();
+	if (err) {
+		kprintf("\n[PANIC] Error in Step 9 of initializing the PS2 Controller. Could not enable first ps2 port\n");
+		kprintf("The error value: %u\n", err);
+		kprintf("The error: %s\n", PS2_OS_Error_to_string(err));
+		ret.ps2_state_err = PS2_ID_ERR_could_not_init;
+		ret.internal_err = err;
+		return ret;
+	}
+
+	err = ps2_enable_second_ps2_port();
+	if (err) {
+		kprintf("\n[PANIC] Error in Step 9 of initializing the PS2 Controller. Could not enable second ps2 port\n");
+		kprintf("The error value: %u\n", err);
+		kprintf("The error: %s\n", PS2_OS_Error_to_string(err));
+		ret.ps2_state_err = PS2_ID_ERR_could_not_init;
+		ret.internal_err = err;
+		return ret;
+	}
+
+	vr_cb = ps2_get_configuration_byte();
+	if (vr_cb.err) {
+		kprintf("\n[PANIC] Error in Step 9 of initializing the PS2 Controller. Could not get configuration byte\n");
+		kprintf("\nThe error value: %u\n", vr_cb.err);
+		kprintf("The error: %s\n", PS2_OS_Error_to_string(vr_cb.err));
+		ret.ps2_state_err = PS2_ID_ERR_could_not_init;
+		ret.internal_err = vr_cb.err;
+		return ret;
+	}
+	config_byte = vr_cb.response.bits;
+	config_byte.first_ps2_port_enabled = true;
+	config_byte.second_ps2_port_enabled = true;
+
+	err = ps2_set_configuration_byte(config_byte);
+	if (err) {
+		kprintf("\n[PANIC] Error in Step 9 of initializing the PS2 Controller. Could not set configuration byte\n");
+		kprintf("The error value: %u\n", err);
+		kprintf("The error: %s\n", PS2_OS_Error_to_string(err));
+		ret.ps2_state_err = PS2_ID_ERR_could_not_init;
+		ret.internal_err = err;
+		return ret;
+	}
+
+	// Step 10: Reset devices:
+	send_data_to_first_ps2_port(PS2_CB_reset_device);
+	wait_till_ready_for_response();
+	uint8_t rep1k = recieve_raw_response();
+	wait_till_ready_for_response();
+	uint8_t rep2k = recieve_raw_response();
+	err = wait_till_ready_for_response();
+	if (!err) {
+		uint8_t rep3k = recieve_raw_response();
+		kprintf("The response from keyboard: %h, %h, %h\n", rep1k, rep2k, rep3k);
+	}
+	kprintf("The response from keyboard: %h, %h, None\n", rep1k, rep2k);
+	assert(rep1k == 0xfa, "start of reset successful command");
+	assert(rep2k == 0xaa, "end of reset successful command");
+
+	send_data_to_second_ps2_port(PS2_CB_reset_device);
+	uint8_t rep1m = recieve_raw_response();
+	wait_till_ready_for_response();
+	uint8_t rep2m = recieve_raw_response();
+	wait_till_ready_for_response();
+	uint8_t rep3m = recieve_raw_response();
+	kprintf("The response from mouse   : %h, %h, %h\n", rep1m, rep2m, rep3m);
+	assert(rep1m == 0xfa, "start of reset successful command");
+	assert(rep2m == 0xaa, "end of reset successful command");
+	// if rep3m == 0x00, then it's a standard ps2 mouse. (No scroll wheel)
+
+	if (!second_port_supported) {
+		ret.ps2_state_err = PS2_ID_ERR_no_second_port;
+		ret.internal_err = PS2_ERR_none;
+
+		ret.first_device_type = PS2_DT_ancient_at_keyboard;
+		return ret;
+	}
+
+	ret.ps2_state_err = PS2_ID_ERR_none;
+	ret.internal_err = PS2_ERR_none;
+	ret.first_device_type = PS2_DT_ancient_at_keyboard;
+	ret.first_device_type = PS2_DT_standard_mouse;
+	return ret;
 }
 
-[[gnu::unused]] void setup_ps2_controller_no_error_check() {
+[[gnu::unused]] struct ps2_initialize_device_state setup_ps2_controller_no_error_check() {
 
 	// Step 1:
 	initialize_usb_controllers();
@@ -776,7 +969,7 @@ void setup_ps2_controller() {
 	ps2_disable_second_ps2_port();
 
 	// Step 4:
-	[[gnu::unused]] uint8_t discard = __inb(PS2_DATA_PORT_RW);
+	[[gnu::unused]] uint8_t discard = recieve_raw_response();
 
 	// Step 5
 	ps2_verified_response_configuration_byte_t vr_cb = ps2_get_configuration_byte();
@@ -784,7 +977,9 @@ void setup_ps2_controller() {
 	config_byte.system_flag_passed_post_one = true;         // qemu bug
 	config_byte.first_ps2_port_enabled = false;             // disable first
 	config_byte.first_ps2_port_translation_enabled = false; // disable first irq
-	config_byte.first_ps2_port_clock_disabled = false;      // enable clock signal
+	// translation enabled: Scan code set 1,
+	// Translation Disabled: Scan code set 2, But, we must change the scancode set using the keyboard driver
+	config_byte.first_ps2_port_clock_disabled = false; // enable clock signal
 	ps2_set_configuration_byte(config_byte);
 
 	// Step 6: Perform controller self test
@@ -807,9 +1002,9 @@ void setup_ps2_controller() {
 
 	// Step 8: Test the ps2 ports:
 	struct ps2_verified_response_test_port response;
-	response = test_first_ps2_port();
+	response = ps2_test_first_ps2_port();
 	assert(response.response == PS2_TPR_passed, "First port test must work\n!");
-	response = test_second_ps2_port();
+	response = ps2_test_second_ps2_port();
 	assert(response.response == PS2_TPR_passed, "Second port test must work\n!");
 
 	// Step 9: Enable devices:

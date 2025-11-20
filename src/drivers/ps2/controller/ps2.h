@@ -139,18 +139,6 @@ typedef union ps2_configuration_byte_uts {
 } ps2_configuration_byte_uts_t;
 _Static_assert(sizeof(ps2_configuration_byte_uts_t) == 1, "ps2_configuration_byte_uts_t must be of size: 1 byte");
 
-static inline bool PS2_verify_configuration_byte_response(ps2_configuration_byte_uts_t configuration_byte) {
-	// TODO: Check if there is any impossible responses?
-	PS2_ConfigurationByte_t bits = configuration_byte.bits;
-	if (bits.zero1 != 0 || bits.zero1 != 0 || bits.system_flag_passed_post_one == 0) {
-		// Maybe the system flag can be 0 at the absolute start.
-		// Then, the software must set it to one once?
-		// If such an error happen, then debug it, and use a static state.
-		return false;
-	}
-	return true;
-}
-
 /* ==================================================================================================================================================*/
 // PS2_CB_test_second_ps2_port = 0xA9,    // response byte type: (passed = 0x00, 0x01 = clock line stuck low, 0x02 = clock line stuck high,  0x03 = data line stuck low, 0x04 = data line stuck high)
 
@@ -169,6 +157,23 @@ static inline bool PS2_verify_test_port_response(enum PS2_TestPortResponse respo
 	return false;
 }
 
+static inline const char* PS2_TestPortResponse_to_string(enum PS2_TestPortResponse r) {
+	switch (r) {
+	case PS2_TPR_passed:
+		return "PS2_TPR_passed"; // 0x00
+	case PS2_TPR_clock_stuck_low:
+		return "PS2_TPR_clock_stuck_low"; // 0x01
+	case PS2_TPR_clock_stuck_high:
+		return "PS2_TPR_clock_stuck_high"; // 0x02
+	case PS2_TPR_data_stuck_low:
+		return "PS2_TPR_data_stuck_low"; // 0x03
+	case PS2_TPR_data_stuck_high:
+		return "PS2_TPR_data_stuck_high"; // 0x04
+	default:
+		return "Invalid PS2_TestPortResponse!";
+	}
+}
+
 typedef enum PS2_TestControllerResponse {
 	PS2_TCR_passed = 0x55,
 	PS2_TCR_failed = 0xFC,
@@ -180,6 +185,17 @@ static inline bool PS2_verify_test_controller_response(enum PS2_TestControllerRe
 		return true;
 	}
 	return false;
+}
+
+static inline const char* PS2_TestControllerResponse_to_string(enum PS2_TestControllerResponse r) {
+	switch (r) {
+	case PS2_TCR_passed:
+		return "PS2_TCR_passed";
+	case PS2_TCR_failed:
+		return "PS2_TCR_failed";
+	default:
+		return "Invalid PS2_TestControllerResponse!";
+	}
 }
 
 /* ==================================================================================================================================================*/
@@ -249,7 +265,8 @@ enum ps2_os_error_code {
 
 	// Warnings
 	PS2_WARN_A20_line_not_set = 1000,
-	PS2_WARN_n_is_zero = 999,
+	PS2_WARN_invalid_configuration_byte_post_is_zero = 999,
+	PS2_WARN_n_is_zero = 998,
 
 };
 
@@ -367,6 +384,9 @@ static inline const char* PS2_OS_Error_to_string(enum ps2_os_error_code err) {
 	case PS2_WARN_n_is_zero:
 		return "PS2_WARN_N_IS_ZERO";
 
+	case PS2_WARN_invalid_configuration_byte_post_is_zero:
+		return "PS2_WARN_invalid_configuration_byte_post_is_zero";
+
 	default:
 		return "Unknown PS2 error code!";
 	}
@@ -471,8 +491,6 @@ __attribute__((optimize("O3"))) static inline PS2_StatusRegister_t read_ps2_stat
 
 enum ps2_os_error_code fake_ps2_keyboard_byte(uint8_t byte);
 enum ps2_os_error_code fake_ps2_mouse_byte(uint8_t byte);
-void setup_ps2_controller();
-void setup_ps2_controller_no_error_check();
 void ps2_detect_devices_type();
 enum ps2_os_error_code send_data_to_first_ps2_port(uint8_t data);
 enum ps2_os_error_code send_data_to_second_ps2_port(uint8_t data);
@@ -484,6 +502,43 @@ enum ps2_os_error_code wait_till_ready_for_response();
 static inline uint8_t recieve_raw_response() {
 	return __inb(PS2_DATA_PORT_RW);
 }
+
+enum ps2_device_type {
+	PS2_DT_ancient_at_keyboard,
+	PS2_DT_standard_mouse,
+	PS2_DT_mouse_with_scroll_wheel,
+	PS2_DT_mouse_with_5_button, // regular gaming mouse, left, right, scroll, mouse4, mouse5
+	PS2_DT_mf2_keyboard_1,      // 0xAB, 0x83
+	PS2_DT_mf2_keyboard_2,      // 0xAB, 0xC1
+	PS2_DT_short_keyboard,
+	PS2_DT_122_key_host_connected,
+	PS2_DT_122_Key,
+	PS2_DT_japanese_g_keyboard,
+	PS2_DT_japanese_p_keyboard,
+	PS2_DT_japanese_a_keyboard,
+	PS2_DT_ncd_sun_layout_keyboard,
+};
+
+enum ps2_initialize_device_errors {
+	PS2_ID_ERR_none,
+	PS2_ID_ERR_no_second_port,
+	PS2_ID_ERR_could_not_init,
+	PS2_ID_ERR_usb_error,
+	PS2_ID_ERR_ps2_controller_does_not_exist,
+	PS2_ID_ERR_controller_self_test_failed,
+	PS2_ID_ERR_first_port_self_test_failed,
+	PS2_ID_ERR_second_port_self_test_failed,
+};
+
+struct ps2_initialize_device_state {
+	enum ps2_os_error_code internal_err;
+	enum ps2_initialize_device_errors ps2_state_err;
+	enum ps2_device_type first_device_type;
+	enum ps2_device_type second_device_type;
+};
+
+struct ps2_initialize_device_state setup_ps2_controller();
+struct ps2_initialize_device_state setup_ps2_controller_no_error_check();
 
 /*============= TESTS ============ */
 void test_command_array(void);
