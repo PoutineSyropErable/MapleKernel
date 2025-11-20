@@ -48,6 +48,7 @@ void idt_set_descriptor(uint8_t vector, void* isr, enum gate_type32_t gate_type,
 }
 
 void idt_init(uint8_t keyboard_interrupt, uint8_t mouse_interrupt) {
+	// Or, i could have simply, port_1_type, port_2_type.
 	idtr.base_address = idt;
 	idtr.limit = (uint16_t)sizeof(idt32_entry_t) * IDT_MAX_VECTOR_COUNT - 1;
 

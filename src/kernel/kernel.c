@@ -219,12 +219,10 @@ void handle_ps2_setup() {
 
 	switch (device_sates.ps2_state_err) {
 	case PS2_ID_ERR_none:
-		kprintf("1k1m\n");
 		goto one_keyboard_one_mouse;
 	case PS2_ID_ERR_two_keyboard:
 		goto two_keyboard;
 	case PS2_ID_ERR_two_mouse:
-		kprintf("2m\n");
 		goto two_mouse;
 	case PS2_ID_ERR_no_second_port:
 		goto one_port_only;
@@ -251,6 +249,7 @@ void handle_ps2_setup() {
 	}
 
 one_keyboard_one_mouse:
+	kprintf("One Keyboard, One Mouse\n");
 	int keyboard_port = device_sates.port_of_keyboard;
 	int mouse_port = device_sates.port_of_mouse;
 
