@@ -1,7 +1,8 @@
 #!/bin/bash
 
 set -eou pipefail
-ARG1="${1:-}"
+DEBUG_NOT_RELEASE="${1:-}"
+QEMU_OR_REAL_MACHINE="${2:-QEMU}"
 
 # Define directories
 BUILD_DIR="build"
@@ -17,9 +18,9 @@ DEBUG_OPT_LVL="-O0"
 RELEASE_OPT_LVL="-O0"
 QEMU_DBG_FLAGS=()
 
-if [[ "$ARG1" == "debug" ]]; then
+if [[ "$DEBUG_NOT_RELEASE" == "debug" ]]; then
 	echo "Debug mode enabled"
-	CFLAGS+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG" "-DQEMU")
+	CFLAGS+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG")
 	CFLAGS16+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG")
 	LDFLAGS+=("-g")
 	NASM_FLAGS32+=("-g" "-F" "dwarf")
@@ -30,6 +31,10 @@ else
 	CFLAGS+=("$RELEASE_OPT_LVL")
 	CFLAGS16+=("$RELEASE_OPT_LVL")
 	LDFLAGS+=("$RELEASE_OPT_LVL")
+fi
+
+if [[ "$QEMU_OR_REAL_MACHINE" == "QEMU" ]]; then
+	CFLAGS+=("-DQEMU")
 fi
 
 # Create necessary directories

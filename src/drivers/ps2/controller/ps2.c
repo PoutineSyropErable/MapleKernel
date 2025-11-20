@@ -882,13 +882,14 @@ struct ps2_initialize_device_state setup_ps2_controller() {
 #endif
 			kprintf("It seems a qemu bug happned where the configuration byte POST bit hasn't been set\n");
 			kprintf("Maybe this is a catastrophic state on a regular machine\n");
+		} else {
+			kprintf("\n[PANIC] Error in Step 5 of initializing the PS2 Controller. Could not get the configuration byte\n");
+			kprintf("The error value: %u\n", vr_cb.err);
+			kprintf("The error: %s\n", PS2_OS_Error_to_string(vr_cb.err));
+			ret.ps2_state_err = PS2_ID_ERR_could_not_init;
+			ret.internal_err = vr_cb.err;
+			return ret;
 		}
-		kprintf("\n[PANIC] Error in Step 5 of initializing the PS2 Controller. Could not get the configuration byte\n");
-		kprintf("The error value: %u\n", vr_cb.err);
-		kprintf("The error: %s\n", PS2_OS_Error_to_string(vr_cb.err));
-		ret.ps2_state_err = PS2_ID_ERR_could_not_init;
-		ret.internal_err = vr_cb.err;
-		return ret;
 	}
 
 	PS2_ConfigurationByte_t config_byte = vr_cb.response.bits;
@@ -1093,11 +1094,15 @@ struct ps2_initialize_device_state setup_ps2_controller() {
 		ret.keyboard_type = device_1_type.device_type;
 		ret.port_of_keyboard = 1;
 		ret.port_of_mouse = 0; // put an invalid port. Kinda hacky, but for handler/caller of this function to check
+		break;
 	case PS2_DST_mouse:
 		mouse_count++;
 		ret.mouse_type = device_1_type.device_type;
 		ret.port_of_mouse = 1;
 		ret.port_of_keyboard = 0; // put an invalid port.
+		break;
+	default:
+		abort_msg("Device 1: Impossible device super type!\n");
 	}
 
 	if (!second_port_supported) {
@@ -1122,10 +1127,14 @@ struct ps2_initialize_device_state setup_ps2_controller() {
 		keyboard_count++;
 		ret.keyboard_type = device_2_type.device_type;
 		ret.port_of_keyboard = 2;
+		break;
 	case PS2_DST_mouse:
 		mouse_count++;
 		ret.mouse_type = device_1_type.device_type;
 		ret.port_of_mouse = 2;
+		break;
+	default:
+		abort_msg("Device 2: Impossible device super type!\n");
 	}
 
 	if (keyboard_count == 2) {

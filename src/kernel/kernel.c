@@ -215,15 +215,93 @@ extern void test_printf(void);
 
 void handle_ps2_setup() {
 	struct ps2_initialize_device_state device_sates = setup_ps2_controller();
-	device_sates;
+	kprintf("\n ===== Handling Result ===== \n");
 
+	switch (device_sates.ps2_state_err) {
+	case PS2_ID_ERR_none:
+		kprintf("1k1m\n");
+		goto one_keyboard_one_mouse;
+	case PS2_ID_ERR_two_keyboard:
+		goto two_keyboard;
+	case PS2_ID_ERR_two_mouse:
+		kprintf("2m\n");
+		goto two_mouse;
+	case PS2_ID_ERR_no_second_port:
+		goto one_port_only;
+
+	// rather have this then default
+	case PS2_ID_ERR_could_not_init:
+		goto no_port;
+	case PS2_ID_ERR_ps2_controller_does_not_exist:
+		goto no_port;
+	case PS2_ID_ERR_controller_self_test_failed:
+		goto no_port;
+	case PS2_ID_ERR_first_port_self_test_failed:
+		goto no_port;
+	case PS2_ID_ERR_second_port_self_test_failed:
+		goto no_port;
+	case PS2_ID_ERR_could_not_reset_device1:
+		goto no_port;
+	case PS2_ID_ERR_could_not_reset_device2:
+		goto no_port;
+	case PS2_ID_ERR_usb_error:
+		goto no_port;
+	default:
+		abort_msg("Impossible initialize device error!\n");
+	}
+
+one_keyboard_one_mouse:
+	int keyboard_port = device_sates.port_of_keyboard;
+	int mouse_port = device_sates.port_of_mouse;
+
+	uint8_t keyboard_interrupt_vector;
+	uint8_t mouse_interrupt_vector;
+	if (keyboard_port == 1 && mouse_port == 2) {
+		// TODO: Use math for this, And #define variable.
+		// Not the magic numbers.
+		keyboard_interrupt_vector = PS2_PORT1_INTERUPT_VECTOR;
+		mouse_interrupt_vector = PS2_PORT2_INTERUPT_VECTOR;
+	} else if (mouse_port == 1 && keyboard_port == 2) {
+		mouse_interrupt_vector = PS2_PORT1_INTERUPT_VECTOR;
+		keyboard_interrupt_vector = PS2_PORT2_INTERUPT_VECTOR;
+	} else {
+		abort_msg("Impossible scenario\n");
+	}
+
+	// TODO: replace the quick enable mouse by the actual enable mouse that will be implemented
+	// TODO: Make it so idt_init also allow for two keyboard and two mouse.
+	// Let's use a context struct, that says:
+	// extra keyboard_interrupt_vector, extra mouse_interrupt_vector
+	// no mouse, or no keyboard.
 	quick_enable_mouse();
-	idt_init();
-	PIC_remap(32, 40);
+	idt_init(keyboard_interrupt_vector, mouse_interrupt_vector);
+	PIC_remap(PIC_1_OFFSET, PIC_2_OFFSET);
 	initialize_irqs();
-	IRQ_clear_mask(1);
-	IRQ_clear_mask(12);
-	IRQ_clear_mask(2);
+	IRQ_clear_mask(PS2_PORT1_IRQ);        // port 1
+	IRQ_clear_mask(PS2_PORT2_BRIDGE_IRQ); // port 2->pic
+	IRQ_clear_mask(PS2_PORT2_IRQ);        // port 2
+	kprintf("Normally set the stuff\n");
+	return;
+
+one_port_only:
+	// TODO
+	kprintf("One Port only\n");
+	return;
+
+two_keyboard:
+	// TODO
+	kprintf("Two keyboards\n");
+	return;
+
+two_mouse:
+	// TODO
+	kprintf("Two Mouse\n");
+	return;
+
+no_port:
+	// Already done, no need for a todo
+	kprintf("No PS2 Devices\n");
+	return;
 }
 
 void kernel_main(void) {

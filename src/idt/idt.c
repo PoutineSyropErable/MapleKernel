@@ -19,11 +19,11 @@ __attribute__((noreturn)) void exception_handler(void) {
 	}
 }
 
-extern function_t interrupt_8_handler;  // not a function pointer. It's value is therefor the first few bytes of code
-extern function_t interrupt_13_handler; // not a function pointer. It's value is therefor the first few bytes of code
-extern function_t interrupt_33_handler; // not a function pointer. It's value is therefor the first few bytes of code
-extern function_t interrupt_44_handler; // not a function pointer. It's value is therefor the first few bytes of code
-extern function_t interrupt_69_handler; // not a function pointer. It's value is therefor the first few bytes of code
+extern function_t interrupt_8_handler;        // not a function pointer. It's value is therefor the first few bytes of code
+extern function_t interrupt_13_handler;       // not a function pointer. It's value is therefor the first few bytes of code
+extern function_t keyboard_interrupt_handler; // not a function pointer. It's value is therefor the first few bytes of code
+extern function_t mouse_interrupt_handler;    // not a function pointer. It's value is therefor the first few bytes of code
+extern function_t interrupt_69_handler;       // not a function pointer. It's value is therefor the first few bytes of code
 
 // typedef struct PACKED {
 //     uint32_t eip;
@@ -47,7 +47,7 @@ void idt_set_descriptor(uint8_t vector, void* isr, enum gate_type32_t gate_type,
 	descriptor->bit_44_is_zero = 0;
 }
 
-void idt_init() {
+void idt_init(uint8_t keyboard_interrupt, uint8_t mouse_interrupt) {
 	idtr.base_address = idt;
 	idtr.limit = (uint16_t)sizeof(idt32_entry_t) * IDT_MAX_VECTOR_COUNT - 1;
 
@@ -69,11 +69,11 @@ void idt_init() {
 	idt_set_descriptor(13, &interrupt_13_handler, GT32_IG32, 0, true);
 	vectors[13] = true;
 
-	idt_set_descriptor(33, &interrupt_33_handler, GT32_IG32, 0, true);
-	vectors[33] = true;
+	idt_set_descriptor(keyboard_interrupt, &keyboard_interrupt_handler, GT32_IG32, 0, true);
+	vectors[keyboard_interrupt] = true;
 
-	idt_set_descriptor(44, &interrupt_44_handler, GT32_IG32, 0, true);
-	vectors[44] = true;
+	idt_set_descriptor(mouse_interrupt, &mouse_interrupt_handler, GT32_IG32, 0, true);
+	vectors[mouse_interrupt] = true;
 
 	// __asm__ volatile("lidt %0" : : "m"(idtr)); // load the new IDT
 	// __asm__ volatile("sti");                   // set the interrupt flag

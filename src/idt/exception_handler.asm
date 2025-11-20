@@ -253,13 +253,18 @@ EFLAGS_Of3 equ 16
 	iret
 
 
+; ========================================== MOUSE AND KEYBOARD HANDLER. TODO: make it so they truly are independant of the port 
+; ========================================== By reading from a specific global address to know if mouse == port1, or mouse == port2. 
+; ========================================== Same for keyboard
 
 
-
+; === Will not always be interrupt 33 not always port 1, not always irq 1
 ; =========================== interrupt 33 handler: Keyboard Handler ========================
+keyboard_interrupt_printf_fmt db "In keyboard handler", NEWLINE, 0
 extern keyboard_handler
-global interrupt_33_handler
-interrupt_33_handler:
+
+global keyboard_interrupt_handler
+keyboard_interrupt_handler:
 	push ebp
 	mov ebp, esp
 
@@ -292,8 +297,13 @@ PS2_DATA_PORT_RW equ 0x60
 
 
 
-global interrupt_44_handler
-interrupt_44_handler:
+; === Will not always be interrupt 44, not always port 2, not always irq 12
+; =========================== interrupt 44 handler: Mouse Handler ========================
+mouse_interrupt_printf_fmt db "In mouse handler handler", NEWLINE,  0
+; extern mouse_handler
+
+global mouse_interrupt_handler
+mouse_interrupt_handler:
 	push ebp
 	mov ebp, esp
 
@@ -303,20 +313,18 @@ interrupt_44_handler:
     push fs
     push gs
 
-	push 44 
-	push interrupt_printf_fmt  
-	push [argc] 
+	push mouse_interrupt_printf_fmt
+	push 1 
 	call kprintf_argc
-	add esp, 12 ; needed if i don't do the prologue and epilogue
+	add esp, 8 ; needed if i don't do the prologue and epilogue
 
 
 	mov eax, 0
-PS2_DATA_PORT_RW equ 0x60
+; PS2_DATA_PORT_RW equ 0x60
 	in al, PS2_DATA_PORT_RW
 
-	push 12 
+	push 12 ; This line would cause an error if the mouse is not port2 
 	call PIC_sendEOI
-	;  sends 0x20 to 0x20 and a0
 	add esp, 4
 
 	pop gs
