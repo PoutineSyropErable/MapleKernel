@@ -16,6 +16,8 @@
       "-Istdlib",
       "-Iother",
       "-Iruntime_code_analysis",
+      "-I./acpi",
+      "-I./drivers/usb/controller",
       "-c",
       "-o",
       "build/kernel.o",
@@ -192,11 +194,212 @@
       "-Istdlib",
       "-Istdio",
       "-o",
+      "build/idt.o",
+      "idt/idt.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/idt/idt.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/idt.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-c",
+      "-Iidt",
+      "-Igdt",
+      "-Istdlib",
+      "-Istdio",
+      "-o",
+      "build/pic.o",
+      "idt/pic.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/idt/pic.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/pic.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-c",
+      "-Iidt",
+      "-Igdt",
+      "-Istdlib",
+      "-Istdio",
+      "-I./acpi",
+      "-I./drivers/usb/controller",
+      "-o",
       "build/ps2.o",
       "idt/ps2.c"
     ],
     "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
     "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/idt/ps2.c",
     "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/ps2.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-c",
+      "-Iidt",
+      "-Igdt",
+      "-Istdlib",
+      "-Istdio",
+      "-o",
+      "build/keyboard_handler.o",
+      "idt/keyboard_handler.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/idt/keyboard_handler.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/keyboard_handler.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-c",
+      "-Iidt",
+      "-Igdt",
+      "-Istdlib",
+      "-Istdio",
+      "-I./drivers/usb/controller",
+      "-o",
+      "build/usb_controller.o",
+      "./drivers/usb/controller/usb_controller.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/drivers/usb/controller/usb_controller.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/usb_controller.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-c",
+      "-Iidt",
+      "-Igdt",
+      "-Istdlib",
+      "-Istdio",
+      "-I./acpi",
+      "-o",
+      "build/acpi.o",
+      "./acpi/acpi.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/acpi/acpi.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/acpi.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-c",
+      "-o",
+      "build/virtual_memory.o",
+      "other/virtual_memory.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/other/virtual_memory.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/virtual_memory.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-c",
+      "-o",
+      "build/pit_timer.o",
+      "other/pit_timer.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/other/pit_timer.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/pit_timer.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-c",
+      "-Irealmode_functions",
+      "-Ireal16_wrappers",
+      "-Igdt",
+      "-Istdlib",
+      "-o",
+      "build/address_getter.o",
+      "runtime_code_analysis/address_getter.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/runtime_code_analysis/address_getter.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/address_getter.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-c",
+      "-Istdio",
+      "-Istdlib",
+      "-Igdt",
+      "-o",
+      "build/call_real16_wrapper.o",
+      "real16_wrappers/call_real16_wrapper.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/real16_wrappers/call_real16_wrapper.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/call_real16_wrapper.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/ia16-elf-gcc",
+      "-std=gnu99",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-c",
+      "-o",
+      "build/realmode_functions.o",
+      "realmode_functions/realmode_functions.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/realmode_functions/realmode_functions.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/realmode_functions.o"
   }
 ]

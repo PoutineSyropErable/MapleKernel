@@ -241,17 +241,18 @@ void kernel_main(void) {
 	kernel_test();
 
 	// terminal_writestring("======Initiating IDT=======\n\n");
+	setup_ps2_controller_no_error_check();
 	idt_init();
 	PIC_remap(32, 40);
 	initialize_irqs();
 	IRQ_clear_mask(1);
 	// enable_mouse();
-	// IRQ_clear_mask(12);
-	// IRQ_clear_mask(2);
+	IRQ_clear_mask(12);
+	IRQ_clear_mask(2);
 
 	// __int_O0(33);
 
-	test_command_array();
+	// test_command_array();
 	terminal_writestring("\n====kernel main entering loop====\n");
 	fake_ps2_keyboard_byte(23);
 

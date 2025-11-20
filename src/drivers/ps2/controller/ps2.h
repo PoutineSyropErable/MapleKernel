@@ -88,10 +88,14 @@ typedef enum PS2_CommandByte {
 	PS2_CB_write_next_byte_to_second_ps2_input_buffer = 0xD4,  // response byte type: None
 
 	PS2_CB_pulse_output_line_low_start = 0xF0, // response byte type: None
-	PS2_CB_pulse_output_line_low_end = 0xFF    // response byte type: None
+	PS2_CB_pulse_output_line_low_end = 0xFF,   // response byte type: None
 	                                           // the duration of the pulse is 6ms
 	                                           // bits 3 to 0 are used as a mask. (0 = pulse line, 1 = don't pulse line) and correspond to 4 different output lines.
 	                                           // Notes: Bits 0 correspond to the "reset" line. The other output lines don't have a standard/defined purpose.
+
+	// Note that this is a command to be sent to port 1 or port 2
+	// It's not something send to the controller itself
+	PS2_CB_reset_device = 0xFF,
 
 } PS2_CommandByte_t;
 _Static_assert(sizeof(PS2_CommandByte_t) == 4, "PS2_ConfigurationByte_t is stupidly 4 bytes because enums ALWAYS use ints. BAD C!");
@@ -110,14 +114,14 @@ _Static_assert(sizeof(ps2_command_byte_t) == 4, "The union's size is stupidly 4 
 /* ==================================================================================================================================================*/
 
 typedef struct [[gnu::packed]] PS2_ConfigurationByte {
-	bool first_ps2_port_enabled : 1;
-	bool second_ps2_port_enabled : 1;
-	bool system_flag_passed_post_one : 1; // 0 should be impossible. If post wasn't pasted, then it failed to boot.
-	bool zero1 : 1;                       // should be 0.
-	bool first_ps2_port_clock_disabled : 1;
-	bool second_ps2_port_clock_disabled : 1;
-	bool first_ps2_port_translation_enabled : 1;
-	bool zero2 : 1; // must be zero.
+	bool first_ps2_port_enabled : 1;             // bit 0
+	bool second_ps2_port_enabled : 1;            // bit 1
+	bool system_flag_passed_post_one : 1;        // bit 2,  0 should be impossible. If post wasn't passed, then it failed to boot.
+	bool zero1 : 1;                              // bit 3, should be 0.
+	bool first_ps2_port_clock_disabled : 1;      // bit 4
+	bool second_ps2_port_clock_disabled : 1;     // bit 5
+	bool first_ps2_port_translation_enabled : 1; // bit 6
+	bool zero2 : 1;                              // bit 7, must be zero.
 } PS2_ConfigurationByte_t;
 _Static_assert(sizeof(PS2_ConfigurationByte_t) == 1, "PS2_ConfigurationByte_t must be of size: 1 byte");
 
@@ -158,12 +162,12 @@ static inline bool PS2_verify_test_port_response(enum PS2_TestPortResponse respo
 }
 
 typedef enum PS2_TestControllerResponse {
-	PS2_TCR_passed = 0xFF,
-	PS2_TCR_clock_stuck_low = 0xFE,
+	PS2_TCR_passed = 0x55,
+	PS2_TCR_failed = 0xFC,
 } PS2_TestControllerResponse_t;
 
 static inline bool PS2_verify_test_controller_response(enum PS2_TestControllerResponse response) {
-	if (response == 0xFF || response == 0xFE) {
+	if (response == PS2_TCR_passed || response == PS2_TCR_failed) {
 		// || optimizable to |, no short cirtcuit needed
 		return true;
 	}
@@ -328,6 +332,38 @@ static inline bool PS2_verify_response_type(enum PS2_ResponseType response) {
 	return false;
 }
 
+static inline const char* PS2_OS_Error_to_string(enum ps2_os_error_code err) {
+	switch (err) {
+	case PS2_ERR_none:
+		return "PS2_ERR_NONE";
+	case PS2_ERR_invalid_port_number:
+		return "PS2_ERR_INVALID_PORT_NUMBER";
+	case PS2_ERR_wait_max_itt_in:
+		return "PS2_ERR_WAIT_MAX_ITT_IN";
+	case PS2_ERR_wait_max_itt_out:
+		return "PS2_ERR_WAIT_MAX_ITT_OUT";
+	case PS2_ERR_invalid_test_port_response:
+		return "PS2_ERR_INVALID_TEST_PORT_RESPONSE";
+	case PS2_ERR_invalid_test_controller_response:
+		return "PS2_ERR_INVALID_TEST_CONTROLLER_RESPONSE";
+	case PS2_ERR_invalid_configuration_byte:
+		return "PS2_ERR_INVALID_CONFIGURATION_BYTE";
+	case PS2_ERR_status_parity:
+		return "PS2_ERR_STATUS_PARITY";
+	case PS2_ERR_status_timeout:
+		return "PS2_ERR_STATUS_TIMEOUT";
+
+	// Warnings
+	case PS2_WARN_A20_line_not_set:
+		return "PS2_WARN_A20_LINE_NOT_SET";
+	case PS2_WARN_n_is_zero:
+		return "PS2_WARN_N_IS_ZERO";
+
+	default:
+		return "Unknown PS2 error code!";
+	}
+}
+
 static inline const char* PS2_ResponseType_to_string(enum PS2_ResponseType response_type) {
 	// The string is located inside the .data section, this return a pointer to that section
 	switch (response_type) {
@@ -347,21 +383,6 @@ static inline const char* PS2_ResponseType_to_string(enum PS2_ResponseType respo
 		return "Controller output";
 	default:
 		return "Invalid Response Type!";
-	}
-}
-
-static inline const char* PS2_OS_Error_to_string(enum ps2_os_error_code err) {
-	switch (err) {
-	case PS2_ERR_none:
-		return "PS2_ERR_NONE";
-	case PS2_ERR_invalid_port_number:
-		return "PS2_ERR_INVALID_PORT_NUMBER";
-	case PS2_ERR_wait_max_itt_in:
-		return "PS2_ERR_WAIT_MAX_ITT_IN";
-	case PS2_ERR_wait_max_itt_out:
-		return "PS2_ERR_WAIT_MAX_ITT_OUT";
-	default:
-		return "Invalid error code!";
 	}
 }
 
@@ -442,6 +463,8 @@ __attribute__((optimize("O3"))) static inline PS2_StatusRegister_t read_ps2_stat
 
 enum ps2_os_error_code fake_ps2_keyboard_byte(uint8_t byte);
 enum ps2_os_error_code fake_ps2_mouse_byte(uint8_t byte);
+void setup_ps2_controller();
+void setup_ps2_controller_no_error_check();
 void ps2_detect_devices_type();
 
 /*============= TESTS ============ */

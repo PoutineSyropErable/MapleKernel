@@ -47,11 +47,13 @@ __attribute__((aligned(64))) const enum PS2_ResponseType command_to_response_typ
 
 // Input that it recieves, aka that we SEND from the OS.
 static inline bool is_ps2_controller_ready_for_more_input(PS2_StatusRegister_t status) {
+	// must be clear, input buffer must be empty before os writes to it.
 	return !status.input_buffer_full_not_empty;
 }
 
 static inline bool is_ps2_controller_ready_for_response(PS2_StatusRegister_t status) {
-	return !status.output_buffer_full_not_empty;
+	// must be set before continuing. Output buffer must be full before writting to os.
+	return status.output_buffer_full_not_empty;
 }
 
 // This function assume PS2 Controller is ready
@@ -470,15 +472,15 @@ enum ps2_os_error_code ps2_disable_first_ps2_port() {
 	return send_command_to_ps2_controller(PS2_CB_disable_first_ps2_port);
 }
 
-enum ps2_os_error_code ps2_enable_first_ps2_port() {
-	return send_command_to_ps2_controller(PS2_CB_enable_first_ps2_port);
-}
-
 /* Only if 2 PS/2 port are supported. Do not use this function for the test. Use the configuration byte
 Set a configuration byte with it enabled, and read it back. check if it's enabled.
 */
 enum ps2_os_error_code ps2_disable_second_ps2_port() {
 	return send_command_to_ps2_controller(PS2_CB_disable_second_ps2_port);
+}
+
+enum ps2_os_error_code ps2_enable_first_ps2_port() {
+	return send_command_to_ps2_controller(PS2_CB_enable_first_ps2_port);
 }
 
 /* Only if 2 PS/2 port are supported. Do not use this function for the test. Use the configuration byte
@@ -500,9 +502,10 @@ struct ps2_verified_response_test_port test_second_ps2_port() {
 	return send_command_test_port_response(PS2_CB_test_second_ps2_port);
 }
 // ===============
-struct ps2_verified_response_test_controller ps2_test_controller() {
+struct ps2_verified_response_test_controller ps2_perform_controller_self_test() {
 	return send_command_test_controller_response(PS2_CB_test_ps2_controller);
 }
+
 // ===============
 // diagnostic dump, idk how to implement it. A loop that reads?
 
@@ -631,6 +634,233 @@ enum ps2_os_error_code send_data_to_ps2_port(enum PS2_PortNumber port_number, ui
 	default:
 		return PS2_ERR_invalid_port_number;
 	}
+}
+// ====================== Prints for the structs ==================
+void print_ps2_configuration_byte(PS2_ConfigurationByte_t config) {
+	kprintf("first_ps2_port_enabled = %b\n", config.first_ps2_port_enabled);
+	kprintf("second_ps2_port_enabled = %b\n", config.second_ps2_port_enabled);
+	kprintf("system_flag_passed_post_one = %b\n", config.system_flag_passed_post_one);
+	kprintf("zero1 = %b\n", config.zero1);
+	kprintf("first_ps2_port_clock_disabled = %b\n", config.first_ps2_port_clock_disabled);
+	kprintf("second_ps2_port_clock_disabled = %b\n", config.second_ps2_port_clock_disabled);
+	kprintf("first_ps2_port_translation_enabled = %b\n", config.first_ps2_port_translation_enabled);
+	kprintf("zero2 = %b\n", config.zero2);
+}
+
+// ================================================= The main important ones, Like setting it up, and enabling mouse ================
+
+void setup_ps2_controller() {
+
+	// Step 1:
+	enum usb_cont_error_code usb_ret;
+	usb_ret = initialize_usb_controllers();
+	assert(!usb_ret, "This should be done properly!\n");
+	usb_ret = disable_legacy_usb_support();
+	assert(!usb_ret, "This should be done properly!\n");
+
+	// Step 2:
+	bool exist = does_ps2_controller_exist();
+	assert(exist, "If it doesn't exist, then we are fucked!\n");
+
+	// Step 3:
+	enum ps2_os_error_code err;
+	err = ps2_disable_first_ps2_port();
+	err = ps2_disable_second_ps2_port();
+
+	// Step 4:
+	[[gnu::unused]] uint8_t discard = __inb(PS2_DATA_PORT_RW);
+
+	// Step 5:
+	ps2_verified_response_configuration_byte_t vr_cb = ps2_get_configuration_byte();
+	if (vr_cb.err) {
+		kprintf("The error value: %u\n", vr_cb.err);
+		kprintf("The error: %s\n", PS2_OS_Error_to_string(vr_cb.err));
+		kprintf("If it's just system past post one, then it's not bad, this happen once!\n");
+	}
+
+	PS2_ConfigurationByte_t config_byte = vr_cb.response.bits;
+	kprintf("\n\n");
+	print_ps2_configuration_byte(config_byte);
+	kprintf("\n\n");
+
+	config_byte.system_flag_passed_post_one = true;         // qemu bug
+	config_byte.first_ps2_port_enabled = false;             // disable first
+	config_byte.first_ps2_port_translation_enabled = false; // disable first irq
+	config_byte.first_ps2_port_clock_disabled = false;      // enable clock signal
+
+	err = ps2_set_configuration_byte(config_byte);
+	if (err) {
+		kprintf("The error value: %u\n", err);
+		kprintf("The error: %s\n", PS2_OS_Error_to_string(err));
+	}
+
+	vr_cb = ps2_get_configuration_byte();
+	if (vr_cb.err) {
+		kprintf("The error value: %u\n", vr_cb.err);
+		kprintf("The error: %s\n", PS2_OS_Error_to_string(vr_cb.err));
+		kprintf("If it's just system past post one, then it's not bad, this happen once!\n");
+	} else {
+		kprintf("\nNo error in getting the configuration_byte\n\n");
+	}
+	kprintf("\n\n");
+	print_ps2_configuration_byte(config_byte);
+	kprintf("\n\n");
+
+	// Step 6: Perform controller self test
+	struct ps2_verified_response_test_controller tc_vr = ps2_perform_controller_self_test();
+	if (tc_vr.err) {
+		kprintf("The error value: %u\n", err);
+		kprintf("The error: %s\n", PS2_OS_Error_to_string(err));
+	}
+	if (tc_vr.response != PS2_TCR_passed) {
+		kprintf("The self test didn't pass!\n");
+	} else {
+		kprintf("\nSelf test passed!\n\n");
+	}
+
+	// Step 7: Determine if there are two channels.
+	err = ps2_enable_second_ps2_port();
+	if (err) {
+		kprintf("Error enabling the second ps2_port");
+		kprintf("The error value: %u\n", err);
+		kprintf("The error: %s\n", PS2_OS_Error_to_string(err));
+	}
+	vr_cb = ps2_get_configuration_byte();
+	config_byte = vr_cb.response.bits;
+	if (vr_cb.err) {
+		kprintf("\nThe error value: %u\n", vr_cb.err);
+		kprintf("The error: %s\n", PS2_OS_Error_to_string(vr_cb.err));
+		kprintf("If it's just system past post one, then it's not bad, this happen once!\n");
+	} else {
+		kprintf("\nNo error in getting the configuration_byte\n\n");
+	}
+	print_ps2_configuration_byte(config_byte);
+	[[maybe_unused]] bool two = config_byte.second_ps2_port_enabled; // bit 1
+	bool no_two = config_byte.second_ps2_port_clock_disabled;        // bit 5
+	// OS Dev say to check bit 5
+	bool second_port_supported = false;
+	if (!no_two)
+		second_port_supported = true;
+	err = ps2_disable_second_ps2_port();
+	if (err) {
+		kprintf("\nError disabling the second ps2_port");
+		kprintf("The error value: %u\n", err);
+		kprintf("The error: %s\n", PS2_OS_Error_to_string(err));
+	} else {
+		kprintf("\nNo error disabling the second ps2_port\n\n");
+	}
+
+	if (second_port_supported) {
+		vr_cb = ps2_get_configuration_byte();
+		config_byte = vr_cb.response.bits;
+		config_byte.second_ps2_port_clock_disabled = false;
+		config_byte.second_ps2_port_enabled = false;
+		err = ps2_set_configuration_byte(config_byte);
+
+		kprintf("\n");
+		vr_cb = ps2_get_configuration_byte();
+		config_byte = vr_cb.response.bits;
+		print_ps2_configuration_byte(config_byte);
+	}
+
+	// Step 8: Perform interface test
+}
+
+[[gnu::unused]] void setup_ps2_controller_no_error_check() {
+
+	// Step 1:
+	initialize_usb_controllers();
+	disable_legacy_usb_support();
+
+	// Step 2
+	bool exist = does_ps2_controller_exist();
+	assert(exist, "If it doesn't exist, then we are fucked!\n");
+
+	// Step 3:
+	ps2_disable_first_ps2_port();
+	ps2_disable_second_ps2_port();
+
+	// Step 4:
+	[[gnu::unused]] uint8_t discard = __inb(PS2_DATA_PORT_RW);
+
+	// Step 5
+	ps2_verified_response_configuration_byte_t vr_cb = ps2_get_configuration_byte();
+	PS2_ConfigurationByte_t config_byte = vr_cb.response.bits;
+	config_byte.system_flag_passed_post_one = true;         // qemu bug
+	config_byte.first_ps2_port_enabled = false;             // disable first
+	config_byte.first_ps2_port_translation_enabled = false; // disable first irq
+	config_byte.first_ps2_port_clock_disabled = false;      // enable clock signal
+	ps2_set_configuration_byte(config_byte);
+
+	// Step 6: Perform controller self test
+	struct ps2_verified_response_test_controller tc_vr = ps2_perform_controller_self_test();
+	assert(tc_vr.response == PS2_TCR_passed, "we are fucked if it didn't pass\n");
+
+	// Step 7: Determine if there are two channels
+	ps2_enable_second_ps2_port();
+	vr_cb = ps2_get_configuration_byte();
+	config_byte = vr_cb.response.bits;
+	bool second_port_supported = !config_byte.second_ps2_port_clock_disabled; // bit 5
+	assert(second_port_supported, "Otherwise we are fucked if no mouse support!\n");
+
+	ps2_disable_second_ps2_port();
+	vr_cb = ps2_get_configuration_byte();
+	config_byte = vr_cb.response.bits;
+	config_byte.second_ps2_port_clock_disabled = false;
+	config_byte.second_ps2_port_enabled = false;
+	ps2_set_configuration_byte(config_byte);
+
+	// Step 8: Test the ps2 ports:
+	struct ps2_verified_response_test_port response;
+	response = test_first_ps2_port();
+	assert(response.response == PS2_TPR_passed, "First port test must work\n!");
+	response = test_second_ps2_port();
+	assert(response.response == PS2_TPR_passed, "Second port test must work\n!");
+
+	// Step 9: Enable devices:
+	ps2_enable_first_ps2_port();
+	ps2_enable_second_ps2_port();
+	vr_cb = ps2_get_configuration_byte();
+	config_byte = vr_cb.response.bits;
+	config_byte.first_ps2_port_enabled = true;
+	config_byte.second_ps2_port_enabled = true;
+	ps2_set_configuration_byte(config_byte);
+
+	// Step 10: Reset devices:
+	send_data_to_first_ps2_port(PS2_CB_reset_device);
+	wait_till_ready_for_response();
+	uint8_t rep1k = recieve_raw_response();
+	wait_till_ready_for_response();
+	uint8_t rep2k = recieve_raw_response();
+	enum ps2_os_error_code err = wait_till_ready_for_response();
+	if (!err) {
+		uint8_t rep3k = recieve_raw_response();
+		kprintf("The response from keyboard: %h, %h, %h\n", rep1k, rep2k, rep3k);
+	}
+	kprintf("The response from keyboard: %h, %h, None\n", rep1k, rep2k);
+	assert(rep1k == 0xfa, "start of reset successful command");
+	assert(rep2k == 0xaa, "end of reset successful command");
+
+	send_data_to_second_ps2_port(PS2_CB_reset_device);
+	uint8_t rep1m = recieve_raw_response();
+	wait_till_ready_for_response();
+	uint8_t rep2m = recieve_raw_response();
+	wait_till_ready_for_response();
+	uint8_t rep3m = recieve_raw_response();
+	kprintf("The response from mouse   : %h, %h, %h\n", rep1m, rep2m, rep3m);
+	assert(rep1m == 0xfa, "start of reset successful command");
+	assert(rep2m == 0xaa, "end of reset successful command");
+	// if rep3m == 0x00, then it's a standard ps2 mouse. (No scroll wheel)
+
+	// Let's enable the mouse.
+
+	send_data_to_second_ps2_port(0xf4);
+	err = wait_till_ready_for_response();
+	if (err) {
+		abort_msg("Error\n");
+	}
+	uint8_t res = recieve_raw_response();
+	assert(res = 0xFA, "mouse must work");
 }
 
 /* ============ TESTS  =============== */
