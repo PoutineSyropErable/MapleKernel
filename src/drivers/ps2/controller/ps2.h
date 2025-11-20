@@ -2,6 +2,14 @@
 #include "assert.h"
 #include "intrinsics.h"
 
+#ifdef PS2_DRIVER_PUBLIC
+#error "Should not use the public and internal header. Pick one or the other"
+#endif
+
+#ifndef DRIVER_PS2_INTERNALS
+#define DRIVER_PS2_INTERNALS
+#endif
+
 // Compile-time check for little-endian
 #if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #error "Big-endian systems are not supported!"
@@ -193,7 +201,7 @@ typedef union ps2_controller_output_port_uts {
 	PS2_ControllerOutputPort_t bits;
 } ps2_controller_output_port_uts_t;
 
-bool static inline PS2_verify_controller_output_port_response(PS2_ControllerOutputPort_t output_port) {
+static inline bool PS2_verify_controller_output_port_response(PS2_ControllerOutputPort_t output_port) {
 	return !output_port.A20_gate;
 }
 
@@ -466,6 +474,16 @@ enum ps2_os_error_code fake_ps2_mouse_byte(uint8_t byte);
 void setup_ps2_controller();
 void setup_ps2_controller_no_error_check();
 void ps2_detect_devices_type();
+enum ps2_os_error_code send_data_to_first_ps2_port(uint8_t data);
+enum ps2_os_error_code send_data_to_second_ps2_port(uint8_t data);
+
+enum ps2_os_error_code wait_till_ready_for_more_input();
+enum ps2_os_error_code wait_till_ready_for_response();
+
+// This function assume PS2 Controller is ready
+static inline uint8_t recieve_raw_response() {
+	return __inb(PS2_DATA_PORT_RW);
+}
 
 /*============= TESTS ============ */
 void test_command_array(void);

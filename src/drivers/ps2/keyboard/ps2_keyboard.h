@@ -79,4 +79,3 @@ typedef enum KeyboardResponseByte {
 typedef uint8_t keyboard_response_byte_t;
 
 /* ===================================================*/
-void keyboard_handler(uint8_t scancode);

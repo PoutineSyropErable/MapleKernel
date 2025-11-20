@@ -56,11 +56,6 @@ static inline bool is_ps2_controller_ready_for_response(PS2_StatusRegister_t sta
 	return status.output_buffer_full_not_empty;
 }
 
-// This function assume PS2 Controller is ready
-static inline uint8_t recieve_raw_response() {
-	return __inb(PS2_DATA_PORT_RW);
-}
-
 /* =================================== Internals Functions ================================ */
 
 /* For the PS2 Device to be ready for more inputs. So, wait for the ps2 controller to be ready for the OS to send the next output */
@@ -851,16 +846,6 @@ void setup_ps2_controller() {
 	assert(rep1m == 0xfa, "start of reset successful command");
 	assert(rep2m == 0xaa, "end of reset successful command");
 	// if rep3m == 0x00, then it's a standard ps2 mouse. (No scroll wheel)
-
-	// Let's enable the mouse.
-
-	send_data_to_second_ps2_port(0xf4);
-	err = wait_till_ready_for_response();
-	if (err) {
-		abort_msg("Error\n");
-	}
-	uint8_t res = recieve_raw_response();
-	assert(res = 0xFA, "mouse must work");
 }
 
 /* ============ TESTS  =============== */

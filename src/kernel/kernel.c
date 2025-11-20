@@ -10,6 +10,7 @@
 #include "pic.h"
 #include "pit_timer.h"
 #include "ps2.h"
+#include "ps2_mouse.h"
 #include "stdio.h"
 #include "string_helper.h"
 #include "vga_terminal.h"
@@ -221,27 +222,12 @@ void kernel_main(void) {
 	initialize_terminal();
 	terminal_set_scroll(0);
 
-	// kprintf("first test var = %d\n", 23);
-	/*
-	0x002007ae <+27>:    push   0x17
-	0x002007b0 <+29>:    push   0x20553e
-	0x002007b5 <+34>:    push   0x2
-	0x002007b7 <+36>:    call   0x2025e2 <kprintf_argc>
-   */
-
-	// test_printf();
-
-	// test_all_ints();
-
-	// kprintf("Calling interrupt handler %d\n", 34);
-	// __int(69);
-
-	color_char_nice_t c = {.c = '0', .bg = VGA_COLOR_BLACK, .fg = VGA_COLOR_RED};
-	kprintf("the color 16 bit value, %h\n", c);
 	kernel_test();
 
 	// terminal_writestring("======Initiating IDT=======\n\n");
 	setup_ps2_controller_no_error_check();
+	quick_enable_mouse();
+
 	idt_init();
 	PIC_remap(32, 40);
 	initialize_irqs();

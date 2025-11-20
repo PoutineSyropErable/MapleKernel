@@ -1,6 +1,5 @@
-#include "idt.h"
-#include "keyboard_handler.h"
 #include "pic.h"
+#include "ps2_keyboard_handler.h"
 #include "stdio.h"
 #include "vga_terminal.h"
 // possible, create a ps2 controller device, and then a keyboard controller device. What was done here is essentially a keyboard hadnler device

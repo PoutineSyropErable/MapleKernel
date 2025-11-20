@@ -16,6 +16,9 @@
       "-Istdlib",
       "-Iother",
       "-Iruntime_code_analysis",
+      "-I./drivers/ps2/controller",
+      "-I./drivers/ps2/keyboard",
+      "-I./drivers/ps2/mouse",
       "-I./acpi",
       "-I./drivers/usb/controller",
       "-c",
@@ -239,10 +242,10 @@
       "-I./drivers/usb/controller",
       "-o",
       "build/ps2.o",
-      "idt/ps2.c"
+      "./drivers/ps2/controller/ps2.c"
     ],
     "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/idt/ps2.c",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/drivers/ps2/controller/ps2.c",
     "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/ps2.o"
   },
   {
@@ -256,15 +259,82 @@
       "-c",
       "-Iidt",
       "-Igdt",
+      "-I./drivers/ps2/controller",
       "-Istdlib",
       "-Istdio",
       "-o",
-      "build/keyboard_handler.o",
-      "idt/keyboard_handler.c"
+      "build/ps2_keyboard.o",
+      "./drivers/ps2/keyboard/ps2_keyboard.c"
     ],
     "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/idt/keyboard_handler.c",
-    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/keyboard_handler.o"
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/drivers/ps2/keyboard/ps2_keyboard.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/ps2_keyboard.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-c",
+      "-Iidt",
+      "-Igdt",
+      "-I./drivers/ps2/controller",
+      "-Istdlib",
+      "-Istdio",
+      "-o",
+      "build/ps2_mouse.o",
+      "./drivers/ps2/mouse/ps2_mouse.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/drivers/ps2/mouse/ps2_mouse.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/ps2_mouse.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-c",
+      "-Iidt",
+      "-Igdt",
+      "-I./drivers/ps2/controller",
+      "-Istdlib",
+      "-Istdio",
+      "-o",
+      "build/ps2_keyboard_handler.o",
+      "./drivers/ps2/keyboard/ps2_keyboard_handler.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/drivers/ps2/keyboard/ps2_keyboard_handler.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/ps2_keyboard_handler.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-c",
+      "-Iidt",
+      "-Igdt",
+      "-I./drivers/ps2/controller",
+      "-Istdlib",
+      "-Istdio",
+      "-o",
+      "build/ps2_mouse_handler.o",
+      "./drivers/ps2/mouse/ps2_mouse_handler.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/drivers/ps2/mouse/ps2_mouse_handler.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/ps2_mouse_handler.o"
   },
   {
     "arguments": [

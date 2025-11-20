@@ -49,9 +49,9 @@ CODE_ANALYSIS="runtime_code_analysis"
 # Unused. but moved stuff there eventually
 DRIVERS="./drivers"
 DRIVERS_PS2="./drivers/ps2"
+DRIVERS_PS2_CONTROLLER="./drivers/ps2/controller"
 DRIVERS_PS2_KEYBOARD="./drivers/ps2/keyboard"
 DRIVERS_PS2_MOUSE="./drivers/ps2/mouse"
-DRIVERS_PS2_CONTROLLER="./drivers/ps2/controller"
 
 DRIVERS_USB_CONTROLLER="./drivers/usb/controller"
 ACPI="./acpi"
@@ -66,6 +66,10 @@ INCLUDE_DIRS=(
 	"$STDLIB"
 	"$OTHER"
 	"$CODE_ANALYSIS"
+
+	"$DRIVERS_PS2_CONTROLLER"
+	"$DRIVERS_PS2_KEYBOARD"
+	"$DRIVERS_PS2_MOUSE"
 
 	"$ACPI"
 	"$DRIVERS_USB_CONTROLLER"
@@ -100,8 +104,11 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/pic.c" -o "$BUILD_DIR/pic.o" "-I$IDT" "-I$G
 nasm "${NASM_FLAGS32[@]}" "$IDT/exception_handler.asm" -o "$BUILD_DIR/exception_handler.o"
 
 # Compile Drivers
-i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/ps2.c" -o "$BUILD_DIR/ps2.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$DRIVERS_USB_CONTROLLER"
-i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/keyboard_handler.c" -o "$BUILD_DIR/keyboard_handler.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO"
+i686-elf-gcc "${CFLAGS[@]}" -c "$DRIVERS_PS2_CONTROLLER/ps2.c" -o "$BUILD_DIR/ps2.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$DRIVERS_USB_CONTROLLER"
+i686-elf-gcc "${CFLAGS[@]}" -c "$DRIVERS_PS2_KEYBOARD/ps2_keyboard.c" -o "$BUILD_DIR/ps2_keyboard.o" "-I$IDT" "-I$GDT" "-I$DRIVERS_PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO"
+i686-elf-gcc "${CFLAGS[@]}" -c "$DRIVERS_PS2_MOUSE/ps2_mouse.c" -o "$BUILD_DIR/ps2_mouse.o" "-I$IDT" "-I$GDT" "-I$DRIVERS_PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO"
+i686-elf-gcc "${CFLAGS[@]}" -c "$DRIVERS_PS2_KEYBOARD/ps2_keyboard_handler.c" -o "$BUILD_DIR/ps2_keyboard_handler.o" "-I$IDT" "-I$GDT" "-I$DRIVERS_PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO"
+i686-elf-gcc "${CFLAGS[@]}" -c "$DRIVERS_PS2_MOUSE/ps2_mouse_handler.c" -o "$BUILD_DIR/ps2_mouse_handler.o" "-I$IDT" "-I$GDT" "-I$DRIVERS_PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO"
 
 # Temporary stuff. Will properly program them one day.
 i686-elf-gcc "${CFLAGS[@]}" -c "$DRIVERS_USB_CONTROLLER/usb_controller.c" -o "$BUILD_DIR/usb_controller.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "-I$DRIVERS_USB_CONTROLLER"
@@ -134,11 +141,14 @@ BUILD_OBJECTS=(
 	"$BUILD_DIR/vga_terminal.o"
 	"$BUILD_DIR/stdio.o"
 
-	"$BUILD_DIR/ps2.o"
-	"$BUILD_DIR/pic.o"
-	"$BUILD_DIR/idt.o"
 	"$BUILD_DIR/exception_handler.o"
-	"$BUILD_DIR/keyboard_handler.o"
+	"$BUILD_DIR/idt.o"
+	"$BUILD_DIR/pic.o"
+	"$BUILD_DIR/ps2.o"
+	"$BUILD_DIR/ps2_keyboard.o"
+	"$BUILD_DIR/ps2_mouse.o"
+	"$BUILD_DIR/ps2_keyboard_handler.o"
+	"$BUILD_DIR/ps2_mouse_handler.o"
 
 	"$BUILD_DIR/usb_controller.o"
 	"$BUILD_DIR/acpi.o"
