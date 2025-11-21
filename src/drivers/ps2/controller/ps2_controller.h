@@ -50,7 +50,7 @@ enum ps2_device_super_type {
 	PS2_DST_mouse = 2,
 };
 
-struct ps2_device_type_uts {
+struct ps2_device_type_verified {
 	enum ps2_controller_error_code err;
 	enum ps2_device_type type;
 	enum ps2_device_super_type mouse_or_keyboard;

@@ -675,8 +675,8 @@ enum ps2_controller_error_code send_command_or_data_to_ps2_port(enum PS2_PortNum
 
 // ========================
 
-struct ps2_device_type_uts reset_port_and_get_device_type(enum PS2_PortNumber portnumber) {
-	struct ps2_device_type_uts ret;
+struct ps2_device_type_verified reset_port_and_get_device_type(enum PS2_PortNumber portnumber) {
+	struct ps2_device_type_verified ret;
 	enum ps2_controller_error_code err;
 
 	err = send_command_or_data_to_ps2_port(portnumber, PS2_CB_reset_device);
@@ -1104,7 +1104,7 @@ struct ps2_initialize_device_state setup_ps2_controller() {
 	}
 
 	// Step 10: Reset devices:
-	struct ps2_device_type_uts device_1 = reset_port_and_get_device_type(PS2_PN_port_one);
+	struct ps2_device_type_verified device_1 = reset_port_and_get_device_type(PS2_PN_port_one);
 	if (device_1.err) {
 		kprintf("\n[PANIC] Error in Step 10 of initializing the PS2 Controller. Could not reset port 1\n");
 		kprintf("The error value: %u\n", err);
@@ -1136,7 +1136,7 @@ struct ps2_initialize_device_state setup_ps2_controller() {
 		return ret;
 	}
 
-	struct ps2_device_type_uts device_2_type = reset_port_and_get_device_type(PS2_PN_port_two);
+	struct ps2_device_type_verified device_2_type = reset_port_and_get_device_type(PS2_PN_port_two);
 	if (device_2_type.err) {
 		kprintf("\n[PANIC] Error in Step 10 of initializing the PS2 Controller. Could not reset port 2\n");
 		kprintf("The error value: %u\n", err);

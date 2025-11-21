@@ -210,8 +210,8 @@ union ps2_keyboard_verified_scan_code_set get_scan_code_set() {
 	return ret;
 }
 
-struct ps2_device_type_uts identify_device() {
-	struct ps2_device_type_uts ret;
+struct ps2_device_type_verified identify_device() {
+	struct ps2_device_type_verified ret;
 	struct ps2_keyboard_verified_response response;
 	enum ps2_controller_error_code err;
 
