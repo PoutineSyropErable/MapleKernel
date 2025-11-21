@@ -13,7 +13,7 @@ Note: This function assume standard PS/2 mouse.
 
 
 preconditions:
-    Port Number must be 1 or two!
+    Port Number must be 1 or 2!
 
 */
 void mouse_handler(uint8_t scancode, uint8_t port_number) {

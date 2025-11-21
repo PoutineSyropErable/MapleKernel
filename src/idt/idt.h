@@ -10,6 +10,8 @@ The TSS has information about the different stack for different priviledge level
 If a priviledge level change is done, then the stack is read from it
 */
 
+#define IDT_MAX_VECTOR_COUNT 256
+
 #define PACKED __attribute__((packed))
 
 // 64-bit TSS descriptor (long mode) // Takes 2 gdt entry

@@ -10,9 +10,31 @@ void parse_scan_code(uint8_t scancode) {
 void parse_extended_scan_code(uint8_t scancode) {
 }
 
+/*
+Scancode: 		The mouse scancode sent, read from port 0x60. (PS2_DATA_PORT_RW)
+port_number: 	The ps2 port number the mouse is connected to.
+    This allows runtimes port number, and the keyboard isn't forced to be plugged in port1, with mouse in port2
+
+Note: This function assume standard PS/2 mouse.
+
+
+
+preconditions:
+    Port Number must be 1 or 2!
+
+    Keyboard must be in scancode set 1.
+
+*/
 void keyboard_handler(uint8_t scancode, uint8_t port_number) {
 
-	uint8_t keyboard_irq = irq_of_ps2_port[port_number];
+	uint8_t keyboard_irq;
+	if (port_number == 1) {
+		keyboard_irq = PS2_PORT1_IRQ;
+	} else {
+		keyboard_irq = PS2_PORT2_IRQ;
+	}
+	// this can be optimized into a cmovs with immediates (no memory reads or branch)
+	// Blazingly fast
 
 	bool extended_signal = false;
 	static bool previous_extended_signal = false;

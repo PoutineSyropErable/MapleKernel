@@ -117,6 +117,7 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$GDT/gdt.c" -o "$BUILD_DIR/gdt.o" "-I$STDIO" "-I
 
 # Compile Drivers CPU structures
 i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/idt.c" -o "$BUILD_DIR/idt.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "${PS2_SUPER_INCLUDE[@]}"
+i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/idt_ps2.c" -o "$BUILD_DIR/idt_ps2.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "${PS2_SUPER_INCLUDE[@]}"
 i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/pic.c" -o "$BUILD_DIR/pic.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO"
 nasm "${NASM_FLAGS32[@]}" "$IDT/exception_handler.asm" -o "$BUILD_DIR/exception_handler.o"
 
@@ -161,6 +162,7 @@ BUILD_OBJECTS=(
 
 	"$BUILD_DIR/exception_handler.o"
 	"$BUILD_DIR/idt.o"
+	"$BUILD_DIR/idt_ps2.o"
 	"$BUILD_DIR/pic.o"
 	"$BUILD_DIR/ps2.o"
 	"$BUILD_DIR/ps2_keyboard.o"

@@ -232,6 +232,32 @@
       "-Igdt",
       "-Istdlib",
       "-Istdio",
+      "-I./drivers/ps2",
+      "-I./drivers/ps2/controller",
+      "-I./drivers/ps2/keyboard",
+      "-I./drivers/ps2/mouse",
+      "-o",
+      "build/idt_ps2.o",
+      "idt/idt_ps2.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/idt/idt_ps2.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/idt_ps2.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-DQEMU",
+      "-c",
+      "-Iidt",
+      "-Igdt",
+      "-Istdlib",
+      "-Istdio",
       "-o",
       "build/pic.o",
       "idt/pic.c"

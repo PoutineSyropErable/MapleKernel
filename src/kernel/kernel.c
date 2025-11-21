@@ -2,9 +2,7 @@
 #include "bit_hex_string.h"
 #include "call_real16_wrapper.h"
 #include "f3_segment_descriptor_internals.h"
-#include "idt.h"
-#include "idt_ps2.h"
-#include "idt_test.h"
+#include "idt_master.h"
 #include "intrinsics.h"
 #include "kernel.h"
 #include "os_registers.c"
@@ -313,21 +311,21 @@ one_keyboard_one_mouse:
 	// no mouse, or no keyboard.
 	quick_enable_mouse();
 	struct idt_init_ps2_fields args;
-	struct idt_fields_1k_1m args_value;
+	struct idt_fields_keyboard_mouse args_value;
 	args_value.keyboard_port = keyboard_port;
 	args_value.mouse_port = mouse_port;
 	args_value.keyboard_type = keyboard_type;
 	args_value.mouse_type = keyboard_type;
 
 	args.type = ITT_one_keyboard_one_mouse;
-	args.value.mk = args_value;
+	args.value.info_keyboard_and_mouse = args_value;
 
 	idt_init(args);
 	PIC_remap(PIC_1_OFFSET, PIC_2_OFFSET);
 	initialize_irqs();
-	IRQ_clear_mask(PS2_PORT1_IRQ);        // port 1
-	IRQ_clear_mask(PS2_PORT2_BRIDGE_IRQ); // port 2->pic
-	IRQ_clear_mask(PS2_PORT2_IRQ);        // port 2
+	IRQ_clear_mask(PS2_PORT1_IRQ);
+	IRQ_clear_mask(PS2_PORT2_BRIDGE_IRQ);
+	IRQ_clear_mask(PS2_PORT2_IRQ);
 	kprintf("Normally set the stuff\n");
 	return PS2_HS_ERR_none;
 
@@ -342,9 +340,33 @@ one_port_only:
 	}
 	switch (only_port_super_type) {
 	case PS2_DST_keyboard:
-		break;
+		enum ps2_device_type keyboard_type = device_sates.port_one_device_type;
+		struct idt_init_ps2_fields args_keyboard;
+		struct idt_fields_1_keyboard args_keyboard_value;
+		args_keyboard_value.keyboard_type = keyboard_type;
+
+		args_keyboard.type = ITT_one_keyboard;
+		args_keyboard.value.info_1_keyboard = args_keyboard_value;
+		idt_init(args_keyboard);
+		PIC_remap(PIC_1_OFFSET, PIC_2_OFFSET);
+		initialize_irqs();
+		IRQ_clear_mask(PS2_PORT1_IRQ);
+		return PS2_HS_ERR_one_port_only;
+
 	case PS2_DST_mouse:
-		break;
+		enum ps2_device_type mouse_type = device_sates.port_one_device_type;
+		struct idt_init_ps2_fields args_mouse;
+		struct idt_fields_1_mouse args_mouse_value;
+		args_mouse_value.mouse_type = mouse_type;
+
+		args_mouse.type = ITT_one_mouse;
+		args_mouse.value.info_1_mouse = args_mouse_value;
+		idt_init(args_mouse);
+		PIC_remap(PIC_1_OFFSET, PIC_2_OFFSET);
+		initialize_irqs();
+		IRQ_clear_mask(PS2_PORT1_IRQ);
+
+		return PS2_HS_ERR_one_port_only;
 	case PS2_DST_unknown:
 		abort_msg("Not treated for now!, treat as a bug!\n");
 		return PS2_HS_ERR_unrecognized_device1;
@@ -356,23 +378,52 @@ one_port_only:
 two_keyboard:
 
 	kprintf("Two keyboards\n");
-	enum ps2_device_type keyboard_1_type = device_sates.port_one_device_type;
-	enum ps2_device_type keyboard_2_type = device_sates.port_one_device_type;
-	enum ps2_device_super_type keyboard_1_super_type = get_device_super_type(keyboard_1_type);
-	enum ps2_device_super_type keyboard_2_super_type = get_device_super_type(keyboard_2_type);
-	assert(keyboard_1_super_type == keyboard_2_super_type && keyboard_1_super_type == PS2_DST_keyboard,
-	       "Inconsistent super types. Should be two keyboard. Not treated for now, assumed as a bug!\n");
-	// TODO
+	enum ps2_device_type keyboard1_type = device_sates.port_one_device_type;
+	enum ps2_device_type keyboard2_type = device_sates.port_two_device_type;
+	enum ps2_device_super_type keyboard1_super_type = get_device_super_type(keyboard1_type);
+	enum ps2_device_super_type keyboard2_super_type = get_device_super_type(keyboard2_type);
+	assert(keyboard1_super_type == keyboard2_super_type && keyboard1_super_type == PS2_DST_keyboard,
+	       "Inconsistent super types. Should be two keyboard. This is an impossible scenario and should never happen. If it does, it needs to be bug fixed. Not error treated \n");
+
+	struct idt_init_ps2_fields args_two_keyboard;
+	struct idt_fields_2_keyboard args_two_keyboard_value = {.keyboard1_port = 1, .keyboard2_port = 2};
+	args_two_keyboard_value.keyboard1_type = keyboard1_type;
+	args_two_keyboard_value.keyboard2_type = keyboard2_type;
+	// Kinda obvious that the keyboard 1 is in keyboard port 1...
+	// hmm... the function itself could assume
+
+	args_two_keyboard.type = ITT_two_keyboard;
+	args_two_keyboard.value.info_2_keyboard = args_two_keyboard_value;
+	idt_init(args_two_keyboard);
+	PIC_remap(PIC_1_OFFSET, PIC_2_OFFSET);
+	initialize_irqs();
+	IRQ_clear_mask(PS2_PORT1_IRQ);
+	IRQ_clear_mask(PS2_PORT2_BRIDGE_IRQ);
+	IRQ_clear_mask(PS2_PORT2_IRQ);
 	return PS2_HS_ERR_two_keyboard;
 
 two_mouse:
 	kprintf("Two Mouse\n");
-	enum ps2_device_type mouse_1_type = device_sates.port_one_device_type;
-	enum ps2_device_type mouse_2_type = device_sates.port_one_device_type;
-	enum ps2_device_super_type mouse_1_super_type = get_device_super_type(mouse_1_type);
-	enum ps2_device_super_type mouse_2_super_type = get_device_super_type(mouse_2_type);
-	assert(mouse_1_super_type == mouse_2_super_type && mouse_1_super_type == PS2_DST_keyboard,
+	enum ps2_device_type mouse1_type = device_sates.port_one_device_type;
+	enum ps2_device_type mouse2_type = device_sates.port_one_device_type;
+	enum ps2_device_super_type mouse1_super_type = get_device_super_type(mouse1_type);
+	enum ps2_device_super_type mouse2_super_type = get_device_super_type(mouse2_type);
+	assert(mouse1_super_type == mouse2_super_type && mouse1_super_type == PS2_DST_keyboard,
 	       "Inconsistent super types. Should be two mouse. Not treated for now, assumed as a bug!\n");
+
+	struct idt_init_ps2_fields args_two_mouse;
+	struct idt_fields_2_mouse args_two_mouse_value = {.mouse1_port = 1, .mouse2_port = 2};
+	args_two_mouse_value.mouse1_type = mouse1_type;
+	args_two_mouse_value.mouse2_type = mouse2_type;
+
+	args_two_mouse.type = ITT_two_keyboard;
+	args_two_mouse.value.info_2_mouse = args_two_mouse_value;
+	idt_init(args_two_mouse);
+	PIC_remap(PIC_1_OFFSET, PIC_2_OFFSET);
+	initialize_irqs();
+	IRQ_clear_mask(PS2_PORT1_IRQ);
+	IRQ_clear_mask(PS2_PORT2_BRIDGE_IRQ);
+	IRQ_clear_mask(PS2_PORT2_IRQ);
 	return PS2_HS_ERR_two_mouse;
 
 no_port:
