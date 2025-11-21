@@ -1,10 +1,7 @@
 #pragma once
 #include "assert.h"
 #include "intrinsics.h"
-
-#ifdef PS2_DRIVER_PUBLIC
-#error "Should not use the public and internal header. Pick one or the other"
-#endif
+#include "ps2_controller.h"
 
 #ifndef DRIVER_PS2_INTERNALS
 #define DRIVER_PS2_INTERNALS
@@ -255,28 +252,7 @@ I'm the one who created these, so they will never be
 send to hardware, so they can be signed and ints
 TODO:? Maybe use a warning type? but that seems overkill
 */
-enum ps2_os_error_code {
-	PS2_ERR_none = 0,
-	PS2_ERR_invalid_port_number = -1,
-	PS2_ERR_wait_max_itt_in = 1,
-	PS2_ERR_wait_max_itt_out = 2,
-	PS2_ERR_invalid_test_port_response = 3,
-	PS2_ERR_invalid_test_controller_response = 4,
-	PS2_ERR_invalid_configuration_byte = 5,
-	PS2_ERR_status_parity = 6,
-	PS2_ERR_status_timeout = 7,
-
-	PS2_ERR_device_command_failed_to_acknowledge = 8,
-	PS2_ERR_device_command_failed_self_test = 9,
-	PS2_ERR_device_rep3_invalid = 10,
-	PS2_ERR_device_rep4_invalid = 10,
-
-	// Warnings
-	PS2_WARN_A20_line_not_set = 1000,
-	PS2_WARN_invalid_configuration_byte_post_is_zero = 999,
-	PS2_WARN_n_is_zero = 998,
-
-};
+enum ps2_os_error_code;
 
 enum PS2_ResponseType {
 	PS2_RT_not_a_command = 0,

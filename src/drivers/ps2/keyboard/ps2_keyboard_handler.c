@@ -20,7 +20,7 @@ Note: This function assume standard PS/2 mouse.
 
 
 preconditions:
-    Port Number must be 1 or 2!
+    Port Number must be 1 or 2
 
     Keyboard must be in scancode set 1.
 
@@ -38,8 +38,11 @@ void keyboard_handler(uint8_t scancode, uint8_t port_number) {
 
 	bool extended_signal = false;
 	static bool previous_extended_signal = false;
-	bool press_not_release = false;
+	// TODO: Fix this.
+	// This can break if we have two keyboards
+	// A race condition can happened, since this is a shared ressource!
 
+	bool press_not_release = false;
 	if (scancode == 0xe0) {
 		extended_signal = true;
 	} else if (scancode < 128) {
