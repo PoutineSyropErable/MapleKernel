@@ -321,9 +321,8 @@ one_keyboard_one_mouse:
 
 	set_single_keyboard_port(keyboard_port);
 	set_single_mouse_port(mouse_port);
-	// TODO: Error here.
-	// idt_init(args);
-	idt_init((struct idt_init_ps2_fields){.type = ITT_no_ps2_device});
+	idt_init(args);
+	// idt_init((struct idt_init_ps2_fields){.type = ITT_no_ps2_device});
 	PIC_remap(PIC_1_OFFSET, PIC_2_OFFSET);
 	initialize_irqs();
 	IRQ_clear_mask(PS2_PORT1_IRQ);

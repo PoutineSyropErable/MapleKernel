@@ -335,7 +335,7 @@ int ps2_get_scancode_set(void) {
 
 /* Quick test */
 void test_scancode_set(uint8_t set_value) {
-	kprintf("\n===== Scan Code Set 1 Test =====\n");
+	kprintf("\n===== Scan Code Set %u Test =====\n", set_value);
 
 	// Echo check first
 	ps2_send_command(PS2_CMD_ECHO);
