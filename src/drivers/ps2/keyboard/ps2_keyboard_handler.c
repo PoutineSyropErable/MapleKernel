@@ -4,15 +4,15 @@
 #include "vga_terminal.h"
 // possible, create a ps2 controller device, and then a keyboard controller device. What was done here is essentially a keyboard hadnler device
 
-#define KEYBOARD_IRQ 1
-
 void parse_scan_code(uint8_t scancode) {
 }
 
 void parse_extended_scan_code(uint8_t scancode) {
 }
 
-void keyboard_handler(uint8_t scancode) {
+void keyboard_handler(uint8_t scancode, uint8_t port_number) {
+
+	uint8_t keyboard_irq = irq_of_ps2_port[port_number];
 
 	bool extended_signal = false;
 	static bool previous_extended_signal = false;
@@ -28,7 +28,7 @@ void keyboard_handler(uint8_t scancode) {
 	if (extended_signal) {
 		kprintf("scan code (e0       ) = |%u:3, %h:4, %b:8|\n", scancode, scancode, scancode);
 		previous_extended_signal = extended_signal;
-		PIC_sendEOI(KEYBOARD_IRQ);
+		PIC_sendEOI(keyboard_irq);
 		return;
 	}
 
@@ -58,5 +58,5 @@ void keyboard_handler(uint8_t scancode) {
 	}
 
 	previous_extended_signal = extended_signal;
-	PIC_sendEOI(KEYBOARD_IRQ);
+	PIC_sendEOI(keyboard_irq);
 }

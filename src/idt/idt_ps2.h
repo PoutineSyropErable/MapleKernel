@@ -1,5 +1,4 @@
 #pragma once
-#include "idt.h"
 #include "ps2.h"
 enum idt_init_type {
 	ITT_one_keyboard_one_mouse,
@@ -13,6 +12,8 @@ enum idt_init_type {
 struct idt_fields_1k_1m {
 	uint8_t keyboard_port;
 	uint8_t mouse_port;
+	enum ps2_device_type keyboard_type;
+	enum ps2_device_type mouse_type;
 };
 
 struct idt_fields_2k {
@@ -46,9 +47,9 @@ union idt_temp {
 	struct idt_fields_none n;
 };
 
-struct idt_init_fields {
+struct idt_init_ps2_fields {
 	enum idt_init_type type;
 	union idt_temp value;
 };
 
-void idt_init(struct idt_init_fields fields);
+void idt_init(struct idt_init_ps2_fields fields);

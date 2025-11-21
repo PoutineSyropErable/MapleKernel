@@ -312,7 +312,17 @@ one_keyboard_one_mouse:
 	// extra keyboard_interrupt_vector, extra mouse_interrupt_vector
 	// no mouse, or no keyboard.
 	quick_enable_mouse();
-	// idt_init();
+	struct idt_init_ps2_fields args;
+	struct idt_fields_1k_1m args_value;
+	args_value.keyboard_port = keyboard_port;
+	args_value.mouse_port = mouse_port;
+	args_value.keyboard_type = keyboard_type;
+	args_value.mouse_type = keyboard_type;
+
+	args.type = ITT_one_keyboard_one_mouse;
+	args.value.mk = args_value;
+
+	idt_init(args);
 	PIC_remap(PIC_1_OFFSET, PIC_2_OFFSET);
 	initialize_irqs();
 	IRQ_clear_mask(PS2_PORT1_IRQ);        // port 1

@@ -7,7 +7,13 @@ interrupt_printf_fmt db "In Interrupt handler: %d", NEWLINE, NEWLINE, 0
 interrupt_69_fmt db NEWLINE, "Hello from Inside the Interrupt handler %d, nice!", NEWLINE, NEWLINE, 0
 
 
+PORT_ONE equ 1
+PORT_TWO equ 2
+PS2_DATA_PORT_RW equ 0x60
+
+
 section .text
+extern kprintf_argc
 
 ; =================================================== KEYBOARD =======================================
 extern keyboard_handler
@@ -23,11 +29,12 @@ keyboard_interrupt_handler_port1:
     push gs
 
 	mov eax, 0
-PS2_DATA_PORT_RW equ 0x60
 	in al, PS2_DATA_PORT_RW
+
+	push PORT_ONE
 	push eax 
 	call keyboard_handler
-	add esp, 4
+	add esp, 8
 
 
 	pop gs
@@ -43,7 +50,6 @@ PS2_DATA_PORT_RW equ 0x60
 
 
 
-extern keyboard_handler
 global keyboard_interrupt_handler_port2
 keyboard_interrupt_handler_port2:
 	push ebp
@@ -56,11 +62,12 @@ keyboard_interrupt_handler_port2:
     push gs
 
 	mov eax, 0
-PS2_DATA_PORT_RW equ 0x60
 	in al, PS2_DATA_PORT_RW
+
+	push PORT_TWO
 	push eax 
 	call keyboard_handler
-	add esp, 4
+	add esp, 8
 
 
 	pop gs
@@ -92,11 +99,12 @@ mouse_interrupt_handler_port1:
     push gs
 
 	mov eax, 0
-PS2_DATA_PORT_RW equ 0x60
 	in al, PS2_DATA_PORT_RW
+
+	push PORT_ONE
 	push eax 
 	call mouse_handler
-	add esp, 4
+	add esp, 8
 
 
 	pop gs
@@ -112,7 +120,6 @@ PS2_DATA_PORT_RW equ 0x60
 
 
 
-extern mouse_handler
 global mouse_interrupt_handler_port2
 mouse_interrupt_handler_port2:
 	push ebp
@@ -124,12 +131,14 @@ mouse_interrupt_handler_port2:
     push fs
     push gs
 
+
 	mov eax, 0
-PS2_DATA_PORT_RW equ 0x60
 	in al, PS2_DATA_PORT_RW
+
+	push PORT_TWO
 	push eax 
 	call mouse_handler
-	add esp, 4
+	add esp, 8
 
 
 	pop gs

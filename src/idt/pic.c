@@ -1,6 +1,9 @@
 #include "intrinsics.h"
-
 #include "pic.h"
+/* ======================== Setting the extern constants ===================== */
+// Not needed, static const will be optimized into a constant anyway
+
+/* ========================================= */
 
 static inline void io_wait(void) {
 	__outb(0x80, 0);
