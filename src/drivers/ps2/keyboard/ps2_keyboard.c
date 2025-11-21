@@ -1,4 +1,4 @@
-#include "ps2.h"
+#include "ps2_controller.h"
 #include "ps2_keyboard.h"
 #include "ps2_keyboard_public.h"
 

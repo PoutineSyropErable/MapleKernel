@@ -1,6 +1,6 @@
 #pragma once
 #include "idt.h"
-#include "ps2.h"
+#include "ps2_controller.h"
 #include "stdint.h"
 enum idt_init_type {
 	ITT_one_keyboard_one_mouse = 0,

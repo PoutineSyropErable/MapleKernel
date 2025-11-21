@@ -1,4 +1,4 @@
-#include "ps2.h"
+#include "ps2_controller.h"
 #define MAX_ERR_COUNT 10
 /*
 This is somewhat too powerful of an error checker. I just implemented it a bit for the fun of it

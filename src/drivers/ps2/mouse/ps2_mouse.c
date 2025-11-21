@@ -1,5 +1,5 @@
 #include "assert.h"
-#include "ps2.h"
+#include "ps2_controller.h"
 #include "ps2_mouse.h"
 
 uint8_t _number_of_mouse;

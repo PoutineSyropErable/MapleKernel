@@ -1,6 +1,6 @@
 #include "acpi.h"
 #include "assert.h"
-#include "ps2.h"
+#include "ps2_controller.h"
 #include "stdio.h"
 #include "usb_controller.h"
 

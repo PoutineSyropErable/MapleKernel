@@ -8,7 +8,7 @@
 #include "os_registers.c"
 #include "pic.h"
 #include "pit_timer.h"
-#include "ps2.h"
+#include "ps2_controller.h"
 #include "ps2_mouse.h"
 #include "stdio.h"
 #include "string_helper.h"
