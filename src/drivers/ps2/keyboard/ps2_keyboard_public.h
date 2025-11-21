@@ -1,4 +1,5 @@
 #pragma once
+#include "ps2_controller_public.h"
 #include <stdint.h>
 enum ps2_keyboard_error_code {
 	PS2_KB_ERR_none = 0,
@@ -20,14 +21,27 @@ typedef enum ScanCodeSet {
 } kcb_scan_code_set_t;
 // don't need a uint equivalent, because this doesn't go into a packed struct with bit fields
 
-union ps2_keyboard_verified_scan_code_set {
+struct ps2_keyboard_verified_scan_code_set {
 	enum ps2_keyboard_error_code err;
 	enum ScanCodeSet response;
 };
 
-enum ps2_keyboard_error_code echo();
+struct ps2_keyboard_type_verified {
+	enum ps2_keyboard_error_code err;
+	enum ps2_device_type type;
+};
+
 void set_single_keyboard_port(uint8_t single_keyboard_port);
 void set_dual_keyboard_port();
 
-union ps2_keyboard_verified_scan_code_set get_scan_code_set();
+const char* ps2_keyboard_error_to_string(enum ps2_keyboard_error_code code);
+
+enum ps2_keyboard_error_code echo_keyboard();
+struct ps2_keyboard_verified_scan_code_set get_scan_code_set();
 enum ps2_keyboard_error_code set_scan_code_set(enum ScanCodeSet scan_code_set);
+
+void test_echo_quick();
+
+void test_scancode_set(uint8_t set_value);
+
+int ps2_get_scancode_set(void);

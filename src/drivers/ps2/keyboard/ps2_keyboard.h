@@ -95,9 +95,3 @@ struct ps2_keyboard_verified_response {
 	enum ps2_keyboard_error_code err;
 	enum KeyboardResponseByte response;
 };
-
-struct ps2_keyboard_type_verified {
-	enum ps2_keyboard_error_code err;
-	enum ps2_device_type type;
-	enum ps2_device_super_type mouse_or_keyboard;
-};

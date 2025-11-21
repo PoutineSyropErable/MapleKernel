@@ -112,7 +112,7 @@ void kernel_test() {
 
 	terminal_writestring("\n\n===== Start of Kernel Test=====\n\n");
 
-	kprintf("int = %d, uint = %u, float = %f.2, bin = %b:7, hex = %h:9-final text|\n\n", 1, 2, 3.0, 0b11011, 0x123bcd);
+	kprintf("int = %d, other int = %d, uint = %u, float = %f.2, bin = %b:7, hex = %h:9-final text|\n\n", 1, -7, 2, 3.0, 0b11011, 0x123bcd);
 
 	return;
 
@@ -308,10 +308,6 @@ one_keyboard_one_mouse:
 	}
 
 	// TODO: replace the quick enable mouse by the actual enable mouse that will be implemented
-	// TODO: Make it so idt_init also allow for two keyboard and two mouse.
-	// Let's use a context struct, that says:
-	// extra keyboard_interrupt_vector, extra mouse_interrupt_vector
-	// no mouse, or no keyboard.
 	quick_enable_mouse();
 	struct idt_init_ps2_fields args;
 	struct idt_fields_keyboard_mouse args_value;
@@ -325,7 +321,9 @@ one_keyboard_one_mouse:
 
 	set_single_keyboard_port(keyboard_port);
 	set_single_mouse_port(mouse_port);
-	idt_init(args);
+	// TODO: Error here.
+	// idt_init(args);
+	idt_init((struct idt_init_ps2_fields){.type = ITT_no_ps2_device});
 	PIC_remap(PIC_1_OFFSET, PIC_2_OFFSET);
 	initialize_irqs();
 	IRQ_clear_mask(PS2_PORT1_IRQ);
@@ -379,7 +377,6 @@ one_port_only:
 		return PS2_HS_ERR_unrecognized_device1;
 	}
 
-	// TODO
 	return PS2_HS_ERR_one_port_only;
 
 two_keyboard:
@@ -452,16 +449,72 @@ void kernel_main(void) {
 
 	kernel_test();
 
-	// terminal_writestring("======Initiating IDT=======\n\n");
-	[[gnu::unused]] enum handle_ps2_setup_errors
-	    err_discard = handle_ps2_setup();
 	/* Some day the future, it might be important to know the state here. But today is not that day*/
+	if (true) {
+		[[gnu::unused]] enum handle_ps2_setup_errors
+		    err_discard = handle_ps2_setup();
+		kprintf("err_discard : %d\n", err_discard);
+		// This case breaks the ps2 controller support
+	} else {
+		setup_ps2_controller_no_error_check();
+		quick_enable_mouse();
+
+		set_single_keyboard_port(1);
+		set_single_mouse_port(2);
+		idt_init((struct idt_init_ps2_fields){.type = ITT_no_ps2_device});
+		PIC_remap(PIC_1_OFFSET, PIC_2_OFFSET);
+		initialize_irqs();
+		IRQ_clear_mask(PS2_PORT1_IRQ);
+		IRQ_clear_mask(PS2_PORT2_BRIDGE_IRQ);
+		IRQ_clear_mask(PS2_PORT2_IRQ);
+	}
+	// wait(5);
+	kprintf("\n\n============= Quick tests commands ===============\n\n");
+	kprintf("Current scanset: %d\n", ps2_get_scancode_set());
+	test_scancode_set(1);
+	test_scancode_set(2);
+	test_scancode_set(3);
+	return;
+
+	// struct ps2_verified_response_test_controller ret = ps2_perform_controller_self_test();
+	// kprintf("%d, %s\n", ret.err, PS2_OS_Error_to_string(ret.err));
+	// kprintf("%u\n", ret.response);
+
+	kprintf("\n\n============= Keyboard commands ===============\n\n");
+	enum ps2_keyboard_error_code ke_err = echo_keyboard();
+	if (ke_err) {
+		kprintf("Error sending echo command: %d, |%s|\n", ke_err, ps2_keyboard_error_to_string(ke_err));
+	} else {
+		kprintf("Echo command succeededd successfully");
+	}
+	// test_echo_quick();
+
+	kprintf("\n\n============= Scan code sets ===============\n\n");
+	struct ps2_keyboard_verified_scan_code_set scan_code_set = get_scan_code_set();
+	if (scan_code_set.err) {
+		kprintf("Error getting the scan code set: %d, |%s|\n", scan_code_set.err, ps2_keyboard_error_to_string(scan_code_set.err));
+	}
+
+	kprintf("The current scan code set: |%d|\n", scan_code_set.response);
+	// enum ps2_keyboard_error_code k_err = set_scan_code_set(3);
+	// if (k_err) {
+	// 	kprintf("Error setting the scan code set: %d, |%s|\n", k_err, ps2_keyboard_error_to_string(k_err));
+	// } else {
+	// 	kprintf("No error setting the scancode set\n");
+	// }
+
+	scan_code_set = get_scan_code_set();
+	if (scan_code_set.err) {
+		kprintf("Error getting the scan code set back: %d, |%s|\n", scan_code_set.err, ps2_keyboard_error_to_string(scan_code_set.err));
+	}
+
+	kprintf("The current scan code set (after changing it): %u\n", scan_code_set.response);
 
 	// __int_O0(33);
 
 	// test_command_array();
 	terminal_writestring("\n====kernel main entering loop====\n");
-	fake_ps2_keyboard_byte(23);
+	// fake_ps2_keyboard_byte(23);
 
 	while (true) {
 		// kernel main loop

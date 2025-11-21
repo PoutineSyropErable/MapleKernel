@@ -51,8 +51,6 @@ typedef union {
 } ps2_status_register_uts_t;
 _Static_assert(sizeof(ps2_status_register_uts_t) == 1, "ps2_satus_register_t must be of size: 1 byte");
 
-// TODO: ? Add a verify status register for it?
-
 /* ==================================================================================================================================================*/
 // PS/2 Controller Commands
 
@@ -336,41 +334,6 @@ static inline bool PS2_verify_response_type(enum PS2_ResponseType response) {
 		return true;
 	}
 	return false;
-}
-
-static inline const char* PS2_OS_Error_to_string(enum ps2_controller_error_code err) {
-	switch (err) {
-	case PS2_ERR_none:
-		return "PS2_ERR_NONE";
-	case PS2_ERR_invalid_port_number:
-		return "PS2_ERR_INVALID_PORT_NUMBER";
-	case PS2_ERR_wait_max_itt_in:
-		return "PS2_ERR_WAIT_MAX_ITT_IN";
-	case PS2_ERR_wait_max_itt_out:
-		return "PS2_ERR_WAIT_MAX_ITT_OUT";
-	case PS2_ERR_invalid_test_port_response:
-		return "PS2_ERR_INVALID_TEST_PORT_RESPONSE";
-	case PS2_ERR_invalid_test_controller_response:
-		return "PS2_ERR_INVALID_TEST_CONTROLLER_RESPONSE";
-	case PS2_ERR_invalid_configuration_byte:
-		return "PS2_ERR_INVALID_CONFIGURATION_BYTE";
-	case PS2_ERR_status_parity:
-		return "PS2_ERR_STATUS_PARITY";
-	case PS2_ERR_status_timeout:
-		return "PS2_ERR_STATUS_TIMEOUT";
-
-	// Warnings
-	case PS2_WARN_A20_line_not_set:
-		return "PS2_WARN_A20_LINE_NOT_SET";
-	case PS2_WARN_n_is_zero:
-		return "PS2_WARN_N_IS_ZERO";
-
-	case PS2_WARN_invalid_configuration_byte_post_is_zero:
-		return "PS2_WARN_invalid_configuration_byte_post_is_zero";
-
-	default:
-		return "Unknown PS2 error code!";
-	}
 }
 
 static inline const char* PS2_ResponseType_to_string(enum PS2_ResponseType response_type) {

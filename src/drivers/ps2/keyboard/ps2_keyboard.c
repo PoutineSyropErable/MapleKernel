@@ -11,7 +11,8 @@ uint8_t _single_keyboard_port;
 uint8_t _keyboard1_port;
 uint8_t _keyboard2_port;
 
-// Single keyboard support
+// SKS = Single keyboard support!
+//
 // Because I found it too boring, let's only really support 1 ps2 keyboard.
 // Supporting two here is just needless complexity. And I want speed, not perfect code. The ps2 controller driver is good enough.
 // At the end of the day, motivation is king.
@@ -67,6 +68,30 @@ static inline bool validate_key_repeat_delay(KeyRepeatDelay_t delay) {
 	return delay >= KRD_250ms && delay <= KRD_1000ms;
 }
 
+/* ==================================== The two string =============================== */
+const char* ps2_keyboard_error_to_string(enum ps2_keyboard_error_code code) {
+	switch (code) {
+	case PS2_KB_ERR_none:
+		return "No error";
+	case PS2_KB_ERR_invalid_command:
+		return "Invalid command";
+	case PS2_KB_ERR_could_not_send_command:
+		return "Could not send command";
+	case PS2_KB_ERR_could_not_recieve_response:
+		return "Could not receive response";
+	case PS2_KB_ERR_resend_too_much:
+		return "Resend attempted too many times";
+	case PS2_KB_ERR_non_ack_response:
+		return "Non-acknowledged response";
+	case PS2_KB_ERR_response_was_not_echo:
+		return "Response was not echo";
+	case PS2_KB_ERR_invalid_scancode:
+		return "Invalid scancode";
+	default:
+		return "Unknown error";
+	}
+}
+
 /* ================================ The main command ================================= */
 static inline enum ps2_controller_error_code
 _send_command_or_data_to_ps2_keyboard(enum KeyboardCommandByte command) {
@@ -85,13 +110,16 @@ static struct ps2_keyboard_verified_response send_data_to_ps2_keyboard(uint8_t d
 	// This way, I can explicitely compare to resend
 	while (response_count < max_response_repeat) {
 
-		enum ps2_controller_error_code c_err = _send_command_or_data_to_ps2_keyboard(data);
+		enum ps2_controller_error_code c_err;
+
+		c_err = _send_command_or_data_to_ps2_keyboard(data);
 		if (c_err) {
 			ret.err = PS2_KB_ERR_could_not_send_command;
 			return ret;
 		}
 		c_err = wait_till_ready_for_response();
 		if (c_err) {
+			kprintf("The ps2_controller error: %d, |%s|\n", c_err, PS2_OS_Error_to_string(c_err));
 			ret.err = PS2_KB_ERR_could_not_recieve_response;
 			return ret;
 		}
@@ -146,7 +174,7 @@ enum ps2_keyboard_error_code set_leds(kcb_led_state_t led_sate) {
 	return PS2_KB_ERR_none;
 }
 
-enum ps2_keyboard_error_code echo() {
+enum ps2_keyboard_error_code echo_keyboard() {
 	struct ps2_keyboard_verified_response obtained;
 	obtained = send_command_to_ps2_keyboard(KCB_echo);
 	if (obtained.err != PS2_KB_ERR_non_ack_response) {
@@ -155,6 +183,7 @@ enum ps2_keyboard_error_code echo() {
 	if (obtained.response != KRB_echo_response) {
 		return PS2_KB_ERR_response_was_not_echo;
 	}
+	kprintf("The echo response: %h\n", obtained.response);
 	return PS2_KB_ERR_none;
 }
 
@@ -175,17 +204,17 @@ enum ps2_keyboard_error_code set_scan_code_set(enum ScanCodeSet scan_code_set) {
 		return obtained.err;
 	}
 
-	obtained = send_data_to_ps2_keyboard(scan_code_set);
+	obtained = send_data_to_ps2_keyboard((uint8_t)scan_code_set);
 	if (obtained.err) {
 		return obtained.err;
 	}
 	return PS2_KB_ERR_none;
 }
 
-union ps2_keyboard_verified_scan_code_set get_scan_code_set() {
+struct ps2_keyboard_verified_scan_code_set get_scan_code_set() {
 
 	struct ps2_keyboard_verified_response obtained;
-	union ps2_keyboard_verified_scan_code_set ret;
+	struct ps2_keyboard_verified_scan_code_set ret;
 	obtained = send_command_to_ps2_keyboard(KCB_get_set_ScanCodeSet);
 	if (obtained.err) {
 		ret.err = obtained.err;
@@ -210,161 +239,132 @@ union ps2_keyboard_verified_scan_code_set get_scan_code_set() {
 	return ret;
 }
 
-struct ps2_device_type_verified identify_device() {
-	struct ps2_device_type_verified ret;
-	struct ps2_keyboard_verified_response response;
-	enum ps2_controller_error_code err;
+struct ps2_keyboard_verified_response identify_device() {
+	abort_msg("!Not implemented!\n");
+	// TODO: Need to implement a recieve response from identify device function.
+	// By moving the code inside
+	// reset_port_and_get_device_type(PS2_PN_port_two);
+	// to an internal function that sends the reset and recieve the fist 2 response
+	// one that an internal function that receieve the get device type.
+	// and a master function that does the steps from detecing divice types. (Pre: Disable scanning, End: Enable scanning)
+	// from PS2 Controller OSDEV Wiki page
 
-	response = send_command_to_ps2_keyboard(KCB_identify_keyboard);
-	if (response.err) {
-		ret.err = response.err;
-		return ret;
+	// Then from here, i can just call the master on _single_keyboard_port
+}
+
+/* ================================ Step function ========================= */
+
+/* ================================= Quick and dirty ========================== */
+
+#include <stdbool.h>
+#include <stdint.h>
+
+/* PS/2 Ports */
+#define PS2_DATA_PORT_RW 0x60
+#define PS2_STATUS_PORT 0x64
+
+/* Status register bits */
+#define PS2_STATUS_OUTPUT_BUFFER_FULL 0x01
+#define PS2_STATUS_INPUT_BUFFER_FULL 0x02
+
+/* Commands */
+#define PS2_CMD_ECHO 0xEE
+#define PS2_CMD_SET_SCANCODE 0xF0
+#define PS2_CMD_GET_SCANCODE 0xF0
+#define PS2_ACK 0xFA
+
+/* Simple outb/inb functions for x86 */
+static inline void outb(uint16_t port, uint8_t val) {
+	__asm__ volatile("outb %0, %1" : : "a"(val), "Nd"(port));
+}
+
+static inline uint8_t inb(uint16_t port) {
+	uint8_t ret;
+	__asm__ volatile("inb %1, %0" : "=a"(ret) : "Nd"(port));
+	return ret;
+}
+
+/* Wait until keyboard input buffer is empty */
+static void wait_input_empty(void) {
+	while (inb(PS2_STATUS_PORT) & PS2_STATUS_INPUT_BUFFER_FULL)
+		;
+}
+
+/* Wait until keyboard output buffer has data */
+static void wait_output_full(void) {
+	while (!(inb(PS2_STATUS_PORT) & PS2_STATUS_OUTPUT_BUFFER_FULL))
+		;
+}
+
+/* Send a command to the keyboard */
+static void ps2_send_command(uint8_t cmd) {
+	wait_input_empty();
+	outb(PS2_DATA_PORT_RW, cmd);
+}
+
+/* Read a byte from the keyboard */
+static uint8_t ps2_read_response(void) {
+	wait_output_full();
+	return inb(PS2_DATA_PORT_RW);
+}
+
+/* Send a command and check ACK */
+static bool ps2_send_cmd_check_ack(uint8_t cmd) {
+	ps2_send_command(cmd);
+	return ps2_read_response() == PS2_ACK;
+}
+
+/* Set scan code set */
+static bool ps2_set_scancode_set(uint8_t set_number) {
+	if (!ps2_send_cmd_check_ack(PS2_CMD_SET_SCANCODE))
+		return false;
+	if (!ps2_send_cmd_check_ack(set_number))
+		return false;
+	return true;
+}
+
+/* Get current scan code set */
+int ps2_get_scancode_set(void) {
+	ps2_send_command(PS2_CMD_GET_SCANCODE); // 0xF0
+	ps2_send_command(0x00);                 // Get current
+	uint8_t ack = ps2_read_response();      // should be 0xFA
+	if (ack != PS2_ACK)
+		return -1;
+	return ps2_read_response(); // scan code set number
+}
+
+/* Quick test */
+void test_scancode_set(uint8_t set_value) {
+	kprintf("\n===== Scan Code Set 1 Test =====\n");
+
+	// Echo check first
+	ps2_send_command(PS2_CMD_ECHO);
+	uint8_t echo_resp = ps2_read_response();
+	if (echo_resp != PS2_CMD_ECHO) {
+		kprintf("Keyboard echo failed!\n");
+		return;
 	}
-	err = wait_till_ready_for_response();
-	if (err) {
-		ret.err = err;
-		return ret;
-	}
-	uint8_t rep1 = ps2_recieve_raw_response();
-	if (rep1 != DEVICE_COMMAND_ACKNOLEDGED) {
-		ret.err = PS2_ERR_device_command_failed_to_acknowledge;
-		return ret;
-	}
 
-	err = wait_till_ready_for_response();
-	if (err) {
-		ret.err = err;
-		return ret;
+	kprintf("Keyboard echo OK\n");
+
+	// Set scan code set 1
+	if (!ps2_set_scancode_set(set_value)) {
+		kprintf("Failed to set scan code set 1\n");
+		return;
 	}
-	uint8_t rep2 = ps2_recieve_raw_response();
-	if (rep2 != DEVICE_COMMAND_SELF_TEST_PASSED) {
-		ret.err = PS2_ERR_device_command_failed_self_test;
-		return ret;
+	kprintf("Scan code set %u sent\n", set_value);
+
+	// Get scan code set
+	int current_set = ps2_get_scancode_set();
+	if (current_set < 0) {
+		kprintf("Failed to read current scan code set\n");
+		return;
 	}
 
-	err = wait_till_ready_for_response();
-	if (err) {
-		// If the third one is none, then it's an ancient keyboard.
-		// so a timeout error would happen here.
-		// Idk if a timeout error could happen in another case, but...
-		// Kinda weird that the error is the expected behavior
-		// But I guess that's what it's all about, they need to be handled eventually.
-		// WIth something different then just return error one layer deeper or abort os.
-		ret.type = PS2_DT_ancient_at_keyboard;
-		ret.mouse_or_keyboard = PS2_DST_keyboard;
-		ret.err = PS2_ERR_none;
-		return ret;
-	}
-
-	uint8_t rep3 = ps2_recieve_raw_response();
-	const uint8_t len4_prefix = 0xAB;
-	if (rep3 != len4_prefix) {
-		enum len3_device_byte {
-			STANDARD_PS2_MOUSE = 0x00,
-			MOUSE_WITH_SCROLL_WHEEL = 0x03,
-			FIVE_BUTTON_MOUSE = 0x04,
-		};
-
-		ret.mouse_or_keyboard = PS2_DST_mouse;
-		switch (rep3) {
-		case STANDARD_PS2_MOUSE:
-			ret.type = PS2_DT_standard_mouse;
-			ret.err = PS2_ERR_none;
-			return ret;
-		case MOUSE_WITH_SCROLL_WHEEL:
-			ret.type = PS2_DT_mouse_with_scroll_wheel;
-			ret.err = PS2_ERR_none;
-			return ret;
-		case FIVE_BUTTON_MOUSE:
-			ret.type = PS2_DT_mouse_with_5_button;
-			ret.err = PS2_ERR_none;
-			return ret;
-		default:
-			ret.type = rep3;
-			ret.err = PS2_ERR_device_rep3_invalid;
-			return ret;
-		}
-	}
-
-	err = wait_till_ready_for_response();
-	if (err) {
-		ret.err = err;
-		return ret;
-	}
-	uint8_t rep4 = ps2_recieve_raw_response();
-	enum len4_device_byte {
-		MF2_KEYBOARD_1 = 0x83,
-		MF2_KEYBOARD_2 = 0xC1,
-		MF2_KEYBOARD_1_TRANSLATED = 0x41,
-
-		SHORT_KEYBOARD = 0x84,
-		SHORT_KEYBOARD_TRANSLATED = 0x54,
-
-		KEY122_HOST_CONNECTED = 0x85,
-		KEY122 = 0x86,
-
-		JAPANESE_G = 0x90,
-		JAPANESE_P = 0x91,
-		JAPANESE_A = 0x92,
-
-		NCD_SUN = 0xA1
-	};
-
-	ret.mouse_or_keyboard = PS2_DST_keyboard;
-	switch (rep4) {
-	case MF2_KEYBOARD_1:
-		ret.type = PS2_DT_mf2_keyboard_1;
-		ret.err = PS2_ERR_none;
-		return ret;
-	case MF2_KEYBOARD_1_TRANSLATED:
-		ret.type = PS2_DT_mf2_keyboard_1;
-		ret.err = PS2_ERR_none;
-		return ret;
-
-	case MF2_KEYBOARD_2:
-		ret.type = PS2_DT_mf2_keyboard_2;
-		ret.err = PS2_ERR_none;
-		return ret;
-
-	case SHORT_KEYBOARD:
-		ret.type = PS2_DT_short_keyboard;
-		ret.err = PS2_ERR_none;
-		return ret;
-	case SHORT_KEYBOARD_TRANSLATED:
-		ret.type = PS2_DT_short_keyboard;
-		ret.err = PS2_ERR_none;
-		return ret;
-
-	case KEY122_HOST_CONNECTED:
-		ret.type = PS2_DT_122_key_host_connected;
-		ret.err = PS2_ERR_none;
-		return ret;
-	case KEY122:
-		ret.type = PS2_DT_122_key;
-		ret.err = PS2_ERR_none;
-		return ret;
-
-	case JAPANESE_G:
-		ret.type = PS2_DT_japanese_g_keyboard;
-		ret.err = PS2_ERR_none;
-		return ret;
-	case JAPANESE_P:
-		ret.type = PS2_DT_japanese_p_keyboard;
-		ret.err = PS2_ERR_none;
-		return ret;
-	case JAPANESE_A:
-		ret.type = PS2_DT_japanese_a_keyboard;
-		ret.err = PS2_ERR_none;
-		return ret;
-
-	case NCD_SUN:
-		ret.type = PS2_DT_ncd_sun_layout_keyboard;
-		ret.err = PS2_ERR_none;
-		return ret;
-
-	default:
-		ret.type = rep4;
-		ret.err = PS2_ERR_device_rep4_invalid;
-		return ret;
+	kprintf("Current scan code set: %d\n", current_set);
+	if (current_set == set_value) {
+		kprintf("Scan code set verified successfully!\n");
+	} else {
+		kprintf("Scan code set verification failed!\n");
 	}
 }

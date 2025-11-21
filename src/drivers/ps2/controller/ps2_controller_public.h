@@ -56,6 +56,41 @@ struct ps2_device_type_verified {
 	enum ps2_device_super_type mouse_or_keyboard;
 };
 
-// This function assume PS2 Controller is ready
+// ================================== The accessible functions
+struct ps2_verified_response_test_controller ps2_perform_controller_self_test();
 
-enum ps2_os_error_code send_data_to_second_ps2_port(uint8_t data);
+// ================================= The to strings
+static inline const char* PS2_OS_Error_to_string(enum ps2_controller_error_code err) {
+	switch (err) {
+	case PS2_ERR_none:
+		return "PS2_ERR_NONE";
+	case PS2_ERR_invalid_port_number:
+		return "PS2_ERR_INVALID_PORT_NUMBER";
+	case PS2_ERR_wait_max_itt_in:
+		return "PS2_ERR_WAIT_MAX_ITT_IN";
+	case PS2_ERR_wait_max_itt_out:
+		return "PS2_ERR_WAIT_MAX_ITT_OUT";
+	case PS2_ERR_invalid_test_port_response:
+		return "PS2_ERR_INVALID_TEST_PORT_RESPONSE";
+	case PS2_ERR_invalid_test_controller_response:
+		return "PS2_ERR_INVALID_TEST_CONTROLLER_RESPONSE";
+	case PS2_ERR_invalid_configuration_byte:
+		return "PS2_ERR_INVALID_CONFIGURATION_BYTE";
+	case PS2_ERR_status_parity:
+		return "PS2_ERR_STATUS_PARITY";
+	case PS2_ERR_status_timeout:
+		return "PS2_ERR_STATUS_TIMEOUT";
+
+	// Warnings
+	case PS2_WARN_A20_line_not_set:
+		return "PS2_WARN_A20_LINE_NOT_SET";
+	case PS2_WARN_n_is_zero:
+		return "PS2_WARN_N_IS_ZERO";
+
+	case PS2_WARN_invalid_configuration_byte_post_is_zero:
+		return "PS2_WARN_invalid_configuration_byte_post_is_zero";
+
+	default:
+		return "Unknown PS2 error code!";
+	}
+}
