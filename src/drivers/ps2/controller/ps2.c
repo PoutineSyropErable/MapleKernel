@@ -56,7 +56,7 @@ static inline bool is_ps2_controller_ready_for_response(PS2_StatusRegister_t sta
 	return status.output_buffer_full_not_empty;
 }
 
-static inline enum ps2_os_error_code PS2_verify_configuration_byte_response(ps2_configuration_byte_uts_t configuration_byte) {
+static inline enum ps2_controller_error_code PS2_verify_configuration_byte_response(ps2_configuration_byte_uts_t configuration_byte) {
 	// TODO: Check if there is any impossible responses?
 	PS2_ConfigurationByte_t bits = configuration_byte.bits;
 	if (bits.zero1 != 0 || bits.zero1 != 0) {
@@ -102,7 +102,7 @@ enum ps2_device_super_type get_device_super_type(enum ps2_device_type dt) {
 /* =================================== Internals Functions ================================ */
 
 /* For the PS2 Device to be ready for more inputs. So, wait for the ps2 controller to be ready for the OS to send the next output */
-enum ps2_os_error_code wait_till_ready_for_more_input() {
+enum ps2_controller_error_code wait_till_ready_for_more_input() {
 
 	for (uint32_t i = 0; i < MAX_PS2_WAIT_LOOP; i++) {
 		io_wait();
@@ -122,7 +122,7 @@ enum ps2_os_error_code wait_till_ready_for_more_input() {
 }
 
 /* For the PS2 Device, who is currently calculating the next output to be done with the result ready. So for the OS to read the response */
-enum ps2_os_error_code wait_till_ready_for_response() {
+enum ps2_controller_error_code wait_till_ready_for_response() {
 
 	for (uint32_t i = 0; i < MAX_PS2_WAIT_LOOP; i++) {
 		io_wait();
@@ -135,8 +135,8 @@ enum ps2_os_error_code wait_till_ready_for_response() {
 	return PS2_ERR_wait_max_itt_out;
 }
 
-static inline enum ps2_os_error_code send_command_to_ps2_controller(enum PS2_CommandByte command) {
-	enum ps2_os_error_code err = wait_till_ready_for_more_input();
+static inline enum ps2_controller_error_code send_command_to_ps2_controller(enum PS2_CommandByte command) {
+	enum ps2_controller_error_code err = wait_till_ready_for_more_input();
 	if (err) {
 		return err;
 	}
@@ -155,7 +155,7 @@ struct PS2_Tagged_Reponse recieve_generic_response(enum PS2_CommandByte command)
 	assert(response_type != PS2_RT_not_a_command, "Asking a response to an Invalid Command!");
 	assert(response_type != PS2_RT_none, "Invalid a response to a command without it");
 
-	uint8_t raw_response = recieve_raw_response();
+	uint8_t raw_response = ps2_recieve_raw_response();
 	struct PS2_Tagged_Reponse ret;
 	ret.type = response_type;
 
@@ -189,7 +189,7 @@ struct ___ps2_typeless_return recieve_generic_verified_response(enum PS2_Respons
 	assert(response_type != PS2_RT_none, "Invalid a response to a command without it");
 	struct ___ps2_typeless_return ret;
 
-	uint8_t raw_response = recieve_raw_response();
+	uint8_t raw_response = ps2_recieve_raw_response();
 	struct PS2_Tagged_Reponse tagged_response;
 	tagged_response.type = response_type;
 
@@ -226,7 +226,7 @@ struct ___ps2_typeless_return recieve_generic_verified_response(enum PS2_Respons
 	case PS2_RT_controller_configuration_byte:
 		union ps2_configuration_byte_uts response_cb = {.raw = raw_response};
 		tagged_response.value.g_configuration_byte = response_cb;
-		enum ps2_os_error_code valid_err = PS2_verify_configuration_byte_response(response_cb);
+		enum ps2_controller_error_code valid_err = PS2_verify_configuration_byte_response(response_cb);
 		if (valid_err) {
 			ret.tagged_response = tagged_response;
 			ret.err = valid_err;
@@ -269,7 +269,7 @@ struct ___ps2_typeless_return send_command_and_recieve_response(enum PS2_Command
 	assert(response_type != PS2_RT_not_a_command, "Sending an invalid command");
 	ret.tagged_response.type = response_type;
 
-	enum ps2_os_error_code err = send_command_to_ps2_controller(command);
+	enum ps2_controller_error_code err = send_command_to_ps2_controller(command);
 	if (err) {
 		ret.err = err;
 		return ret;
@@ -296,7 +296,7 @@ struct ___ps2_typeless_return send_command_and_recieve_response(enum PS2_Command
 // These are really concrete wrapper, used as atomic functions.
 
 // None response
-static inline enum ps2_os_error_code
+static inline enum ps2_controller_error_code
 send_command_none_response(enum PS2_CommandByte command) {
 	return send_command_to_ps2_controller(command);
 }
@@ -305,7 +305,7 @@ send_command_none_response(enum PS2_CommandByte command) {
 ps2_verified_response_unknown_t send_command_unknown_response(enum PS2_CommandByte command) {
 	ps2_verified_response_unknown_t ret;
 
-	enum ps2_os_error_code err = send_command_to_ps2_controller(command);
+	enum ps2_controller_error_code err = send_command_to_ps2_controller(command);
 	if (err) {
 		ret.err = err;
 		return ret;
@@ -317,7 +317,7 @@ ps2_verified_response_unknown_t send_command_unknown_response(enum PS2_CommandBy
 		return ret;
 	}
 
-	uint8_t raw_response = recieve_raw_response();
+	uint8_t raw_response = ps2_recieve_raw_response();
 	ret.response = raw_response;
 	return ret;
 }
@@ -327,7 +327,7 @@ static inline ps2_verified_response_configuration_byte_t
 send_command_configuration_byte_response(enum PS2_CommandByte command) {
 	ps2_verified_response_configuration_byte_t ret;
 
-	enum ps2_os_error_code err = send_command_to_ps2_controller(command);
+	enum ps2_controller_error_code err = send_command_to_ps2_controller(command);
 	if (err) {
 		ret.err = err;
 		return ret;
@@ -339,9 +339,9 @@ send_command_configuration_byte_response(enum PS2_CommandByte command) {
 		return ret;
 	}
 
-	uint8_t raw_response = recieve_raw_response();
+	uint8_t raw_response = ps2_recieve_raw_response();
 	ret.response.raw = raw_response;
-	enum ps2_os_error_code valid_err = PS2_verify_configuration_byte_response(ret.response);
+	enum ps2_controller_error_code valid_err = PS2_verify_configuration_byte_response(ret.response);
 	if (valid_err) {
 		ret.err = valid_err;
 		return ret;
@@ -355,7 +355,7 @@ send_command_configuration_byte_response(enum PS2_CommandByte command) {
 ps2_verified_response_test_port_t send_command_test_port_response(enum PS2_CommandByte command) {
 	ps2_verified_response_test_port_t ret;
 
-	enum ps2_os_error_code err = send_command_to_ps2_controller(command);
+	enum ps2_controller_error_code err = send_command_to_ps2_controller(command);
 	if (err) {
 		ret.err = err;
 		return ret;
@@ -367,7 +367,7 @@ ps2_verified_response_test_port_t send_command_test_port_response(enum PS2_Comma
 		return ret;
 	}
 
-	uint8_t raw_response = recieve_raw_response();
+	uint8_t raw_response = ps2_recieve_raw_response();
 	ret.response = raw_response;
 	bool valid = PS2_verify_test_port_response(ret.response);
 	if (!valid) {
@@ -384,7 +384,7 @@ static inline ps2_verified_response_test_controller_t
 send_command_test_controller_response(enum PS2_CommandByte command) {
 	ps2_verified_response_test_controller_t ret;
 
-	enum ps2_os_error_code err = send_command_to_ps2_controller(command);
+	enum ps2_controller_error_code err = send_command_to_ps2_controller(command);
 	if (err) {
 		ret.err = err;
 		return ret;
@@ -396,7 +396,7 @@ send_command_test_controller_response(enum PS2_CommandByte command) {
 		return ret;
 	}
 
-	uint8_t raw_response = recieve_raw_response();
+	uint8_t raw_response = ps2_recieve_raw_response();
 	ret.response = raw_response;
 	bool valid = PS2_verify_test_controller_response(ret.response);
 	if (!valid) {
@@ -413,7 +413,7 @@ static inline ps2_verified_response_controller_output_port_t
 send_command_test_controller_output_port_response(enum PS2_CommandByte command) {
 	ps2_verified_response_controller_output_port_t ret;
 
-	enum ps2_os_error_code err = send_command_to_ps2_controller(command);
+	enum ps2_controller_error_code err = send_command_to_ps2_controller(command);
 	if (err) {
 		ret.err = err;
 		return ret;
@@ -425,7 +425,7 @@ send_command_test_controller_output_port_response(enum PS2_CommandByte command) 
 		return ret;
 	}
 
-	uint8_t raw_response = recieve_raw_response();
+	uint8_t raw_response = ps2_recieve_raw_response();
 	ret.response.raw = raw_response;
 	bool valid = PS2_verify_controller_output_port_response(ret.response.bits);
 	if (!valid) {
@@ -468,15 +468,15 @@ ps2_verified_response_configuration_byte_t ps2_get_configuration_byte() {
 }
 
 //=======
-static inline enum ps2_os_error_code write_next_to_byte_0_of_interal_ram() {
+static inline enum ps2_controller_error_code write_next_to_byte_0_of_interal_ram() {
 	return send_command_none_response(PS2_CB_write_next_to_byte_0);
 }
 
-[[maybe_unused]] static inline enum ps2_os_error_code
+[[maybe_unused]] static inline enum ps2_controller_error_code
 write_next_to_byte_n_of_interal_ram(uint8_t byte_index) {
 	assert(byte_index < (PS2_CB_write_next_to_byte_N_end - PS2_CB_write_next_to_byte_0), "must be in allowed byte range!\n");
 
-	enum ps2_os_error_code err;
+	enum ps2_controller_error_code err;
 	enum PS2_CommandByte command_byte = PS2_CB_write_next_to_byte_0 + byte_index;
 	err = send_command_none_response(command_byte);
 
@@ -489,10 +489,10 @@ write_next_to_byte_n_of_interal_ram(uint8_t byte_index) {
 }
 
 // Should the public api allow these functions? If so, maybe use verifed response none, rather then error code?
-enum ps2_os_error_code ps2_set_configuration_byte(PS2_ConfigurationByte_t config_byte) {
+enum ps2_controller_error_code ps2_set_configuration_byte(PS2_ConfigurationByte_t config_byte) {
 	union ps2_configuration_byte_uts config_byte_uts = {.bits = config_byte};
 
-	enum ps2_os_error_code err = write_next_to_byte_0_of_interal_ram();
+	enum ps2_controller_error_code err = write_next_to_byte_0_of_interal_ram();
 	if (err) {
 		return err;
 	}
@@ -506,25 +506,25 @@ enum ps2_os_error_code ps2_set_configuration_byte(PS2_ConfigurationByte_t config
 }
 //==========
 
-enum ps2_os_error_code ps2_disable_first_ps2_port() {
+enum ps2_controller_error_code ps2_disable_first_ps2_port() {
 	return send_command_to_ps2_controller(PS2_CB_disable_first_ps2_port);
 }
 
 /* Only if 2 PS/2 port are supported. Do not use this function for the test. Use the configuration byte
 Set a configuration byte with it enabled, and read it back. check if it's enabled.
 */
-enum ps2_os_error_code ps2_disable_second_ps2_port() {
+enum ps2_controller_error_code ps2_disable_second_ps2_port() {
 	return send_command_to_ps2_controller(PS2_CB_disable_second_ps2_port);
 }
 
-enum ps2_os_error_code ps2_enable_first_ps2_port() {
+enum ps2_controller_error_code ps2_enable_first_ps2_port() {
 	return send_command_to_ps2_controller(PS2_CB_enable_first_ps2_port);
 }
 
 /* Only if 2 PS/2 port are supported. Do not use this function for the test. Use the configuration byte
 Set a configuration byte with it enabled, and read it back. check if it's enabled.
 */
-enum ps2_os_error_code ps2_enable_second_ps2_port() {
+enum ps2_controller_error_code ps2_enable_second_ps2_port() {
 	return send_command_to_ps2_controller(PS2_CB_enable_second_ps2_port);
 }
 // ===============
@@ -551,8 +551,8 @@ struct ps2_verified_response_test_controller ps2_perform_controller_self_test() 
 
 // This function is only used by manifucaturer to check if the things work.
 // It shouldn't even be implemented or used
-enum ps2_os_error_code ps2_copy_input_port_to_status() {
-	enum ps2_os_error_code err;
+enum ps2_controller_error_code ps2_copy_input_port_to_status() {
+	enum ps2_controller_error_code err;
 	err = send_command_none_response(PS2_CB_copy_high_input_to_status);
 	if (err) {
 		kprintf("Failed during high copy\n");
@@ -574,14 +574,14 @@ struct ps2_verified_response_controller_output_port ps2_read_controller_output_p
 	return send_command_test_controller_output_port_response(PS2_CB_read_controller_output_port);
 }
 // ===============
-static inline enum ps2_os_error_code
+static inline enum ps2_controller_error_code
 ps2_write_next_byte_to_controller_output_port() {
 	return send_command_none_response(PS2_CB_write_next_byte_to_controller_output_port);
 }
 
-enum ps2_os_error_code ps2_set_controller_output_port(PS2_ControllerOutputPort_t output_port) {
+enum ps2_controller_error_code ps2_set_controller_output_port(PS2_ControllerOutputPort_t output_port) {
 	union ps2_controller_output_port_uts output_port_uts = {.bits = output_port};
-	enum ps2_os_error_code err;
+	enum ps2_controller_error_code err;
 	err = ps2_write_next_byte_to_controller_output_port();
 	if (err) {
 		return err;
@@ -602,15 +602,15 @@ enum ps2_os_error_code ps2_set_controller_output_port(PS2_ControllerOutputPort_t
 
 // ===============
 // Fake ps2 keyboard and mouse (port 1 and port 2) outputs.
-enum ps2_os_error_code write_next_byte_to_first_ps2_output_port() {
+enum ps2_controller_error_code write_next_byte_to_first_ps2_output_port() {
 	return send_command_none_response(PS2_CB_write_next_byte_to_first_ps2_output_buffer);
 }
 
-enum ps2_os_error_code write_next_byte_to_second_ps2_output_port() {
+enum ps2_controller_error_code write_next_byte_to_second_ps2_output_port() {
 	return send_command_none_response(PS2_CB_write_next_byte_to_second_ps2_output_buffer);
 }
-enum ps2_os_error_code fake_ps2_keyboard_byte(uint8_t byte) {
-	enum ps2_os_error_code err;
+enum ps2_controller_error_code fake_ps2_keyboard_byte(uint8_t byte) {
+	enum ps2_controller_error_code err;
 	err = write_next_byte_to_first_ps2_output_port();
 	if (err) {
 		return err;
@@ -619,8 +619,8 @@ enum ps2_os_error_code fake_ps2_keyboard_byte(uint8_t byte) {
 	__outb(PS2_DATA_PORT_RW, byte);
 	return PS2_ERR_none;
 }
-enum ps2_os_error_code fake_ps2_mouse_byte(uint8_t byte) {
-	enum ps2_os_error_code err;
+enum ps2_controller_error_code fake_ps2_mouse_byte(uint8_t byte) {
+	enum ps2_controller_error_code err;
 	err = write_next_byte_to_second_ps2_output_port();
 	if (err) {
 		return err;
@@ -631,10 +631,9 @@ enum ps2_os_error_code fake_ps2_mouse_byte(uint8_t byte) {
 }
 
 // ===============
-enum ps2_os_error_code
-send_data_to_first_ps2_port(uint8_t data) {
+enum ps2_controller_error_code send_command_to_first_ps2_port(uint8_t data) {
 
-	enum ps2_os_error_code err = wait_till_ready_for_more_input();
+	enum ps2_controller_error_code err = wait_till_ready_for_more_input();
 	if (err) {
 		return err;
 	}
@@ -644,9 +643,9 @@ send_data_to_first_ps2_port(uint8_t data) {
 	return PS2_ERR_none;
 }
 
-enum ps2_os_error_code send_data_to_second_ps2_port(uint8_t data) {
+enum ps2_controller_error_code send_command_to_second_ps2_port(uint8_t data) {
 
-	enum ps2_os_error_code err = wait_till_ready_for_more_input();
+	enum ps2_controller_error_code err = wait_till_ready_for_more_input();
 	if (err) {
 		return err;
 	}
@@ -662,13 +661,13 @@ enum ps2_os_error_code send_data_to_second_ps2_port(uint8_t data) {
 }
 
 // This is used to send data to the first or second ps2 device. Port 1 = Keyboard, Port 2 = mouse
-enum ps2_os_error_code send_data_to_ps2_port(enum PS2_PortNumber port_number, uint8_t data) {
+enum ps2_controller_error_code send_command_or_data_to_ps2_port(enum PS2_PortNumber port_number, uint8_t data) {
 
 	switch (port_number) {
 	case 1:
-		return send_data_to_first_ps2_port(data);
+		return send_command_to_first_ps2_port(data);
 	case 2:
-		return send_data_to_second_ps2_port(data);
+		return send_command_to_second_ps2_port(data);
 	default:
 		return PS2_ERR_invalid_port_number;
 	}
@@ -678,9 +677,9 @@ enum ps2_os_error_code send_data_to_ps2_port(enum PS2_PortNumber port_number, ui
 
 struct ps2_device_type_uts reset_port_and_get_device_type(enum PS2_PortNumber portnumber) {
 	struct ps2_device_type_uts ret;
-	enum ps2_os_error_code err;
+	enum ps2_controller_error_code err;
 
-	err = send_data_to_ps2_port(portnumber, PS2_CB_reset_device);
+	err = send_command_or_data_to_ps2_port(portnumber, PS2_CB_reset_device);
 	if (err) {
 		ret.err = err;
 		return ret;
@@ -690,7 +689,7 @@ struct ps2_device_type_uts reset_port_and_get_device_type(enum PS2_PortNumber po
 		ret.err = err;
 		return ret;
 	}
-	uint8_t rep1 = recieve_raw_response();
+	uint8_t rep1 = ps2_recieve_raw_response();
 	if (rep1 != DEVICE_COMMAND_ACKNOLEDGED) {
 		ret.err = PS2_ERR_device_command_failed_to_acknowledge;
 		return ret;
@@ -701,7 +700,7 @@ struct ps2_device_type_uts reset_port_and_get_device_type(enum PS2_PortNumber po
 		ret.err = err;
 		return ret;
 	}
-	uint8_t rep2 = recieve_raw_response();
+	uint8_t rep2 = ps2_recieve_raw_response();
 	if (rep2 != DEVICE_COMMAND_SELF_TEST_PASSED) {
 		ret.err = PS2_ERR_device_command_failed_self_test;
 		return ret;
@@ -721,7 +720,7 @@ struct ps2_device_type_uts reset_port_and_get_device_type(enum PS2_PortNumber po
 		return ret;
 	}
 
-	uint8_t rep3 = recieve_raw_response();
+	uint8_t rep3 = ps2_recieve_raw_response();
 	const uint8_t len4_prefix = 0xAB;
 	if (rep3 != len4_prefix) {
 		enum len3_device_byte {
@@ -756,7 +755,7 @@ struct ps2_device_type_uts reset_port_and_get_device_type(enum PS2_PortNumber po
 		ret.err = err;
 		return ret;
 	}
-	uint8_t rep4 = recieve_raw_response();
+	uint8_t rep4 = ps2_recieve_raw_response();
 	enum len4_device_byte {
 		MF2_KEYBOARD_1 = 0x83,
 		MF2_KEYBOARD_2 = 0xC1,
@@ -873,7 +872,7 @@ struct ps2_initialize_device_state setup_ps2_controller() {
 	}
 
 	// Step 3:
-	enum ps2_os_error_code err;
+	enum ps2_controller_error_code err;
 	err = ps2_disable_first_ps2_port();
 	if (err) {
 		kprintf("\n[PANIC] Error in Step 3 of initializing the PS2 Controller. Could not disable first ps2 port.\n");
@@ -1187,7 +1186,7 @@ struct ps2_initialize_device_state setup_ps2_controller() {
 	ps2_disable_second_ps2_port();
 
 	// Step 4:
-	[[gnu::unused]] uint8_t discard = recieve_raw_response();
+	[[gnu::unused]] uint8_t discard = ps2_recieve_raw_response();
 
 	// Step 5
 	ps2_verified_response_configuration_byte_t vr_cb = ps2_get_configuration_byte();
@@ -1235,26 +1234,26 @@ struct ps2_initialize_device_state setup_ps2_controller() {
 	ps2_set_configuration_byte(config_byte);
 
 	// Step 10: Reset devices:
-	send_data_to_first_ps2_port(PS2_CB_reset_device);
+	send_command_to_first_ps2_port(PS2_CB_reset_device);
 	wait_till_ready_for_response();
-	uint8_t rep1k = recieve_raw_response();
+	uint8_t rep1k = ps2_recieve_raw_response();
 	wait_till_ready_for_response();
-	uint8_t rep2k = recieve_raw_response();
-	enum ps2_os_error_code err = wait_till_ready_for_response();
+	uint8_t rep2k = ps2_recieve_raw_response();
+	enum ps2_controller_error_code err = wait_till_ready_for_response();
 	if (!err) {
-		uint8_t rep3k = recieve_raw_response();
+		uint8_t rep3k = ps2_recieve_raw_response();
 		kprintf("The response from keyboard: %h, %h, %h\n", rep1k, rep2k, rep3k);
 	}
 	kprintf("The response from keyboard: %h, %h, None\n", rep1k, rep2k);
 	assert(rep1k == 0xfa, "start of reset successful command");
 	assert(rep2k == 0xaa, "end of reset successful command");
 
-	send_data_to_second_ps2_port(PS2_CB_reset_device);
-	uint8_t rep1m = recieve_raw_response();
+	send_command_to_second_ps2_port(PS2_CB_reset_device);
+	uint8_t rep1m = ps2_recieve_raw_response();
 	wait_till_ready_for_response();
-	uint8_t rep2m = recieve_raw_response();
+	uint8_t rep2m = ps2_recieve_raw_response();
 	wait_till_ready_for_response();
-	uint8_t rep3m = recieve_raw_response();
+	uint8_t rep3m = ps2_recieve_raw_response();
 	kprintf("The response from mouse   : %h, %h, %h\n", rep1m, rep2m, rep3m);
 	assert(rep1m == 0xfa, "start of reset successful command");
 	assert(rep2m == 0xaa, "end of reset successful command");

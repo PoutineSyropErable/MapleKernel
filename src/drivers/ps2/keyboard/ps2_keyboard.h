@@ -1,4 +1,6 @@
 #pragma once
+#include "ps2_controller.h"
+#include "ps2_keyboard_public.h"
 #include "stdio.h"
 #include <stddef.h>
 #include <stdint.h>
@@ -39,21 +41,18 @@ typedef struct [[gnu::packed]] {
 	uint8_t reserved : 5;
 } kcb_led_state_t;
 
-_Static_assert(sizeof(kcb_led_state_t) == 1, "kcb_led_sate_t must be of size: 1 byte");
+union kcb_led_state_uts {
+	kcb_led_state_t value;
+	uint8_t raw;
+};
 
-typedef enum ScanCodeSet {
-	SCS_get_current = 0,
-	SCS_set_scan_code_set_1 = 1,
-	SCS_set_scan_code_set_2 = 2,
-	SCS_set_scan_code_set_3 = 3,
-} kcb_scan_code_set_t;
-// don't need a uint equivalent, because this doesn't go into a packed struct with bit fields
+_Static_assert(sizeof(kcb_led_state_t) == 1, "kcb_led_sate_t must be of size: 1 byte");
 
 typedef enum KeyRepeatDelay {
 	KRD_250ms = 0b00,
 	KRD_500ms = 0b01,
 	KRD_750ms = 0b11,
-	KRB_1000ms = 0b11
+	KRD_1000ms = 0b11
 } KeyRepeatDelay_t;
 typedef uint8_t key_repeat_delay_t;
 
@@ -70,12 +69,35 @@ typedef enum KeyboardResponseByte {
 	KRB_key_dectection_error = 0x00,  // or Internal Buffer Overrun
 	KRB_self_test_passed = 0xAA,      //
 	KRB_echo_response = 0xEE,         //
-	KRB_command_acknowledge = 0xFA,   // (ACK)
+	KRB_command_acknowledged = 0xFA,  // (ACK)
 	KRB_self_test_failed = 0xFC,      // Ack And Resend are very popular responses
 	KRB_self_test_failed2 = 0xFD,     //
 	KRB_resend = 0xFE,                // (Resend)
 	KRB_key_dectection_error2 = 0xFF, // or Internal Buffer Overrun
+
+	// Maybe this should be it's own type?
+	KRB_scan_code_set1 = 1,
+	KRB_scan_code_set2 = 2,
+	KRB_scan_code_set3 = 3,
+	KRB_scan_code_set1_tl = 0x43,
+	KRB_scan_code_set2_tl = 0x41,
+	KRB_scan_code_set3_tl = 0x3F,
 } KeyboardResponseByte_t;
 typedef uint8_t keyboard_response_byte_t;
 
 /* ===================================================*/
+
+// enum ps2_keyboard_internals_error_code {
+// 	PS2_KBI_ERR_none = 0,
+// };
+
+struct ps2_keyboard_verified_response {
+	enum ps2_keyboard_error_code err;
+	enum KeyboardResponseByte response;
+};
+
+struct ps2_keyboard_type_verified {
+	enum ps2_keyboard_error_code err;
+	enum ps2_device_type type;
+	enum ps2_device_super_type mouse_or_keyboard;
+};

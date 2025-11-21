@@ -17,6 +17,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "ps2_keyboard_public.h"
+#include "ps2_mouse_public.h"
+
 GDT_ROOT* GDT16_ROOT = &GDT16_DESCRIPTOR;
 
 void gdt_analize(GDT_ENTRY* gdt, size_t index) {
@@ -320,6 +323,8 @@ one_keyboard_one_mouse:
 	args.type = ITT_one_keyboard_one_mouse;
 	args.value.info_keyboard_and_mouse = args_value;
 
+	set_single_keyboard_port(keyboard_port);
+	set_single_mouse_port(mouse_port);
 	idt_init(args);
 	PIC_remap(PIC_1_OFFSET, PIC_2_OFFSET);
 	initialize_irqs();
@@ -347,6 +352,7 @@ one_port_only:
 
 		args_keyboard.type = ITT_one_keyboard;
 		args_keyboard.value.info_1_keyboard = args_keyboard_value;
+		set_single_keyboard_port(1);
 		idt_init(args_keyboard);
 		PIC_remap(PIC_1_OFFSET, PIC_2_OFFSET);
 		initialize_irqs();
@@ -361,6 +367,7 @@ one_port_only:
 
 		args_mouse.type = ITT_one_mouse;
 		args_mouse.value.info_1_mouse = args_mouse_value;
+		set_single_mouse_port(1);
 		idt_init(args_mouse);
 		PIC_remap(PIC_1_OFFSET, PIC_2_OFFSET);
 		initialize_irqs();
@@ -394,6 +401,7 @@ two_keyboard:
 
 	args_two_keyboard.type = ITT_two_keyboard;
 	args_two_keyboard.value.info_2_keyboard = args_two_keyboard_value;
+	set_dual_keyboard_port();
 	idt_init(args_two_keyboard);
 	PIC_remap(PIC_1_OFFSET, PIC_2_OFFSET);
 	initialize_irqs();
@@ -418,6 +426,7 @@ two_mouse:
 
 	args_two_mouse.type = ITT_two_keyboard;
 	args_two_mouse.value.info_2_mouse = args_two_mouse_value;
+	set_dual_mouse_port();
 	idt_init(args_two_mouse);
 	PIC_remap(PIC_1_OFFSET, PIC_2_OFFSET);
 	initialize_irqs();

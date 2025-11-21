@@ -3,6 +3,8 @@
 #include "idt_ps2.h"
 #include "more_types.h"
 #include "pic.h"
+#include "ps2_keyboard_public.h"
+#include "ps2_mouse_public.h"
 
 void idt_set_descriptor(uint8_t vector, void* isr, enum gate_type32_t gate_type, uint8_t dpl, bool present);
 

@@ -1,11 +1,8 @@
 #pragma once
 #include "assert.h"
 #include "intrinsics.h"
+#include "ps2.h"
 #include "ps2_controller.h"
-
-#ifndef DRIVER_PS2_INTERNALS
-#define DRIVER_PS2_INTERNALS
-#endif
 
 // Compile-time check for little-endian
 #if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
@@ -252,7 +249,7 @@ I'm the one who created these, so they will never be
 send to hardware, so they can be signed and ints
 TODO:? Maybe use a warning type? but that seems overkill
 */
-enum ps2_os_error_code;
+enum ps2_controller_error_code;
 
 enum PS2_ResponseType {
 	PS2_RT_not_a_command = 0,
@@ -265,31 +262,31 @@ enum PS2_ResponseType {
 };
 
 // When none, just return an err
-typedef enum ps2_os_error_code ps2_verified_response_none_t;
+typedef enum ps2_controller_error_code ps2_verified_response_none_t;
 
 typedef struct ps2_verified_response_unknown {
 	uint8_t response;
-	enum ps2_os_error_code err;
+	enum ps2_controller_error_code err;
 } ps2_verified_response_unknown_t;
 
 typedef struct ps2_verified_response_configuration_byte {
 	union ps2_configuration_byte_uts response;
-	enum ps2_os_error_code err;
+	enum ps2_controller_error_code err;
 } ps2_verified_response_configuration_byte_t;
 
 typedef struct ps2_verified_response_test_port {
 	enum PS2_TestPortResponse response;
-	enum ps2_os_error_code err;
+	enum ps2_controller_error_code err;
 } ps2_verified_response_test_port_t;
 
 typedef struct ps2_verified_response_test_controller {
 	enum PS2_TestControllerResponse response;
-	enum ps2_os_error_code err;
+	enum ps2_controller_error_code err;
 } ps2_verified_response_test_controller_t;
 
 typedef struct ps2_verified_response_controller_output_port {
 	union ps2_controller_output_port_uts response;
-	enum ps2_os_error_code err;
+	enum ps2_controller_error_code err;
 } ps2_verified_response_controller_output_port_t;
 
 /*
@@ -328,7 +325,7 @@ The Wrapped both sends the commands, and gets the answer back, which returns bot
 */
 struct ___ps2_typeless_return {
 	struct PS2_Tagged_Reponse tagged_response;
-	enum ps2_os_error_code err;
+	enum ps2_controller_error_code err;
 };
 
 /* ================= Verify's and _to_string (Todo: Move the verify to the C file ================= */
@@ -341,7 +338,7 @@ static inline bool PS2_verify_response_type(enum PS2_ResponseType response) {
 	return false;
 }
 
-static inline const char* PS2_OS_Error_to_string(enum ps2_os_error_code err) {
+static inline const char* PS2_OS_Error_to_string(enum ps2_controller_error_code err) {
 	switch (err) {
 	case PS2_ERR_none:
 		return "PS2_ERR_NONE";
@@ -473,40 +470,19 @@ __attribute__((optimize("O3"))) static inline PS2_StatusRegister_t read_ps2_stat
 // enum ps2_os_error_code send_data_to_ps2_port(enum PS2_PortNumber port_number, uint8_t data);
 // static inline enum ps2_os_error_code send_command_to_ps2_controller(enum PS2_CommandByte command);
 
-enum ps2_os_error_code fake_ps2_keyboard_byte(uint8_t byte);
-enum ps2_os_error_code fake_ps2_mouse_byte(uint8_t byte);
+enum ps2_controller_error_code fake_ps2_keyboard_byte(uint8_t byte);
+enum ps2_controller_error_code fake_ps2_mouse_byte(uint8_t byte);
 void ps2_detect_devices_type();
-enum ps2_os_error_code send_data_to_first_ps2_port(uint8_t data);
-enum ps2_os_error_code send_data_to_second_ps2_port(uint8_t data);
+enum ps2_controller_error_code send_command_to_first_ps2_port(uint8_t data);
+enum ps2_controller_error_code send_command_to_second_ps2_port(uint8_t data);
 
-enum ps2_os_error_code wait_till_ready_for_more_input();
-enum ps2_os_error_code wait_till_ready_for_response();
+enum ps2_controller_error_code wait_till_ready_for_more_input();
+enum ps2_controller_error_code wait_till_ready_for_response();
 
 // This function assume PS2 Controller is ready
-static inline uint8_t recieve_raw_response() {
+static inline uint8_t ps2_recieve_raw_response() {
 	return __inb(PS2_DATA_PORT_RW);
 }
-
-enum ps2_device_type {
-	PS2_DT_ancient_at_keyboard,
-	PS2_DT_standard_mouse,
-	PS2_DT_mouse_with_scroll_wheel,
-	PS2_DT_mouse_with_5_button, // regular gaming mouse, left, right, scroll, mouse4, mouse5
-	PS2_DT_mf2_keyboard_1,      // 0xAB, 0x83
-	PS2_DT_mf2_keyboard_2,      // 0xAB, 0xC1
-	PS2_DT_short_keyboard,
-	PS2_DT_122_key_host_connected,
-	PS2_DT_122_key,
-	PS2_DT_japanese_g_keyboard,
-	PS2_DT_japanese_p_keyboard,
-	PS2_DT_japanese_a_keyboard,
-	PS2_DT_ncd_sun_layout_keyboard,
-};
-enum ps2_device_super_type {
-	PS2_DST_unknown = 0,
-	PS2_DST_keyboard = 1,
-	PS2_DST_mouse = 2,
-};
 
 enum ps2_device_super_type get_device_super_type(enum ps2_device_type dt);
 
@@ -526,14 +502,8 @@ enum ps2_initialize_device_errors {
 	PS2_ID_ERR_two_mouse,
 };
 
-struct ps2_device_type_uts {
-	enum ps2_os_error_code err;
-	enum ps2_device_type type;
-	enum ps2_device_super_type mouse_or_keyboard;
-};
-
 struct ps2_initialize_device_state {
-	enum ps2_os_error_code internal_err;
+	enum ps2_controller_error_code internal_err;
 	enum ps2_initialize_device_errors ps2_state_err;
 	enum ps2_device_type port_one_device_type;
 	enum ps2_device_type port_two_device_type;
@@ -541,6 +511,8 @@ struct ps2_initialize_device_state {
 
 struct ps2_initialize_device_state setup_ps2_controller();
 struct ps2_initialize_device_state setup_ps2_controller_no_error_check();
+
+enum ps2_controller_error_code send_command_or_data_to_ps2_port(enum PS2_PortNumber port_number, uint8_t data);
 
 /*============= TESTS ============ */
 void test_command_array(void);
