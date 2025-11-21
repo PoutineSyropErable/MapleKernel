@@ -1,5 +1,5 @@
 #pragma once
-#include "ps2_controller.h"
+#include "ps2_controller_public.h"
 #include "ps2_keyboard_public.h"
 #include "stdio.h"
 #include <stddef.h>

@@ -2,7 +2,7 @@
 #include "assert.h"
 #include "intrinsics.h"
 #include "ps2.h"
-#include "ps2_controller.h"
+#include "ps2_controller_public.h"
 
 // Compile-time check for little-endian
 #if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
