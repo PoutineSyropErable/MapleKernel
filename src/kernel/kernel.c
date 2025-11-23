@@ -467,7 +467,8 @@ void test_ps2_keyboard_commands() {
 
 	enum ps2_keyboard_error_code k_err = set_scan_code_set(3);
 	if (k_err) {
-		kprintf("Error setting the scan code set: %d, |%s|\n", k_err, ps2_keyboard_error_to_string(k_err));
+		kprintf("Error setting the scan code set %d: Error %d, Error Name: |%s|\n", 3, k_err, ps2_keyboard_error_to_string(k_err));
+		abort();
 	}
 
 	scan_code_set = get_scan_code_set();
@@ -509,7 +510,7 @@ void kernel_main(void) {
 		IRQ_clear_mask(PS2_PORT2_BRIDGE_IRQ);
 		IRQ_clear_mask(PS2_PORT2_IRQ);
 	}
-	tss();
+	// tss();
 
 	// __int_O0(33);
 	test_ps2_keyboard_commands();
