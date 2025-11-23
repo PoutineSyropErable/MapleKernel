@@ -283,12 +283,12 @@
       "-I./acpi",
       "-I./drivers/usb/controller",
       "-o",
-      "build/ps2.o",
-      "./drivers/ps2/controller/ps2.c"
+      "build/ps2_controller.o",
+      "./drivers/ps2/controller/ps2_controller.c"
     ],
     "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/drivers/ps2/controller/ps2.c",
-    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/ps2.o"
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/drivers/ps2/controller/ps2_controller.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/ps2_controller.o"
   },
   {
     "arguments": [

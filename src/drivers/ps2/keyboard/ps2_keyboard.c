@@ -368,3 +368,37 @@ void test_scancode_set(uint8_t set_value) {
 		kprintf("Scan code set verification failed!\n");
 	}
 }
+
+void tss(void) {
+	// Set scan code set 1
+	kprintf("--------------");
+	for (int i = 1; i <= 3; i++) {
+		if (true) {
+			enum ps2_keyboard_error_code k_err = set_scan_code_set(i);
+			if (k_err) {
+				kprintf("Error setting the scan code set: %d, |%s|\n", k_err, ps2_keyboard_error_to_string(k_err));
+			}
+		} else {
+			if (!ps2_set_scancode_set(i)) {
+				kprintf("Failed to set scan code set 1\n");
+				return;
+			}
+		}
+
+		struct ps2_keyboard_verified_scan_code_set scan_code_set = get_scan_code_set();
+		if (scan_code_set.err) {
+			kprintf("Error getting the scan code set: %d, |%s|\n", scan_code_set.err, ps2_keyboard_error_to_string(scan_code_set.err));
+		}
+
+		int current_set = ps2_get_scancode_set();
+		if (current_set < 0) {
+			kprintf("Failed to read current scan code set\n");
+			return;
+		}
+
+		kprintf("The current scan code set: |%b|, should be %d\n", scan_code_set.response, i);
+		kprintf("[QUICK] Current scan code set: %d\n", current_set);
+		kprintf("\n");
+	}
+	kprintf("--------------");
+}

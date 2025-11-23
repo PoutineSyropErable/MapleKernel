@@ -31,6 +31,7 @@ keyboard_interrupt_handler_port1:
 	mov eax, 0
 	in al, PS2_DATA_PORT_RW
 
+
 	push PORT_ONE
 	push eax 
 	call keyboard_handler

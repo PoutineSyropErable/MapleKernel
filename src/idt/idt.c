@@ -64,7 +64,7 @@ void idt_init(struct idt_init_ps2_fields ps2_args) {
 	}
 
 	// TODO: Error here.
-	idt_init_ps2(ps2_args);
+	// idt_init_ps2(ps2_args);
 	kprintf("After ps2 settup\n");
 	// if there are other stuff with runtime args to init, it can go after
 

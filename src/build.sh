@@ -164,7 +164,7 @@ BUILD_OBJECTS=(
 	"$BUILD_DIR/idt.o"
 	"$BUILD_DIR/idt_ps2.o"
 	"$BUILD_DIR/pic.o"
-	"$BUILD_DIR/ps2.o"
+	"$BUILD_DIR/ps2_controller.o"
 	"$BUILD_DIR/ps2_keyboard.o"
 	"$BUILD_DIR/ps2_mouse.o"
 	"$BUILD_DIR/ps2_keyboard_handler.o"

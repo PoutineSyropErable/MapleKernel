@@ -437,6 +437,48 @@ no_port:
 	return PS2_HS_ERR_no_port;
 }
 
+void test_ps2_keyboard_commands() {
+
+	// struct ps2_verified_response_test_controller ret = ps2_perform_controller_self_test();
+	// kprintf("%d, %s\n", ret.err, PS2_OS_Error_to_string(ret.err));
+	// kprintf("%u\n", ret.response);
+
+	kprintf("\n\n============= Keyboard commands ===============\n\n");
+	enum ps2_keyboard_error_code ke_err = echo_keyboard();
+	if (ke_err) {
+		kprintf("Error sending echo command: %d, |%s|\n", ke_err, ps2_keyboard_error_to_string(ke_err));
+	} else {
+		kprintf("Echo command succeededd successfully");
+	}
+	// test_echo_quick();
+
+	// wait(5);
+	if (false) {
+		kprintf("\n\n============= Quick tests commands ===============\n\n");
+		kprintf("Current scanset: %d\n", ps2_get_scancode_set());
+		test_scancode_set(1);
+		test_scancode_set(2);
+		test_scancode_set(3);
+	}
+	// return;
+
+	kprintf("\n\n============= Scan code sets ===============\n\n");
+	struct ps2_keyboard_verified_scan_code_set scan_code_set;
+
+	enum ps2_keyboard_error_code k_err = set_scan_code_set(3);
+	if (k_err) {
+		kprintf("Error setting the scan code set: %d, |%s|\n", k_err, ps2_keyboard_error_to_string(k_err));
+	}
+
+	scan_code_set = get_scan_code_set();
+	if (scan_code_set.err) {
+		kprintf("Error getting the scan code set back: %d, |%s|\n", scan_code_set.err, ps2_keyboard_error_to_string(scan_code_set.err));
+	}
+	kprintf("The current scan code set (after changing it): %u\n", scan_code_set.response);
+}
+
+void tss(void);
+
 void kernel_main(void) {
 
 	// init_paging();
@@ -467,49 +509,10 @@ void kernel_main(void) {
 		IRQ_clear_mask(PS2_PORT2_BRIDGE_IRQ);
 		IRQ_clear_mask(PS2_PORT2_IRQ);
 	}
-	// wait(5);
-	kprintf("\n\n============= Quick tests commands ===============\n\n");
-	kprintf("Current scanset: %d\n", ps2_get_scancode_set());
-	test_scancode_set(1);
-	test_scancode_set(2);
-	test_scancode_set(3);
-	return;
-
-	// struct ps2_verified_response_test_controller ret = ps2_perform_controller_self_test();
-	// kprintf("%d, %s\n", ret.err, PS2_OS_Error_to_string(ret.err));
-	// kprintf("%u\n", ret.response);
-
-	kprintf("\n\n============= Keyboard commands ===============\n\n");
-	enum ps2_keyboard_error_code ke_err = echo_keyboard();
-	if (ke_err) {
-		kprintf("Error sending echo command: %d, |%s|\n", ke_err, ps2_keyboard_error_to_string(ke_err));
-	} else {
-		kprintf("Echo command succeededd successfully");
-	}
-	// test_echo_quick();
-
-	kprintf("\n\n============= Scan code sets ===============\n\n");
-	struct ps2_keyboard_verified_scan_code_set scan_code_set = get_scan_code_set();
-	if (scan_code_set.err) {
-		kprintf("Error getting the scan code set: %d, |%s|\n", scan_code_set.err, ps2_keyboard_error_to_string(scan_code_set.err));
-	}
-
-	kprintf("The current scan code set: |%d|\n", scan_code_set.response);
-	// enum ps2_keyboard_error_code k_err = set_scan_code_set(3);
-	// if (k_err) {
-	// 	kprintf("Error setting the scan code set: %d, |%s|\n", k_err, ps2_keyboard_error_to_string(k_err));
-	// } else {
-	// 	kprintf("No error setting the scancode set\n");
-	// }
-
-	scan_code_set = get_scan_code_set();
-	if (scan_code_set.err) {
-		kprintf("Error getting the scan code set back: %d, |%s|\n", scan_code_set.err, ps2_keyboard_error_to_string(scan_code_set.err));
-	}
-
-	kprintf("The current scan code set (after changing it): %u\n", scan_code_set.response);
+	tss();
 
 	// __int_O0(33);
+	test_ps2_keyboard_commands();
 
 	// test_command_array();
 	terminal_writestring("\n====kernel main entering loop====\n");
