@@ -11,6 +11,18 @@ The uint8_t type must always be casted to the enum once it's obtained from the s
 
 */
 
+// This macro exist to help with debugging.
+#ifdef ERR_VALUE
+#define SET_ERR_RESPONSE(ret) \
+	do {                      \
+		(ret).response = -1;  \
+	} while (0)
+#else
+#define SET_ERR_RESPONSE(ret) \
+	do {                      \
+	} while (0)
+#endif
+
 /* ===================================================*/
 
 typedef enum KeyboardCommandByte {
@@ -56,7 +68,7 @@ typedef enum KeyRepeatDelay {
 } KeyRepeatDelay_t;
 typedef uint8_t key_repeat_delay_t;
 
-typedef struct [[gnu::packed]] {
+typedef struct [[gnu::packed]] kcb_typematic_rate_and_delay {
 	uint8_t repeat_rate : 5; // 30 - repeat_rate == true_repeat_rate
 	key_repeat_delay_t delay_repeat : 2;
 	bool must_be_zero : 1;

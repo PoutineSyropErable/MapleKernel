@@ -1,32 +1,60 @@
 #pragma once
 #include "stdio.h"
 #include "vga_terminal.h"
+#include <stdarg.h>
 
 static inline __attribute__((noreturn)) void _abort(void) {
 	terminal_writestring("ABORTED\n");
 
-	// Halt loop
 	while (true) {
 		__asm__ volatile("cli; hlt");
 	}
 }
 
-static inline __attribute__((noreturn)) void _abort_msg(const char* message, const char* file, const char* function_name, int line) {
-	kprintf("%s\nFile: %s, Function: %s, Line: %d\n", message, file, function_name, line);
+static inline __attribute__((noreturn)) void _abort_msg_fmt(const char* file, const char* func, int line,
+                                                            const char* fmt, va_list args) {
+	kprintf("Assertion Failed\n");
+
+	// Print user message (formatted)
+	vkprintf(fmt, args); // <-- You MUST provide kvprintf(fmt, va_list)
+	kprintf("\n");
+
+	// Print location
+	kprintf("File: %s, Function: %s, Line: %d\n", file, func, line);
 
 	_abort();
 }
 
-// The assert handler function
-static inline void assert_handler(bool condition, const char* message, const char* file, const char* function_name, int line) {
-	if (!condition) {
-		kprintf("Assertion Failed\n");
-		_abort_msg(message, file, function_name, line);
+static inline __attribute__((noreturn)) void abort_msg_fmt(const char* fmt, ...) {
+	va_list args;
+	va_start(args, fmt);
+
+	_abort_msg_fmt(__FILE__, __func__, __LINE__, fmt, args);
+
+	va_end(args);
+}
+
+static inline void assert_handler_fmt(bool cond,
+                                      const char* file,
+                                      const char* func,
+                                      int line,
+                                      const char* fmt, ...) {
+	if (!cond) {
+		va_list args;
+		va_start(args, fmt);
+
+		_abort_msg_fmt(file, func, line, fmt, args);
+
+		va_end(args);
 	}
 }
 
-// The macro: automatically passes line number and file
-#define assert(cond, msg) assert_handler((cond), (msg), __FILE__, __func__, __LINE__)
+// PUBLIC MACROS — user interface
+#define assert(cond, fmt, ...) \
+	assert_handler_fmt((cond), __FILE__, __func__, __LINE__, (fmt), ##__VA_ARGS__)
 
-#define abort_msg(msg) _abort_msg(msg, __FILE__, __func__, __LINE__)
-#define abort() abort_msg("abort called")
+#define abort_msg(fmt, ...) \
+	abort_msg_fmt((fmt), ##__VA_ARGS__)
+
+#define abort() \
+	abort_msg("abort() called")

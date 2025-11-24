@@ -115,12 +115,14 @@ static struct ps2_keyboard_verified_response send_data_to_ps2_keyboard(uint8_t d
 		c_err = _send_command_or_data_to_ps2_keyboard(data);
 		if (c_err) {
 			ret.err = PS2_KB_ERR_could_not_send_command;
+			ret.response = -1;
 			return ret;
 		}
 		c_err = wait_till_ready_for_response();
 		if (c_err) {
 			kprintf("The ps2_controller error: %d, |%s|\n", c_err, PS2_OS_Error_to_string(c_err));
 			ret.err = PS2_KB_ERR_could_not_recieve_response;
+			ret.response = -1;
 			return ret;
 		}
 		uint8_t response = ps2_recieve_raw_response();
@@ -140,6 +142,7 @@ static struct ps2_keyboard_verified_response send_data_to_ps2_keyboard(uint8_t d
 		}
 	}
 
+	ret.response = -1;
 	ret.err = PS2_KB_ERR_resend_too_much;
 	return ret;
 }
@@ -175,6 +178,7 @@ static struct ps2_keyboard_verified_response send_getter_subcommand_to_ps2_keybo
 
 	verified_response = send_data_to_ps2_keyboard(subcommand_data);
 	if (verified_response.err) {
+		ret.response = -1;
 		ret.err = verified_response.err;
 		return ret;
 	}
@@ -183,6 +187,7 @@ static struct ps2_keyboard_verified_response send_getter_subcommand_to_ps2_keybo
 	c_err = wait_till_ready_for_response();
 	if (c_err) {
 		kprintf("The ps2_controller error: %d, |%s|\n", c_err, PS2_OS_Error_to_string(c_err));
+		ret.response = -1;
 		ret.err = PS2_KB_ERR_could_not_recieve_response;
 		return ret;
 	}
@@ -256,19 +261,21 @@ struct ps2_keyboard_verified_scan_code_set get_scan_code_set() {
 	struct ps2_keyboard_verified_scan_code_set ret;
 	obtained = send_command_to_ps2_keyboard(KCB_get_set_ScanCodeSet);
 	if (obtained.err) {
+		ret.response = -1;
 		ret.err = obtained.err;
 		return ret;
 	}
 
 	obtained = send_getter_subcommand_to_ps2_keyboard(SCS_get_current);
 	if (obtained.err) {
+		ret.response = -1;
 		ret.err = obtained.err;
 		return ret;
 	}
 
 	enum ScanCodeSet scan_code_set = (enum ScanCodeSet)obtained.response;
 	if (scan_code_set == SCS_get_current || scan_code_set > SCS_set_scan_code_set_3) {
-
+		ret.response = -1;
 		ret.err = PS2_KB_ERR_invalid_scancode;
 		return ret;
 	}
@@ -291,154 +298,93 @@ struct ps2_keyboard_verified_response identify_device() {
 	// Then from here, i can just call the master on _single_keyboard_port
 }
 
+enum ps2_keyboard_error_code set_typematic(kcb_typematic_rate_and_delay_t rate_and_delay) {
+	struct ps2_keyboard_verified_response obtained;
+	obtained = send_command_to_ps2_keyboard(KCB_set_typematic_rate_delay);
+	if (obtained.err) {
+		return obtained.err;
+	}
+
+	union {
+		kcb_typematic_rate_and_delay_t bits;
+		uint8_t raw;
+	} typesafe = {.bits = rate_and_delay};
+	obtained = send_setter_subcommand_to_ps2_keyboard(typesafe.raw);
+
+	if (obtained.err) {
+		return obtained.err;
+	}
+
+	return PS2_KB_ERR_none;
+}
+
+enum ps2_keyboard_error_code enable_scanning() {
+	struct ps2_keyboard_verified_response obtained;
+	obtained = send_command_to_ps2_keyboard(KCB_enable_scanning);
+	if (obtained.err) {
+		return obtained.err;
+	}
+
+	return PS2_KB_ERR_none;
+}
+
+// Keyboard wills top sending scan code
+// May also restore default parameter
+enum ps2_keyboard_error_code disable_scanning() {
+	struct ps2_keyboard_verified_response obtained;
+	obtained = send_command_to_ps2_keyboard(KCB_enable_scanning);
+	if (obtained.err) {
+		return obtained.err;
+	}
+
+	return PS2_KB_ERR_none;
+}
+
+enum ps2_keyboard_error_code set_default_parameters() {
+	struct ps2_keyboard_verified_response obtained;
+	obtained = send_command_to_ps2_keyboard(KCB_set_default_parameters);
+	if (obtained.err) {
+		return obtained.err;
+	}
+
+	return PS2_KB_ERR_none;
+}
+
+enum ps2_keyboard_error_code set_all_keycode_to_make_release() {
+	struct ps2_keyboard_verified_response obtained;
+	obtained = send_command_to_ps2_keyboard(KCB_set_all_to_make_release);
+	if (obtained.err) {
+		return obtained.err;
+	}
+
+	return PS2_KB_ERR_none;
+}
+
+enum ps2_keyboard_error_code set_all_keycode_to_make_only() {
+#define SC3_ONLY // comment this out to deactivate
+#ifdef SC3_ONLY
+	assert(get_scan_code_set().response == 3, "Need to be in scancode 3\n");
+#endif
+
+	struct ps2_keyboard_verified_response obtained;
+	obtained = send_command_to_ps2_keyboard(KCB_set_all_to_make_only);
+	if (obtained.err) {
+		return obtained.err;
+	}
+
+	return PS2_KB_ERR_none;
+}
+
+// Precondition:
+// Must be in scancode 3
+enum ps2_keyboard_error_code set_all_keycode_to_typematic_autorepeat_make_release() {
+	struct ps2_keyboard_verified_response obtained;
+	obtained = send_command_to_ps2_keyboard(KCB_set_all_to_typematic_autorepeat_make_release);
+	if (obtained.err) {
+		return obtained.err;
+	}
+
+	return PS2_KB_ERR_none;
+}
+
 /* ================================ Step function ========================= */
-
-/* ================================= Quick and dirty ========================== */
-
-#include <stdbool.h>
-#include <stdint.h>
-
-/* PS/2 Ports */
-#define PS2_DATA_PORT_RW 0x60
-#define PS2_STATUS_PORT 0x64
-
-/* Status register bits */
-#define PS2_STATUS_OUTPUT_BUFFER_FULL 0x01
-#define PS2_STATUS_INPUT_BUFFER_FULL 0x02
-
-/* Commands */
-#define PS2_CMD_ECHO 0xEE
-#define PS2_CMD_SET_SCANCODE 0xF0
-#define PS2_CMD_GET_SCANCODE 0xF0
-#define PS2_ACK 0xFA
-
-/* Simple outb/inb functions for x86 */
-static inline void outb(uint16_t port, uint8_t val) {
-	__asm__ volatile("outb %0, %1" : : "a"(val), "Nd"(port));
-}
-
-static inline uint8_t inb(uint16_t port) {
-	uint8_t ret;
-	__asm__ volatile("inb %1, %0" : "=a"(ret) : "Nd"(port));
-	return ret;
-}
-
-/* Wait until keyboard input buffer is empty */
-static void wait_input_empty(void) {
-	while (inb(PS2_STATUS_PORT) & PS2_STATUS_INPUT_BUFFER_FULL)
-		;
-}
-
-/* Wait until keyboard output buffer has data */
-static void wait_output_full(void) {
-	while (!(inb(PS2_STATUS_PORT) & PS2_STATUS_OUTPUT_BUFFER_FULL))
-		;
-}
-
-/* Send a command to the keyboard */
-static void ps2_send_command(uint8_t cmd) {
-	wait_input_empty();
-	outb(PS2_DATA_PORT_RW, cmd);
-}
-
-/* Read a byte from the keyboard */
-static uint8_t ps2_read_response(void) {
-	wait_output_full();
-	return inb(PS2_DATA_PORT_RW);
-}
-
-/* Send a command and check ACK */
-static bool ps2_send_cmd_check_ack(uint8_t cmd) {
-	ps2_send_command(cmd);
-	return ps2_read_response() == PS2_ACK;
-}
-
-/* Set scan code set */
-static bool ps2_set_scancode_set(uint8_t set_number) {
-	if (!ps2_send_cmd_check_ack(PS2_CMD_SET_SCANCODE))
-		return false;
-	if (!ps2_send_cmd_check_ack(set_number))
-		return false;
-	return true;
-}
-
-/* Get current scan code set */
-int ps2_get_scancode_set(void) {
-	ps2_send_command(PS2_CMD_GET_SCANCODE); // 0xF0
-	ps2_send_command(0x00);                 // Get current
-	uint8_t ack = ps2_read_response();      // should be 0xFA
-	if (ack != PS2_ACK)
-		return -1;
-	return ps2_read_response(); // scan code set number
-}
-
-/* Quick test */
-void test_scancode_set(uint8_t set_value) {
-	kprintf("\n===== Scan Code Set %u Test =====\n", set_value);
-
-	// Echo check first
-	ps2_send_command(PS2_CMD_ECHO);
-	uint8_t echo_resp = ps2_read_response();
-	if (echo_resp != PS2_CMD_ECHO) {
-		kprintf("Keyboard echo failed!\n");
-		return;
-	}
-
-	kprintf("Keyboard echo OK\n");
-
-	// Set scan code set 1
-	if (!ps2_set_scancode_set(set_value)) {
-		kprintf("Failed to set scan code set 1\n");
-		return;
-	}
-	kprintf("Scan code set %u sent\n", set_value);
-
-	// Get scan code set
-	int current_set = ps2_get_scancode_set();
-	if (current_set < 0) {
-		kprintf("Failed to read current scan code set\n");
-		return;
-	}
-
-	kprintf("Current scan code set: %d\n", current_set);
-	if (current_set == set_value) {
-		kprintf("Scan code set verified successfully!\n");
-	} else {
-		kprintf("Scan code set verification failed!\n");
-	}
-}
-
-void tss(void) {
-	// Set scan code set 1
-	kprintf("--------------");
-	for (int i = 1; i <= 3; i++) {
-		if (true) {
-			enum ps2_keyboard_error_code k_err = set_scan_code_set(i);
-			if (k_err) {
-				kprintf("Error setting the scan code set %d. Error: %d, Error Name: |%s|\n", i, k_err, ps2_keyboard_error_to_string(k_err));
-				abort();
-			}
-		} else {
-			if (!ps2_set_scancode_set(i)) {
-				kprintf("Failed to set scan code set 1\n");
-				return;
-			}
-		}
-
-		struct ps2_keyboard_verified_scan_code_set scan_code_set = get_scan_code_set();
-		if (scan_code_set.err) {
-			kprintf("Error getting the scan code set: %d, |%s|\n", scan_code_set.err, ps2_keyboard_error_to_string(scan_code_set.err));
-		}
-
-		int current_set = ps2_get_scancode_set();
-		if (current_set < 0) {
-			kprintf("Failed to read current scan code set\n");
-			return;
-		}
-
-		kprintf("The current scan code set: |%d|, should be %d\n", scan_code_set.response, i);
-		kprintf("[QUICK] Current scan code set: %d\n", current_set);
-		kprintf("\n");
-	}
-	kprintf("--------------");
-}

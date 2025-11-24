@@ -21,7 +21,18 @@
 
 */
 
-uint8_t count_char(const char* str, char delimiter);
+uint8_t count_char(const char* str, char delimiter) {
+	const char* char_ptr = str;
+	uint8_t count = 0;
+	while (*char_ptr) {
+		if (*char_ptr == delimiter) {
+			count++;
+		}
+		char_ptr++;
+	}
+	return count;
+}
+
 uint8_t get_single_format_size(const char* str);
 
 static inline int is_alpha(char c) {
@@ -258,28 +269,6 @@ void kprintf_argc(const uint32_t argc, const char* fmt, ...) {
 		start_and_ends[len].end = format_len - 1;
 	}
 
-// #define TEST_PRINTF
-#ifdef TEST_PRINTF
-	terminal_writestring("\n==Start of info===\n");
-	for (uint8_t i = 0; i < len; i++) {
-		print_info(printf_information[i]);
-		terminal_writestring("--------\n");
-	}
-	terminal_writestring("\n===End of info==\n");
-
-	for (uint8_t i = 0; i < argc; i++) {
-		terminal_write_uint("i = ", i);
-		terminal_write_uint("start = ", start_and_ends[i].start);
-		terminal_write_uint("end = ", start_and_ends[i].end);
-		terminal_putchar('|');
-		terminal_write_offsets(fmt, start_and_ends[i].start, start_and_ends[i].end + 1);
-		terminal_putchar('|');
-		terminal_writestring("\n======\n");
-	}
-#endif
-
-	// terminal_writestring("\n==Showing the real text==\n");
-
 	terminal_write_offsets(fmt, start_and_ends[0].start, start_and_ends[0].end + 1);
 
 	va_list args;
@@ -386,14 +375,94 @@ void kprintf_argc(const uint32_t argc, const char* fmt, ...) {
 	va_end(args);
 }
 
-uint8_t count_char(const char* str, char delimiter) {
-	const char* char_ptr = str;
-	uint8_t count = 0;
-	while (*char_ptr) {
-		if (*char_ptr == delimiter) {
-			count++;
-		}
-		char_ptr++;
+void vkprintf(const char* fmt, va_list args) {
+	uint8_t len = count_char(fmt, '%');
+
+	if (len == 0) {
+		terminal_writestring(fmt);
+		return;
 	}
-	return count;
+
+	struct PRINTF_FIELD_PROPERTIES printf_information[len];
+	set_types_and_pos(fmt, printf_information, len);
+
+	uint16_t format_len = strlen(fmt);
+
+	struct startAndEnd start_and_ends[len + 1];
+	start_and_ends[0].start = 0;
+	start_and_ends[0].end = printf_information[0].pos - 1;
+
+	for (uint8_t i = 1; i < len; i++) {
+		start_and_ends[i].start = printf_information[i - 1].pos + printf_information[i - 1].len;
+		start_and_ends[i].end = printf_information[i].pos - 1;
+	}
+
+	start_and_ends[len].start = printf_information[len - 1].pos + printf_information[len - 1].len;
+	start_and_ends[len].end = format_len - 1;
+
+	terminal_write_offsets(fmt,
+	                       start_and_ends[0].start,
+	                       start_and_ends[0].end + 1);
+
+	for (uint8_t i = 0; i < len; i++) {
+		switch (printf_information[i].type) {
+		case PRINTF_TAG_CHAR: {
+			char v = (char)va_arg(args, int);
+			terminal_putchar(v);
+			break;
+		}
+		case PRINTF_TAG_STRING: {
+			const char* v = va_arg(args, const char*);
+			terminal_writestring(v);
+			break;
+		}
+		case PRINTF_TAG_INT: {
+			int v = va_arg(args, int);
+			struct PRINTF_FIELD_PROPERTIES info = printf_information[i];
+			print_int_f(v, info.option == FMT_OPTION_PAD ? info.option_num : 0);
+			break;
+		}
+		case PRINTF_TAG_UINT32_T: {
+			uint32_t v = va_arg(args, uint32_t);
+			struct PRINTF_FIELD_PROPERTIES info = printf_information[i];
+			print_uint_f(v, info.option == FMT_OPTION_PAD ? info.option_num : 0);
+			break;
+		}
+		case PRINTF_TAG_FLOAT: {
+			float v = (float)va_arg(args, double);
+			struct PRINTF_FIELD_PROPERTIES info = printf_information[i];
+			if (info.option == FMT_OPTION_PRECISION)
+				print_float_var_no_newline_precision(v, info.option_num);
+			else
+				print_float_var_no_newline(v);
+			break;
+		}
+		case PRINTF_TAG_HEX: {
+			uint32_t v = va_arg(args, unsigned int);
+			struct PRINTF_FIELD_PROPERTIES info = printf_information[i];
+			print_hex_f(v, info.option == FMT_OPTION_PAD ? info.option_num : 0);
+			break;
+		}
+		case PRINTF_TAG_BINARY: {
+			uint32_t v = va_arg(args, uint32_t);
+			struct PRINTF_FIELD_PROPERTIES info = printf_information[i];
+			print_binary_var_no_newline(v,
+			                            info.option == FMT_OPTION_PAD ? info.option_num : 0);
+			break;
+		}
+		default:
+			break;
+		}
+
+		terminal_write_offsets(fmt,
+		                       start_and_ends[i + 1].start,
+		                       start_and_ends[i + 1].end + 1);
+	}
+}
+
+void kprintf2(const char* fmt, ...) {
+	va_list args;
+	va_start(args, fmt);
+	vkprintf(fmt, args);
+	va_end(args);
 }

@@ -450,17 +450,6 @@ void test_ps2_keyboard_commands() {
 	} else {
 		kprintf("Echo command succeededd successfully");
 	}
-	// test_echo_quick();
-
-	// wait(5);
-	if (false) {
-		kprintf("\n\n============= Quick tests commands ===============\n\n");
-		kprintf("Current scanset: %d\n", ps2_get_scancode_set());
-		test_scancode_set(1);
-		test_scancode_set(2);
-		test_scancode_set(3);
-	}
-	// return;
 
 	kprintf("\n\n============= Scan code sets ===============\n\n");
 	struct ps2_keyboard_verified_scan_code_set scan_code_set;
@@ -473,12 +462,10 @@ void test_ps2_keyboard_commands() {
 
 	scan_code_set = get_scan_code_set();
 	if (scan_code_set.err) {
-		kprintf("Error getting the scan code set back: %d, |%s|\n", scan_code_set.err, ps2_keyboard_error_to_string(scan_code_set.err));
+		kprintf("Error getting the scan code set back. Error: %d, Error Name: |%s|\n", scan_code_set.err, ps2_keyboard_error_to_string(scan_code_set.err));
 	}
 	kprintf("The current scan code set (after changing it): %u\n", scan_code_set.response);
 }
-
-void tss(void);
 
 void kernel_main(void) {
 

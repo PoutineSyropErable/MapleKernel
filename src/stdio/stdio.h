@@ -1,5 +1,6 @@
 #pragma once
 #include "ppnargs.h"
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -8,6 +9,9 @@ void kprintf_argc(const uint32_t argc, const char* fmt, ...);
 // Macro wrapper: automatically counts number of arguments
 #define kprintf(...) \
 	kprintf_argc(PP_NARG(__VA_ARGS__), __VA_ARGS__)
+
+void vkprintf(const char* fmt, va_list args);
+void kprintf2(const char* fmt, ...);
 
 enum PRINTF_FMT_OPTION {
 	FMT_OPTION_NONE = 0,
