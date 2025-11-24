@@ -5,15 +5,25 @@
 #include <stdint.h>
 
 void kprintf_argc(const uint32_t argc, const char* fmt, ...);
+void kprintf2_argc_check(uint32_t argc, const char* fmt, ...);
 void vkprintf(const char* fmt, va_list args);
 void kprintf2(const char* fmt, ...);
 
-// #define USE_KPRINTF_ARGC
-#ifdef USE_KPRINTF_ARGC
-// calculates argc
+// #define USE_OLD_KPRINTF_ARGC
+#define CHECK_ARGC
+
+#ifdef USE_OLD_KPRINTF_ARGC
+#if defined(USE_OLD_KPRINTF_ARGC) && defined(CHECK_ARGC)
+#error "Cannot define both USE_OLD_KPRINTF_ARGC and CHECK_ARGC"
+#endif
+
 #define kprintf(...) kprintf_argc(PP_NARG(__VA_ARGS__), __VA_ARGS__)
 #else
+#ifdef CHECK_ARGC
+#define kprintf(...) kprintf2_argc_check(PP_NARG(__VA_ARGS__), __VA_ARGS__)
+#else
 #define kprintf(...) kprintf2(__VA_ARGS__)
+#endif
 #endif
 
 enum PRINTF_FMT_OPTION {

@@ -49,3 +49,17 @@ int ps2_get_scancode_set(void);
 
 void disable_keyboard();
 void enable_keyboard();
+
+enum ps2_keyboard_error_code setup_keyboard();
+void test_ps2_keyboard_commands();
+
+struct keyboard_porting_state_context {
+	bool initialized;
+	uint8_t number_of_keyboards;
+
+	uint8_t active_port;
+	uint8_t active_irq;
+	uint8_t active_interrupt_vector;
+
+	uint8_t active_scancode_set;
+};

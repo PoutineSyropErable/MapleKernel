@@ -1,13 +1,31 @@
+#include "assert.h"
 #include "pic.h"
 #include "ps2_keyboard_handler.h"
+#include "ps2_keyboard_public.h"
 #include "stdio.h"
 #include "vga_terminal.h"
 // possible, create a ps2 controller device, and then a keyboard controller device. What was done here is essentially a keyboard hadnler device
 
-void parse_scan_code(uint8_t scancode) {
-}
+extern struct keyboard_porting_state_context kps;
 
-void parse_extended_scan_code(uint8_t scancode) {
+void parse_scan_code(uint8_t scancode);
+void parse_extended_scan_code(uint8_t scancode);
+
+void keyboard_handler_scs1(uint8_t scancode, uint8_t port_number);
+void keyboard_handler_scs2(uint8_t scancode, uint8_t port_number);
+void keyboard_handler_scs3(uint8_t scancode, uint8_t port_number);
+
+extern inline void keyboard_handler(uint8_t scancode, uint8_t port_number) {
+	switch (kps.active_scancode_set) {
+	case 1:
+		return keyboard_handler_scs1(scancode, port_number);
+	case 2:
+		return keyboard_handler_scs3(scancode, port_number);
+	case 3:
+		return keyboard_handler_scs3(scancode, port_number);
+	default:
+		abort_msg("Impossible scan scode set (%u)\n", kps.active_scancode_set);
+	}
 }
 
 /*
@@ -25,7 +43,7 @@ preconditions:
     Keyboard must be in scancode set 1.
 
 */
-void keyboard_handler(uint8_t scancode, uint8_t port_number) {
+void keyboard_handler_scs1(uint8_t scancode, uint8_t port_number) {
 
 	uint8_t keyboard_irq;
 	if (port_number == 1) {
@@ -84,4 +102,17 @@ void keyboard_handler(uint8_t scancode, uint8_t port_number) {
 
 	previous_extended_signal = extended_signal;
 	PIC_sendEOI(keyboard_irq);
+}
+
+void keyboard_handler_scs2(uint8_t scancode, uint8_t port_number) {
+	kprintf("[PANIC-WARNING] scan code 2 handling not supported!\n");
+}
+
+void keyboard_handler_scs3(uint8_t scancode, uint8_t port_number) {
+	kprintf("[PANIC-WARNING] scan code 3 handling not supported!\n");
+}
+
+void parse_scan_code(uint8_t scancode) {
+}
+void parse_extended_scan_code(uint8_t scancode) {
 }

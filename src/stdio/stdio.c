@@ -467,6 +467,16 @@ void kprintf2(const char* fmt, ...) {
 	va_end(args);
 }
 
+void kprintf2_argc_check(uint32_t argc, const char* fmt, ...) {
+	uint8_t len = count_char(fmt, '%');
+	assert(len == argc - 1, "Len (%u) must match argc(%u)-1\n", len, argc);
+
+	va_list args;
+	va_start(args, fmt);
+	vkprintf(fmt, args);
+	va_end(args);
+}
+
 void test_printf(void) {
 
 	kprintf("1: No args\n");

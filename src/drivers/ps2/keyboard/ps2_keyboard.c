@@ -7,49 +7,44 @@
 // This is used to send data to the first or second ps2 device. Port 1 = Keyboard, Port 2 = mouse
 extern enum ps2_controller_error_code send_command_or_data_to_ps2_port(enum PS2_PortNumber port_number, uint8_t data);
 
-uint8_t _number_of_keyboard;
-uint8_t _single_keyboard_port;
-uint8_t _single_keyboard_irq;
-uint8_t _single_keyboard_idt_vector;
+struct keyboard_porting_state_context kps = {.initialized = false};
+
+static inline void _set_irq_and_vector();
+void set_single_keyboard_port(uint8_t single_keyboard_port) {
+	kps.active_port = single_keyboard_port;
+	kps.number_of_keyboards = 1;
+
+	_set_irq_and_vector();
+	kps.initialized = true;
+}
+
+void set_dual_keyboard_port() {
+	kps.number_of_keyboards = 2;
+
+	kprintf("[PANIC-WARNING] Dual keyboard ports commands works by setting the active keyboard\n");
+	kprintf("[PANIC-WARNING] No currently selected keyboard");
+	kprintf("[PANIC-WARNING] Need to do: set_active_keyboard_for_commands(1 or 2);\n");
+}
 
 static inline void _set_irq_and_vector() {
 
-	if (_single_keyboard_port == 1) {
-		_single_keyboard_idt_vector = PS2_PORT1_INTERUPT_VECTOR;
-		_single_keyboard_irq = PS2_PORT1_IRQ;
+	if (kps.active_port == 1) {
+		kps.active_interrupt_vector = PS2_PORT1_INTERUPT_VECTOR;
+		kps.active_irq = PS2_PORT1_IRQ;
 	} else {
-		_single_keyboard_idt_vector = PS2_PORT2_INTERUPT_VECTOR;
-		_single_keyboard_irq = PS2_PORT2_IRQ;
+		kps.active_interrupt_vector = PS2_PORT2_INTERUPT_VECTOR;
+		kps.active_irq = PS2_PORT2_IRQ;
 	}
 }
 
-void set_single_keyboard_port(uint8_t single_keyboard_port) {
-	_single_keyboard_port = single_keyboard_port;
-	_number_of_keyboard = 1;
-
-	_set_irq_and_vector();
-}
-
-uint8_t _keyboard1_port;
-uint8_t _keyboard2_port;
-
-void set_dual_keyboard_port() {
-	_keyboard1_port = 1;
-	_keyboard2_port = 2;
-	_number_of_keyboard = 2;
-	kprintf("[PANIC-WARNING] Dual keyboard ports commands works by setting the active keyboard\n");
-	kprintf("[PANIC-WARNING] No currently selected keyboard");
-	// True by definition and hardware
-}
-
 void set_active_keyboard_for_commands(uint8_t keyboard_idx) {
-	assert(_number_of_keyboard > 1,
-	       "Makes no sense to change the active keyboard!\nThis was wrongly called with: keyboard_idx = %u, _number_of_keyboard = %u\n",
-	       keyboard_idx, _number_of_keyboard);
-	assert(keyboard_idx <= _number_of_keyboard, "keyboard_idx (%u) must be <= _number_of_keyboard (%u)!\n",
-	       keyboard_idx, _number_of_keyboard);
+	assert(kps.number_of_keyboards > 1,
+	       "Makes no sense to change the active keyboard when there's just 1!\nThis was wrongly called with: keyboard_idx = %u, _number_of_keyboard = %u\n",
+	       keyboard_idx, kps.number_of_keyboards);
+	assert(keyboard_idx <= kps.number_of_keyboards, "keyboard_idx (%u) must be <= _number_of_keyboard (%u)!\n",
+	       keyboard_idx, kps.number_of_keyboards);
 
-	_single_keyboard_port = keyboard_idx;
+	kps.active_port = keyboard_idx;
 	_set_irq_and_vector();
 }
 
@@ -57,11 +52,11 @@ void set_active_keyboard_for_commands(uint8_t keyboard_idx) {
 Using this without masking irqs and then sending keyboard commands will cause a #GP 13.
 */
 void disable_keyboard_interrupts() {
-	disable_idt_entry(_single_keyboard_idt_vector);
+	disable_idt_entry(kps.active_interrupt_vector);
 }
 
 void enable_keyboard_interrupts() {
-	enable_idt_entry(_single_keyboard_idt_vector);
+	enable_idt_entry(kps.active_interrupt_vector);
 }
 
 /* ================================== The validates ============================= */
@@ -126,7 +121,7 @@ const char* ps2_keyboard_error_to_string(enum ps2_keyboard_error_code code) {
 /* ================================ The main command ================================= */
 static inline enum ps2_controller_error_code
 _send_command_or_data_to_ps2_keyboard(enum KeyboardCommandByte command) {
-	return send_command_or_data_to_ps2_port(_single_keyboard_port, command);
+	return send_command_or_data_to_ps2_port(kps.active_port, command);
 }
 
 // This is to send data to the ps2 keyboard. Data can be either commands
@@ -284,6 +279,7 @@ enum ps2_keyboard_error_code set_scan_code_set(enum ScanCodeSet scan_code_set) {
 		kprintf("Error sending the special scan code set\n!");
 		return obtained.err;
 	}
+	kps.active_scancode_set = scan_code_set;
 	return PS2_KB_ERR_none;
 }
 
@@ -517,14 +513,62 @@ struct ps2_keyboard_verified_response reset_and_self_test() {
 
 void disable_keyboard() {
 	kprintf("Disabling keyboard\n");
-	IRQ_set_mask(_single_keyboard_irq);
+	IRQ_set_mask(kps.active_port);
 	disable_keyboard_interrupts(); // This seems to not be the way to do it
 	disable_scanning();
 }
 
 void enable_keyboard() {
 	kprintf("Enabling keyboard\n");
-	enable_keyboard_interrupts();
-	IRQ_clear_mask(_single_keyboard_irq);
 	enable_scanning();
+	enable_keyboard_interrupts();
+	IRQ_clear_mask(kps.active_port);
+}
+
+enum ps2_keyboard_error_code setup_keyboard() {
+	enum ps2_keyboard_error_code err;
+	assert(kps.initialized, "The command must target a keyboard\n!");
+
+	disable_keyboard();
+	err = set_scan_code_set(1);
+	if (err) {
+		return err;
+	}
+
+	enable_keyboard();
+
+	return PS2_KB_ERR_none;
+}
+
+void test_ps2_keyboard_commands() {
+
+	// struct ps2_verified_response_test_controller ret = ps2_perform_controller_self_test();
+	// kprintf("%d, %s\n", ret.err, PS2_OS_Error_to_string(ret.err));
+	// kprintf("%u\n", ret.response);
+	disable_keyboard();
+
+	kprintf("\n\n============= Keyboard commands ===============\n\n");
+	enum ps2_keyboard_error_code ke_err = echo_keyboard();
+	if (ke_err) {
+		kprintf("Error sending echo command: %d, |%s|\n", ke_err, ps2_keyboard_error_to_string(ke_err));
+	} else {
+		kprintf("Echo command succeededd successfully");
+	}
+
+	kprintf("\n\n============= Scan code sets ===============\n\n");
+	struct ps2_keyboard_verified_scan_code_set scan_code_set;
+
+	enum ps2_keyboard_error_code k_err = set_scan_code_set(3);
+	if (k_err) {
+		kprintf("Error setting the scan code set %d: Error %d, Error Name: |%s|\n", 3, k_err, ps2_keyboard_error_to_string(k_err));
+		abort();
+	}
+
+	scan_code_set = get_scan_code_set();
+	if (scan_code_set.err) {
+		kprintf("Error getting the scan code set back. Error: %d, Error Name: |%s|\n", scan_code_set.err, ps2_keyboard_error_to_string(scan_code_set.err));
+	}
+	kprintf("The current scan code set (after changing it): %u\n", scan_code_set.response);
+
+	enable_keyboard();
 }

@@ -436,36 +436,6 @@ no_port:
 	return PS2_HS_ERR_no_port;
 }
 
-void test_ps2_keyboard_commands() {
-
-	// struct ps2_verified_response_test_controller ret = ps2_perform_controller_self_test();
-	// kprintf("%d, %s\n", ret.err, PS2_OS_Error_to_string(ret.err));
-	// kprintf("%u\n", ret.response);
-
-	kprintf("\n\n============= Keyboard commands ===============\n\n");
-	enum ps2_keyboard_error_code ke_err = echo_keyboard();
-	if (ke_err) {
-		kprintf("Error sending echo command: %d, |%s|\n", ke_err, ps2_keyboard_error_to_string(ke_err));
-	} else {
-		kprintf("Echo command succeededd successfully");
-	}
-
-	kprintf("\n\n============= Scan code sets ===============\n\n");
-	struct ps2_keyboard_verified_scan_code_set scan_code_set;
-
-	enum ps2_keyboard_error_code k_err = set_scan_code_set(1);
-	if (k_err) {
-		kprintf("Error setting the scan code set %d: Error %d, Error Name: |%s|\n", 3, k_err, ps2_keyboard_error_to_string(k_err));
-		abort();
-	}
-
-	scan_code_set = get_scan_code_set();
-	if (scan_code_set.err) {
-		kprintf("Error getting the scan code set back. Error: %d, Error Name: |%s|\n", scan_code_set.err, ps2_keyboard_error_to_string(scan_code_set.err));
-	}
-	kprintf("The current scan code set (after changing it): %u\n", scan_code_set.response);
-}
-
 void kernel_main(void) {
 
 	// init_paging();
@@ -479,35 +449,16 @@ void kernel_main(void) {
 	test_printf();
 	test_assert(); // gd, and set to false and play with it
 
-	if (true) {
-		/* Some day the future, it might be important to know the state here (hence err_discard). But today is not that day*/
-		[[gnu::unused]] enum handle_ps2_setup_errors
-		    err_discard = handle_ps2_setup();
-		kprintf("err_discard : %d\n", err_discard);
-	} else {
-		setup_ps2_controller_no_error_check();
-		quick_enable_mouse();
+	/* Some day the future, it might be important to know the state here (hence err_discard). But today is not that day*/
+	[[gnu::unused]] enum handle_ps2_setup_errors
+	    err_discard = handle_ps2_setup();
+	kprintf("err_discard : %d\n", err_discard);
 
-		set_single_keyboard_port(1);
-		set_single_mouse_port(2);
-		idt_init((struct idt_init_ps2_fields){.type = ITT_no_ps2_device});
-		PIC_remap(PIC_1_OFFSET, PIC_2_OFFSET);
-		initialize_irqs();
-		IRQ_clear_mask(PS2_PORT1_IRQ);
-		IRQ_clear_mask(PS2_PORT2_BRIDGE_IRQ);
-		IRQ_clear_mask(PS2_PORT2_IRQ);
-	}
-	// tss();
+	// test_ps2_keyboard_commands();
+	setup_keyboard();
 
-	// __int_O0(33);
-	disable_keyboard();
-	test_ps2_keyboard_commands();
-
-	// test_command_array();
 	terminal_writestring("\n====kernel main entering loop====\n");
-	// fake_ps2_keyboard_byte(23);
 
-	enable_keyboard();
 	while (true) {
 		// kernel main loop
 	}
