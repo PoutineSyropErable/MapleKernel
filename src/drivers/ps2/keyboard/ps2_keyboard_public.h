@@ -45,3 +45,6 @@ void test_echo_quick();
 void test_scancode_set(uint8_t set_value);
 
 int ps2_get_scancode_set(void);
+
+void disable_keyboard();
+void enable_keyboard();

@@ -320,7 +320,6 @@ one_keyboard_one_mouse:
 	set_single_keyboard_port(keyboard_port);
 	set_single_mouse_port(mouse_port);
 	idt_init(args);
-	// idt_init((struct idt_init_ps2_fields){.type = ITT_no_ps2_device});
 	PIC_remap(PIC_1_OFFSET, PIC_2_OFFSET);
 	initialize_irqs();
 	IRQ_clear_mask(PS2_PORT1_IRQ);
@@ -452,7 +451,7 @@ void test_ps2_keyboard_commands() {
 	kprintf("\n\n============= Scan code sets ===============\n\n");
 	struct ps2_keyboard_verified_scan_code_set scan_code_set;
 
-	enum ps2_keyboard_error_code k_err = set_scan_code_set(3);
+	enum ps2_keyboard_error_code k_err = set_scan_code_set(1);
 	if (k_err) {
 		kprintf("Error setting the scan code set %d: Error %d, Error Name: |%s|\n", 3, k_err, ps2_keyboard_error_to_string(k_err));
 		abort();
@@ -476,15 +475,13 @@ void kernel_main(void) {
 
 	kernel_test();
 	test_printf();
-	test_assert();
-	return;
+	test_assert(); // gd, and set to false and play with it
 
-	/* Some day the future, it might be important to know the state here. But today is not that day*/
 	if (true) {
+		/* Some day the future, it might be important to know the state here (hence err_discard). But today is not that day*/
 		[[gnu::unused]] enum handle_ps2_setup_errors
 		    err_discard = handle_ps2_setup();
 		kprintf("err_discard : %d\n", err_discard);
-		// This case breaks the ps2 controller support
 	} else {
 		setup_ps2_controller_no_error_check();
 		quick_enable_mouse();
@@ -501,12 +498,14 @@ void kernel_main(void) {
 	// tss();
 
 	// __int_O0(33);
+	disable_keyboard();
 	test_ps2_keyboard_commands();
 
 	// test_command_array();
 	terminal_writestring("\n====kernel main entering loop====\n");
 	// fake_ps2_keyboard_byte(23);
 
+	enable_keyboard();
 	while (true) {
 		// kernel main loop
 	}

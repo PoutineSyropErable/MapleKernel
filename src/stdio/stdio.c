@@ -489,5 +489,5 @@ void test_printf(void) {
 
 void test_assert(void) {
 
-	assert(false, "the int = %d, the float = %f.5, the hex = %h:3\n", 3, 25.1, 0x4b);
+	assert(true, "the int = %d, the float = %f.5, the hex = %h:3\n", 3, 25.1, 0x4b);
 }

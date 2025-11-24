@@ -21,6 +21,7 @@ __attribute__((noreturn)) void exception_handler(void) {
 }
 
 extern function_t interrupt_8_handler;  // not a function pointer. It's value is therefor the first few bytes of code
+extern function_t interrupt_11_handler; // not a function pointer. It's value is therefor the first few bytes of code
 extern function_t interrupt_13_handler; // not a function pointer. It's value is therefor the first few bytes of code
 extern function_t interrupt_69_handler; // not a function pointer. It's value is therefor the first few bytes of code
 
@@ -64,7 +65,7 @@ void idt_init(struct idt_init_ps2_fields ps2_args) {
 	}
 
 	// TODO: Error here.
-	// idt_init_ps2(ps2_args);
+	idt_init_ps2(ps2_args);
 	kprintf("After ps2 settup\n");
 	// if there are other stuff with runtime args to init, it can go after
 
@@ -74,6 +75,37 @@ void idt_init(struct idt_init_ps2_fields ps2_args) {
 	idt_set_descriptor(13, &interrupt_13_handler, GT32_IG32, 0, true);
 	vectors[13] = true;
 
+	idt_set_descriptor(11, &interrupt_11_handler, GT32_IG32, 0, true);
+	vectors[11] = true;
+
 	__lidt(idtr);
 	__sti();
+}
+
+idt32_entry_t* get_idt_base() {
+	return idt;
+}
+
+idt32_entry_t* get_idt_entry(uint8_t entry_index) {
+
+	uint8_t idt_entry_index_max = idtr.limit / sizeof(idt32_entry_t);
+	// if i wanted the count: (idtr.limit + 1)/32.
+	// that would be one bigger then entry max.
+
+	assert(entry_index <= idt_entry_index_max, "The entry index: (%u) must be <= the max possible entry: (%u)\n", entry_index, idt_entry_index_max);
+
+	return &idt[entry_index];
+}
+
+void enable_idt_entry(uint8_t entry_index) {
+
+	assert(vectors[entry_index], "The entry (%u) must have been enabled once before by a proper setup in idt_init!\n", entry_index);
+	idt32_entry_t* entry_ptr = get_idt_entry(entry_index);
+	entry_ptr->present = true;
+}
+
+void disable_idt_entry(uint8_t entry_index) {
+
+	idt32_entry_t* entry_ptr = get_idt_entry(entry_index);
+	entry_ptr->present = false;
 }

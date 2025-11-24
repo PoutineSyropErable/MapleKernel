@@ -1,3 +1,5 @@
+#include "idt_public.h"
+#include "pic.h"
 #include "ps2_controller.h"
 #include "ps2_keyboard.h"
 #include "ps2_keyboard_public.h"
@@ -7,30 +9,59 @@ extern enum ps2_controller_error_code send_command_or_data_to_ps2_port(enum PS2_
 
 uint8_t _number_of_keyboard;
 uint8_t _single_keyboard_port;
+uint8_t _single_keyboard_irq;
+uint8_t _single_keyboard_idt_vector;
 
-uint8_t _keyboard1_port;
-uint8_t _keyboard2_port;
+static inline void _set_irq_and_vector() {
 
-// SKS = Single keyboard support!
-//
-// Because I found it too boring, let's only really support 1 ps2 keyboard.
-// Supporting two here is just needless complexity. And I want speed, not perfect code. The ps2 controller driver is good enough.
-// At the end of the day, motivation is king.
-void sks() {
-	assert(_number_of_keyboard == 1, "We don't support two keyboards!\n");
+	if (_single_keyboard_port == 1) {
+		_single_keyboard_idt_vector = PS2_PORT1_INTERUPT_VECTOR;
+		_single_keyboard_irq = PS2_PORT1_IRQ;
+	} else {
+		_single_keyboard_idt_vector = PS2_PORT2_INTERUPT_VECTOR;
+		_single_keyboard_irq = PS2_PORT2_IRQ;
+	}
 }
 
 void set_single_keyboard_port(uint8_t single_keyboard_port) {
 	_single_keyboard_port = single_keyboard_port;
 	_number_of_keyboard = 1;
+
+	_set_irq_and_vector();
 }
+
+uint8_t _keyboard1_port;
+uint8_t _keyboard2_port;
 
 void set_dual_keyboard_port() {
 	_keyboard1_port = 1;
 	_keyboard2_port = 2;
 	_number_of_keyboard = 2;
+	kprintf("[PANIC-WARNING] Dual keyboard ports commands works by setting the active keyboard\n");
+	kprintf("[PANIC-WARNING] No currently selected keyboard");
 	// True by definition and hardware
-	sks();
+}
+
+void set_active_keyboard_for_commands(uint8_t keyboard_idx) {
+	assert(_number_of_keyboard > 1,
+	       "Makes no sense to change the active keyboard!\nThis was wrongly called with: keyboard_idx = %u, _number_of_keyboard = %u\n",
+	       keyboard_idx, _number_of_keyboard);
+	assert(keyboard_idx <= _number_of_keyboard, "keyboard_idx (%u) must be <= _number_of_keyboard (%u)!\n",
+	       keyboard_idx, _number_of_keyboard);
+
+	_single_keyboard_port = keyboard_idx;
+	_set_irq_and_vector();
+}
+
+/*
+Using this without masking irqs and then sending keyboard commands will cause a #GP 13.
+*/
+void disable_keyboard_interrupts() {
+	disable_idt_entry(_single_keyboard_idt_vector);
+}
+
+void enable_keyboard_interrupts() {
+	enable_idt_entry(_single_keyboard_idt_vector);
 }
 
 /* ================================== The validates ============================= */
@@ -388,3 +419,17 @@ enum ps2_keyboard_error_code set_all_keycode_to_typematic_autorepeat_make_releas
 }
 
 /* ================================ Step function ========================= */
+
+void disable_keyboard() {
+	kprintf("Disabling keyboard\n");
+	IRQ_set_mask(_single_keyboard_irq);
+	disable_keyboard_interrupts(); // This seems to not be the way to do it
+	disable_scanning();
+}
+
+void enable_keyboard() {
+	kprintf("Enabling keyboard\n");
+	enable_keyboard_interrupts();
+	IRQ_clear_mask(_single_keyboard_irq);
+	enable_scanning();
+}

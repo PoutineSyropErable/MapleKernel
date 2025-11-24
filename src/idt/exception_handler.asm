@@ -241,6 +241,12 @@ EFLAGS_Of3 equ 16
 	add esp, 24
 
 
+
+	cli
+hl13: 
+	jmp hl13
+
+
 	pop gs 
 	pop fs 
 	pop es
@@ -253,3 +259,79 @@ EFLAGS_Of3 equ 16
 	iret
 
 
+
+
+interrupt_11_fmt db "In Interrupt handler: %d, RESERVED PCI", NEWLINE, 0
+outb_err_fmt db "Outb error: al = %h, dx = %h", NEWLINE , 0
+global interrupt_11_handler 
+interrupt_11_handler: 
+	push ebp
+	mov ebp, esp
+
+	pusha 
+	push ds 
+	push es 
+	push fs 
+	push gs 
+
+
+	mov ah, 0
+	push dx 
+	push ax 
+	push outb_err_fmt
+	push 3 
+	call kprintf_argc 
+	add esp, 16
+
+
+
+	push 11 ; %d
+	push interrupt_11_fmt ; fmt
+	push 2 ; argc
+	call kprintf_argc
+	add esp, 12
+
+
+ERROR_CODE_Of3 equ 4
+EIP_Of3 equ 8 
+CS_Of3 equ 12 
+EFLAGS_Of3 equ 16
+	;; argc = number of % + 1; 
+	mov eax, [ebp + ERROR_CODE_Of3]   ; error code
+	mov ebx, [ebp + EIP_Of3]  ; EIP 
+	mov ecx, 0
+	mov cx, word [ebp + CS_Of3] ; CS
+	mov edx, [ebp + EFLAGS_Of3] ; Eflags
+
+
+	push edx
+	push ecx
+	push ebx
+	push eax
+	push err_inf_fmt 
+	push 5 ; argc 
+	call kprintf_argc
+	add esp, 24
+
+
+
+	cli
+hl11: 
+	jmp hl11
+
+
+	pop gs 
+	pop fs 
+	pop es
+	pop ds 
+	popa
+
+
+	mov esp, ebp
+	pop ebp
+	iret
+
+
+section .bss
+saved_al resb 1      ; 1 byte for AL
+saved_dx resw 1      ; 2 bytes for DX

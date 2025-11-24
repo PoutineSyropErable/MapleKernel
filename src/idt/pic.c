@@ -67,6 +67,7 @@ void PIC_sendEOI(uint8_t irq) {
 	__outb(PIC1_COMMAND, PIC_EOI);
 }
 
+// Set mask is to DISABLE THE IRQ
 void IRQ_set_mask(uint8_t IRQline) {
 	uint16_t port;
 	uint8_t value;
@@ -81,6 +82,7 @@ void IRQ_set_mask(uint8_t IRQline) {
 	__outb(port, value);
 }
 
+// Clear mask is to ENABLE THE IRQ
 void IRQ_clear_mask(uint8_t IRQline) {
 	uint16_t port;
 	uint8_t value;
