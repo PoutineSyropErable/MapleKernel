@@ -66,17 +66,16 @@ void idt_init(struct idt_init_ps2_fields ps2_args) {
 
 	// TODO: Error here.
 	idt_init_ps2(ps2_args);
-	kprintf("After ps2 settup\n");
 	// if there are other stuff with runtime args to init, it can go after
 
 	idt_set_descriptor(8, &interrupt_8_handler, GT32_IG32, 0, true);
 	vectors[8] = true;
 
-	idt_set_descriptor(13, &interrupt_13_handler, GT32_IG32, 0, true);
-	vectors[13] = true;
-
 	idt_set_descriptor(11, &interrupt_11_handler, GT32_IG32, 0, true);
 	vectors[11] = true;
+
+	idt_set_descriptor(13, &interrupt_13_handler, GT32_IG32, 0, true);
+	vectors[13] = true;
 
 	__lidt(idtr);
 	__sti();

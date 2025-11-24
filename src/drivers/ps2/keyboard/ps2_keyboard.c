@@ -79,7 +79,7 @@ bool validate_keyboard_command(uint8_t cmd) {
 	case KCB_set_all_to_make_release:
 	case KCB_set_all_to_make_only:
 	case KCB_set_all_to_typematic_autorepeat_make_release:
-	case KCB_set_specific_to_typematic_autorepeat:
+	case KCB_set_specific_to_typematic_autorepeat_only:
 	case KCB_set_specific_to_make_release:
 	case KCB_set_specific_to_make_only:
 	case KCB_resend_last_byte:
@@ -186,6 +186,7 @@ static inline struct ps2_keyboard_verified_response send_command_to_ps2_keyboard
 		return (struct ps2_keyboard_verified_response){.err = PS2_KB_ERR_invalid_command};
 	}
 #endif
+
 	return send_data_to_ps2_keyboard(command);
 }
 
@@ -416,6 +417,100 @@ enum ps2_keyboard_error_code set_all_keycode_to_typematic_autorepeat_make_releas
 	}
 
 	return PS2_KB_ERR_none;
+}
+
+enum ps2_keyboard_error_code set_specific_key_to_typematic_autorepeat_only(uint8_t key_scancode) {
+	struct ps2_keyboard_verified_response obtained;
+	obtained = send_command_to_ps2_keyboard(KCB_set_specific_to_typematic_autorepeat_only);
+	if (obtained.err) {
+		return obtained.err;
+	}
+
+	obtained = send_setter_subcommand_to_ps2_keyboard(key_scancode);
+	if (obtained.err) {
+		return obtained.err;
+	}
+
+	return PS2_KB_ERR_none;
+}
+
+enum ps2_keyboard_error_code set_specific_key_to_make_release(uint8_t key_scancode) {
+	struct ps2_keyboard_verified_response obtained;
+	obtained = send_command_to_ps2_keyboard(KCB_set_specific_to_make_release);
+	if (obtained.err) {
+		return obtained.err;
+	}
+
+	obtained = send_setter_subcommand_to_ps2_keyboard(key_scancode);
+	if (obtained.err) {
+		return obtained.err;
+	}
+
+	return PS2_KB_ERR_none;
+}
+
+enum ps2_keyboard_error_code set_specific_key_to_make_only(uint8_t key_scancode) {
+	struct ps2_keyboard_verified_response obtained;
+	obtained = send_command_to_ps2_keyboard(KCB_set_specific_to_make_only);
+	if (obtained.err) {
+		return obtained.err;
+	}
+
+	obtained = send_setter_subcommand_to_ps2_keyboard(key_scancode);
+	if (obtained.err) {
+		return obtained.err;
+	}
+
+	return PS2_KB_ERR_none;
+}
+
+struct ps2_keyboard_verified_response resend_last_byte() {
+	struct ps2_keyboard_verified_response obtained;
+	struct ps2_keyboard_verified_response ret;
+
+	obtained = send_command_to_ps2_keyboard(KCB_resend_last_byte);
+	if (obtained.err) {
+		ret.err = obtained.err;
+		ret.response = -1;
+		return ret;
+	}
+
+	ret.response = obtained.response;
+	ret.err = PS2_KB_ERR_none;
+	return ret;
+}
+
+struct ps2_keyboard_verified_response reset_and_self_test() {
+	struct ps2_keyboard_verified_response obtained;
+	struct ps2_keyboard_verified_response ret;
+
+	obtained = send_command_to_ps2_keyboard(KCB_reset_and_self_test);
+	if (obtained.err) {
+		ret.err = obtained.err;
+		ret.response = -1;
+		return ret;
+	}
+
+	enum ps2_controller_error_code c_err;
+	c_err = wait_till_ready_for_response();
+	if (c_err) {
+		kprintf("The ps2_controller error: %d, |%s|\n", c_err, PS2_OS_Error_to_string(c_err));
+		ret.response = -1;
+		ret.err = PS2_KB_ERR_could_not_recieve_response;
+		return ret;
+	}
+
+	uint8_t response = ps2_recieve_raw_response();
+	if (response != KRB_self_test_passed) {
+		ret.err = PS2_KB_ERR_self_test_failed;
+		ret.response = response;
+		// not -1, maybe the response and the kinda failure is useful.
+		return ret;
+	}
+
+	ret.response = response;
+	ret.err = PS2_KB_ERR_none;
+	return ret;
 }
 
 /* ================================ Step function ========================= */

@@ -38,7 +38,7 @@ typedef enum KeyboardCommandByte {
 	KCB_set_all_to_make_release = 0xF8,
 	KCB_set_all_to_make_only = 0xF9,
 	KCB_set_all_to_typematic_autorepeat_make_release = 0xFA,
-	KCB_set_specific_to_typematic_autorepeat = 0xFB,
+	KCB_set_specific_to_typematic_autorepeat_only = 0xFB,
 	KCB_set_specific_to_make_release = 0xFC,
 	KCB_set_specific_to_make_only = 0xFD,
 	KCB_resend_last_byte = 0xFE,

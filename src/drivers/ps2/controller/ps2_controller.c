@@ -99,6 +99,39 @@ enum ps2_device_super_type get_device_super_type(enum ps2_device_type dt) {
 	}
 }
 
+const char* ps2_device_type_to_string(enum ps2_device_type type) {
+	switch (type) {
+	case PS2_DT_ancient_at_keyboard:
+		return "Ancient AT Keyboard";
+	case PS2_DT_standard_mouse:
+		return "Standard Mouse";
+	case PS2_DT_mouse_with_scroll_wheel:
+		return "Mouse with Scroll Wheel";
+	case PS2_DT_mouse_with_5_button:
+		return "Mouse with 5 Buttons";
+	case PS2_DT_mf2_keyboard_1:
+		return "MF2 Keyboard 1 (0xAB, 0x83)";
+	case PS2_DT_mf2_keyboard_2:
+		return "MF2 Keyboard 2 (0xAB, 0xC1)";
+	case PS2_DT_short_keyboard:
+		return "Short Keyboard";
+	case PS2_DT_122_key_host_connected:
+		return "122-Key Host Connected Keyboard";
+	case PS2_DT_122_key:
+		return "122-Key Keyboard";
+	case PS2_DT_japanese_g_keyboard:
+		return "Japanese G Keyboard";
+	case PS2_DT_japanese_p_keyboard:
+		return "Japanese P Keyboard";
+	case PS2_DT_japanese_a_keyboard:
+		return "Japanese A Keyboard";
+	case PS2_DT_ncd_sun_layout_keyboard:
+		return "NCD / Sun Layout Keyboard";
+	default:
+		return "Unknown PS/2 Device";
+	}
+}
+
 /* =================================== Internals Functions ================================ */
 
 /* For the PS2 Device to be ready for more inputs. So, wait for the ps2 controller to be ready for the OS to send the next output */

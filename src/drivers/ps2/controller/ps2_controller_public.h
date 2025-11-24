@@ -94,3 +94,5 @@ static inline const char* PS2_OS_Error_to_string(enum ps2_controller_error_code 
 		return "Unknown PS2 error code!";
 	}
 }
+
+const char* ps2_device_type_to_string(enum ps2_device_type type);

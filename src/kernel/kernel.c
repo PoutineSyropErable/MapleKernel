@@ -305,6 +305,8 @@ one_keyboard_one_mouse:
 		abort_msg("Impossible scenario! Should be bug fixed and prevented\n!");
 	}
 
+	kprintf("\nKeyboard type: |%s|, Mouse type: |%s|\n\n", ps2_device_type_to_string(keyboard_type), ps2_device_type_to_string(mouse_type));
+
 	// TODO: replace the quick enable mouse by the actual enable mouse that will be implemented
 	quick_enable_mouse();
 	struct idt_init_ps2_fields args;

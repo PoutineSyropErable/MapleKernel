@@ -11,6 +11,7 @@ enum ps2_keyboard_error_code {
 	PS2_KB_ERR_response_was_not_echo,
 
 	PS2_KB_ERR_invalid_scancode,
+	PS2_KB_ERR_self_test_failed,
 };
 
 typedef enum ScanCodeSet {

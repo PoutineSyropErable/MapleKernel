@@ -32,7 +32,6 @@ function_t_ptr mouse_interrupt_handlers[3] = {
 void idt_init_ps2(struct idt_init_ps2_fields args) {
 	switch (args.type) {
 	case ITT_one_keyboard_one_mouse:
-		kprintf("Setting up the keyboard and mouse stuff, idt entries\n!");
 
 		struct idt_fields_keyboard_mouse args_km_value = args.value.info_keyboard_and_mouse;
 		uint8_t keyboard_port = args_km_value.keyboard_port;

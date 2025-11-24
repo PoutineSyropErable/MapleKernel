@@ -4,6 +4,7 @@
 **/*.log
 **/*.o 
 **/*.bin 
+**/*.dump
 **/*.iso
 
 **/*.gdb_history
