@@ -16,7 +16,7 @@ static inline __attribute__((noreturn)) void _abort_msg_fmt(const char* file, co
 	kprintf("Assertion Failed\n");
 
 	// Print user message (formatted)
-	vkprintf(fmt, args); // <-- You MUST provide kvprintf(fmt, va_list)
+	vkprintf(fmt, args);
 	kprintf("\n");
 
 	// Print location

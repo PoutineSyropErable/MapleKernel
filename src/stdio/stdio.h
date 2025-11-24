@@ -5,13 +5,16 @@
 #include <stdint.h>
 
 void kprintf_argc(const uint32_t argc, const char* fmt, ...);
-
-// Macro wrapper: automatically counts number of arguments
-#define kprintf(...) \
-	kprintf_argc(PP_NARG(__VA_ARGS__), __VA_ARGS__)
-
 void vkprintf(const char* fmt, va_list args);
 void kprintf2(const char* fmt, ...);
+
+// #define USE_KPRINTF_ARGC
+#ifdef USE_KPRINTF_ARGC
+// calculates argc
+#define kprintf(...) kprintf_argc(PP_NARG(__VA_ARGS__), __VA_ARGS__)
+#else
+#define kprintf(...) kprintf2(__VA_ARGS__)
+#endif
 
 enum PRINTF_FMT_OPTION {
 	FMT_OPTION_NONE = 0,
@@ -50,3 +53,6 @@ struct PRINTF_FIELD_PROPERTIES {
 
 // Function to print a string to your terminal
 extern void terminal_writestring(const char* str);
+
+void test_printf(void);
+void test_assert(void);

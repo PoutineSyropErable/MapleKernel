@@ -466,3 +466,28 @@ void kprintf2(const char* fmt, ...) {
 	vkprintf(fmt, args);
 	va_end(args);
 }
+
+void test_printf(void) {
+
+	kprintf("1: No args\n");
+
+	kprintf("2: int, x = |%d|\n", 5);
+	kprintf("3: int negative, x = |%d|\n", -5);
+	kprintf("4: uint , y = |%u|\n", 13);
+	kprintf("5: hex , z = |%h|\n", 0xdeadface);
+	kprintf("6: binary, b = |%b|\n", 0b10011);
+	kprintf("7: float, f = |%f|\n", 12.694207);
+
+	kprintf("\n");
+
+	kprintf("8: int, x = |%d:5|\n", 1206);
+	kprintf("9: uint, x = |%u:2|\n", 3);
+	kprintf("10: hex, x = |%h:3|\n", 0xab);
+	kprintf("11: bin, x = |%b:7|\n", 0b110);
+	kprintf("12: bin, x = |%b:8|\n", 0b110);
+}
+
+void test_assert(void) {
+
+	assert(false, "the int = %d, the float = %f.5, the hex = %h:3\n", 3, 25.1, 0x4b);
+}

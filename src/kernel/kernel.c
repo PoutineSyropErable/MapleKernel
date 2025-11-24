@@ -211,8 +211,6 @@ void kernel_test() {
 	terminal_writestring("\n\n===== End of Kernel Test=====\n\n");
 }
 
-extern void test_printf(void);
-
 // Macro to call all interrupts in the X-Macro
 
 enum handle_ps2_setup_errors {
@@ -477,6 +475,9 @@ void kernel_main(void) {
 	terminal_set_scroll(0);
 
 	kernel_test();
+	test_printf();
+	test_assert();
+	return;
 
 	/* Some day the future, it might be important to know the state here. But today is not that day*/
 	if (true) {
