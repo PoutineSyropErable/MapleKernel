@@ -2,6 +2,7 @@
 #include "pic.h"
 #include "ps2_controller.h"
 #include "ps2_keyboard.h"
+#include "ps2_keyboard_handler_public.h"
 #include "ps2_keyboard_public.h"
 
 // This is used to send data to the first or second ps2 device. Port 1 = Keyboard, Port 2 = mouse
@@ -534,6 +535,7 @@ enum ps2_keyboard_error_code setup_keyboard() {
 	if (err) {
 		return err;
 	}
+	setup_keyboard_extra();
 
 	enable_keyboard();
 

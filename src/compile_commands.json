@@ -369,6 +369,27 @@
       "-O0",
       "-DQEMU",
       "-c",
+      "-I./drivers/ps2/controller",
+      "-Istdlib",
+      "-Istdio",
+      "-o",
+      "build/ps2_keyboard_key_functions.o",
+      "./drivers/ps2/keyboard/ps2_keyboard_key_functions.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/drivers/ps2/keyboard/ps2_keyboard_key_functions.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/ps2_keyboard_key_functions.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-DQEMU",
+      "-c",
       "-Iidt",
       "-Igdt",
       "-I./drivers/ps2/controller",

@@ -14,6 +14,13 @@ enum ps2_keyboard_error_code {
 	PS2_KB_ERR_self_test_failed,
 };
 
+typedef struct [[gnu::packed]] {
+	bool ScrollLock : 1;
+	bool NumberLock : 1;
+	bool CapsLock : 1;
+	uint8_t reserved : 5;
+} kcb_led_state_t;
+
 typedef enum ScanCodeSet {
 	SCS_get_current = 0,
 	SCS_set_scan_code_set_1 = 1,
@@ -37,6 +44,7 @@ void set_dual_keyboard_port();
 
 const char* ps2_keyboard_error_to_string(enum ps2_keyboard_error_code code);
 
+enum ps2_keyboard_error_code set_leds(kcb_led_state_t led_sate);
 enum ps2_keyboard_error_code echo_keyboard();
 struct ps2_keyboard_verified_scan_code_set get_scan_code_set();
 enum ps2_keyboard_error_code set_scan_code_set(enum ScanCodeSet scan_code_set);

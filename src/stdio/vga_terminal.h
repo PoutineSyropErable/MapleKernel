@@ -46,7 +46,7 @@ typedef volatile color_char (*vga_buffer_ptr_t)[VGA_WIDTH];
 typedef color_char big_vga_buffer_t[VGA_MEM_HEIGHT][VGA_WIDTH];
 
 typedef struct {
-	size_t current_write_row;
+	size_t current_write_row; // This row is £ [0, VGA_MEM_HEIGHT]. It's big.
 	size_t current_write_column;
 	size_t scroll_row;
 	color_bg_fg color;

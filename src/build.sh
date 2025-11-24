@@ -127,6 +127,7 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$DRIVERS_PS2_CONTROLLER/ps2_controller.c" -o "$B
 i686-elf-gcc "${CFLAGS[@]}" -c "$DRIVERS_PS2_KEYBOARD/ps2_keyboard.c" -o "$BUILD_DIR/ps2_keyboard.o" "-I$IDT" "-I$GDT" "-I$DRIVERS_PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO"
 i686-elf-gcc "${CFLAGS[@]}" -c "$DRIVERS_PS2_MOUSE/ps2_mouse.c" -o "$BUILD_DIR/ps2_mouse.o" "-I$IDT" "-I$GDT" "-I$DRIVERS_PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO"
 i686-elf-gcc "${CFLAGS[@]}" -c "$DRIVERS_PS2_KEYBOARD/ps2_keyboard_handler.c" -o "$BUILD_DIR/ps2_keyboard_handler.o" "-I$IDT" "-I$GDT" "-I$DRIVERS_PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO"
+i686-elf-gcc "${CFLAGS[@]}" -c "$DRIVERS_PS2_KEYBOARD/ps2_keyboard_key_functions.c" -o "$BUILD_DIR/ps2_keyboard_key_functions.o" "-I$DRIVERS_PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO"
 i686-elf-gcc "${CFLAGS[@]}" -c "$DRIVERS_PS2_MOUSE/ps2_mouse_handler.c" -o "$BUILD_DIR/ps2_mouse_handler.o" "-I$IDT" "-I$GDT" "-I$DRIVERS_PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO"
 
 # Temporary stuff. Will properly program them one day.
@@ -168,6 +169,7 @@ BUILD_OBJECTS=(
 	"$BUILD_DIR/ps2_keyboard.o"
 	"$BUILD_DIR/ps2_mouse.o"
 	"$BUILD_DIR/ps2_keyboard_handler.o"
+	"$BUILD_DIR/ps2_keyboard_key_functions.o"
 	"$BUILD_DIR/ps2_mouse_handler.o"
 	"$BUILD_DIR/ps2_interrupt_handlers.o"
 

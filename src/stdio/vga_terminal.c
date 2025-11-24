@@ -1,7 +1,9 @@
 #include "intrinsics.h"
 #include "pit_timer.h"
+#include "stdio.h"
 #include "string_helper.h"
 #include "vga_terminal.h"
+#include "vga_terminal_public.h"
 
 // Static makes it so the symbol name, "vga_entry_color" is in a name space,
 // unique to this file, so there is no clash of symbols, if another function
@@ -85,6 +87,8 @@ void terminal_set_scroll(size_t row) {
 	const size_t max = VGA_MEM_HEIGHT - VGA_HEIGHT;
 	if (row > max)
 		row = max;
+	if (row < 0)
+		row = 0;
 	term.scroll_row = row;
 
 	terminal_update_vga_mem();
@@ -94,6 +98,10 @@ void terminal_scroll_down(int scroll_amount) {
 
 	size_t current_scroll = term.scroll_row;
 	terminal_set_scroll(current_scroll + scroll_amount);
+}
+
+static inline void terminal_scroll_up(int scroll_amount) {
+	terminal_scroll_down(-scroll_amount);
 }
 
 void terminal_setcolor(color_bg_fg color) {
@@ -118,10 +126,8 @@ void terminal_putentryat(char c, color_bg_fg color, size_t pos_x, size_t pos_y) 
 	set_vga_element(pos_x, pos_y - term.scroll_row, colored_c);
 }
 
+// This function doesn't set the collum to 0
 void terminal_increase_row() {
-
-	term.current_write_column = 0;
-	// should it do it here? or next to the caller? Can a row increase without changing the columns work?
 
 	term.current_write_row++;
 	if (term.current_write_row - term.scroll_row > VGA_HEIGHT) {
@@ -134,6 +140,54 @@ void terminal_increase_row() {
 		clear_visible_terminal();
 	}
 }
+
+/* ===========Start of the functions for directional arrow movement ==============  */
+
+void terminal_arrow_left() {
+}
+
+void terminal_arrow_right() {
+}
+
+void terminal_arrow_up() {
+	term.current_write_row--;
+	if (term.current_write_row < term.scroll_row) {
+		term.current_write_row = term.scroll_row;
+		terminal_scroll_up(1);
+	}
+}
+
+void terminal_arrow_down() {
+	term.current_write_row++;
+	if (term.current_write_row > term.scroll_row + VGA_HEIGHT) {
+		term.current_write_row = term.scroll_row + VGA_HEIGHT;
+		terminal_scroll_down(1);
+	}
+}
+
+// Change viewport down. v. This might increase current write row
+void terminal_ctrl_f() {
+	if (term.scroll_row + VGA_HEIGHT < VGA_MEM_HEIGHT) {
+		terminal_scroll_down(1);
+	}
+
+	if (term.current_write_row < term.scroll_row) {
+		term.current_write_row = term.scroll_row;
+	}
+}
+
+// Change viewport up. ^. This might decrease current write row
+void terminal_ctrl_r() {
+	if (term.scroll_row > 0) {
+		terminal_scroll_up(1);
+	}
+
+	if (term.current_write_row > term.scroll_row + VGA_HEIGHT) {
+		term.current_write_row = term.scroll_row + VGA_HEIGHT;
+	}
+}
+
+/* ======================== */
 
 void serial_write_char(char c) {
 

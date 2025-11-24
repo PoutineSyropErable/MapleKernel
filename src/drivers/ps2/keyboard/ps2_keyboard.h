@@ -46,13 +46,6 @@ typedef enum KeyboardCommandByte {
 } KeyboardCommandByte_t;
 typedef uint8_t keyboard_command_byte_t;
 
-typedef struct [[gnu::packed]] {
-	bool ScrollLock : 1;
-	bool NumberLock : 1;
-	bool CapsLock : 1;
-	uint8_t reserved : 5;
-} kcb_led_state_t;
-
 union kcb_led_state_uts {
 	kcb_led_state_t value;
 	uint8_t raw;
