@@ -6,6 +6,7 @@
 #include "intrinsics.h"
 #include "kernel.h"
 #include "kernel_cpp.h"
+#include "kernel_zig.h"
 #include "os_registers.c"
 #include "pic.h"
 #include "pit_timer.h"
@@ -461,6 +462,7 @@ void kernel_main(void) {
 	terminal_writestring("\n====kernel main entering loop====\n");
 
 	cpp_main();
+	zig_main();
 
 	while (true) {
 		// kernel main loop

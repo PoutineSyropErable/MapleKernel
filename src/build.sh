@@ -165,6 +165,12 @@ ia16-elf-gcc "${CFLAGS16[@]}" -c "$REAL_FUNC/realmode_functions.c" -o "$BUILD_DI
 # Compile other languages files
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$CPP/kernel_cpp.cpp" -o "$BUILD_DIR/kernel_cpp.o" "-I$STDIO" "-I$STDLIB"
 
+printf "\n\n============Start of Zig Build ============\n\n"
+./z_otherLang/zig/build.sh
+
+printf "\n\n============Start of Rust Build ============\n\n"
+./z_otherLang/rust/build.sh
+
 # Link the kernel and generate the final binary
 printf "\n\n====== Start of Linking =====\n\n"
 
@@ -208,8 +214,11 @@ BUILD_OBJECTS=(
 	"$BUILD_DIR/call_real16_wrapper.o"
 
 	"$BUILD_DIR/kernel_cpp.o"
+	# "$BUILD_DIR/kernel_zig.o"
+	"$BUILD_DIR/libkernel_zig.a"
 )
 
+# could also use g++. But as long as no runtime support, gcc will work
 i686-elf-g++ -T linker.ld -o "$BUILD_DIR/myos.bin" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}"
 
 printf "\n\n====== End of Linking =====\n\n"
