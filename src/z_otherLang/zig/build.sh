@@ -8,4 +8,5 @@ echo "Building in: $SCRIPT_DIR"
 cd "$SCRIPT_DIR"
 zig build "$@"
 
-mv ./zig-out/lib/libkernel_zig.a ../../build/libkernel_zig.a
+# mv ./zig-out/lib/libkernel_zig.a ../../build/libkernel_zig.a
+mv ./zig-out/kernel_zig.o ../../build/kernel_zig.o

@@ -214,12 +214,35 @@ BUILD_OBJECTS=(
 	"$BUILD_DIR/call_real16_wrapper.o"
 
 	"$BUILD_DIR/kernel_cpp.o"
-	# "$BUILD_DIR/kernel_zig.o"
-	"$BUILD_DIR/libkernel_zig.a"
+	"$BUILD_DIR/kernel_zig.o"
 )
 
+# ========= Static library setup ============
+
+# Library configuration
+LIBRARY_PATHS=(
+	"$BUILD_DIR"
+	# "/path/to/other/libs"
+)
+
+LIBRARY_FILES=(
+	# "libkernel_zig.a"
+	# "libother.a"
+)
+
+# Build the -L and library arguments
+LIBRARY_ARGS=()
+for path in "${LIBRARY_PATHS[@]}"; do
+	LIBRARY_ARGS+=("-L$path")
+done
+
+for lib in "${LIBRARY_FILES[@]}"; do
+	LIBRARY_ARGS+=("$lib")
+done
+
+# ============= Linking ==============
 # could also use g++. But as long as no runtime support, gcc will work
-i686-elf-g++ -T linker.ld -o "$BUILD_DIR/myos.bin" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}"
+i686-elf-g++ -T linker.ld -o "$BUILD_DIR/myos.bin" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}" "${LIBRARY_ARGS[@]}"
 
 printf "\n\n====== End of Linking =====\n\n"
 

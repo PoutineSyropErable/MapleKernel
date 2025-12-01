@@ -15,22 +15,18 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    // Add additional source files to the module
-    // mod.addSourceFile("src/z_otherLang/zig/utils.zig");
-    // mod.addSourceFile("src/z_otherLang/zig/drivers.zig");
-    // Add all your Zig files...
-
-    // Freestanding settings
-    mod.red_zone = false;
-
-    // Create static library using addLibrary (not addStaticLibrary)
-    const lib = b.addLibrary(.{
+    // Use addObject instead of addLibrary to get a .o file
+    const obj = b.addObject(.{
         .name = "kernel_zig",
         .root_module = mod,
-        .linkage = .static, // Explicitly static for embedded
     });
-    lib.root_module.addIncludePath(b.path("../../stdio"));
 
-    // Install the library
-    b.installArtifact(lib);
+    obj.root_module.addIncludePath(b.path("../../stdio"));
+    obj.root_module.addIncludePath(b.path("../../stdlib/"));
+    obj.root_module.red_zone = false;
+
+    // Install the object file
+    // CORRECT: Install object file using addInstallFile
+    const install_obj = b.addInstallFile(obj.getEmittedBin(), "kernel_zig.o");
+    b.getInstallStep().dependOn(&install_obj.step);
 }
