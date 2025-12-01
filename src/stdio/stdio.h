@@ -4,6 +4,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void kprintf_argc(const uint32_t argc, const char* fmt, ...);
 void kprintf2_argc_check(uint32_t argc, const char* fmt, ...);
 void vkprintf(const char* fmt, va_list args);
@@ -66,3 +70,7 @@ extern void terminal_writestring(const char* str);
 
 void test_printf(void);
 void test_assert(void);
+
+#ifdef __cplusplus
+}
+#endif

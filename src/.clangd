@@ -11,7 +11,6 @@ CompileFlags:
     - -fno-rtti
     - -Wall
     - -Wextra
-    - -std=gnu23
     - -fno-builtin
     - -fno-stack-protector
     - -fno-common
@@ -33,6 +32,21 @@ CompileFlags:
     - -Idrivers/ps2/keyboard
     - -Idrivers/usb/controller
     - -Iacpi
+# C files (default standard)
+If:
+  PathMatch: ".*\\.c$"
+CompileFlags:
+  Add:
+    - -std=gnu23
+
+# Override flags for C++ files
+If:
+  PathMatch: ".*\\.cpp$"
+CompileFlags:
+  Add:
+    - -std=gnu++23
+    - -fno-exceptions
+    - -fno-rtti
 
 # Optional per-file overrides for 16-bit realmode code
 If:

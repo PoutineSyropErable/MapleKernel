@@ -4,11 +4,20 @@ set -eou pipefail
 DEBUG_NOT_RELEASE="${1:-}"
 QEMU_OR_REAL_MACHINE="${2:-QEMU}"
 
+# use my custom gcc and g++:
+if true; then
+	PATH="$HOME/cross-gcc/install-ia16-elf/bin:$PATH"
+	PATH="$HOME/cross-gcc/install-i686-elf/bin:$PATH"
+	PATH="$HOME/cross-gcc/install-x86_64-elf/bin:$PATH"
+	export PATH
+fi
+
 # Define directories
 BUILD_DIR="build"
 ISO_DIR="isodir"
 
 CFLAGS=("-std=gnu23" "-ffreestanding" "-Wall" "-Wextra")
+CPPFLAGS=("-std=gnu++23" "-ffreestanding" "-Wall" "-Wextra")
 CFLAGS16=("-std=gnu99" "-ffreestanding" "-Wall" "-Wextra")
 LDFLAGS=("-ffreestanding" "-nostdlib" "-lgcc")
 NASM_FLAGS32=("-f" "elf32")
@@ -60,6 +69,10 @@ DRIVERS_PS2_MOUSE="./drivers/ps2/mouse"
 
 DRIVERS_USB_CONTROLLER="./drivers/usb/controller"
 ACPI="./acpi"
+
+CPP="./z_otherLang/cpp/"
+RUST="./z_otherLang/rust/"
+ZIG="./z_otherLang/zig/"
 
 INCLUDE_DIRS=(
 	"$KERNEL"
@@ -145,6 +158,9 @@ nasm "${NASM_FLAGS16[@]}" "$REAL16_WRAPPERS/call_realmode_function_wrapper16.asm
 nasm "${NASM_FLAGS32[@]}" "$REAL16_WRAPPERS/call_realmode_function_wrapper32.asm" -o "$BUILD_DIR/call_realmode_function_wrapper32.o" "-I$REAL16_WRAPPERS"
 ia16-elf-gcc "${CFLAGS16[@]}" -c "$REAL_FUNC/realmode_functions.c" -o "$BUILD_DIR/realmode_functions.o"
 
+# Compile other languages files
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$CPP/lol.cpp" -o "$BUILD_DIR/cpp_lol.o" "-I$STDIO" "-I$STDLIB"
+
 # Link the kernel and generate the final binary
 printf "\n\n====== Start of Linking =====\n\n"
 
@@ -186,6 +202,8 @@ BUILD_OBJECTS=(
 	"$BUILD_DIR/call_realmode_function_wrapper16.o"
 	"$BUILD_DIR/realmode_functions.o"
 	"$BUILD_DIR/call_real16_wrapper.o"
+
+	"$BUILD_DIR/cpp_lol.o"
 )
 
 i686-elf-gcc -T linker.ld -o "$BUILD_DIR/myos.bin" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}"
