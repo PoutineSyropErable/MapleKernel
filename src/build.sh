@@ -91,6 +91,10 @@ INCLUDE_DIRS=(
 
 	"$ACPI"
 	"$DRIVERS_USB_CONTROLLER"
+
+	"$CPP"
+	"$RUST"
+	"$ZIG"
 )
 
 PS2_INCLUDE_DIRS=(
@@ -159,7 +163,7 @@ nasm "${NASM_FLAGS32[@]}" "$REAL16_WRAPPERS/call_realmode_function_wrapper32.asm
 ia16-elf-gcc "${CFLAGS16[@]}" -c "$REAL_FUNC/realmode_functions.c" -o "$BUILD_DIR/realmode_functions.o"
 
 # Compile other languages files
-i686-elf-g++ "${CPPFLAGS[@]}" -c "$CPP/lol.cpp" -o "$BUILD_DIR/cpp_lol.o" "-I$STDIO" "-I$STDLIB"
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$CPP/kernel_cpp.cpp" -o "$BUILD_DIR/kernel_cpp.o" "-I$STDIO" "-I$STDLIB"
 
 # Link the kernel and generate the final binary
 printf "\n\n====== Start of Linking =====\n\n"
@@ -203,10 +207,10 @@ BUILD_OBJECTS=(
 	"$BUILD_DIR/realmode_functions.o"
 	"$BUILD_DIR/call_real16_wrapper.o"
 
-	"$BUILD_DIR/cpp_lol.o"
+	"$BUILD_DIR/kernel_cpp.o"
 )
 
-i686-elf-gcc -T linker.ld -o "$BUILD_DIR/myos.bin" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}"
+i686-elf-g++ -T linker.ld -o "$BUILD_DIR/myos.bin" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}"
 
 printf "\n\n====== End of Linking =====\n\n"
 

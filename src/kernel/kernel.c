@@ -5,6 +5,7 @@
 #include "idt_master.h"
 #include "intrinsics.h"
 #include "kernel.h"
+#include "kernel_cpp.h"
 #include "os_registers.c"
 #include "pic.h"
 #include "pit_timer.h"
@@ -458,6 +459,8 @@ void kernel_main(void) {
 	setup_keyboard();
 
 	terminal_writestring("\n====kernel main entering loop====\n");
+
+	cpp_main();
 
 	while (true) {
 		// kernel main loop

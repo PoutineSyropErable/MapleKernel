@@ -32,6 +32,10 @@ CompileFlags:
     - -Idrivers/ps2/keyboard
     - -Idrivers/usb/controller
     - -Iacpi
+
+    - -Iz_otherLang/cpp/
+    - -Iz_otherLang/zig/
+    - -Iz_otherLang/rust/
 # C files (default standard)
 If:
   PathMatch: ".*\\.c$"
