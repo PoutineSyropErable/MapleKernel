@@ -107,7 +107,7 @@ void ps2_keyboard_cpp_init()
     initialize_keycodes_name_converter();
 
     keyboard_mode = keycodes::KeyboardMode::Testing;
-    keyboard_mode = keycodes::KeyboardMode::Typing;
+    // keyboard_mode = keycodes::KeyboardMode::Typing;
 }
 
 void keycode_handler(struct KeyCode keycode, struct KeyModifierState mod_state, bool first_press, bool press_not_released)
