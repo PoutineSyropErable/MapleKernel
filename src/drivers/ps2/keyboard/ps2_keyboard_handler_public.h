@@ -1,5 +1,6 @@
 #pragma once
 #include "ps2_keyboard_handler_public.h"
+#include <stdbool.h>
 
 void setup_keyboard_extra();
 

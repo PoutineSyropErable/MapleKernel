@@ -1,5 +1,5 @@
 # .clang-format
-Language:        C
+# Language:        Cpp
 IndentWidth:     4
 UseTab:          Never
 BreakBeforeBraces: Allman
@@ -11,5 +11,21 @@ AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 IndentCaseLabels: false
 AllowShortCaseLabelsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: None
 
+# Align consecutive assignments on =
+AlignConsecutiveAssignments: true
+# Align consecutive declarations (optional for struct members)
+AlignConsecutiveDeclarations: true
+# Align trailing comments
+AlignTrailingComments: true
 
+# # Indent array braces nicely
+# BraceWrapping:
+#   AfterStruct: true
+#   AfterArray: true
+#
+# Control spaces inside braces
+SpacesInContainerLiterals: true
+# Column limit (set high so it doesn’t wrap)
+ColumnLimit: 140

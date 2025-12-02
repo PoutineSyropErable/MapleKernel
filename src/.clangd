@@ -30,6 +30,7 @@ CompileFlags:
     - -Idrivers/ps2/controller
     - -Idrivers/ps2/mouse
     - -Idrivers/ps2/keyboard
+    - -Idrivers/ps2/keyboard/cpp
     - -Idrivers/usb/controller
     - -Iacpi
 

@@ -1,7 +1,7 @@
 [
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -19,9 +19,13 @@
       "-Iruntime_code_analysis",
       "-I./drivers/ps2/controller",
       "-I./drivers/ps2/keyboard",
+      "-I./drivers/ps2/keyboard/cpp",
       "-I./drivers/ps2/mouse",
       "-I./acpi",
       "-I./drivers/usb/controller",
+      "-I./z_otherLang/cpp/",
+      "-I./z_otherLang/rust/",
+      "-I./z_otherLang/zig/",
       "-c",
       "-o",
       "build/kernel.o",
@@ -33,7 +37,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -51,7 +55,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -72,7 +76,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -93,7 +97,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -114,7 +118,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -132,7 +136,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -152,7 +156,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -173,7 +177,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -194,7 +198,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -220,7 +224,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -246,7 +250,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -268,7 +272,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -292,7 +296,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -315,7 +319,91 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-DQEMU",
+      "-c",
+      "-Iidt",
+      "-Igdt",
+      "-I./drivers/ps2/controller",
+      "-Istdlib",
+      "-Istdio",
+      "-I./drivers/ps2/keyboard/cpp",
+      "-o",
+      "build/ps2_keyboard_handler.o",
+      "./drivers/ps2/keyboard/ps2_keyboard_handler.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/drivers/ps2/keyboard/ps2_keyboard_handler.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/ps2_keyboard_handler.o"
+  },
+  {
+    "arguments": [
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-g++",
+      "-std=gnu++23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-c",
+      "-Istdio",
+      "-Istdlib",
+      "-I./drivers/ps2/keyboard/cpp",
+      "-o",
+      "build/keycodes.o",
+      "./drivers/ps2/keyboard/cpp/keycodes.cpp"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/drivers/ps2/keyboard/cpp/keycodes.cpp",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/keycodes.o"
+  },
+  {
+    "arguments": [
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-g++",
+      "-std=gnu++23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-c",
+      "-Istdio",
+      "-Istdlib",
+      "-I./drivers/ps2/keyboard",
+      "-I./drivers/ps2/keyboard/cpp",
+      "-o",
+      "build/scancodes_to_keycodes.o",
+      "./drivers/ps2/keyboard/cpp/scancodes_to_keycodes.cpp"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/drivers/ps2/keyboard/cpp/scancodes_to_keycodes.cpp",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/scancodes_to_keycodes.o"
+  },
+  {
+    "arguments": [
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-DQEMU",
+      "-c",
+      "-I./drivers/ps2/controller",
+      "-Istdlib",
+      "-Istdio",
+      "-o",
+      "build/ps2_keyboard_key_functions.o",
+      "./drivers/ps2/keyboard/ps2_keyboard_key_functions.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/drivers/ps2/keyboard/ps2_keyboard_key_functions.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/ps2_keyboard_key_functions.o"
+  },
+  {
+    "arguments": [
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -338,51 +426,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
-      "-std=gnu23",
-      "-ffreestanding",
-      "-Wall",
-      "-Wextra",
-      "-O0",
-      "-DQEMU",
-      "-c",
-      "-Iidt",
-      "-Igdt",
-      "-I./drivers/ps2/controller",
-      "-Istdlib",
-      "-Istdio",
-      "-o",
-      "build/ps2_keyboard_handler.o",
-      "./drivers/ps2/keyboard/ps2_keyboard_handler.c"
-    ],
-    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/drivers/ps2/keyboard/ps2_keyboard_handler.c",
-    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/ps2_keyboard_handler.o"
-  },
-  {
-    "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
-      "-std=gnu23",
-      "-ffreestanding",
-      "-Wall",
-      "-Wextra",
-      "-O0",
-      "-DQEMU",
-      "-c",
-      "-I./drivers/ps2/controller",
-      "-Istdlib",
-      "-Istdio",
-      "-o",
-      "build/ps2_keyboard_key_functions.o",
-      "./drivers/ps2/keyboard/ps2_keyboard_key_functions.c"
-    ],
-    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/drivers/ps2/keyboard/ps2_keyboard_key_functions.c",
-    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/ps2_keyboard_key_functions.o"
-  },
-  {
-    "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -405,7 +449,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -428,7 +472,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -451,7 +495,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -469,7 +513,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -487,7 +531,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -509,7 +553,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -544,5 +588,23 @@
     "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
     "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/realmode_functions/realmode_functions.c",
     "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/realmode_functions.o"
+  },
+  {
+    "arguments": [
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-g++",
+      "-std=gnu++23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-c",
+      "-Istdio",
+      "-Istdlib",
+      "-o",
+      "build/kernel_cpp.o",
+      "./z_otherLang/cpp//kernel_cpp.cpp"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/z_otherLang/cpp/kernel_cpp.cpp",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/kernel_cpp.o"
   }
 ]
