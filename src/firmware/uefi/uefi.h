@@ -6,7 +6,7 @@ extern "C"
 {
 #endif
 
-    bool does_ps2_controller_exist();
+    // Stuff here
 
 #ifdef __cplusplus
 }
