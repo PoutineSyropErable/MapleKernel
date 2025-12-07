@@ -35,9 +35,12 @@ _start:
 	mov eax, 0xdeadfac0
     mov esp, stack_top
 
-    ; Call the high-level kernel entry point
+	
     extern kernel_main
+    ; EBX = pointer to Multiboot2 info structure
+	push ebx ; push mb2_info_addr
     call kernel_main
+	add esp, 4
 
     ; Infinite halt loop if kernel_main returns
 halt_loop:

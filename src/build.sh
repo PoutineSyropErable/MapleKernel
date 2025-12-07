@@ -71,7 +71,7 @@ DRIVERS_PS2_MOUSE="./drivers/ps2/mouse"
 DRIVERS_PS2_KEYBOARD_CPP="./drivers/ps2/keyboard/cpp"
 
 DRIVERS_USB_CONTROLLER="./drivers/usb/controller"
-ACPI="./acpi"
+ACPI="./firmware/acpi"
 
 CPP="./z_otherLang/cpp/"
 RUST="./z_otherLang/rust/"
@@ -122,6 +122,7 @@ done
 # Assemble the bootloader assembly
 nasm "${NASM_FLAGS32[@]}" "$KERNEL/boot_intel.asm" -o "$BUILD_DIR/boot.o"
 i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/kernel.c" -o "$BUILD_DIR/kernel.o"
+i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/kernel_helper.c" -o "$BUILD_DIR/kernel_helper.o"
 
 # Compile the print functions.
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/string_helper.c" -o "$BUILD_DIR/string_helper.o"

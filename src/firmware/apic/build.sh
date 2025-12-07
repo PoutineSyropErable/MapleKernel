@@ -1,6 +1,6 @@
-../../u../../b../../env bash
+#!/usr/bin/env bash
 
-BUILD_DIR="../../bui../../"
+BUILD_DIR="../../build/"
 
 CFLAGS=("-std=gnu23" "-ffreestanding" "-Wall" "-Wextra")
 CPPFLAGS=("-std=gnu++23" "-ffreestanding" "-Wall" "-Wextra")
@@ -41,17 +41,17 @@ CODE_ANALYSIS="../../runtime_code_analysis"
 
 # Unused. but moved stuff there eventually
 DRIVERS="../../drivers"
-DRIVERS_PS2="../../drive../../ps2"
-DRIVERS_PS2_CONTROLLER="../../drive../../p../../controller"
-DRIVERS_PS2_KEYBOARD="../../drive../../p../../keyboard"
-DRIVERS_PS2_MOUSE="../../drive../../p../../mouse"
-DRIVERS_PS2_KEYBOARD_CPP="../../drive../../p../../keyboa../../cpp"
+DRIVERS_PS2="../../drivers/ps2"
+DRIVERS_PS2_CONTROLLER="../../drivers/ps2/controller"
+DRIVERS_PS2_KEYBOARD="../../drivers/ps2/keyboard"
+DRIVERS_PS2_MOUSE="../../drivers/ps2/mouse"
+DRIVERS_PS2_KEYBOARD_CPP="../../drivers/ps2/keyboard/cpp"
 
-DRIVERS_USB_CONTROLLER="../../drive../../u../../controller"
+DRIVERS_USB_CONTROLLER="../../drivers/usb/controller"
 ACPI="../../acpi"
 
 # ============ The new stuff
-MADT=../../madt"
-APIC=../../"
+MADT="./madt"
+APIC="./"
 
-i686-elf-g++ "${CPPFLAGS[@]}" -c "$MA../../madt.cpp" -o "$BUILD_D../../madt.o" "-I$STDIO" "-I$STDLIB"
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$MADT/madt.cpp" -o "$BUILD_DIR/madt.o" "-I$STDIO" "-I$STDLIB"

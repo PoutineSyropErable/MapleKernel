@@ -6,4 +6,4 @@ struct madt_t
 {
 };
 
-../..// namespace madt
+../../../..// namespace madt
