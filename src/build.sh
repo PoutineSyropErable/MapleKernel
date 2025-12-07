@@ -30,6 +30,7 @@ QEMU_DBG_FLAGS=()
 if [[ "$DEBUG_NOT_RELEASE" == "debug" ]]; then
 	echo "Debug mode enabled"
 	CFLAGS+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG")
+	CPPFLAGS+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG")
 	CFLAGS16+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG")
 	LDFLAGS+=("-g")
 	NASM_FLAGS32+=("-g" "-F" "dwarf")
@@ -38,6 +39,7 @@ if [[ "$DEBUG_NOT_RELEASE" == "debug" ]]; then
 else
 	echo "In normal mode, $RELEASE_OPT_LVL optimisation"
 	CFLAGS+=("$RELEASE_OPT_LVL")
+	CPPFLAGS+=("$RELEASE_OPT_LVL")
 	CFLAGS16+=("$RELEASE_OPT_LVL")
 	LDFLAGS+=("$RELEASE_OPT_LVL")
 fi
