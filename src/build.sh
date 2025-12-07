@@ -186,6 +186,7 @@ printf "\n\n====== Start of Linking =====\n\n"
 BUILD_OBJECTS=(
 	"$BUILD_DIR/boot.o"
 	"$BUILD_DIR/kernel.o"
+	"$BUILD_DIR/kernel_helper.o"
 
 	"$BUILD_DIR/stdlib.o"
 

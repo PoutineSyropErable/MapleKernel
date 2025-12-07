@@ -24,7 +24,7 @@
 
 #include "kernel_helper.h"
 
-GDT_ROOT *GDT16_ROOT = &GDT16_DESCRIPTOR;
+static GDT_ROOT *GDT16_ROOT = &GDT16_DESCRIPTOR;
 
 void gdt_analize(GDT_ENTRY *gdt, size_t index)
 {
