@@ -274,7 +274,7 @@ objdump -D -h "$BUILD_DIR/myos.bin" >"$BUILD_DIR/myos.dump"
 
 # Check if the kernel is multiboot-compliant
 USE_MULTIBOOT1=false
-if USE_MULTIBOOT1; then
+if [ "$USE_MULTIBOOT1" == true ]; then
 	if grub-file --is-x86-multiboot "$BUILD_DIR/myos.bin"; then
 		echo "Multiboot confirmed"
 	else
@@ -297,8 +297,10 @@ cp "$ISO_DIR/grub.cfg" "$ISO_DIR/boot/grub/grub.cfg"
 
 # Create the ISO image
 grub-mkrescue -o "$BUILD_DIR/myos.iso" "$ISO_DIR"
-
 echo "ISO created successfully: $BUILD_DIR/myos.iso"
+
+# Create 64 MB raw disk image
+DISK_IMG="$BUILD_DIR/myos.img"
 
 # start qemu using the binary, bypassing grub.
 # -no-reboot: don't reset if the kernel crash
@@ -309,14 +311,26 @@ echo "ISO created successfully: $BUILD_DIR/myos.iso"
 # ===== Pick one of those two
 # -kernel "$BUILD_DIR/myos.bin" \
 # -cdrom "$BUILD_DIR/myos.iso" \
-qemu-system-x86_64 \
-	-cdrom "$BUILD_DIR/myos.iso" \
-	-no-reboot \
-	"${QEMU_DBG_FLAGS[@]}" \
-	-d in_asm,int,cpu_reset \
-	-D qemu_instr.log \
-	-serial stdio &
 
+USE_IMAGE=false
+if [ "$USE_IMAGE" == true ]; then
+	qemu-system-x86_64 \
+		-drive file=build/myos.img,format=raw \
+		-m 512M \
+		-serial stdio \
+		-no-reboot \
+		"${QEMU_DBG_FLAGS[@]}" \
+		-d in_asm,int,cpu_reset -D qemu_instr.log
+
+else
+	qemu-system-x86_64 \
+		-cdrom "$BUILD_DIR/myos.iso" \
+		-no-reboot \
+		"${QEMU_DBG_FLAGS[@]}" \
+		-d in_asm,int,cpu_reset \
+		-D qemu_instr.log \
+		-serial stdio &
+fi
 # qemu-system-i386 -kernel ./build/myos.bin & # or do this to use the binary directly # -cdrom "$BUILD_DIR/myos.iso" # -kernel "$BUILD_DIR/myos.bin" \
 
 QEMU_PID=$!
