@@ -129,7 +129,7 @@ void kernel_test()
             "hex = %h:9-final text|\n\n",
         1, -7, 2, 3.0, 0b11011, 0x123bcd);
 
-    return;
+    // return;
 
     print_extern_address("The address of stack16_start: ", get_stack16_start_address);
     print_extern_address("The address of stack16_end: ", get_stack16_end_address);

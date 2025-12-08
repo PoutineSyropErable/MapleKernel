@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -eou pipefail
 DEBUG_NOT_RELEASE="${1:-}"
@@ -11,6 +11,30 @@ if false; then
 	PATH="$HOME/cross-gcc/install-x86_64-elf/bin:$PATH"
 	export PATH
 fi
+
+function find_git_root() {
+	local dir=${1:-$PWD} # start from given dir or current directory
+	while [[ "$dir" != "/" ]]; do
+		if [[ -d "$dir/.git" ]]; then
+			echo "$dir"
+			return 0
+		fi
+		dir=$(dirname "$dir")
+	done
+	echo "No git repository found" >&2
+	return 1
+}
+
+project_root=$(find_git_root)
+src="$project_root/src"
+cd "$src" || { # Tries to cd to "src" relative to current dir
+	echo "Could not cd to $src."
+	exit 1
+}
+
+#With this, it should work nice
+export PATH="./tools:$PATH"
+source ./tools/source_this.bash
 
 # Define directories
 BUILD_DIR="build"
@@ -55,8 +79,6 @@ mkdir -p "$BUILD_DIR" "$ISO_DIR/boot/grub"
 KERNEL="kernel"
 REAL16_WRAPPERS="real16_wrappers"
 REAL_FUNC="realmode_functions"
-GDT="gdt"
-IDT="idt"
 STDIO="stdio"
 STDLIB="stdlib"
 OTHER="other"
@@ -75,7 +97,10 @@ DRIVERS_USB_CONTROLLER="./drivers/usb/controller"
 UEFI="./firmware/uefi"
 MULTIBOOT="./firmware/multiboot"
 ACPI="./firmware/acpi"
-APIC="./firmware/acpi"
+
+APIC="./cpu/apic"
+GDT="./cpu/gdt"
+IDT="./cpu/idt"
 
 CPP="./z_otherLang/cpp/"
 RUST="./z_otherLang/rust/"
@@ -332,7 +357,10 @@ USE_IMAGE=false
 if [ "$USE_IMAGE" == true ]; then
 	bochs -f bochsrc.txt
 else
-	qemu-system-x86_64 \
+	QEMU32=qemu-system-i386
+	QEMU64=qemu-system-x86_64
+	QEMU="$QEMU32"
+	$QEMU \
 		-cdrom "$BUILD_DIR/myos.iso" \
 		\
 		-no-reboot \
@@ -347,7 +375,13 @@ else
 	sleep 1
 
 	# Launch VNC viewer
-	vncviewer localhost:5900
+	vncviewer localhost:5900 &
+	VNC_PID=$!
+
+	# sleep 1
+	move_pid_to_workspace $VNC_PID 21
+
+	wait $VNC_PID
 
 	# After you close the VNC viewer, kill QEMU
 	kill $QEMU_PID 2>/dev/null
