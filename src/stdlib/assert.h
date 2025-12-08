@@ -3,58 +3,65 @@
 #include "vga_terminal.h"
 #include <stdarg.h>
 
-static inline __attribute__((noreturn)) void _abort(void) {
-	terminal_writestring("ABORTED\n");
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
-	while (true) {
-		__asm__ volatile("cli; hlt");
-	}
-}
+    static inline __attribute__((noreturn)) void _abort(void)
+    {
+        terminal_writestring("ABORTED\n");
 
-static inline __attribute__((noreturn)) void _abort_msg_fmt(const char* file, const char* func, int line,
-                                                            const char* fmt, va_list args) {
-	kprintf("Assertion Failed\n");
+        while (true)
+        {
+            __asm__ volatile("cli; hlt");
+        }
+    }
 
-	// Print user message (formatted)
-	vkprintf(fmt, args);
-	kprintf("\n");
+    static inline __attribute__((noreturn)) void _abort_msg_fmt(const char *file, const char *func, int line, const char *fmt, va_list args)
+    {
+        kprintf("Assertion Failed\n");
 
-	// Print location
-	kprintf("File: %s, Function: %s, Line: %d\n", file, func, line);
+        // Print user message (formatted)
+        vkprintf(fmt, args);
+        kprintf("\n");
 
-	_abort();
-}
+        // Print location
+        kprintf("File: %s, Function: %s, Line: %d\n", file, func, line);
 
-static inline __attribute__((noreturn)) void abort_msg_fmt(const char* fmt, ...) {
-	va_list args;
-	va_start(args, fmt);
+        _abort();
+    }
 
-	_abort_msg_fmt(__FILE__, __func__, __LINE__, fmt, args);
+    static inline __attribute__((noreturn)) void abort_msg_fmt(const char *fmt, ...)
+    {
+        va_list args;
+        va_start(args, fmt);
 
-	va_end(args);
-}
+        _abort_msg_fmt(__FILE__, __func__, __LINE__, fmt, args);
 
-static inline void assert_handler_fmt(bool cond,
-                                      const char* file,
-                                      const char* func,
-                                      int line,
-                                      const char* fmt, ...) {
-	if (!cond) {
-		va_list args;
-		va_start(args, fmt);
+        va_end(args);
+    }
 
-		_abort_msg_fmt(file, func, line, fmt, args);
+    static inline void assert_handler_fmt(bool cond, const char *file, const char *func, int line, const char *fmt, ...)
+    {
+        if (!cond)
+        {
+            va_list args;
+            va_start(args, fmt);
 
-		va_end(args);
-	}
-}
+            _abort_msg_fmt(file, func, line, fmt, args);
+
+            va_end(args);
+        }
+    }
 
 // PUBLIC MACROS — user interface
-#define assert(cond, fmt, ...) \
-	assert_handler_fmt((cond), __FILE__, __func__, __LINE__, (fmt), ##__VA_ARGS__)
+#define assert(cond, fmt, ...) assert_handler_fmt((cond), __FILE__, __func__, __LINE__, (fmt), ##__VA_ARGS__)
 
-#define abort_msg(fmt, ...) \
-	abort_msg_fmt((fmt), ##__VA_ARGS__)
+#define abort_msg(fmt, ...) abort_msg_fmt((fmt), ##__VA_ARGS__)
 
-#define abort() \
-	abort_msg("abort() called")
+#define abort() abort_msg("abort() called")
+
+#ifdef __cplusplus
+}
+#endif

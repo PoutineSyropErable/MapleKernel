@@ -23,18 +23,45 @@
 #include "ps2_mouse_public.h"
 
 #include "kernel_helper.h"
+#include "multiboot.h"
 
 GDT_ROOT *GDT16_ROOT = &GDT16_DESCRIPTOR;
 
-void kernel_main(void)
+void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_multiboot_32)
 {
+
+    initialize_terminal();
+    terminal_set_scroll(0);
+
+    kprintf("\n===========Terminal Initialized=============\n");
+    kprintf("addr = %u, magic = %h, is_proper_multiboot_32 = %u\n", mb2_info_addr, magic, is_proper_multiboot_32);
+
+    bool is_proper_multiboot = is_proper_multiboot_32;
+    if (is_proper_multiboot)
+    {
+        kprintf("It's proper multiboot\n");
+    }
+    else
+    {
+        abort_msg("Not proper multiboot\n");
+        // The abbort might not be needed anyway.
+    }
+
+    uint32_t *mbi = (uint32_t *)mb2_info_addr;
+    for (uint8_t i = 0; i < 255; i++)
+    {
+        kprintf("data= %h:4\n", mbi[i]);
+    }
+
+    void *rsdp = get_rsdp(mb2_info_addr);
+    kprintf("rsdp = %h\n", rsdp);
+
+    return;
 
     // init_paging();
     // init_page_bitmap();
 
     /* Initialize terminal interface */
-    initialize_terminal();
-    terminal_set_scroll(0);
 
     kernel_test();
     test_printf();

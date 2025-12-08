@@ -32,15 +32,26 @@ section .text
 global _start
 _start:
     ; Set stack pointer (stack grows downward)
-	mov eax, 0xdeadfac0
+	mov edx, 0xdeadfac0
     mov esp, stack_top
 
 	
+	; Is it proper multiboot? (ECX = (EAX == MB2_MAGIC_EAX))
+%define MB2_MAGIC_EAX 0x2BADB002
+	cmp eax, MB2_MAGIC_EAX
+	sete cl 
+	movzx ecx, cl
+
+
+
     extern kernel_main
     ; EBX = pointer to Multiboot2 info structure
+	; EAX = MAGIC value
+	push ecx ; (proper multiboot)
+	push eax ; magic number
 	push ebx ; push mb2_info_addr
     call kernel_main
-	add esp, 4
+	add esp, 12
 
     ; Infinite halt loop if kernel_main returns
 halt_loop:

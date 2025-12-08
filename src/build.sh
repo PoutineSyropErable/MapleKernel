@@ -124,6 +124,9 @@ nasm "${NASM_FLAGS32[@]}" "$KERNEL/boot_intel.asm" -o "$BUILD_DIR/boot.o"
 i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/kernel.c" -o "$BUILD_DIR/kernel.o"
 i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/kernel_helper.c" -o "$BUILD_DIR/kernel_helper.o"
 
+# Move this to firmware maybe?
+i686-elf-g++ "${CPPFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/multiboot.cpp" -o "$BUILD_DIR/multiboot.o"
+
 # Compile the print functions.
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/string_helper.c" -o "$BUILD_DIR/string_helper.o"
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/bit_hex_string.c" -o "$BUILD_DIR/bit_hex_string.o" -std=gnu99 "-I$STDIO" "-I$STDLIB"
@@ -187,6 +190,7 @@ BUILD_OBJECTS=(
 	"$BUILD_DIR/boot.o"
 	"$BUILD_DIR/kernel.o"
 	"$BUILD_DIR/kernel_helper.o"
+	"$BUILD_DIR/multiboot.o"
 
 	"$BUILD_DIR/stdlib.o"
 
@@ -261,11 +265,13 @@ printf "\n\n====== End of Linking =====\n\n"
 objdump -D -h "$BUILD_DIR/myos.bin" >"$BUILD_DIR/myos.dump"
 
 # Check if the kernel is multiboot-compliant
-if grub-file --is-x86-multiboot "$BUILD_DIR/myos.bin"; then
-	echo "Multiboot confirmed"
-else
-	echo "The file is not multiboot"
-	exit 1
+if false; then
+	if grub-file --is-x86-multiboot "$BUILD_DIR/myos.bin"; then
+		echo "Multiboot confirmed"
+	else
+		echo "The file is not multiboot"
+		exit 1
+	fi
 fi
 
 # Copy the kernel binary and GRUB configuration to the ISO directory
