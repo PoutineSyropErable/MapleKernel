@@ -1,7 +1,7 @@
 [
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "/usr/local/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -21,8 +21,11 @@
       "-I./drivers/ps2/keyboard",
       "-I./drivers/ps2/keyboard/cpp",
       "-I./drivers/ps2/mouse",
-      "-I./acpi",
       "-I./drivers/usb/controller",
+      "-I./firmware/uefi",
+      "-I./firmware/multiboot",
+      "-I./firmware/acpi",
+      "-I./firmware/acpi",
       "-I./z_otherLang/cpp/",
       "-I./z_otherLang/rust/",
       "-I./z_otherLang/zig/",
@@ -37,7 +40,84 @@
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "/usr/local/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-DQEMU",
+      "-Ikernel",
+      "-Ireal16_wrappers",
+      "-Irealmode_functions",
+      "-Igdt",
+      "-Iidt",
+      "-Istdio",
+      "-Istdlib",
+      "-Iother",
+      "-Iruntime_code_analysis",
+      "-I./drivers/ps2/controller",
+      "-I./drivers/ps2/keyboard",
+      "-I./drivers/ps2/keyboard/cpp",
+      "-I./drivers/ps2/mouse",
+      "-I./drivers/usb/controller",
+      "-I./firmware/uefi",
+      "-I./firmware/multiboot",
+      "-I./firmware/acpi",
+      "-I./firmware/acpi",
+      "-I./z_otherLang/cpp/",
+      "-I./z_otherLang/rust/",
+      "-I./z_otherLang/zig/",
+      "-c",
+      "-o",
+      "build/kernel_helper.o",
+      "kernel/kernel_helper.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/kernel/kernel_helper.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/kernel_helper.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-g++",
+      "-std=gnu++23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-Ikernel",
+      "-Ireal16_wrappers",
+      "-Irealmode_functions",
+      "-Igdt",
+      "-Iidt",
+      "-Istdio",
+      "-Istdlib",
+      "-Iother",
+      "-Iruntime_code_analysis",
+      "-I./drivers/ps2/controller",
+      "-I./drivers/ps2/keyboard",
+      "-I./drivers/ps2/keyboard/cpp",
+      "-I./drivers/ps2/mouse",
+      "-I./drivers/usb/controller",
+      "-I./firmware/uefi",
+      "-I./firmware/multiboot",
+      "-I./firmware/acpi",
+      "-I./firmware/acpi",
+      "-I./z_otherLang/cpp/",
+      "-I./z_otherLang/rust/",
+      "-I./z_otherLang/zig/",
+      "-c",
+      "-o",
+      "build/multiboot.o",
+      "./firmware/multiboot/multiboot.cpp"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/firmware/multiboot/multiboot.cpp",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/multiboot.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -55,7 +135,7 @@
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "/usr/local/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -76,7 +156,7 @@
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "/usr/local/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -97,7 +177,7 @@
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "/usr/local/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -118,7 +198,7 @@
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "/usr/local/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -136,7 +216,7 @@
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "/usr/local/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -156,7 +236,7 @@
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "/usr/local/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -177,7 +257,7 @@
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "/usr/local/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -198,7 +278,7 @@
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "/usr/local/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -224,7 +304,7 @@
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "/usr/local/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -250,7 +330,7 @@
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "/usr/local/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -272,7 +352,7 @@
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "/usr/local/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -284,7 +364,7 @@
       "-Igdt",
       "-Istdlib",
       "-Istdio",
-      "-I./acpi",
+      "-I./firmware/acpi",
       "-I./drivers/usb/controller",
       "-o",
       "build/ps2_controller.o",
@@ -296,7 +376,7 @@
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "/usr/local/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -319,7 +399,7 @@
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "/usr/local/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -343,11 +423,12 @@
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-g++",
+      "/usr/local/bin/i686-elf-g++",
       "-std=gnu++23",
       "-ffreestanding",
       "-Wall",
       "-Wextra",
+      "-O0",
       "-c",
       "-Istdio",
       "-Istdlib",
@@ -362,11 +443,12 @@
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-g++",
+      "/usr/local/bin/i686-elf-g++",
       "-std=gnu++23",
       "-ffreestanding",
       "-Wall",
       "-Wextra",
+      "-O0",
       "-c",
       "-Istdio",
       "-Istdlib",
@@ -382,7 +464,7 @@
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "/usr/local/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -403,7 +485,7 @@
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "/usr/local/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -426,7 +508,7 @@
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "/usr/local/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -449,7 +531,7 @@
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "/usr/local/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -472,7 +554,7 @@
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "/usr/local/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -484,18 +566,18 @@
       "-Igdt",
       "-Istdlib",
       "-Istdio",
-      "-I./acpi",
+      "-I./firmware/acpi",
       "-o",
       "build/acpi.o",
-      "./acpi/acpi.c"
+      "./firmware/acpi/acpi.c"
     ],
     "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/acpi/acpi.c",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/firmware/acpi/acpi.c",
     "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/acpi.o"
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "/usr/local/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -513,7 +595,7 @@
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "/usr/local/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -531,7 +613,7 @@
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "/usr/local/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -553,7 +635,7 @@
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "/usr/local/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -591,11 +673,12 @@
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-g++",
+      "/usr/local/bin/i686-elf-g++",
       "-std=gnu++23",
       "-ffreestanding",
       "-Wall",
       "-Wextra",
+      "-O0",
       "-c",
       "-Istdio",
       "-Istdlib",

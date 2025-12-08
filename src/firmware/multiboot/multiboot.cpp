@@ -1,5 +1,6 @@
 // multiboot2.cpp - C++ implementation
 #include "assert.h"
+#include "multiboot.h"
 #include "multiboot.hpp"
 #include "stdio.h"
 #include <stddef.h>
@@ -37,13 +38,13 @@ static bool check_rsdp_checksum(const void *rsdp_ptr)
 }
 
 // Main implementation
-void *find_rsdp(info *mbi)
+struct multiboot::rsdp_tagged_t find_rsdp(info *mbi)
 {
+
+    struct multiboot::rsdp_tagged_t ret;
     if (!mbi)
     {
-        // abort_msg("null mbi");
         abort_msg("null mbi\n");
-        return nullptr;
     }
 
     // Check if MBI size is reasonable
@@ -51,7 +52,6 @@ void *find_rsdp(info *mbi)
     { // header + minimum tag
         abort_msg("too small\n");
         abort();
-        return nullptr;
     }
 
     tag      *current  = tag_first(mbi);
@@ -60,24 +60,43 @@ void *find_rsdp(info *mbi)
     while (reinterpret_cast<uintptr_t>(current) < end_addr)
     {
 
-        kprintf("Current type: %h\n", current->type);
-        kprintf("Current size: %h\n", current->size);
+        // kprintf("Current type: %s\n", multiboot::type_to_str(current->type));
+        // kprintf("Current size: %h\n", current->size);
         // Check for end tag
-        if (current->type == END && current->size == 8)
+        if (current->type == multiboot::tag_type::END && current->size == 8)
         {
             break;
         }
 
         // Check for ACPI RSDP tags
-        if (current->type == ACPI_OLD || current->type == ACPI_NEW)
+        if (current->type == multiboot::tag_type::ACPI_NEW)
         {
             // RSDP data starts right after the tag header
             void *rsdp_ptr = reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(current) + sizeof(tag));
+            kprintf("NEW\n");
 
             // Quick validation
             if (check_rsdp_signature(rsdp_ptr) && check_rsdp_checksum(rsdp_ptr))
             {
-                return rsdp_ptr;
+                ret.rsdp       = rsdp_ptr;
+                ret.new_or_old = multiboot::rsdp_type::NEW_V2;
+                return ret;
+            }
+        }
+
+        // Check for ACPI RSDP tags
+        else if (current->type == multiboot::tag_type::ACPI_OLD)
+        {
+            // RSDP data starts right after the tag header
+            void *rsdp_ptr = reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(current) + sizeof(tag));
+            kprintf("OLD\n");
+
+            // Quick validation
+            if (check_rsdp_signature(rsdp_ptr) && check_rsdp_checksum(rsdp_ptr))
+            {
+                ret.rsdp       = rsdp_ptr;
+                ret.new_or_old = multiboot::rsdp_type::OLD_V1;
+                return ret;
             }
         }
 
@@ -85,7 +104,6 @@ void *find_rsdp(info *mbi)
     }
 
     abort_msg("Nothing found!\n");
-    return nullptr;
 }
 
 bool validate_rsdp(void *rsdp_ptr)
@@ -104,9 +122,14 @@ bool validate_rsdp(void *rsdp_ptr)
 extern "C"
 {
 
-    void *get_rsdp(uint32_t mbi_addr)
+    struct rsdp_tagged_c get_rsdp(uint32_t mbi_addr)
     {
-        return multiboot::find_rsdp(reinterpret_cast<multiboot::info *>(mbi_addr));
+        struct multiboot::rsdp_tagged_t t = multiboot::find_rsdp(reinterpret_cast<multiboot::info *>(mbi_addr));
+
+        struct rsdp_tagged_c ret;
+        ret.new_or_old = (enum rsdp_type_c)(int)t.new_or_old;
+        ret.rsdp       = t.rsdp;
+        return ret;
     }
 
     int multiboot_validate_rsdp(void *rsdp)

@@ -1,20 +1,40 @@
 ; =====================================================
 ; Multiboot Header Constants
 ; =====================================================
-%define ALIGN    1
-%define MEMINFO  2  
-%define FLAGS    3
-%define MAGIC    0x1BADB002
-%define CHECKSUM 0xE4524FFB
+%define MB2_MAGIC      0xE85250D6
+%define MB2_ARCH       0              ; i386 (32-bit)
+%define MB2_TAG_END    0
+%define MB2_TAG_INFO_REQ 1
+%define MB2_TAG_ACPI_OLD 14
+%define MB2_TAG_ACPI_NEW 15
+
+%define BOOTLOADER_MAGIC_MB1 0x2BADB002
+%define BOOTLOADER_MAGIC_MB2 0x36D76289
 
 ; =====================================================
 ; Multiboot Header Section
 ; =====================================================
-section .multiboot
-    align 4
-    dd MAGIC
-    dd FLAGS
-    dd CHECKSUM
+header_start:
+    ; Multiboot2 header
+    dd MB2_MAGIC          ; Magic number
+    dd MB2_ARCH           ; Architecture
+    dd header_end - header_start ; Header length
+    dd -(MB2_MAGIC + MB2_ARCH + (header_end - header_start)) ; Checksum
+    
+    ; Optional: Request ACPI RSDP tags (if you want GRUB to provide them)
+    dw MB2_TAG_INFO_REQ  ; Type: Information request
+    dw 0                 ; Flags
+    dd 16                ; Size: 16 bytes (for 2, 12 bytes for 1)
+    ; dd MB2_TAG_ACPI_OLD  ; Request ACPI v1 RSDP
+    dd MB2_TAG_ACPI_NEW  ; Request ACPI v2 RSDP
+    dd MB2_TAG_ACPI_NEW  ; Request ACPI v2 RSDP
+	; dd 0 ; padding
+    
+    ; Required end tag
+    dw MB2_TAG_END        ; Type: End
+    dw 0                  ; Flags
+    dd 8                  ; Size: 8 bytes
+header_end:
 
 ; =====================================================
 ; Stack Section (16-byte aligned, 16 KiB)
@@ -37,8 +57,7 @@ _start:
 
 	
 	; Is it proper multiboot? (ECX = (EAX == MB2_MAGIC_EAX))
-%define MB2_MAGIC_EAX 0x2BADB002
-	cmp eax, MB2_MAGIC_EAX
+	cmp eax, BOOTLOADER_MAGIC_MB2
 	sete cl 
 	movzx ecx, cl
 

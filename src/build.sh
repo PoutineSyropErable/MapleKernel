@@ -71,7 +71,11 @@ DRIVERS_PS2_MOUSE="./drivers/ps2/mouse"
 DRIVERS_PS2_KEYBOARD_CPP="./drivers/ps2/keyboard/cpp"
 
 DRIVERS_USB_CONTROLLER="./drivers/usb/controller"
+
+UEFI="./firmware/uefi"
+MULTIBOOT="./firmware/multiboot"
 ACPI="./firmware/acpi"
+APIC="./firmware/acpi"
 
 CPP="./z_otherLang/cpp/"
 RUST="./z_otherLang/rust/"
@@ -93,8 +97,12 @@ INCLUDE_DIRS=(
 	"$DRIVERS_PS2_KEYBOARD_CPP"
 	"$DRIVERS_PS2_MOUSE"
 
-	"$ACPI"
 	"$DRIVERS_USB_CONTROLLER"
+
+	"$UEFI"
+	"$MULTIBOOT"
+	"$APIC"
+	"$ACPI"
 
 	"$CPP"
 	"$RUST"
@@ -125,7 +133,7 @@ i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/kernel.c" -o "$BUI
 i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/kernel_helper.c" -o "$BUILD_DIR/kernel_helper.o"
 
 # Move this to firmware maybe?
-i686-elf-g++ "${CPPFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/multiboot.cpp" -o "$BUILD_DIR/multiboot.o"
+i686-elf-g++ "${CPPFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$MULTIBOOT/multiboot.cpp" -o "$BUILD_DIR/multiboot.o"
 
 # Compile the print functions.
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/string_helper.c" -o "$BUILD_DIR/string_helper.o"
@@ -265,13 +273,22 @@ printf "\n\n====== End of Linking =====\n\n"
 objdump -D -h "$BUILD_DIR/myos.bin" >"$BUILD_DIR/myos.dump"
 
 # Check if the kernel is multiboot-compliant
-if false; then
+USE_MULTIBOOT1=false
+if USE_MULTIBOOT1; then
 	if grub-file --is-x86-multiboot "$BUILD_DIR/myos.bin"; then
 		echo "Multiboot confirmed"
 	else
 		echo "The file is not multiboot"
 		exit 1
 	fi
+else
+	if grub-file --is-x86-multiboot2 "$BUILD_DIR/myos.bin"; then
+		echo "Multiboot2 confirmed"
+	else
+		echo "The file is not multiboot 2"
+		exit 1
+	fi
+
 fi
 
 # Copy the kernel binary and GRUB configuration to the ISO directory
@@ -292,7 +309,7 @@ echo "ISO created successfully: $BUILD_DIR/myos.iso"
 # ===== Pick one of those two
 # -kernel "$BUILD_DIR/myos.bin" \
 # -cdrom "$BUILD_DIR/myos.iso" \
-qemu-system-i386 \
+qemu-system-x86_64 \
 	-cdrom "$BUILD_DIR/myos.iso" \
 	-no-reboot \
 	"${QEMU_DBG_FLAGS[@]}" \
