@@ -15,7 +15,7 @@ extern "C"
         uint8_t a; // a might be ignored or reserved
     };
 
-    void do_test_c(struct framebuffer_info_t framebuffer_info);
+    void do_test_c(volatile struct color_t *base_address, uint32_t width, uint32_t height, uint32_t pitch);
 
 #ifdef __cplusplus
 }

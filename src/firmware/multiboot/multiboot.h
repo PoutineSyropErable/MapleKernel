@@ -21,7 +21,7 @@ extern "C"
     };
 
     // void  parse_multiboot_header(uint32_t multiboot_add);
-    struct rsdp_tagged_c get_rsdp(uint32_t mbi);
+    struct rsdp_tagged_c get_rsdp_grub(uint32_t mbi);
 
     bool validate_rsdp_c(void *rsdp_ptr);
 

@@ -50,20 +50,41 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
         // The abbort might not be needed anyway.
     }
 
-    struct rsdp_tagged_c rsdp_tagged       = get_rsdp(mb2_info_addr);
-    char                *rsdp_type_names[] = {"NULL", "OLD", "NEW"};
-    char                *name              = rsdp_type_names[rsdp_tagged.new_or_old];
-    kprintf("RSDP Type = %s\n", name);
-    kprintf("NULL = 0, OLD = 1, NEW = 2. The type of rsdp: %d\n", rsdp_tagged.new_or_old);
-    void *rsdp = rsdp_tagged.rsdp;
+#define GRUB_FRAMEBUFFER
+    // #define BIOS_FRAMEBUFFER_HACK
+
+#ifdef GRUB_FRAMEBUFFER
+    struct rsdp_tagged_c      rsdp_tagged       = get_rsdp_grub(mb2_info_addr);
+    char                     *rsdp_type_names[] = {"NULL", "OLD", "NEW"};
+    char                     *name              = rsdp_type_names[rsdp_tagged.new_or_old];
+    void                     *rsdp              = rsdp_tagged.rsdp;
+    struct framebuffer_info_t grub_fb_info      = get_framebuffer(mb2_info_addr);
+
+    uint8_t bpp  = grub_fb_info.bit_per_pixel;
+    bool    type = grub_fb_info.type;
+
+    kprintf("FB addr: %h %h, pitch=%u, w=%u, h=%u, bpp=%u, type=%u\n", grub_fb_info.base_addr_high, grub_fb_info.base_addr_low,
+        grub_fb_info.pitch, grub_fb_info.width, grub_fb_info.height, bpp, grub_fb_info.type);
+    assert(bpp == 32, "Need 32 bit per pixel, else we are fucked!\n");
+    assert(type == 1, "Need color support\n");
+
+    uint32_t                 width        = grub_fb_info.width;
+    uint32_t                 height       = grub_fb_info.height;
+    uint32_t                 pitch        = grub_fb_info.pitch;
+    volatile struct color_t *base_address = (struct color_t *)grub_fb_info.base_addr_low;
+
+#elifdef BIOS_FRAMEBUFFER_HACK
+    kprintf("in elif\n\n\n");
+    uint32_t                 width        = 0;
+    uint32_t                 height       = 0;
+    uint32_t                 pitch        = 0;
+    volatile struct color_t *base_address = (struct color_t *)0
+
+#endif
+
     kprintf("rsdp = %h\n", rsdp);
+    do_test_c(base_address, width, height, pitch);
 
-    bool val = validate_rsdp_c(rsdp);
-    kprintf("Valid = %b\n", val);
-
-    struct framebuffer_info_t framebuffer = get_framebuffer(mb2_info_addr);
-
-    do_test_c(framebuffer);
     return;
 
     // init_paging();

@@ -37,7 +37,10 @@ header_start:
 %define HEIGHT 768
 
 
+	
 	; === Framebuffer request tag ===
+	%define GRUB_FRAMEBUFFER
+	%ifdef GRUB_FRAMEBUFFER
     dw MB2_TAG_FRAMEBUFFER         ; Type: framebuffer
     dw 0                  ; Flags
     dd 24                 ; Size of this tag
@@ -46,6 +49,7 @@ header_start:
     dd 32                 ; Bits per pixel
     ; dd 0                  ; Framebuffer type: 0 = RGB, 1 = EGA text
     dd 0                  ; Padding/reserved
+	%endif
     
     ; Required end tag
     dw MB2_TAG_END        ; Type: End

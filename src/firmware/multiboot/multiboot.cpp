@@ -166,7 +166,7 @@ bool validate_rsdp(void *rsdp_ptr)
 extern "C"
 {
 
-    struct rsdp_tagged_c get_rsdp(uint32_t mbi_addr)
+    struct rsdp_tagged_c get_rsdp_grub(uint32_t mbi_addr)
     {
         struct multiboot::rsdp_tagged_t t = multiboot::find_rsdp(reinterpret_cast<multiboot::info *>(mbi_addr));
 

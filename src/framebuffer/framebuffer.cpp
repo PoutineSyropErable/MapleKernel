@@ -124,6 +124,7 @@ void draw_3_lines(uint8_t row_c)
 void framebuffer::do_test(uint32_t width, uint32_t height, uint32_t pitch, volatile struct color_t *base_address)
 
 {
+    assert(base_address != nullptr, "Null Base Address\n");
     g_framebuffer.base_address = base_address;
     g_framebuffer.height       = height;
     g_framebuffer.width        = width;
@@ -138,22 +139,8 @@ extern "C"
 {
 #endif
 
-    void do_test_c(struct framebuffer_info_t framebuffer_info)
+    void do_test_c(volatile struct color_t *base_address, uint32_t width, uint32_t height, uint32_t pitch)
     {
-        // passing a framebuffer_info_t might be weird if i don't use grub...
-
-        uint32_t          width        = framebuffer_info.width;
-        uint32_t          height       = framebuffer_info.height;
-        uint32_t          pitch        = framebuffer_info.pitch;
-        volatile color_t *base_address = (color_t *)framebuffer_info.base_addr_low;
-
-        uint8_t bpp  = framebuffer_info.bit_per_pixel;
-        bool    type = framebuffer_info.type;
-        assert(bpp == 32, "Need 32 bit per pixel, else we are fucked!\n");
-        assert(type == 1, "Need color support\n");
-
-        kprintf("FB addr: %h %h, pitch=%u, w=%u, h=%u, bpp=%u, type=%u\n", framebuffer_info.base_addr_high, base_address, pitch, width,
-            height, bpp, framebuffer_info.type);
 
         framebuffer::do_test(width, height, pitch, base_address);
     }
