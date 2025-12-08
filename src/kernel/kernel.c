@@ -50,7 +50,7 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
         // The abbort might not be needed anyway.
     }
 
-#define GRUB_FRAMEBUFFER
+// #define GRUB_FRAMEBUFFER
 // #define BIOS_FRAMEBUFFER_HACK
 #ifdef GRUB_FRAMEBUFFER
     struct framebuffer_info_t grub_fb_info = get_framebuffer(mb2_info_addr);
@@ -80,15 +80,20 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 
 #endif
 
+// #define GET_RSDP
+#ifdef GET_RSDP
     // Eventually, learn to get rsdp from bios and uefi function calls
     struct rsdp_tagged_c rsdp_tagged       = get_rsdp_grub(mb2_info_addr);
     char                *rsdp_type_names[] = {"NULL", "OLD", "NEW"};
     char                *name              = rsdp_type_names[rsdp_tagged.new_or_old];
     void                *rsdp              = rsdp_tagged.rsdp;
     kprintf("rsdp = %h, type=%s\n", rsdp, name);
-    do_test_c(base_address, width, height, pitch);
+#endif
 
-    // return;
+// #define VIS_TEST
+#ifdef VIS_TEST
+    do_test_c(base_address, width, height, pitch);
+#endif
 
     // init_paging();
     // init_page_bitmap();
