@@ -50,15 +50,10 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
         // The abbort might not be needed anyway.
     }
 
-#define GRUB_FRAMEBUFFER
-    // #define BIOS_FRAMEBUFFER_HACK
-
+    // #define GRUB_FRAMEBUFFER
+#define BIOS_FRAMEBUFFER_HACK
 #ifdef GRUB_FRAMEBUFFER
-    struct rsdp_tagged_c      rsdp_tagged       = get_rsdp_grub(mb2_info_addr);
-    char                     *rsdp_type_names[] = {"NULL", "OLD", "NEW"};
-    char                     *name              = rsdp_type_names[rsdp_tagged.new_or_old];
-    void                     *rsdp              = rsdp_tagged.rsdp;
-    struct framebuffer_info_t grub_fb_info      = get_framebuffer(mb2_info_addr);
+    struct framebuffer_info_t grub_fb_info = get_framebuffer(mb2_info_addr);
 
     uint8_t bpp  = grub_fb_info.bit_per_pixel;
     bool    type = grub_fb_info.type;
@@ -75,14 +70,22 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 
 #elifdef BIOS_FRAMEBUFFER_HACK
     kprintf("in elif\n\n\n");
-    uint32_t                 width        = 0;
-    uint32_t                 height       = 0;
+    uint32_t                 width        = 1024;
+    uint32_t                 height       = 768;
     uint32_t                 pitch        = 0;
-    volatile struct color_t *base_address = (struct color_t *)0
+    volatile struct color_t *base_address = (struct color_t *)0;
+
+    uint16_t result = call_real_mode_function(add16_ref, width, height); // argc automatically calculated
+    print_args16(&args16_start);
 
 #endif
 
-    kprintf("rsdp = %h\n", rsdp);
+    // Eventually, learn to get rsdp from bios and uefi function calls
+    struct rsdp_tagged_c rsdp_tagged       = get_rsdp_grub(mb2_info_addr);
+    char                *rsdp_type_names[] = {"NULL", "OLD", "NEW"};
+    char                *name              = rsdp_type_names[rsdp_tagged.new_or_old];
+    void                *rsdp              = rsdp_tagged.rsdp;
+    kprintf("rsdp = %h, type=%s\n", rsdp, name);
     do_test_c(base_address, width, height, pitch);
 
     return;

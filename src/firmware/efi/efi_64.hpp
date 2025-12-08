@@ -1,8 +1,9 @@
 #pragma once
+
 #include <stddef.h>
 #include <stdint.h>
 
-namespace uefi
+namespace efi
 {
 
-} // namespace uefi
+} // namespace efi

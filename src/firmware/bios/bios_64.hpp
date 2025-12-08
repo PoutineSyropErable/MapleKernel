@@ -1,8 +1,9 @@
 #pragma once
+
 #include <stddef.h>
 #include <stdint.h>
 
-namespace uefi
+namespace bios
 {
 
-} // namespace uefi
+} // namespace bios
