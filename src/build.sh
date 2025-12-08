@@ -334,12 +334,12 @@ if [ "$USE_IMAGE" == true ]; then
 else
 	qemu-system-x86_64 \
 		-cdrom "$BUILD_DIR/myos.iso" \
-		-vga vmware \
+		\
 		-no-reboot \
 		"${QEMU_DBG_FLAGS[@]}" \
 		-d in_asm,int,cpu_reset \
 		-D qemu_instr.log \
-		-serial stdio &
+		-serial stdio & # -vga vmware \
 
 	QEMU_PID=$!
 
