@@ -22,8 +22,11 @@
 #include "ps2_keyboard_public.h"
 #include "ps2_mouse_public.h"
 
-#include "kernel_helper.h"
+#include "framebuffer.h"
+#include "framebuffer_multiboot.h"
 #include "multiboot.h"
+
+#include "kernel_helper.h"
 
 GDT_ROOT *GDT16_ROOT = &GDT16_DESCRIPTOR;
 
@@ -55,6 +58,12 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
     void *rsdp = rsdp_tagged.rsdp;
     kprintf("rsdp = %h\n", rsdp);
 
+    bool val = validate_rsdp_c(rsdp);
+    kprintf("Valid = %b\n", val);
+
+    struct framebuffer_info_t framebuffer = get_framebuffer(mb2_info_addr);
+
+    do_test_c(framebuffer);
     return;
 
     // init_paging();

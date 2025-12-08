@@ -81,6 +81,8 @@ CPP="./z_otherLang/cpp/"
 RUST="./z_otherLang/rust/"
 ZIG="./z_otherLang/zig/"
 
+FRAMEBUFER="./framebuffer"
+
 INCLUDE_DIRS=(
 	"$KERNEL"
 	"$REAL16_WRAPPERS"
@@ -103,6 +105,8 @@ INCLUDE_DIRS=(
 	"$MULTIBOOT"
 	"$APIC"
 	"$ACPI"
+
+	"$FRAMEBUFER"
 
 	"$CPP"
 	"$RUST"
@@ -134,6 +138,7 @@ i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/kernel_helper.c" -
 
 # Move this to firmware maybe?
 i686-elf-g++ "${CPPFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$MULTIBOOT/multiboot.cpp" -o "$BUILD_DIR/multiboot.o"
+i686-elf-g++ "${CPPFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$FRAMEBUFER/framebuffer.cpp" -o "$BUILD_DIR/framebuffer.o"
 
 # Compile the print functions.
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/string_helper.c" -o "$BUILD_DIR/string_helper.o"
@@ -239,6 +244,8 @@ BUILD_OBJECTS=(
 
 	"$BUILD_DIR/kernel_cpp.o"
 	"$BUILD_DIR/kernel_zig.o"
+
+	"$BUILD_DIR/framebuffer.o"
 )
 
 # ========= Static library setup ============
@@ -327,6 +334,7 @@ if [ "$USE_IMAGE" == true ]; then
 else
 	qemu-system-x86_64 \
 		-cdrom "$BUILD_DIR/myos.iso" \
+		-vga vmware \
 		-no-reboot \
 		"${QEMU_DBG_FLAGS[@]}" \
 		-d in_asm,int,cpu_reset \

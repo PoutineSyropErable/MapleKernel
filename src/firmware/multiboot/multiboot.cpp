@@ -106,6 +106,50 @@ struct multiboot::rsdp_tagged_t find_rsdp(info *mbi)
     abort_msg("Nothing found!\n");
 }
 
+struct framebuffer_info_t find_framebuffer(info *mbi)
+{
+
+    struct multiboot::rsdp_tagged_t ret;
+    if (!mbi)
+    {
+        abort_msg("null mbi\n");
+    }
+
+    // Check if MBI size is reasonable
+    if (mbi->total_size < 8 + 8)
+    { // header + minimum tag
+        abort_msg("too small\n");
+        abort();
+    }
+
+    tag      *current  = tag_first(mbi);
+    uintptr_t end_addr = reinterpret_cast<uintptr_t>(mbi) + mbi->total_size;
+
+    while (reinterpret_cast<uintptr_t>(current) < end_addr)
+    {
+
+        // Check for end tag
+        if (current->type == multiboot::tag_type::END && current->size == 8)
+        {
+            break;
+        }
+
+        // Check for ACPI RSDP tags
+        if (current->type == multiboot::tag_type::FRAMEBUFFER)
+        {
+
+            framebuffer_info_t *ret_ptr = reinterpret_cast<framebuffer_info_t *>(current);
+            framebuffer_info_t  ret     = *ret_ptr;
+
+            return ret;
+        }
+
+        current = tag_next(current);
+    }
+
+    abort_msg("Nothing found!\n");
+}
+
 bool validate_rsdp(void *rsdp_ptr)
 {
     if (!rsdp_ptr)
@@ -135,5 +179,16 @@ extern "C"
     int multiboot_validate_rsdp(void *rsdp)
     {
         return multiboot::validate_rsdp(rsdp) ? 1 : 0;
+    }
+
+    bool validate_rsdp_c(void *rsdp_ptr)
+    {
+        return multiboot_validate_rsdp(rsdp_ptr);
+    }
+
+    struct framebuffer_info_t get_framebuffer(uint32_t mid_addr)
+    {
+        multiboot::info *mbi = (multiboot::info *)mid_addr;
+        return multiboot::find_framebuffer(mbi);
     }
 }
