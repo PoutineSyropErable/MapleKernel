@@ -299,8 +299,17 @@ cp "$ISO_DIR/grub.cfg" "$ISO_DIR/boot/grub/grub.cfg"
 grub-mkrescue -o "$BUILD_DIR/myos.iso" "$ISO_DIR"
 echo "ISO created successfully: $BUILD_DIR/myos.iso"
 
+# Check if Ventoy USB is mounted
+VENTOY_PATH="/run/media/$USER/Ventoy"
+if [ -d "$VENTOY_PATH" ]; then
+	echo "Ventoy detected at $VENTOY_PATH. Copying ISO..."
+	cp "$BUILD_DIR/myos.iso" "$VENTOY_PATH/"
+	echo "ISO copied to Ventoy USB successfully."
+else
+	echo "Ventoy USB not found at $VENTOY_PATH. Skipping copy."
+fi
+
 # Create 64 MB raw disk image
-DISK_IMG="$BUILD_DIR/myos.img"
 
 # start qemu using the binary, bypassing grub.
 # -no-reboot: don't reset if the kernel crash
@@ -314,32 +323,26 @@ DISK_IMG="$BUILD_DIR/myos.img"
 
 USE_IMAGE=false
 if [ "$USE_IMAGE" == true ]; then
-	qemu-system-x86_64 \
-		-drive file=build/myos.img,format=raw \
-		-m 512M \
-		-serial stdio \
-		-no-reboot \
-		"${QEMU_DBG_FLAGS[@]}" \
-		-d in_asm,int,cpu_reset -D qemu_instr.log
-
+	bochs -f bochsrc.txt
 else
 	qemu-system-x86_64 \
 		-cdrom "$BUILD_DIR/myos.iso" \
 		-no-reboot \
+		-vga std \
 		"${QEMU_DBG_FLAGS[@]}" \
 		-d in_asm,int,cpu_reset \
 		-D qemu_instr.log \
 		-serial stdio &
+
+	QEMU_PID=$!
+
+	# Give QEMU a second to start up
+	sleep 1
+
+	# Launch VNC viewer
+	vncviewer localhost:5900
+
+	# After you close the VNC viewer, kill QEMU
+	kill $QEMU_PID 2>/dev/null
 fi
 # qemu-system-i386 -kernel ./build/myos.bin & # or do this to use the binary directly # -cdrom "$BUILD_DIR/myos.iso" # -kernel "$BUILD_DIR/myos.bin" \
-
-QEMU_PID=$!
-
-# Give QEMU a second to start up
-sleep 1
-
-# Launch VNC viewer
-vncviewer localhost:5900
-
-# After you close the VNC viewer, kill QEMU
-kill $QEMU_PID 2>/dev/null

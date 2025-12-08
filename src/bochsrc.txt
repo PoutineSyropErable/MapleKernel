@@ -1,0 +1,25 @@
+# ================= Machine =================
+megs: 512
+romimage: file=/usr/share/bochs/BIOS-bochs-latest
+vgaromimage: file=/usr/share/bochs/VGABIOS-lgpl-latest
+boot: cdrom
+
+# ================= Display =================
+display_library: sdl
+# Use VGA text mode by default
+vga: extension=vbe
+vgaromimage: file=/usr/share/bochs/VGABIOS-lgpl-latest
+
+# ================= Logging =================
+log: bochs.log
+debug: action=ignore
+
+# ================= CPU/Hardware =================
+cpu: count=1
+# optional, makes debugging easier
+panic: action=ask
+
+# ================= Serial/Console =================
+# Redirect serial port to terminal for easier kernel print debugging
+com1: enabled=1, mode=term
+

@@ -47,7 +47,10 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
         // The abbort might not be needed anyway.
     }
 
-    struct rsdp_tagged_c rsdp_tagged = get_rsdp(mb2_info_addr);
+    struct rsdp_tagged_c rsdp_tagged       = get_rsdp(mb2_info_addr);
+    char                *rsdp_type_names[] = {"NULL", "OLD", "NEW"};
+    char                *name              = rsdp_type_names[rsdp_tagged.new_or_old];
+    kprintf("RSDP Type = %s\n", name);
     kprintf("NULL = 0, OLD = 1, NEW = 2. The type of rsdp: %d\n", rsdp_tagged.new_or_old);
     void *rsdp = rsdp_tagged.rsdp;
     kprintf("rsdp = %h\n", rsdp);
