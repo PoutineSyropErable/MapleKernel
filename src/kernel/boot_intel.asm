@@ -11,6 +11,10 @@
 %define BOOTLOADER_MAGIC_MB1 0x2BADB002
 %define BOOTLOADER_MAGIC_MB2 0x36D76289
 
+
+%define MB2_TAG_FRAMEBUFFER 5   ; correct type for framebuffer request
+
+
 ; =====================================================
 ; Multiboot Header Section
 ; =====================================================
@@ -24,11 +28,24 @@ header_start:
     ; Optional: Request ACPI RSDP tags (if you want GRUB to provide them)
     dw MB2_TAG_INFO_REQ  ; Type: Information request
     dw 0                 ; Flags
-    dd 16                ; Size: 16 bytes (for 2, 12 bytes for 1)
-    ; dd MB2_TAG_ACPI_OLD  ; Request ACPI v1 RSDP
-    dd MB2_TAG_ACPI_NEW  ; Request ACPI v2 RSDP
+    dd 16                ; Size: 16 bytes (for 2, 12 bytes for 1) || Changed when added framebuffer? Must padd upward to nearest 8x? 
+    dd MB2_TAG_ACPI_OLD  ; Request ACPI v1 RSDP
     dd MB2_TAG_ACPI_NEW  ; Request ACPI v2 RSDP
 	; dd 0 ; padding
+
+%define WIDTH 1024 
+%define HEIGHT 768
+
+
+	; === Framebuffer request tag ===
+    dw MB2_TAG_FRAMEBUFFER         ; Type: framebuffer
+    dw 0                  ; Flags
+    dd 24                 ; Size of this tag
+    dd WIDTH              ; Width (desired)
+    dd HEIGHT             ; Height (desired)
+    dd 32                 ; Bits per pixel
+    ; dd 0                  ; Framebuffer type: 0 = RGB, 1 = EGA text
+    dd 0                  ; Padding/reserved
     
     ; Required end tag
     dw MB2_TAG_END        ; Type: End

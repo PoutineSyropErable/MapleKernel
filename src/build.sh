@@ -328,7 +328,6 @@ else
 	qemu-system-x86_64 \
 		-cdrom "$BUILD_DIR/myos.iso" \
 		-no-reboot \
-		-vga std \
 		"${QEMU_DBG_FLAGS[@]}" \
 		-d in_asm,int,cpu_reset \
 		-D qemu_instr.log \
