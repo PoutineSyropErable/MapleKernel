@@ -1,5 +1,5 @@
 megs: 32
-	vgaromimage: file=/usr/share/bochs/VGABIOS-lgpl-latest.bin
+	vgaromimage: file=/usr/share/bochs/VGABIOS-lgpl-latest
     floppya: 1_44=boot.com, status=inserted
     boot: a
     log: bochsout.txt
