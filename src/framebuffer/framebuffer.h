@@ -15,7 +15,7 @@ extern "C"
         uint8_t a; // a might be ignored or reserved
     };
 
-    void do_test(struct framebuffer_info_t framebuffer_info);
+    void do_test_c(struct framebuffer_info_t framebuffer_info);
 
 #ifdef __cplusplus
 }
