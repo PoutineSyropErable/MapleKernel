@@ -27,6 +27,7 @@
 #include "multiboot.h"
 
 #include "kernel_helper.h"
+#include "symbols.h"
 
 GDT_ROOT *GDT16_ROOT = &GDT16_DESCRIPTOR;
 
@@ -35,6 +36,11 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 
     // initialize_terminal();
     // terminal_set_scroll(0);
+
+    init_elf_symbols();
+    uintptr_t kma = find_symbol_address("kernel_main");
+    kprintf("kma = %u\n", kma);
+    return;
 
     kprintf("\n===========Terminal Initialized=============\n");
     kprintf("addr = %u, magic = %h, is_proper_multiboot_32 = %u\n", mb2_info_addr, magic, is_proper_multiboot_32);

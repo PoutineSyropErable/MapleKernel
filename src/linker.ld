@@ -112,7 +112,39 @@ SECTIONS
         *(.bss)
     }
 
-    /* Catch-all for any other sections */
+	/* ============================================
+		Symbol tables - LOADED INTO MEMORY
+	============================================ */
+    .symtab : ALIGN(4) {
+        __symtab_start = .;
+        KEEP(*(.symtab))
+        __symtab_end = .;
+    } 
+    
+    .strtab : ALIGN(4) {
+        __strtab_start = .;
+        KEEP(*(.strtab))
+        __strtab_end = .;
+    }     
+    /* Optional: section header string table */
+    .shstrtab : ALIGN(4) {
+        shstrtab_start = .;
+        KEEP(*(.shstrtab))
+        shstrtab_end = .;
+    }     
+
+    
+    /* Optional: discard other debug sections */
+    /DISCARD/ : {
+        *(.debug*)
+        *(.comment)
+        *(.note*)
+    }
+
+
+    /* End of kernel */
+    __kernel_end = .;
+
 }
 
 
