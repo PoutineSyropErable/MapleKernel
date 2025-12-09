@@ -1,8 +1,35 @@
 #!/usr/bin/env bash
 
 set -eou pipefail
-DEBUG_NOT_RELEASE="${1:-}"
-QEMU_OR_REAL_MACHINE="${2:-QEMU}"
+DEBUG_OR_RELEASE="${1:-release}"
+QEMU_OR_REAL_MACHINE="${2:-qemu}"
+MACHINE_BITNESS="${3:-32}"
+MOVE_VNC="${4:-move}"
+
+# Check for help argument
+if [[ "${1:-}" == "help" ]]; then
+	cat <<'EOF'
+Usage: ./build.sh [debug|release] [QEMU|REAL] [32|64] [move|nomove]
+
+Arguments:
+  debug|release       Build mode. Defaults to release if omitted.
+  qemu|real           Whether to run in QEMU or on a real machine. Defaults to QEMU.
+  32|64               Machine bitness. Defaults to 32.
+  move|nomove         Whether to move VNC window to workspace. Defaults to move.
+
+Examples:
+  ./build.sh debug QEMU 64 move
+  ./build.sh release REAL 32 nomove
+
+Notes:
+  - debug enables -g and -DDEBUG flags
+  - QEMU_OR_REAL_MACHINE chooses whether to start QEMU, and add -QEMU flags
+  - MACHINE_BITNESS chooses QEMU binary (qemu-system-i386 vs qemu-system-x86_64)
+  - MOVE_VNC controls whether VNC viewer is moved to a workspace
+
+EOF
+	exit 0
+fi
 
 # use my custom gcc and g++:
 if false; then
@@ -51,7 +78,7 @@ DEBUG_OPT_LVL="-O0"
 RELEASE_OPT_LVL="-O0"
 QEMU_DBG_FLAGS=()
 
-if [[ "$DEBUG_NOT_RELEASE" == "debug" ]]; then
+if [[ "$DEBUG_OR_RELEASE" == "debug" ]]; then
 	echo "Debug mode enabled"
 	CFLAGS+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG")
 	CPPFLAGS+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG")
@@ -68,7 +95,7 @@ else
 	LDFLAGS+=("$RELEASE_OPT_LVL")
 fi
 
-if [[ "$QEMU_OR_REAL_MACHINE" == "QEMU" ]]; then
+if [[ "$QEMU_OR_REAL_MACHINE" == "qemu" ]]; then
 	CFLAGS+=("-DQEMU")
 fi
 
@@ -353,6 +380,11 @@ fi
 # -kernel "$BUILD_DIR/myos.bin" \
 # -cdrom "$BUILD_DIR/myos.iso" \
 
+if [[ "$QEMU_OR_REAL_MACHINE" != "qemu" ]]; then
+	printf -- "\nSince Not In Qemu, then we aren't gonna emulate the machine\n\n"
+	exit 1
+fi
+
 USE_IMAGE=false
 if [ "$USE_IMAGE" == true ]; then
 	bochs -f bochsrc.txt
@@ -360,8 +392,12 @@ else
 	QEMU32=qemu-system-i386
 	QEMU64=qemu-system-x86_64
 
-	QEMU="$QEMU32"
-	# QEMU="$QEMU64"
+	# Choose QEMU based on machine bitness
+	if [[ "$MACHINE_BITNESS" == "64" ]]; then
+		QEMU="$QEMU64"
+	else
+		QEMU="$QEMU32"
+	fi
 
 	# Check if QEMU is already running, kill only if it exists
 	if pgrep -f "$QEMU" >/dev/null 2>&1; then
@@ -389,7 +425,9 @@ else
 	VNC_PID=$!
 
 	# sleep 1
-	move_pid_to_workspace $VNC_PID 21
+	if [[ "$MOVE_VNC" == "move" ]]; then
+		move_pid_to_workspace $VNC_PID 21
+	fi
 
 	wait $VNC_PID
 
