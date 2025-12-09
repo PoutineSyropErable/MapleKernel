@@ -21,9 +21,9 @@ end
 
 
 file build/myos.bin
-tbreak _start
+# tbreak _start
 tbreak kernel_main
-rk32
-dc2
-activate_dashboard
+# rk32
+# dc2
+# activate_dashboard
 
