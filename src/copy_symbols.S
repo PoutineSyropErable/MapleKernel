@@ -1,3 +1,4 @@
+; ./copy_symbols.S
 .section .ksymtab, "aw", @progbits
 .align 4
 
