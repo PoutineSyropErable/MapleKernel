@@ -1,6 +1,6 @@
-define rk32
-	target remote :1234 
-end
+# define rk32
+# 	target remote :1234 
+# end
 #
 # define rk64
 # 	set architecture i386:x86-64
@@ -20,6 +20,11 @@ end
 
 
 
+
+
+
+
+cd-src
 file build/myos.bin
 # rk32
 # tbreak _start
