@@ -359,7 +359,9 @@ if [ "$USE_IMAGE" == true ]; then
 else
 	QEMU32=qemu-system-i386
 	QEMU64=qemu-system-x86_64
-	QEMU="$QEMU64"
+
+	QEMU="$QEMU32"
+	# QEMU="$QEMU64"
 
 	# Check if QEMU is already running, kill only if it exists
 	if pgrep -f "$QEMU" >/dev/null 2>&1; then

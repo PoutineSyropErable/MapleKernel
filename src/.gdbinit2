@@ -1,5 +1,0 @@
-# file build/myos.bin
-# tbreak _start
-# tbreak kernel_main
-# target remote :1234
-# continue
