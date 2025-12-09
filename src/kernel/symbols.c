@@ -3,10 +3,10 @@
 #include <stddef.h>
 
 // Linker provides these
-extern char __symtab_start[];
-extern char __symtab_end[];
-extern char __strtab_start[];
-extern char __strtab_end[];
+extern char __ksymtab_start[];
+extern char __ksymtab_end[];
+extern char __kstrtab_start[];
+extern char __kstrtab_end[];
 
 typedef struct
 {
@@ -24,9 +24,9 @@ static int        elf_symcount = 0;
 
 void init_elf_symbols(void)
 {
-    elf_symtab   = (Elf32_Sym *)__symtab_start;
-    elf_strtab   = __strtab_start;
-    elf_symcount = (__symtab_end - __symtab_start) / sizeof(Elf32_Sym);
+    elf_symtab   = (Elf32_Sym *)__ksymtab_start;
+    elf_strtab   = __kstrtab_start;
+    elf_symcount = (__ksymtab_end - __ksymtab_start) / sizeof(Elf32_Sym);
 
     kprintf("ELF symbols: %d entries\n", elf_symcount);
 

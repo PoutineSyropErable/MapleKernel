@@ -115,23 +115,25 @@ SECTIONS
 	/* ============================================
 		Symbol tables - LOADED INTO MEMORY
 	============================================ */
-    .symtab : ALIGN(4) {
-        __symtab_start = .;
-        KEEP(*(.symtab))
-        __symtab_end = .;
+
+	  /* Custom symbol table section */
+    .ksymtab : ALIGN(4) {
+        __ksymtab_start = .;
+        *(.ksymtab)  /* ← This collects ALL .ksymtab sections */
+        __ksymtab_end = .;
     } 
     
-    .strtab : ALIGN(4) {
-        __strtab_start = .;
-        KEEP(*(.strtab))
-        __strtab_end = .;
-    }     
-    /* Optional: section header string table */
-    .shstrtab : ALIGN(4) {
-        shstrtab_start = .;
-        KEEP(*(.shstrtab))
-        shstrtab_end = .;
-    }     
+    .kstrtab : ALIGN(4) {
+        __kstrtab_start = .;
+        *(.kstrtab)
+        __kstrtab_end = .;
+    } 
+
+	/* .debug_info : ALIGN(4) { KEEP(*(.debug_info*)); } */
+	/* .debug_abbrev : ALIGN(4) { KEEP(*(.debug_abbrev*)); } */
+	/* .debug_line : ALIGN(4) { KEEP(*(.debug_line*)); } */
+	/* .debug_str : ALIGN(4) { KEEP(*(.debug_str*)); } */
+
 
     
     /* Optional: discard other debug sections */

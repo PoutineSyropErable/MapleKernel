@@ -32,7 +32,7 @@ EOF
 fi
 
 # use my custom gcc and g++:
-if false; then
+if true; then
 	PATH="$HOME/cross-gcc/install-ia16-elf/bin:$PATH"
 	PATH="$HOME/cross-gcc/install-i686-elf/bin:$PATH"
 	PATH="$HOME/cross-gcc/install-x86_64-elf/bin:$PATH"
@@ -70,7 +70,7 @@ ISO_DIR="isodir"
 CFLAGS=("-std=gnu23" "-ffreestanding" "-Wall" "-Wextra")
 CPPFLAGS=("-std=gnu++23" "-ffreestanding" "-Wall" "-Wextra")
 CFLAGS16=("-std=gnu99" "-ffreestanding" "-Wall" "-Wextra")
-LDFLAGS=("-ffreestanding" "-nostdlib" "-lgcc")
+LDFLAGS=("-ffreestanding" "-nostdlib" "-lgcc" "-fno-eliminate-unused-debug-symbols")
 NASM_FLAGS32=("-f" "elf32")
 NASM_FLAGS16=("-f" "elf")
 
@@ -327,23 +327,32 @@ done
 
 # ============= Linking ==============
 # could also use g++. But as long as no runtime support, gcc will work
-i686-elf-g++ -T linker.ld -o "$BUILD_DIR/myos.bin" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}" "${LIBRARY_ARGS[@]}"
+i686-elf-g++ -T linker.ld -o "$BUILD_DIR/myos_s.elf" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}" "${LIBRARY_ARGS[@]}"
+
+# objcopy \
+# 	--rename-section .stack16=.stack17 \
+# 	build/myos_s.elf build/myos.elf
+
+objcopy \
+	--rename-section .symtab=.ksymtab \
+	--rename-section .strtab=.kstrtab \
+	build/myos_s.elf build/myos.elf
 
 printf "\n\n====== End of Linking =====\n\n"
 
-objdump -D -h "$BUILD_DIR/myos.bin" >"$BUILD_DIR/myos.dump"
+# objdump -D -h "$BUILD_DIR/myos.elf" >"$BUILD_DIR/myos.dump"
 
 # Check if the kernel is multiboot-compliant
 USE_MULTIBOOT1=false
 if [ "$USE_MULTIBOOT1" == true ]; then
-	if grub-file --is-x86-multiboot "$BUILD_DIR/myos.bin"; then
+	if grub-file --is-x86-multiboot "$BUILD_DIR/myos.elf"; then
 		echo "Multiboot confirmed"
 	else
 		echo "The file is not multiboot"
 		exit 1
 	fi
 else
-	if grub-file --is-x86-multiboot2 "$BUILD_DIR/myos.bin"; then
+	if grub-file --is-x86-multiboot2 "$BUILD_DIR/myos.elf"; then
 		echo "Multiboot2 confirmed"
 	else
 		echo "The file is not multiboot 2"
@@ -353,7 +362,7 @@ else
 fi
 
 # Copy the kernel binary and GRUB configuration to the ISO directory
-cp "$BUILD_DIR/myos.bin" "$ISO_DIR/boot/myos.bin"
+cp "$BUILD_DIR/myos.elf" "$ISO_DIR/boot/myos.elf"
 cp "$ISO_DIR/grub.cfg" "$ISO_DIR/boot/grub/grub.cfg"
 
 # Create the ISO image
@@ -379,7 +388,7 @@ fi
 # -serial stdio: redirect COM1 serial port to your terminal
 
 # ===== Pick one of those two
-# -kernel "$BUILD_DIR/myos.bin" \
+# -kernel "$BUILD_DIR/myos.elf" \
 # -cdrom "$BUILD_DIR/myos.iso" \
 
 if [[ "$QEMU_OR_REAL_MACHINE" != "qemu" ]]; then
@@ -436,4 +445,4 @@ else
 	# After you close the VNC viewer, kill QEMU
 	kill $QEMU_PID 2>/dev/null
 fi
-# qemu-system-i386 -kernel ./build/myos.bin & # or do this to use the binary directly # -cdrom "$BUILD_DIR/myos.iso" # -kernel "$BUILD_DIR/myos.bin" \
+# qemu-system-i386 -kernel ./build/myos.elf & # or do this to use the binary directly # -cdrom "$BUILD_DIR/myos.iso" # -kernel "$BUILD_DIR/myos.elf" \
