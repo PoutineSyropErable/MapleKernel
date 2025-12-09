@@ -351,7 +351,7 @@ i686-elf-g++ -T linker.ld -o "$BUILD_DIR/myos.elf" \
 
 printf "\n\n====== End of Linking =====\n\n"
 
-# objdump -D -h "$BUILD_DIR/myos.elf" >"$BUILD_DIR/myos.dump"
+objdump -D -h "$BUILD_DIR/myos.elf" >"$BUILD_DIR/myos.dump"
 
 # Check if the kernel is multiboot-compliant
 USE_MULTIBOOT1=false

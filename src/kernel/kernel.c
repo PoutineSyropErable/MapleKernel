@@ -36,16 +36,13 @@ extern char __kstrtab_start[];
 void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_multiboot_32)
 {
 
-    return;
-
     // initialize_terminal();
     // terminal_set_scroll(0);
     kprintf("\n===========Terminal Initialized=============\n");
 
-    for (uint32_t i = 0; i < 500; i++)
+    for (uint32_t i = 0; i < 5000; i++)
     {
         kprintf("%c", __kstrtab_start[i]);
-        kprintf("hey\n");
     }
 
     uintptr_t kma = find_symbol_address("kernel_main");
