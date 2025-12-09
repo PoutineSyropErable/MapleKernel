@@ -329,14 +329,40 @@ done
 # could also use g++. But as long as no runtime support, gcc will work
 i686-elf-g++ -T linker.ld -o "$BUILD_DIR/myos_s.elf" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}" "${LIBRARY_ARGS[@]}"
 
-# objcopy \
-# 	--rename-section .stack16=.stack17 \
-# 	build/myos_s.elf build/myos.elf
+printf "\n\n====== Copying Symbol Table =====\n\n"
 
-objcopy \
-	--rename-section .symtab=.ksymtab \
-	--rename-section .strtab=.kstrtab \
-	build/myos_s.elf build/myos.elf
+# 1. Extract .symtab as raw binary
+# Get FILE offset and size (not VMA!)
+SYM_OFFSET=$(readelf -S build/myos_s.elf | grep "\.symtab" | awk '{print $4}')
+SYM_SIZE=$(readelf -S build/myos_s.elf | grep "\.symtab" | awk '{print $5}')
+STR_OFFSET=$(readelf -S build/myos_s.elf | grep "\.strtab" | awk '{print $4}')
+STR_SIZE=$(readelf -S build/myos_s.elf | grep "\.strtab" | awk '{print $5}')
+
+echo "Extracting .symtab at file offset 0x$SYM_OFFSET, size 0x$SYM_SIZE"
+echo "Extracting .strtab at file offset 0x$STR_OFFSET, size 0x$STR_SIZE"
+
+# Convert hex to decimal
+SYM_OFFSET_DEC=$((0x$SYM_OFFSET))
+SYM_SIZE_DEC=$((0x$SYM_SIZE))
+STR_OFFSET_DEC=$((0x$STR_OFFSET))
+STR_SIZE_DEC=$((0x$STR_SIZE))
+
+# Extract using dd (reads from file offset)
+dd if=build/myos_s.elf of=build/symtab_raw.bin bs=1 skip=$SYM_OFFSET_DEC count=$SYM_SIZE_DEC
+dd if=build/myos_s.elf of=build/strtab_raw.bin bs=1 skip=$STR_OFFSET_DEC count=$STR_SIZE_DEC
+
+# Verify
+echo "File sizes:"
+ls -la build/symtab_raw.bin build/strtab_raw.bin
+echo "First 16 bytes of symtab_raw.bin:"
+hexdump -C build/symtab_raw.bin | head -3
+
+# 3. Assemble (need to be in src directory)
+i686-elf-as -o "copy_symbols.o" "$BUILD_DIR/copy_symbols.S"
+
+# 4. Link with copied symbols
+i686-elf-g++ -T linker.ld -o "$BUILD_DIR/myos.elf" \
+	"${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}" "$BUILD_DIR/copy_symbols.o" "${LIBRARY_ARGS[@]}"
 
 printf "\n\n====== End of Linking =====\n\n"
 
