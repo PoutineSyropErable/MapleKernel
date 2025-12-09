@@ -1,4 +1,4 @@
-/* ./copy_symbols.S */
+/* ./copy_symbols.S - IMPROVED */
 .section .ksymtab, "aw", @progbits
 .align 4
 
@@ -7,6 +7,9 @@ __ksymtab_start:
 
 /* Include the raw symbol table binary */
 .incbin "build/symtab_raw.bin"
+
+/* Pad to ensure next section starts aligned */
+.align 4
 
 .global __ksymtab_end  
 __ksymtab_end:
@@ -20,6 +23,8 @@ __kstrtab_start:
 /* Include the raw string table binary */
 .incbin "build/strtab_raw.bin"
 
+/* Pad to ensure end is aligned */
+.align 4
+
 .global __kstrtab_end
 __kstrtab_end:
-

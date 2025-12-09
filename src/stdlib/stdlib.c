@@ -88,3 +88,42 @@ int strcmp(const char *s1, const char *s2)
     // This gives correct ordering based on ASCII values
     return (int)*us1 - (int)*us2;
 }
+
+int find_string_offset(const char *haystack, int haystack_len, const char *needle)
+{
+    if (!haystack || !needle || haystack_len <= 0)
+        return -1;
+
+    int needle_len = 0;
+    // Calculate needle length (could also use strlen if available)
+    for (const char *p = needle; *p != '\0'; p++)
+    {
+        needle_len++;
+        // Safety: prevent infinite loop if needle isn't null-terminated
+        if (needle_len > 4096)
+            return -1;
+    }
+
+    if (needle_len == 0)
+        return 0; // Empty string is always at offset 0
+
+    // Search for the string
+    for (int i = 0; i <= haystack_len - needle_len; i++)
+    {
+        int match = 1;
+        for (int j = 0; j < needle_len; j++)
+        {
+            if (haystack[i + j] != needle[j])
+            {
+                match = 0;
+                break;
+            }
+        }
+        if (match)
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}

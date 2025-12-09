@@ -29,6 +29,8 @@
 #include "kernel_helper.h"
 #include "symbols.h"
 
+#include "stdlib.h"
+
 GDT_ROOT *GDT16_ROOT = &GDT16_DESCRIPTOR;
 
 extern char __kstrtab_start[];
@@ -40,13 +42,19 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
     // terminal_set_scroll(0);
     kprintf("\n===========Terminal Initialized=============\n");
 
-    for (uint32_t i = 0; i < 5000; i++)
-    {
-        kprintf("%c", __kstrtab_start[i]);
-    }
+    // for (uint32_t i = 0; i < 5000; i++)
+    // {
+    //     kprintf("%c", __kstrtab_start[i]);
+    // }
 
-    uintptr_t kma = find_symbol_address("kernel_main");
-    kprintf("kma2 = %u\n", kma);
+    int res = find_string_offset(__kstrtab_start, 100000, "kernel_main");
+    kprintf("res = %d\n", res);
+    if (res > 0)
+        kprintf("string = %s\n", &__kstrtab_start[res]);
+
+    init_elf_symbols();
+    // uintptr_t kma = find_symbol_address("kernel_main");
+    // kprintf("kma2 = %u\n", kma);
     return;
 
     kprintf("addr = %u, magic = %h, is_proper_multiboot_32 = %u\n", mb2_info_addr, magic, is_proper_multiboot_32);

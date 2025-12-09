@@ -1,7 +1,7 @@
 [
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -41,7 +41,47 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-DQEMU",
+      "-Ikernel",
+      "-Ireal16_wrappers",
+      "-Irealmode_functions",
+      "-I./cpu/gdt",
+      "-I./cpu/idt",
+      "-Istdio",
+      "-Istdlib",
+      "-Iother",
+      "-Iruntime_code_analysis",
+      "-I./drivers/ps2/controller",
+      "-I./drivers/ps2/keyboard",
+      "-I./drivers/ps2/keyboard/cpp",
+      "-I./drivers/ps2/mouse",
+      "-I./drivers/usb/controller",
+      "-I./firmware/uefi",
+      "-I./firmware/multiboot",
+      "-I./cpu/apic",
+      "-I./firmware/acpi",
+      "-I./framebuffer",
+      "-I./z_otherLang/cpp/",
+      "-I./z_otherLang/rust/",
+      "-I./z_otherLang/zig/",
+      "-c",
+      "-o",
+      "build/symbols.o",
+      "kernel/symbols.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/kernel/symbols.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/symbols.o"
+  },
+  {
+    "arguments": [
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -81,7 +121,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-g++",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-g++",
       "-std=gnu++23",
       "-ffreestanding",
       "-Wall",
@@ -120,7 +160,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-g++",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-g++",
       "-std=gnu++23",
       "-ffreestanding",
       "-Wall",
@@ -159,7 +199,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -177,7 +217,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -198,7 +238,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -219,7 +259,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -240,7 +280,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -248,6 +288,8 @@
       "-O0",
       "-DQEMU",
       "-c",
+      "-Istdlib",
+      "-Istdio",
       "-o",
       "build/stdlib.o",
       "stdlib/stdlib.c"
@@ -258,7 +300,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -278,7 +320,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -299,7 +341,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -320,7 +362,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -346,7 +388,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -372,7 +414,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -394,7 +436,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -418,7 +460,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -441,7 +483,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -465,7 +507,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-g++",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-g++",
       "-std=gnu++23",
       "-ffreestanding",
       "-Wall",
@@ -485,7 +527,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-g++",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-g++",
       "-std=gnu++23",
       "-ffreestanding",
       "-Wall",
@@ -506,7 +548,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -527,7 +569,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -550,7 +592,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -573,7 +615,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -596,7 +638,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -619,7 +661,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -637,7 +679,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -655,7 +697,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -677,7 +719,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-gcc",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
       "-std=gnu23",
       "-ffreestanding",
       "-Wall",
@@ -715,7 +757,7 @@
   },
   {
     "arguments": [
-      "/usr/local/bin/i686-elf-g++",
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-g++",
       "-std=gnu++23",
       "-ffreestanding",
       "-Wall",

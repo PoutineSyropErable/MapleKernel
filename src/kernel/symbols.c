@@ -1,42 +1,69 @@
+#include "assert.h"
 #include "stdio.h"
+#include "stdlib.h"
 #include "symbols.h"
 #include <stddef.h>
-
 // Linker provides these
 extern char __ksymtab_start[];
 extern char __ksymtab_end[];
 extern char __kstrtab_start[];
 extern char __kstrtab_end[];
 
+// For 32-bit ELF
 typedef struct
 {
-    uint32_t  name;  // Offset in .strtab
-    uintptr_t value; // Address
-    uint32_t  size;
-    uint8_t   info;
-    uint8_t   other;
-    uint16_t  shndx;
-} Elf32_Sym;
+    uint32_t      name;  // String table index (4 bytes)
+    uint32_t      value; // Symbol value/address (4 bytes)
+    uint32_t      size;  // Size of symbol (4 bytes)
+    unsigned char info;  // Type and binding (1 byte)
+    unsigned char other; // Visibility (1 byte)
+    uint16_t      shndx; // Section index (2 bytes)
+} __attribute__((packed)) Elf32_Sym;
 
-static Elf32_Sym *elf_symtab   = NULL;
-static char      *elf_strtab   = NULL;
+static Elf32_Sym *elf_symtab   = (Elf32_Sym *)__ksymtab_start;
+static char      *elf_strtab   = __kstrtab_start;
 static int        elf_symcount = 0;
+
+// uint32_t abs(int x)
+// {
+//     if (x < 0)
+//         return -x;
+//     else
+//         return x;
+// }
+//
+// bool is_close(uint32_t a, uint32_t b, uint32_t diff_allowed)
+// {
+//
+//     int      diff   = ((int)a - (int)b);
+//     uint32_t diff_p = abs(diff);
+//     return diff_p < diff_allowed;
+// }
+
+_Static_assert(sizeof(Elf32_Sym) == 16, "Elf32_Sym must be 16 byte\n");
 
 void init_elf_symbols(void)
 {
-    elf_symtab   = (Elf32_Sym *)__ksymtab_start;
-    elf_strtab   = __kstrtab_start;
     elf_symcount = (__ksymtab_end - __ksymtab_start) / sizeof(Elf32_Sym);
+
+    // MUST be divisible by 16!
+    if (((__ksymtab_end - __ksymtab_start) % 16) != 0)
+    {
+        kprintf("ERROR: Symbol table size not multiple of 16!\n");
+        kprintf("Size mod 16 = %d\n", (__ksymtab_end - __ksymtab_start) % 16);
+        abort();
+    }
 
     kprintf("ELF symbols: %d entries\n", elf_symcount);
 
     // Optional: print some symbols
-    for (int i = 0; i < 10 && i < elf_symcount; i++)
+    for (int i = 0; i < elf_symcount; i++)
     {
-        if (elf_symtab[i].value != 0)
-        {
-            kprintf("  %s = 0x%lx\n", elf_strtab + elf_symtab[i].name, elf_symtab[i].value);
-        }
+        // kprintf("name = %s, address =%h\n", elf_strtab + elf_symtab[i].name, elf_symtab[i].value);
+        // if (is_close(elf_symtab[i].value, 9828, 50))
+        // {
+        //     kprintf("name = %s, address =%h\n", elf_strtab + elf_symtab[i].name, elf_symtab[i].value);
+        // }
     }
 }
 
