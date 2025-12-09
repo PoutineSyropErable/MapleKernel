@@ -33,8 +33,8 @@ GDT_ROOT *GDT16_ROOT = &GDT16_DESCRIPTOR;
 void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_multiboot_32)
 {
 
-    initialize_terminal();
-    terminal_set_scroll(0);
+    // initialize_terminal();
+    // terminal_set_scroll(0);
 
     kprintf("\n===========Terminal Initialized=============\n");
     kprintf("addr = %u, magic = %h, is_proper_multiboot_32 = %u\n", mb2_info_addr, magic, is_proper_multiboot_32);
@@ -50,7 +50,7 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
         // The abbort might not be needed anyway.
     }
 
-// #define GRUB_FRAMEBUFFER
+#define GRUB_FRAMEBUFFER
 // #define BIOS_FRAMEBUFFER_HACK
 #ifdef GRUB_FRAMEBUFFER
     struct framebuffer_info_t grub_fb_info = get_framebuffer(mb2_info_addr);
@@ -80,7 +80,7 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 
 #endif
 
-// #define GET_RSDP
+#define GET_RSDP
 #ifdef GET_RSDP
     // Eventually, learn to get rsdp from bios and uefi function calls
     struct rsdp_tagged_c rsdp_tagged       = get_rsdp_grub(mb2_info_addr);
@@ -90,7 +90,7 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
     kprintf("rsdp = %h, type=%s\n", rsdp, name);
 #endif
 
-// #define VIS_TEST
+#define VIS_TEST
 #ifdef VIS_TEST
     do_test_c(base_address, width, height, pitch);
 #endif
