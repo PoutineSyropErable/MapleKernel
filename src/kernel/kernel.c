@@ -36,6 +36,8 @@ extern char __kstrtab_start[];
 void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_multiboot_32)
 {
 
+    return;
+
     // initialize_terminal();
     // terminal_set_scroll(0);
     kprintf("\n===========Terminal Initialized=============\n");

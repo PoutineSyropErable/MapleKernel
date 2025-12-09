@@ -343,7 +343,7 @@ echo "First 16 bytes of symtab_raw.bin:"
 hexdump -C build/strtab_raw.bin
 
 # 3. Assemble (need to be in src directory)
-i686-elf-as -o "$BUILD_DIR/copy_symbols.o" "copy_symbols.S"
+i686-elf-as -o "$BUILD_DIR/copy_symbols.o" "$KERNEL/copy_symbols.S"
 
 # 4. Link with copied symbols
 i686-elf-g++ -T linker.ld -o "$BUILD_DIR/myos.elf" \
