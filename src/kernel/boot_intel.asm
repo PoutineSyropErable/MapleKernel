@@ -39,8 +39,11 @@ header_start:
 
 	
 	; === Framebuffer request tag ===
+	%ifdef DEBUG
+	; Don't request the framebuffer in debug mode
+	%else
 	; %define GRUB_FRAMEBUFFER
-	%ifdef GRUB_FRAMEBUFFER
+	; %ifdef GRUB_FRAMEBUFFER
     dw MB2_TAG_FRAMEBUFFER         ; Type: framebuffer
     dw 0                  ; Flags
     dd 24                 ; Size of this tag
