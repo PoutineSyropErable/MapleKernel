@@ -75,7 +75,7 @@ NASM_FLAGS32=("-f" "elf32")
 NASM_FLAGS16=("-f" "elf")
 
 DEBUG_OPT_LVL="-O0"
-RELEASE_OPT_LVL="-O0"
+RELEASE_OPT_LVL="-O3"
 QEMU_DBG_FLAGS=()
 
 if [[ "$DEBUG_OR_RELEASE" == "debug" ]]; then
@@ -250,6 +250,9 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$OTHER/virtual_memory.c" -o "$BUILD_DIR/virtual_
 
 # Timers
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$PIT/pit.cpp" -o "$BUILD_DIR/pit.o" "-I$STDLIB" "-I$STDIO" "-I$PIC" "-I$CPU"
+i686-elf-gcc "${CFLAGS[@]}" -c "$PIT/idt_pit.c" -o "$BUILD_DIR/idt_pit.o" "-I$STDLIB" "-I$STDIO" "-I$PIC" "-I$CPU" "-I$IDT" "-I$GDT"
+i686-elf-gcc "${CFLAGS[@]}" -c "$PIT/pit_interrupt_handler.c" -o "$BUILD_DIR/pit_interrupt_handler.o" "-I$STDLIB" "-I$STDIO" "-I$PIC" "-I$CPU"
+nasm "${NASM_FLAGS32[@]}" "$PIT/pit_interrupt_handler.asm" -o "$BUILD_DIR/pit_interrupt_handler_asm.o" "-I$STDLIB" "-I$STDIO" "-I$PIC" "-I$CPU"
 
 # Just another thing
 i686-elf-gcc "${CFLAGS[@]}" -c "$CODE_ANALYSIS/address_getter.c" -o "$BUILD_DIR/address_getter.o" "-I$REAL_FUNC" "-I$REAL16_WRAPPERS" "-I$GDT" "-I$STDLIB"
@@ -322,6 +325,9 @@ BUILD_OBJECTS=(
 
 	"$BUILD_DIR/framebuffer.o"
 	"$BUILD_DIR/pit.o"
+	"$BUILD_DIR/pit_interrupt_handler.o"
+	"$BUILD_DIR/pit_interrupt_handler_asm.o"
+	"$BUILD_DIR/idt_pit.o"
 )
 
 # ========= Static library setup ============

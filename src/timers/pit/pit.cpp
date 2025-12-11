@@ -4,25 +4,27 @@
 #include "pic_public.h"
 #include "pit.h"
 #include "pit.hpp"
+#include "pit_internals.h"
+#include "stdio.h"
 // ===================== Start of CPP stuff
 using namespace pit;
 
-constexpr void send_byte_to_pit(IOPort channel, uint8_t byte)
+inline void send_byte_to_pit(IOPort channel, uint8_t byte)
 {
 	__outb(static_cast<uint8_t>(channel), byte);
 }
 
-constexpr void send_command(IOPort channel, mode_command_register command)
+inline void send_command(IOPort channel, mode_command_register command)
 {
 	__outb(static_cast<uint8_t>(channel), static_cast<uint8_t>(command));
 }
 
-constexpr uint8_t read_from_channel(IOPort channel)
+inline uint8_t read_from_channel(IOPort channel)
 {
 	return __inb(static_cast<uint8_t>(channel));
 }
 
-constexpr void set_operation_mode(mode_command_register operation_mode)
+inline void set_operation_mode(mode_command_register operation_mode)
 {
 	send_command(pit::IOPort::mode_or_command_register, operation_mode);
 }
@@ -60,13 +62,74 @@ void set_pit_count(uint16_t count)
 }
 
 // ================= Implementation of usefull functions =====================
+int pit::send_wait_count_command(uint32_t freq_divider_count)
+{
+	if (freq_divider_count == (MAX_FREQ_DIVIDER + 1))
+	{
+		freq_divider_count = 0;
+	}
+
+	mode_command_register wait_command = {//
+		.bcd_binary_mode = MCR::Bit_0::binary16,
+		.operating_mode	 = MCR::Bit_1_3::single_shot,
+		.access_mode	 = MCR::Bit_4_5::low_then_high_byte,
+		.channel		 = MCR::Bit_6_7::channel_0};
+	set_operation_mode(wait_command);
+	// kprintf("The command byte: %b:8\n", wait_command);
+
+	set_pit_count(freq_divider_count);
+
+	return 0;
+}
+
+// ================= Implementation of  wait =====================
+// pit.cpp
+extern "C"
+{
+	volatile bool pit_interrupt_handled;
+}
+struct pit_wait_split
+{
+	uint32_t full_cycles;
+	uint32_t reminder_pit_count;
+};
+constexpr pit_wait_split compute_pit_wait(float seconds, float max_single_wait, uint32_t max_freq_div)
+{
+	float f_interrupt_count = seconds / max_single_wait;
+
+	uint32_t full = static_cast<uint32_t>(f_interrupt_count);
+
+	float remainder_seconds = seconds - (full * max_single_wait);
+
+	uint32_t remainder_pit_count = static_cast<uint32_t>(remainder_seconds * (max_freq_div + 1));
+
+	return {full, remainder_pit_count};
+}
+
+inline void wait_lt_one_cycle(uint32_t pit_freq_divider)
+{
+	send_wait_count_command(pit_freq_divider);
+	pit_interrupt_handled = false;
+	__sti();
+	do
+	{
+		__hlt();
+	} while (!pit_interrupt_handled);
+}
+
 int pit::wait(float seconds)
 {
 	IRQ_clear_mask(PIT_IRQ);
-	for (uint32_t i = 0; i < seconds * 1000 * 1000 * 25; i++)
+	pit_wait_split sp = compute_pit_wait(seconds, max_single_wait, MAX_FREQ_DIVIDER);
+
+	for (uint32_t cycle_idx = 0; cycle_idx < sp.full_cycles; cycle_idx++)
 	{
-		__nop();
+		wait_lt_one_cycle(MAX_FREQ_DIVIDER + 1);
 	}
+
+	wait_lt_one_cycle(sp.reminder_pit_count);
+
+	IRQ_set_mask(PIT_IRQ);
 	return 0;
 }
 // ===================== End of Cpp Stuff

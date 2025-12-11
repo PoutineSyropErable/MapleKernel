@@ -25,6 +25,8 @@
 #include "stdlib.h"
 #include "symbols.h"
 
+#include "idt_pit.h"
+
 static GDT_ROOT *GDT16_ROOT = &GDT16_DESCRIPTOR;
 
 void setup_interrupts()
@@ -60,6 +62,7 @@ void setup_interrupts()
 	case PS2_HS_ERR_no_port: break;
 	}
 
+	idt_init_pit();
 	idt_finalize();
 }
 
