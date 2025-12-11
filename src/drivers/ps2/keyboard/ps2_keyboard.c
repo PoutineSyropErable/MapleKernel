@@ -1,6 +1,7 @@
 #include "idt_public.h"
 #include "pic.h"
 #include "pic_ps2.h"
+#include "pic_public.h"
 #include "ps2_controller.h"
 #include "ps2_keyboard.h"
 #include "ps2_keyboard_handler_public.h"
