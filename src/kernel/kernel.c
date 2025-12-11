@@ -107,7 +107,7 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 	test_printf();
 	test_assert(); // gd, and set to false and play with it
 
-	setup_interrupts();
+	setup_interrupts(); // needed to have a working wait
 
 	for (uint32_t i = 3; i > 0; i--)
 	{

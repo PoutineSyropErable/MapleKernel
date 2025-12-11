@@ -106,7 +106,7 @@ constexpr pit_wait_split compute_pit_wait(float seconds, float max_single_wait, 
 	return {full, remainder_pit_count};
 }
 
-inline void wait_lt_one_cycle(uint32_t pit_freq_divider)
+inline void wait_lte_one_cycle(uint32_t pit_freq_divider)
 {
 	send_wait_count_command(pit_freq_divider);
 	pit_interrupt_handled = false;
@@ -124,10 +124,10 @@ int pit::wait(float seconds)
 
 	for (uint32_t cycle_idx = 0; cycle_idx < sp.full_cycles; cycle_idx++)
 	{
-		wait_lt_one_cycle(MAX_FREQ_DIVIDER + 1);
+		wait_lte_one_cycle(MAX_FREQ_DIVIDER + 1);
 	}
 
-	wait_lt_one_cycle(sp.reminder_pit_count);
+	wait_lte_one_cycle(sp.reminder_pit_count);
 
 	IRQ_set_mask(PIT_IRQ);
 	return 0;

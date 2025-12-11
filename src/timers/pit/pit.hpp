@@ -9,7 +9,8 @@ namespace pit
 
 constexpr uint32_t PIT_FREQ_HZ = 1'193'182;
 
-constexpr uint16_t MAX_FREQ_DIVIDER = 65535; // maybe 0 is mapped to 65536
+// This is techically max -1. This number is uint16_t max.
+constexpr uint16_t MAX_FREQ_DIVIDER = 65535; // 0 is mapped to 65536. (Some weird hardware might not. Fuck them)
 constexpr float	   max_single_wait	= (float)(MAX_FREQ_DIVIDER + 1) / (float)(PIT_FREQ_HZ);
 
 constexpr uint8_t PIT_IRQ_CHANEL0 = 0;
