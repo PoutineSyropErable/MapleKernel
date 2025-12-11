@@ -17,13 +17,13 @@ constexpr uint8_t PIT_IRQ_CHANEL0 = 0;
 // Should i create an enum? It's not really an enumeration of possible value...
 enum class IOPort : uint8_t
 {
-    channel_0_data           = 0x40, // read/write
+    channel_0_data_port      = 0x40, // read/write
     channel_1_data           = 0x41, // read/write
     channel_2_data           = 0x42, // read/write
     mode_or_command_register = 0x43  // (Write only, a read is ignored)
 };
 
-namespace ModeCommandRegister
+namespace MCR
 {
 enum class Bit_6_7 : uint8_t
 {
@@ -36,10 +36,10 @@ enum class Bit_6_7 : uint8_t
 // This
 enum class Bit_4_5 : uint8_t
 {
-    latch_count_value_cmd = 0b00,
-    low_byte_only         = 0b01,
-    high_byte_only        = 0b10,
-    low_then_high_byte    = 0b11,
+    latch_count_get_value_cmd = 0b00,
+    low_byte_only             = 0b01,
+    high_byte_only            = 0b10,
+    low_then_high_byte        = 0b11,
 };
 
 struct __attribute__((packed)) split_uint16_t
@@ -74,18 +74,34 @@ enum class Bit_0 : bool
                          // Let's not program arround it
 };
 
-} // namespace ModeCommandRegister
+} // namespace MCR
 
 struct mode_command_register
 {
-    enum ModeCommandRegister::Bit_0   bcd_binary_mode : 1;
-    enum ModeCommandRegister::Bit_1_3 operating_mode : 3;
-    enum ModeCommandRegister::Bit_4_5 access_mode : 2;
-    enum ModeCommandRegister::Bit_6_7 channel : 2;
+    enum MCR::Bit_0   bcd_binary_mode : 1;
+    enum MCR::Bit_1_3 operating_mode : 3;
+    enum MCR::Bit_4_5 access_mode : 2;
+    enum MCR::Bit_6_7 channel : 2;
+
+    constexpr operator uint8_t() const noexcept
+    {
+	union
+	{
+	    mode_command_register c;
+	    uint8_t               raw;
+	} u{.c = *this};
+	return u.raw;
+    }
 };
 
 STATIC_ASSERT(sizeof(mode_command_register) == 1, "Must be 1 byte");
 
+enum class PIT_Error
+{
+    None = 0,
+};
+
+// =============== End
 int wait(float seconds);
 
 } // namespace pit

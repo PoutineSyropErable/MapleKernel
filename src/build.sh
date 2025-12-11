@@ -134,6 +134,7 @@ RUST="./z_otherLang/rust/"
 ZIG="./z_otherLang/zig/"
 
 FRAMEBUFER="./framebuffer"
+TIMERS="./timers"
 PIT="./timers/pit"
 
 INCLUDE_DIRS=(
