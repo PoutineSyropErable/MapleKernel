@@ -259,6 +259,7 @@
       "-Istdio",
       "-Iother",
       "-Istdlib",
+      "-I./timers/pit",
       "-o",
       "build/vga_terminal.o",
       "stdio/vga_terminal.c"
@@ -712,24 +713,6 @@
     "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
     "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/other/virtual_memory.c",
     "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/virtual_memory.o"
-  },
-  {
-    "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
-      "-std=gnu23",
-      "-ffreestanding",
-      "-Wall",
-      "-Wextra",
-      "-O0",
-      "-DQEMU",
-      "-c",
-      "-o",
-      "build/pit_timer.o",
-      "other/pit_timer.c"
-    ],
-    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/other/pit_timer.c",
-    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/pit_timer.o"
   },
   {
     "arguments": [

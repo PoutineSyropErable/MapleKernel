@@ -1,25 +1,22 @@
-#include "address_getter.h"
-#include "bit_hex_string.h"
-#include "call_real16_wrapper.h"
-#include "f3_segment_descriptor_internals.h"
-#include "idt_master.h"
-#include "intrinsics.h"
 #include "kernel.h"
-#include "kernel_cpp.h"
-#include "kernel_zig.h"
-#include "os_registers.c"
-#include "pic.h"
-#include "pit_timer.h"
-#include "ps2_controller.h"
-#include "ps2_mouse.h"
-#include "stdio.h"
-#include "string_helper.h"
-#include "vga_terminal.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
+#include "call_real16_wrapper.h"
+#include "kernel_cpp.h"
+#include "kernel_zig.h"
+#include "os_registers.c"
+#include "pic.h"
+
+#include "stdio.h"
+#include "stdlib.h"
+#include "vga_terminal.h"
+
+#include "ps2.h"
+#include "ps2_controller.h"
 #include "ps2_keyboard_public.h"
+#include "ps2_mouse.h"
 #include "ps2_mouse_public.h"
 
 #include "framebuffer.h"
@@ -29,8 +26,7 @@
 #include "kernel_helper.h"
 #include "symbols.h"
 
-#include "ps2.h"
-#include "stdlib.h"
+#include "pit.h"
 
 GDT_ROOT *GDT16_ROOT = &GDT16_DESCRIPTOR;
 

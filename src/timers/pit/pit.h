@@ -5,10 +5,11 @@
 extern "C"
 {
 #endif
-// ================ Start
+    // ================ Start
 
+    int wait(float seconds);
 
-// =============== End
+    // =============== End
 #ifdef __cplusplus
 }
 #endif

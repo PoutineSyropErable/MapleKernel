@@ -16,13 +16,11 @@ enum handle_ps2_setup_errors handle_ps2_setup_no_port();
 
 void quick_enable_mouse();
 
-enum handle_ps2_setup_errors handle_ps2_setup()
-{
+enum handle_ps2_setup_errors handle_ps2_setup() {
     struct ps2_initialize_device_state device_sates = setup_ps2_controller();
     kprintf("\n ===== Handling Result ===== \n");
 
-    switch (device_sates.ps2_state_err)
-    {
+    switch (device_sates.ps2_state_err) {
     case PS2_ID_ERR_none: return handle_ps2_setup_one_keyboard_one_mouse(device_sates);
 
     case PS2_ID_ERR_two_keyboard: return handle_ps2_setup_two_keyboard(device_sates);
@@ -46,8 +44,7 @@ enum handle_ps2_setup_errors handle_ps2_setup()
 
 /* ------------------ Helper Functions ------------------ */
 
-enum handle_ps2_setup_errors handle_ps2_setup_one_keyboard_one_mouse(struct ps2_initialize_device_state device_sates)
-{
+enum handle_ps2_setup_errors handle_ps2_setup_one_keyboard_one_mouse(struct ps2_initialize_device_state device_sates) {
     kprintf("One Keyboard, One Mouse\n");
     enum ps2_device_type port1_type = device_sates.port_one_device_type;
     enum ps2_device_type port2_type = device_sates.port_two_device_type;
@@ -66,17 +63,14 @@ enum handle_ps2_setup_errors handle_ps2_setup_one_keyboard_one_mouse(struct ps2_
     enum ps2_device_type keyboard_type, mouse_type;
     uint8_t              keyboard_interrupt_vector, mouse_interrupt_vector;
 
-    if (port1_super_type == PS2_DST_keyboard && port2_super_type == PS2_DST_mouse)
-    {
+    if (port1_super_type == PS2_DST_keyboard && port2_super_type == PS2_DST_mouse) {
 	keyboard_port             = 1;
 	mouse_port                = 2;
 	keyboard_type             = port1_type;
 	mouse_type                = port2_type;
 	keyboard_interrupt_vector = PS2_PORT1_INTERUPT_VECTOR;
 	mouse_interrupt_vector    = PS2_PORT2_INTERUPT_VECTOR;
-    }
-    else
-    {
+    } else {
 	keyboard_port             = 2;
 	mouse_port                = 1;
 	keyboard_type             = port2_type;
@@ -111,8 +105,7 @@ enum handle_ps2_setup_errors handle_ps2_setup_one_keyboard_one_mouse(struct ps2_
     return PS2_HS_ERR_none;
 }
 
-enum handle_ps2_setup_errors handle_ps2_setup_one_port_only(struct ps2_initialize_device_state device_sates)
-{
+enum handle_ps2_setup_errors handle_ps2_setup_one_port_only(struct ps2_initialize_device_state device_sates) {
     kprintf("One Port only\n");
 
     enum ps2_device_type       only_port_type       = device_sates.port_one_device_type;
@@ -121,10 +114,8 @@ enum handle_ps2_setup_errors handle_ps2_setup_one_port_only(struct ps2_initializ
     if (only_port_super_type == PS2_DST_unknown)
 	return PS2_HS_ERR_unrecognized_device1;
 
-    switch (only_port_super_type)
-    {
-    case PS2_DST_keyboard:
-    {
+    switch (only_port_super_type) {
+    case PS2_DST_keyboard: {
 	struct idt_init_ps2_fields   args;
 	struct idt_fields_1_keyboard args_value;
 	args_value.keyboard_type   = only_port_type;
@@ -137,8 +128,7 @@ enum handle_ps2_setup_errors handle_ps2_setup_one_port_only(struct ps2_initializ
 	IRQ_clear_mask(PS2_PORT1_IRQ);
 	return PS2_HS_ERR_one_port_only;
     }
-    case PS2_DST_mouse:
-    {
+    case PS2_DST_mouse: {
 	struct idt_init_ps2_fields args;
 	struct idt_fields_1_mouse  args_value;
 	args_value.mouse_type   = only_port_type;
@@ -155,8 +145,7 @@ enum handle_ps2_setup_errors handle_ps2_setup_one_port_only(struct ps2_initializ
     }
 }
 
-enum handle_ps2_setup_errors handle_ps2_setup_two_keyboard(struct ps2_initialize_device_state device_sates)
-{
+enum handle_ps2_setup_errors handle_ps2_setup_two_keyboard(struct ps2_initialize_device_state device_sates) {
     kprintf("Two keyboards\n");
     enum ps2_device_type keyboard1_type = device_sates.port_one_device_type;
     enum ps2_device_type keyboard2_type = device_sates.port_two_device_type;
@@ -179,8 +168,7 @@ enum handle_ps2_setup_errors handle_ps2_setup_two_keyboard(struct ps2_initialize
     return PS2_HS_ERR_two_keyboard;
 }
 
-enum handle_ps2_setup_errors handle_ps2_setup_two_mouse(struct ps2_initialize_device_state device_sates)
-{
+enum handle_ps2_setup_errors handle_ps2_setup_two_mouse(struct ps2_initialize_device_state device_sates) {
     kprintf("Two Mouse\n");
     enum ps2_device_type mouse1_type = device_sates.port_one_device_type;
     enum ps2_device_type mouse2_type = device_sates.port_two_device_type;
@@ -203,8 +191,7 @@ enum handle_ps2_setup_errors handle_ps2_setup_two_mouse(struct ps2_initialize_de
     return PS2_HS_ERR_two_mouse;
 }
 
-enum handle_ps2_setup_errors handle_ps2_setup_no_port()
-{
+enum handle_ps2_setup_errors handle_ps2_setup_no_port() {
     kprintf("No PS2 Devices\n");
     return PS2_HS_ERR_no_port;
 }

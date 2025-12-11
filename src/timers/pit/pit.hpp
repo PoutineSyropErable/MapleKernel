@@ -1,4 +1,5 @@
 #pragma once
+#include "pit.h"
 #include "static_assert.h"
 #include <stddef.h>
 #include <stdint.h>
@@ -32,12 +33,19 @@ enum class Bit_6_7 : uint8_t
     read_back_command = 0b11, //(8254+ only, So supported by anything modern)
 };
 
+// This
 enum class Bit_4_5 : uint8_t
 {
     latch_count_value_cmd = 0b00,
     low_byte_only         = 0b01,
     high_byte_only        = 0b10,
-    low_or_high_byte      = 0b11,
+    low_then_high_byte    = 0b11,
+};
+
+struct __attribute__((packed)) split_uint16_t
+{
+    uint8_t low;
+    uint8_t high;
 };
 
 #define PIT_INCLUDE_ALIAS_MODES
@@ -77,5 +85,7 @@ struct mode_command_register
 };
 
 STATIC_ASSERT(sizeof(mode_command_register) == 1, "Must be 1 byte");
+
+int wait(float seconds);
 
 } // namespace pit
