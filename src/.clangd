@@ -60,3 +60,8 @@ CompileFlags:
   Add:
     - -std=gnu99
 
+
+
+Hover:
+  ShowAKA: Yes
+  Expand: Yes

@@ -24,7 +24,7 @@ AlignTrailingComments: true
 # # Indent array braces nicely
 BraceWrapping:
   AfterStruct: false
-  AfterArray: false
+  # AfterArray: false
 #
 # Control spaces inside braces
 SpacesInContainerLiterals: true

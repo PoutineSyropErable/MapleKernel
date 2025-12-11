@@ -27,6 +27,7 @@
       "-I./cpu/apic",
       "-I./firmware/acpi",
       "-I./framebuffer",
+      "-I./timers/pit",
       "-I./z_otherLang/cpp/",
       "-I./z_otherLang/rust/",
       "-I./z_otherLang/zig/",
@@ -67,6 +68,7 @@
       "-I./cpu/apic",
       "-I./firmware/acpi",
       "-I./framebuffer",
+      "-I./timers/pit",
       "-I./z_otherLang/cpp/",
       "-I./z_otherLang/rust/",
       "-I./z_otherLang/zig/",
@@ -107,6 +109,7 @@
       "-I./cpu/apic",
       "-I./firmware/acpi",
       "-I./framebuffer",
+      "-I./timers/pit",
       "-I./z_otherLang/cpp/",
       "-I./z_otherLang/rust/",
       "-I./z_otherLang/zig/",
@@ -146,6 +149,7 @@
       "-I./cpu/apic",
       "-I./firmware/acpi",
       "-I./framebuffer",
+      "-I./timers/pit",
       "-I./z_otherLang/cpp/",
       "-I./z_otherLang/rust/",
       "-I./z_otherLang/zig/",
@@ -185,6 +189,7 @@
       "-I./cpu/apic",
       "-I./firmware/acpi",
       "-I./framebuffer",
+      "-I./timers/pit",
       "-I./z_otherLang/cpp/",
       "-I./z_otherLang/rust/",
       "-I./z_otherLang/zig/",
@@ -694,6 +699,25 @@
     "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
     "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/other/pit_timer.c",
     "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/pit_timer.o"
+  },
+  {
+    "arguments": [
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-g++",
+      "-std=gnu++23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-c",
+      "-Istdlib",
+      "-Istdio",
+      "-o",
+      "build/pit.o",
+      "./timers/pit/pit.cpp"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/timers/pit/pit.cpp",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/pit.o"
   },
   {
     "arguments": [
