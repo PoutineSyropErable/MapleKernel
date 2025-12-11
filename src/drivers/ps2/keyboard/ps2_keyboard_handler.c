@@ -2,6 +2,7 @@
 #include "keycodes.h"
 #include "more_types.h"
 #include "pic.h"
+#include "pic_public.h"
 #include "ps2_keyboard_handler.h"
 #include "ps2_keyboard_handler_public.h"
 #include "ps2_keyboard_key_functions.h"
@@ -55,11 +56,11 @@ void setup_keyboard_extra()
 {
     for (uint16_t i = 0; i < 256; i++)
     {
-        key_functions[i]           = nop;
-        is_key_tied_to_function[i] = false;
+	key_functions[i]           = nop;
+	is_key_tied_to_function[i] = false;
 
-        extended_key_functions[i]           = nop;
-        is_extended_key_tied_to_function[i] = false;
+	extended_key_functions[i]           = nop;
+	is_extended_key_tied_to_function[i] = false;
     }
 
     // For the parts that changes leds
@@ -96,8 +97,8 @@ extern inline void keyboard_handler(uint8_t scancode, uint8_t port_number)
     {
     case 1:
     {
-        keyboard_handler_scs1(scancode, port_number);
-        return;
+	keyboard_handler_scs1(scancode, port_number);
+	return;
     }
     case 2: return keyboard_handler_scs3(scancode, port_number);
     case 3: return keyboard_handler_scs3(scancode, port_number);
@@ -125,11 +126,11 @@ void keyboard_handler_scs1(uint8_t scancode, uint8_t port_number)
     uint8_t keyboard_irq;
     if (port_number == 1)
     {
-        keyboard_irq = PS2_PORT1_IRQ;
+	keyboard_irq = PS2_PORT1_IRQ;
     }
     else
     {
-        keyboard_irq = PS2_PORT2_IRQ;
+	keyboard_irq = PS2_PORT2_IRQ;
     }
     // this can be optimized into a cmovs with immediates (no memory reads or branch)
     // Blazingly fast
@@ -146,14 +147,14 @@ void keyboard_handler_scs1(uint8_t scancode, uint8_t port_number)
     bool press_not_release = true;
     if (scancode == 0xe0)
     {
-        extended_signal = true;
+	extended_signal = true;
     }
     // =============== Len 2, 4 and 6 prelude
     if (extended_signal && !four_long_sequence[port_number] && !six_long_sequence[port_number])
     {
-        previous_extended_signal[port_number] = extended_signal;
-        PIC_sendEOI(keyboard_irq);
-        return;
+	previous_extended_signal[port_number] = extended_signal;
+	PIC_sendEOI(keyboard_irq);
+	return;
     }
 
     // ==================== Start of length 4 sequence dealing ===================
@@ -165,59 +166,59 @@ void keyboard_handler_scs1(uint8_t scancode, uint8_t port_number)
 
     if (previous_extended_signal[port_number] && !four_long_sequence[port_number])
     {
-        if (scancode == psps1 || scancode == psrs1)
-        {
-            four_long_sequence[port_number]       = true;
-            current_sequence_length[port_number]  = 2;
-            previous_extended_signal[port_number] = false;
-            // kprintf("Start of 4 long sequence\n");
-            PIC_sendEOI(keyboard_irq);
-            return;
-        }
+	if (scancode == psps1 || scancode == psrs1)
+	{
+	    four_long_sequence[port_number]       = true;
+	    current_sequence_length[port_number]  = 2;
+	    previous_extended_signal[port_number] = false;
+	    // kprintf("Start of 4 long sequence\n");
+	    PIC_sendEOI(keyboard_irq);
+	    return;
+	}
     }
 
     if (four_long_sequence[port_number])
     {
-        previous_extended_signal[port_number] = false;
-        //
-        uint8_t i = current_sequence_length[port_number];
+	previous_extended_signal[port_number] = false;
+	//
+	uint8_t i = current_sequence_length[port_number];
 
-        // kprintf("i = %u, scancode = %h:2, comp = %h:2\n", i, scancode, print_screen_pressed_sequence[i]);
-        if (scancode == print_screen_pressed_sequence[i])
-        {
-            if (i == 3)
-            {
-                current_sequence_length[port_number] = 0;
-                four_long_sequence[port_number]      = false;
-                parse_print_screen(true);
-                PIC_sendEOI(keyboard_irq);
-                return;
-            }
-            current_sequence_length[port_number]++;
-            PIC_sendEOI(keyboard_irq);
-            return;
-        }
-        else if (scancode == print_screen_released_sequence[i])
-        {
-            if (i == 3)
-            {
-                current_sequence_length[port_number] = 0;
-                four_long_sequence[port_number]      = false;
-                parse_print_screen(false);
-                PIC_sendEOI(keyboard_irq);
-                return;
-            }
-            current_sequence_length[port_number]++;
-            PIC_sendEOI(keyboard_irq);
-            return;
-        }
-        else
-        {
-            current_sequence_length[port_number] = 0;
-            four_long_sequence[port_number]      = 0;
-            PIC_sendEOI(keyboard_irq);
-            return;
-        }
+	// kprintf("i = %u, scancode = %h:2, comp = %h:2\n", i, scancode, print_screen_pressed_sequence[i]);
+	if (scancode == print_screen_pressed_sequence[i])
+	{
+	    if (i == 3)
+	    {
+		current_sequence_length[port_number] = 0;
+		four_long_sequence[port_number]      = false;
+		parse_print_screen(true);
+		PIC_sendEOI(keyboard_irq);
+		return;
+	    }
+	    current_sequence_length[port_number]++;
+	    PIC_sendEOI(keyboard_irq);
+	    return;
+	}
+	else if (scancode == print_screen_released_sequence[i])
+	{
+	    if (i == 3)
+	    {
+		current_sequence_length[port_number] = 0;
+		four_long_sequence[port_number]      = false;
+		parse_print_screen(false);
+		PIC_sendEOI(keyboard_irq);
+		return;
+	    }
+	    current_sequence_length[port_number]++;
+	    PIC_sendEOI(keyboard_irq);
+	    return;
+	}
+	else
+	{
+	    current_sequence_length[port_number] = 0;
+	    four_long_sequence[port_number]      = 0;
+	    PIC_sendEOI(keyboard_irq);
+	    return;
+	}
     }
     // ==================== End of length 4 sequence dealing ===================
 
@@ -225,31 +226,31 @@ void keyboard_handler_scs1(uint8_t scancode, uint8_t port_number)
     const uint8_t pause_pressed_sequence[] = {0xE1, 0x1D, 0x45, 0xE1, 0x9D, 0xC5};
     if (scancode == pause_pressed_sequence[0])
     {
-        six_long_sequence[port_number] = true;
-        current_sequence_length[port_number]++;
-        previous_extended_signal[port_number] = false;
-        PIC_sendEOI(keyboard_irq);
-        return;
+	six_long_sequence[port_number] = true;
+	current_sequence_length[port_number]++;
+	previous_extended_signal[port_number] = false;
+	PIC_sendEOI(keyboard_irq);
+	return;
     }
 
     if (six_long_sequence[port_number])
     {
-        previous_extended_signal[port_number] = false;
-        uint8_t i                             = current_sequence_length[port_number];
-        if (scancode == pause_pressed_sequence[i])
-        {
-            if (i == 5)
-            {
-                current_sequence_length[port_number] = 0;
-                parse_pause_pressed();
-                PIC_sendEOI(keyboard_irq);
-                return;
-            }
+	previous_extended_signal[port_number] = false;
+	uint8_t i                             = current_sequence_length[port_number];
+	if (scancode == pause_pressed_sequence[i])
+	{
+	    if (i == 5)
+	    {
+		current_sequence_length[port_number] = 0;
+		parse_pause_pressed();
+		PIC_sendEOI(keyboard_irq);
+		return;
+	    }
 
-            current_sequence_length[port_number]++;
-            PIC_sendEOI(keyboard_irq);
-            return;
-        }
+	    current_sequence_length[port_number]++;
+	    PIC_sendEOI(keyboard_irq);
+	    return;
+	}
     }
     // ==================== End of length 6 sequence dealing ===================
 
@@ -257,27 +258,27 @@ void keyboard_handler_scs1(uint8_t scancode, uint8_t port_number)
     if (previous_extended_signal[port_number])
     {
 
-        if (scancode >= EXTENDED_SCANCODE_RELEASE_START)
-        {
-            scancode -= EXTENDED_SCANCODE_RELEASE_OFFSET;
-            press_not_release = false;
-        }
-        parse_extended_scan_code(scancode, press_not_release);
-        previous_extended_signal[port_number] = extended_signal;
-        PIC_sendEOI(keyboard_irq);
-        return;
+	if (scancode >= EXTENDED_SCANCODE_RELEASE_START)
+	{
+	    scancode -= EXTENDED_SCANCODE_RELEASE_OFFSET;
+	    press_not_release = false;
+	}
+	parse_extended_scan_code(scancode, press_not_release);
+	previous_extended_signal[port_number] = extended_signal;
+	PIC_sendEOI(keyboard_irq);
+	return;
     }
     else
     {
-        if (scancode >= SCANCODE_RELEASE_START)
-        {
-            scancode -= SCANCODE_RELEASE_OFFSET;
-            press_not_release = false;
-        }
-        parse_scan_code(scancode, press_not_release);
-        previous_extended_signal[port_number] = extended_signal;
-        PIC_sendEOI(keyboard_irq);
-        return;
+	if (scancode >= SCANCODE_RELEASE_START)
+	{
+	    scancode -= SCANCODE_RELEASE_OFFSET;
+	    press_not_release = false;
+	}
+	parse_scan_code(scancode, press_not_release);
+	previous_extended_signal[port_number] = extended_signal;
+	PIC_sendEOI(keyboard_irq);
+	return;
     }
     // ==================== End of length 2 sequence dealing ===================
 }
@@ -374,23 +375,23 @@ void parse_scan_code(uint8_t press_scancode, bool pressed_not_released)
 
     if (pressed_not_released)
     {
-        if (is_key_tied_to_function[press_scancode])
-        {
-            key_functions[press_scancode]();
-        }
+	if (is_key_tied_to_function[press_scancode])
+	{
+	    key_functions[press_scancode]();
+	}
 
-        struct KeyCode          keycode     = scancode_to_keycode(press_scancode);
-        struct KeyModifierState state       = get_current_mod_state();
-        bool                    first_press = !is_key_pressed[press_scancode];
-        keycode_handler(keycode, state, first_press, true);
-        is_key_pressed[press_scancode] = true;
+	struct KeyCode          keycode     = scancode_to_keycode(press_scancode);
+	struct KeyModifierState state       = get_current_mod_state();
+	bool                    first_press = !is_key_pressed[press_scancode];
+	keycode_handler(keycode, state, first_press, true);
+	is_key_pressed[press_scancode] = true;
     }
     else
     {
-        is_key_pressed[press_scancode]  = false;
-        struct KeyCode          keycode = scancode_to_keycode(press_scancode);
-        struct KeyModifierState state   = get_current_mod_state();
-        keycode_handler(keycode, state, false, false);
+	is_key_pressed[press_scancode]  = false;
+	struct KeyCode          keycode = scancode_to_keycode(press_scancode);
+	struct KeyModifierState state   = get_current_mod_state();
+	keycode_handler(keycode, state, false, false);
     }
 }
 void parse_extended_scan_code(uint8_t press_scancode, bool pressed_not_released)
@@ -402,23 +403,23 @@ void parse_extended_scan_code(uint8_t press_scancode, bool pressed_not_released)
     if (pressed_not_released)
     {
 
-        if (is_extended_key_tied_to_function[press_scancode])
-        {
-            extended_key_functions[press_scancode]();
-        }
+	if (is_extended_key_tied_to_function[press_scancode])
+	{
+	    extended_key_functions[press_scancode]();
+	}
 
-        struct KeyCode          keycode     = extended_scancode_to_keycode(press_scancode);
-        struct KeyModifierState state       = get_current_mod_state();
-        bool                    first_press = !is_extended_key_pressed[press_scancode];
-        keycode_handler(keycode, state, first_press, true);
-        is_extended_key_pressed[press_scancode] = true;
+	struct KeyCode          keycode     = extended_scancode_to_keycode(press_scancode);
+	struct KeyModifierState state       = get_current_mod_state();
+	bool                    first_press = !is_extended_key_pressed[press_scancode];
+	keycode_handler(keycode, state, first_press, true);
+	is_extended_key_pressed[press_scancode] = true;
     }
     else
     {
-        is_extended_key_pressed[press_scancode] = false;
-        struct KeyCode          keycode         = extended_scancode_to_keycode(press_scancode);
-        struct KeyModifierState state           = get_current_mod_state();
-        keycode_handler(keycode, state, false, false);
+	is_extended_key_pressed[press_scancode] = false;
+	struct KeyCode          keycode         = extended_scancode_to_keycode(press_scancode);
+	struct KeyModifierState state           = get_current_mod_state();
+	keycode_handler(keycode, state, false, false);
     }
 }
 
@@ -428,16 +429,16 @@ void parse_print_screen(bool pressed_not_released)
 
     if (pressed_not_released)
     {
-        struct KeyCode          keycode = print_screen_to_keycode();
-        struct KeyModifierState state   = get_current_mod_state();
-        keycode_handler(keycode, state, !is_print_screen_pressed, true);
+	struct KeyCode          keycode = print_screen_to_keycode();
+	struct KeyModifierState state   = get_current_mod_state();
+	keycode_handler(keycode, state, !is_print_screen_pressed, true);
     }
     else
     {
 
-        struct KeyCode          keycode = print_screen_to_keycode();
-        struct KeyModifierState state   = get_current_mod_state();
-        keycode_handler(keycode, state, false, false);
+	struct KeyCode          keycode = print_screen_to_keycode();
+	struct KeyModifierState state   = get_current_mod_state();
+	keycode_handler(keycode, state, false, false);
     }
 
     is_print_screen_pressed = pressed_not_released;
