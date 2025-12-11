@@ -134,6 +134,7 @@ RUST="./z_otherLang/rust/"
 ZIG="./z_otherLang/zig/"
 
 FRAMEBUFER="./framebuffer"
+PIT="./timers/pit"
 
 INCLUDE_DIRS=(
 	"$KERNEL"
@@ -159,6 +160,7 @@ INCLUDE_DIRS=(
 	"$ACPI"
 
 	"$FRAMEBUFER"
+	"$PIT"
 
 	"$CPP"
 	"$RUST"
@@ -231,6 +233,8 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$ACPI/acpi.c" -o "$BUILD_DIR/acpi.o" "-I$IDT" "-
 i686-elf-gcc "${CFLAGS[@]}" -c "$OTHER/virtual_memory.c" -o "$BUILD_DIR/virtual_memory.o"
 i686-elf-gcc "${CFLAGS[@]}" -c "$OTHER/pit_timer.c" -o "$BUILD_DIR/pit_timer.o"
 
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$PIT/pit.cpp" -o "$BUILD_DIR/pit.o" "-I$STDLIB" "-I$STDIO"
+
 # Just another thing
 i686-elf-gcc "${CFLAGS[@]}" -c "$CODE_ANALYSIS/address_getter.c" -o "$BUILD_DIR/address_getter.o" "-I$REAL_FUNC" "-I$REAL16_WRAPPERS" "-I$GDT" "-I$STDLIB"
 
@@ -300,6 +304,7 @@ BUILD_OBJECTS=(
 	"$BUILD_DIR/kernel_zig.o"
 
 	"$BUILD_DIR/framebuffer.o"
+	"$BUILD_DIR/pit.o"
 )
 
 # ========= Static library setup ============
