@@ -26,13 +26,19 @@ CompileFlags:
     - -Iother
     - -Iruntime_code_analysis
 
+    - -I./cpu/
+    - -I./cpu/gdt 
+    - -I./cpu/idt
+    - -I./cpu/pic
+    - -I./cpu/apic
 
+
+    - -Idrivers/ps2/
     - -Idrivers/ps2/controller
     - -Idrivers/ps2/mouse
     - -Idrivers/ps2/keyboard
     - -Idrivers/ps2/keyboard/cpp
     - -Idrivers/usb/controller
-    - -Iacpi
 
     - -Iz_otherLang/cpp/
     - -Iz_otherLang/zig/

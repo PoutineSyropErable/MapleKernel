@@ -25,13 +25,10 @@
 #include "multiboot.h"
 
 #include "kernel_helper.h"
-#include "symbols.h"
 
 #include "pit.h"
 
 GDT_ROOT *GDT16_ROOT = &GDT16_DESCRIPTOR;
-
-extern char __kstrtab_start[];
 
 void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_multiboot_32)
 {
@@ -39,20 +36,6 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 	// initialize_terminal();
 	// terminal_set_scroll(0);
 	kprintf("\n===========Terminal Initialized=============\n");
-
-	// for (uint32_t i = 0; i < 5000; i++)
-	// {
-	//     kprintf("%c", __kstrtab_start[i]);
-	// }
-
-	// int res = find_string_offset(__kstrtab_start, 100000, "kernel_main");
-	// kprintf("res = %d\n", res);
-	// if (res > 0)
-	//     kprintf("string = %s\n", &__kstrtab_start[res]);
-	//
-	// init_elf_symbols();
-	// uintptr_t kma = find_symbol_address("kernel_main");
-	// kprintf("kma2 = %u\n", kma);
 
 	kprintf("addr = %u, magic = %h, is_proper_multiboot_32 = %u\n", mb2_info_addr, magic, is_proper_multiboot_32);
 
@@ -124,29 +107,7 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 	test_printf();
 	test_assert(); // gd, and set to false and play with it
 
-	/* Some day the future, it might be important to know the state here (hence
-	 * err_discard). But today is not that day*/
-	idt_init();
-	enum handle_ps2_setup_status err = handle_ps2_setup();
-	switch (err)
-	{
-	case PS2_HS_ERR_one_keyboard_one_mouse:
-	case PS2_HS_ERR_two_keyboard:
-	case PS2_HS_ERR_two_mouse:
-		// When there's two device
-
-		break;
-	case PS2_HS_ERR_unrecognized_device2:
-	case PS2_HS_ERR_one_port_only:
-		// When there's only device 1
-		break;
-
-	case PS2_HS_ERR_unrecognized_device1:
-		// When there's only device 2
-
-	case PS2_HS_ERR_no_port: break;
-	}
-	idt_finalize();
+	setup_interrupts();
 
 	// test_ps2_keyboard_commands();
 	setup_keyboard();

@@ -1,4 +1,5 @@
 #pragma once
+#include "irq.h"
 #include <stdint.h>
 
 #define PIC1 0x20 /* IO base address for master PIC */
@@ -12,10 +13,7 @@
 
 // TODO: Double check them. (This goes with the other todo of not using magic numbers)
 // To what index are Interrupt reserved in PM and LM?
-#define PS2_PORT1_IRQ 1
-#define PS2_PORT2_BRIDGE_IRQ 2
-#define PS2_PORT2_IRQ 12
-#define START_OF_USER_ALLOCATABLE_INTERRUPT 32
+
 #define NUMBER_OF_IRQ_PER_PIC 8
 
 // These are changeable. It doesn't have to be this formula

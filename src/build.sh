@@ -126,6 +126,7 @@ UEFI="./firmware/uefi"
 MULTIBOOT="./firmware/multiboot"
 ACPI="./firmware/acpi"
 
+CPU="./cpu/"
 PIC="./cpu/pic"
 APIC="./cpu/apic"
 GDT="./cpu/gdt"
@@ -156,6 +157,7 @@ INCLUDE_DIRS=(
 
 	"$DRIVERS_USB_CONTROLLER"
 
+	"$CPU"
 	"$GDT"
 	"$IDT"
 	"$PIC"
@@ -178,8 +180,10 @@ PS2_INCLUDE_DIRS=(
 	"$PS2"
 	"$PS2_CONTROLLER"
 	"$PS2_KEYBOARD"
+	"$PS2_KEYBOARD_CPP"
 	"$PS2_MOUSE"
 	"$PIC"
+	"$CPU"
 )
 
 # Build SUPER_INCLUDE as an array of -I arguments
@@ -225,19 +229,19 @@ nasm "${NASM_FLAGS32[@]}" "$IDT/exception_handler.asm" -o "$BUILD_DIR/exception_
 nasm "${NASM_FLAGS32[@]}" "$PS2/ps2_interrupt_handlers.asm" -o "$BUILD_DIR/ps2_interrupt_handlers.o"
 i686-elf-gcc "${CFLAGS[@]}" -c "$PS2_CONTROLLER/ps2_controller.c" -o "$BUILD_DIR/ps2_controller.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$DRIVERS_USB_CONTROLLER"
 
-i686-elf-gcc "${CFLAGS[@]}" -c "$PS2_KEYBOARD/ps2_keyboard.c" -o "$BUILD_DIR/ps2_keyboard.o" "-I$IDT" "-I$GDT" "-I$PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO" "-I$PIC"
+i686-elf-gcc "${CFLAGS[@]}" -c "$PS2_KEYBOARD/ps2_keyboard.c" -o "$BUILD_DIR/ps2_keyboard.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "${PS2_SUPER_INCLUDE[@]}"
 i686-elf-gcc "${CFLAGS[@]}" -c "$PS2_KEYBOARD/ps2_keyboard_handler.c" -o "$BUILD_DIR/ps2_keyboard_handler.o" \
-	-I"$IDT" -I"$GDT" -I"$PS2_CONTROLLER" -I"$STDLIB" -I"$STDIO" -I"$PS2_KEYBOARD_CPP" -I"$PIC"
+	-I"$IDT" -I"$GDT" -I"$STDLIB" -I"$STDIO" "${PS2_SUPER_INCLUDE[@]}"
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$PS2_KEYBOARD_CPP/keycodes.cpp" -o "$BUILD_DIR/keycodes.o" "-I$STDIO" "-I$STDLIB" "-I$PS2_KEYBOARD_CPP"
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$PS2_KEYBOARD_CPP/scancodes_to_keycodes.cpp" -o "$BUILD_DIR/scancodes_to_keycodes.o" "-I$STDIO" "-I$STDLIB" "-I$PS2_KEYBOARD" "-I$PS2_KEYBOARD_CPP"
 i686-elf-gcc "${CFLAGS[@]}" -c "$PS2_KEYBOARD/ps2_keyboard_key_functions.c" -o "$BUILD_DIR/ps2_keyboard_key_functions.o" "-I$PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO"
 
 i686-elf-gcc "${CFLAGS[@]}" -c "$PS2_MOUSE/ps2_mouse.c" -o "$BUILD_DIR/ps2_mouse.o" "-I$IDT" "-I$GDT" "-I$PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO"
-i686-elf-gcc "${CFLAGS[@]}" -c "$PS2_MOUSE/ps2_mouse_handler.c" -o "$BUILD_DIR/ps2_mouse_handler.o" "-I$IDT" "-I$GDT" "-I$PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO" "-I$PIC"
+i686-elf-gcc "${CFLAGS[@]}" -c "$PS2_MOUSE/ps2_mouse_handler.c" -o "$BUILD_DIR/ps2_mouse_handler.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "${PS2_SUPER_INCLUDE[@]}"
 
 i686-elf-gcc "${CFLAGS[@]}" -c "$PS2/ps2.c" -o "$BUILD_DIR/ps2.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "${PS2_SUPER_INCLUDE[@]}"
 
-i686-elf-gcc "${CFLAGS[@]}" -c "$PIC/pic.c" -o "$BUILD_DIR/pic.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO"
+i686-elf-gcc "${CFLAGS[@]}" -c "$PIC/pic.c" -o "$BUILD_DIR/pic.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "-I$CPU"
 
 # Temporary stuff. Will properly program them one day.
 i686-elf-gcc "${CFLAGS[@]}" -c "$DRIVERS_USB_CONTROLLER/usb_controller.c" -o "$BUILD_DIR/usb_controller.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "-I$DRIVERS_USB_CONTROLLER"
@@ -245,7 +249,7 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$ACPI/acpi.c" -o "$BUILD_DIR/acpi.o" "-I$IDT" "-
 i686-elf-gcc "${CFLAGS[@]}" -c "$OTHER/virtual_memory.c" -o "$BUILD_DIR/virtual_memory.o"
 
 # Timers
-i686-elf-g++ "${CPPFLAGS[@]}" -c "$PIT/pit.cpp" -o "$BUILD_DIR/pit.o" "-I$STDLIB" "-I$STDIO"
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$PIT/pit.cpp" -o "$BUILD_DIR/pit.o" "-I$STDLIB" "-I$STDIO" "-I$PIC" "-I$CPU"
 
 # Just another thing
 i686-elf-gcc "${CFLAGS[@]}" -c "$CODE_ANALYSIS/address_getter.c" -o "$BUILD_DIR/address_getter.o" "-I$REAL_FUNC" "-I$REAL16_WRAPPERS" "-I$GDT" "-I$STDLIB"
