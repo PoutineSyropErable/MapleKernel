@@ -40,23 +40,35 @@ enum class Bit_4_5 : uint8_t
     low_or_high_byte      = 0b11,
 };
 
+#define PIT_INCLUDE_ALIAS_MODES
 enum class Bit_1_3 : uint8_t
 {
-    single_shot       = 0b000,
-    channel_1         = 0b001,
-    channel_2         = 0b010,
-    read_back_command = 0b011,
+    single_shot           = 0b000,
+    hardware_one_shot     = 0b001, //  hardware re-triggerable one-shot)
+    rate_generator        = 0b010, //
+    square_wave_generator = 0b011,
+    software_strobe       = 0b100,
+    hardware_strobe       = 0b101,
+#ifdef PIT_INCLUDE_ALIAS_MODES
+    // Should I even use these bellow?
+    // They are the same way to send the same command
+    // Used for readbacks so needed?
+    // If not needed, it will polute switch statement
+    rate_generator_2        = 0b110,
+    square_wave_generator_2 = 0b111,
+#endif
 };
 
 enum class Bit_0 : bool
 {
     binary16        = 0,
-    four_digits_bcd = 1,
+    four_digits_bcd = 1, // Stuff work with information saved as 4 digits. Not supported a lot.
+                         // Let's not program arround it
 };
 
 } // namespace ModeCommandRegister
 
-struct command
+struct mode_command_register
 {
     enum ModeCommandRegister::Bit_0   bcd_binary_mode : 1;
     enum ModeCommandRegister::Bit_1_3 operating_mode : 3;
@@ -64,6 +76,6 @@ struct command
     enum ModeCommandRegister::Bit_6_7 channel : 2;
 };
 
-STATIC_ASSERT(sizeof(command) == 1, "Must be 1 byte");
+STATIC_ASSERT(sizeof(mode_command_register) == 1, "Must be 1 byte");
 
 } // namespace pit
