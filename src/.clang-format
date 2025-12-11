@@ -1,8 +1,9 @@
 # .clang-format
 # Language:        Cpp
 IndentWidth:     4
-UseTab:          Never
+UseTab:          ForIndentation
 BreakBeforeBraces: Allman
+# BreakBeforeBraces: Attach
 AlignAfterOpenBracket: DontAlign
 IndentPPDirectives: AfterHash
 MacroBlockBegin: ''
@@ -21,9 +22,9 @@ AlignConsecutiveDeclarations: true
 AlignTrailingComments: true
 
 # # Indent array braces nicely
-# BraceWrapping:
-#   AfterStruct: true
-#   AfterArray: true
+BraceWrapping:
+  AfterStruct: false
+  AfterArray: false
 #
 # Control spaces inside braces
 SpacesInContainerLiterals: true

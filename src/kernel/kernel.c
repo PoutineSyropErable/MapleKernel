@@ -47,15 +47,14 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
     //     kprintf("%c", __kstrtab_start[i]);
     // }
 
-    int res = find_string_offset(__kstrtab_start, 100000, "kernel_main");
-    kprintf("res = %d\n", res);
-    if (res > 0)
-        kprintf("string = %s\n", &__kstrtab_start[res]);
-
-    init_elf_symbols();
+    // int res = find_string_offset(__kstrtab_start, 100000, "kernel_main");
+    // kprintf("res = %d\n", res);
+    // if (res > 0)
+    //     kprintf("string = %s\n", &__kstrtab_start[res]);
+    //
+    // init_elf_symbols();
     // uintptr_t kma = find_symbol_address("kernel_main");
     // kprintf("kma2 = %u\n", kma);
-    return;
 
     kprintf("addr = %u, magic = %h, is_proper_multiboot_32 = %u\n", mb2_info_addr, magic, is_proper_multiboot_32);
 
@@ -117,6 +116,8 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
     void                *rsdp              = rsdp_tagged.rsdp;
     kprintf("rsdp = %h, type=%s\n", rsdp, name);
 #endif
+
+    return;
 
     // init_paging();
     // init_page_bitmap();

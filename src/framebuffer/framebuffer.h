@@ -7,6 +7,9 @@ extern "C"
 {
 #endif
 
+    /*
+    blue, green, red, reserved/transparency
+    */
     struct __attribute__((packed)) color_t
     {
         uint8_t b;
