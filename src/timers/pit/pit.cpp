@@ -26,7 +26,7 @@ constexpr void set_operation_mode(mode_command_register operation_mode)
 }
 
 // ====================
-unsigned read_pit_count(void)
+uint16_t read_pit_count(void)
 {
 
     // Disable interrupts
@@ -52,9 +52,8 @@ void set_pit_count(uint16_t count)
     // Disable interrupts
     __cli();
 
-    // Set low byte
-    __outb(0x40, count & 0xFF);          // Low byte
-    __outb(0x40, (count & 0xFF00) >> 8); // High byte
+    send_byte_to_pit(IOPort::channel_0_data_port, count & 0xFF);          // Low byte
+    send_byte_to_pit(IOPort::channel_0_data_port, (count & 0xFF00) >> 8); // High Byte
     return;
 }
 

@@ -3,4 +3,5 @@
 #include "idt_ps2.h"
 #include "idt_test.h"
 
-void idt_init(struct idt_init_ps2_fields fields);
+void idt_init();
+void idt_finalize();

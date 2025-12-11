@@ -17,10 +17,10 @@ constexpr uint8_t PIT_IRQ_CHANEL0 = 0;
 // Should i create an enum? It's not really an enumeration of possible value...
 enum class IOPort : uint8_t
 {
-    channel_0_data_port      = 0x40, // read/write
-    channel_1_data           = 0x41, // read/write
-    channel_2_data           = 0x42, // read/write
-    mode_or_command_register = 0x43  // (Write only, a read is ignored)
+    channel_0_data_port      = 0x40, // 0x40: read/write
+    channel_1_data           = 0x41, // 0x41: read/write
+    channel_2_data           = 0x42, // 0x42: read/write
+    mode_or_command_register = 0x43  // 0x43: (Write only, a read is ignored)
 };
 
 namespace MCR
