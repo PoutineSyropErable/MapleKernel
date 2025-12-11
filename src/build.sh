@@ -113,11 +113,11 @@ CODE_ANALYSIS="runtime_code_analysis"
 
 # Unused. but moved stuff there eventually
 DRIVERS="./drivers"
-DRIVERS_PS2="./drivers/ps2"
-DRIVERS_PS2_CONTROLLER="./drivers/ps2/controller"
-DRIVERS_PS2_KEYBOARD="./drivers/ps2/keyboard"
-DRIVERS_PS2_MOUSE="./drivers/ps2/mouse"
-DRIVERS_PS2_KEYBOARD_CPP="./drivers/ps2/keyboard/cpp"
+PS2="./drivers/ps2"
+PS2_CONTROLLER="./drivers/ps2/controller"
+PS2_KEYBOARD="./drivers/ps2/keyboard"
+PS2_MOUSE="./drivers/ps2/mouse"
+PS2_KEYBOARD_CPP="./drivers/ps2/keyboard/cpp"
 
 DRIVERS_USB_CONTROLLER="./drivers/usb/controller"
 
@@ -147,10 +147,11 @@ INCLUDE_DIRS=(
 	"$OTHER"
 	"$CODE_ANALYSIS"
 
-	"$DRIVERS_PS2_CONTROLLER"
-	"$DRIVERS_PS2_KEYBOARD"
-	"$DRIVERS_PS2_KEYBOARD_CPP"
-	"$DRIVERS_PS2_MOUSE"
+	"$PS2"
+	"$PS2_CONTROLLER"
+	"$PS2_KEYBOARD"
+	"$PS2_KEYBOARD_CPP"
+	"$PS2_MOUSE"
 
 	"$DRIVERS_USB_CONTROLLER"
 
@@ -168,10 +169,10 @@ INCLUDE_DIRS=(
 )
 
 PS2_INCLUDE_DIRS=(
-	"$DRIVERS_PS2"
-	"$DRIVERS_PS2_CONTROLLER"
-	"$DRIVERS_PS2_KEYBOARD"
-	"$DRIVERS_PS2_MOUSE"
+	"$PS2"
+	"$PS2_CONTROLLER"
+	"$PS2_KEYBOARD"
+	"$PS2_MOUSE"
 )
 
 # Build SUPER_INCLUDE as an array of -I arguments
@@ -215,17 +216,19 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/pic.c" -o "$BUILD_DIR/pic.o" "-I$IDT" "-I$G
 nasm "${NASM_FLAGS32[@]}" "$IDT/exception_handler.asm" -o "$BUILD_DIR/exception_handler.o"
 
 # Compile Drivers
-nasm "${NASM_FLAGS32[@]}" "$DRIVERS_PS2/ps2_interrupt_handlers.asm" -o "$BUILD_DIR/ps2_interrupt_handlers.o"
-i686-elf-gcc "${CFLAGS[@]}" -c "$DRIVERS_PS2_CONTROLLER/ps2_controller.c" -o "$BUILD_DIR/ps2_controller.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$DRIVERS_USB_CONTROLLER"
+nasm "${NASM_FLAGS32[@]}" "$PS2/ps2_interrupt_handlers.asm" -o "$BUILD_DIR/ps2_interrupt_handlers.o"
+i686-elf-gcc "${CFLAGS[@]}" -c "$PS2_CONTROLLER/ps2_controller.c" -o "$BUILD_DIR/ps2_controller.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$DRIVERS_USB_CONTROLLER"
 
-i686-elf-gcc "${CFLAGS[@]}" -c "$DRIVERS_PS2_KEYBOARD/ps2_keyboard.c" -o "$BUILD_DIR/ps2_keyboard.o" "-I$IDT" "-I$GDT" "-I$DRIVERS_PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO"
-i686-elf-gcc "${CFLAGS[@]}" -c "$DRIVERS_PS2_KEYBOARD/ps2_keyboard_handler.c" -o "$BUILD_DIR/ps2_keyboard_handler.o" "-I$IDT" "-I$GDT" "-I$DRIVERS_PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO" "-I$DRIVERS_PS2_KEYBOARD_CPP"
-i686-elf-g++ "${CPPFLAGS[@]}" -c "$DRIVERS_PS2_KEYBOARD_CPP/keycodes.cpp" -o "$BUILD_DIR/keycodes.o" "-I$STDIO" "-I$STDLIB" "-I$DRIVERS_PS2_KEYBOARD_CPP"
-i686-elf-g++ "${CPPFLAGS[@]}" -c "$DRIVERS_PS2_KEYBOARD_CPP/scancodes_to_keycodes.cpp" -o "$BUILD_DIR/scancodes_to_keycodes.o" "-I$STDIO" "-I$STDLIB" "-I$DRIVERS_PS2_KEYBOARD" "-I$DRIVERS_PS2_KEYBOARD_CPP"
-i686-elf-gcc "${CFLAGS[@]}" -c "$DRIVERS_PS2_KEYBOARD/ps2_keyboard_key_functions.c" -o "$BUILD_DIR/ps2_keyboard_key_functions.o" "-I$DRIVERS_PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO"
+i686-elf-gcc "${CFLAGS[@]}" -c "$PS2_KEYBOARD/ps2_keyboard.c" -o "$BUILD_DIR/ps2_keyboard.o" "-I$IDT" "-I$GDT" "-I$PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO"
+i686-elf-gcc "${CFLAGS[@]}" -c "$PS2_KEYBOARD/ps2_keyboard_handler.c" -o "$BUILD_DIR/ps2_keyboard_handler.o" "-I$IDT" "-I$GDT" "-I$PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO" "-I$PS2_KEYBOARD_CPP"
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$PS2_KEYBOARD_CPP/keycodes.cpp" -o "$BUILD_DIR/keycodes.o" "-I$STDIO" "-I$STDLIB" "-I$PS2_KEYBOARD_CPP"
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$PS2_KEYBOARD_CPP/scancodes_to_keycodes.cpp" -o "$BUILD_DIR/scancodes_to_keycodes.o" "-I$STDIO" "-I$STDLIB" "-I$PS2_KEYBOARD" "-I$PS2_KEYBOARD_CPP"
+i686-elf-gcc "${CFLAGS[@]}" -c "$PS2_KEYBOARD/ps2_keyboard_key_functions.c" -o "$BUILD_DIR/ps2_keyboard_key_functions.o" "-I$PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO"
 
-i686-elf-gcc "${CFLAGS[@]}" -c "$DRIVERS_PS2_MOUSE/ps2_mouse.c" -o "$BUILD_DIR/ps2_mouse.o" "-I$IDT" "-I$GDT" "-I$DRIVERS_PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO"
-i686-elf-gcc "${CFLAGS[@]}" -c "$DRIVERS_PS2_MOUSE/ps2_mouse_handler.c" -o "$BUILD_DIR/ps2_mouse_handler.o" "-I$IDT" "-I$GDT" "-I$DRIVERS_PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO"
+i686-elf-gcc "${CFLAGS[@]}" -c "$PS2_MOUSE/ps2_mouse.c" -o "$BUILD_DIR/ps2_mouse.o" "-I$IDT" "-I$GDT" "-I$PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO"
+i686-elf-gcc "${CFLAGS[@]}" -c "$PS2_MOUSE/ps2_mouse_handler.c" -o "$BUILD_DIR/ps2_mouse_handler.o" "-I$IDT" "-I$GDT" "-I$PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO"
+
+i686-elf-gcc "${CFLAGS[@]}" -c "$PS2/ps2.c" -o "$BUILD_DIR/ps2.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "${PS2_SUPER_INCLUDE[@]}"
 
 # Temporary stuff. Will properly program them one day.
 i686-elf-gcc "${CFLAGS[@]}" -c "$DRIVERS_USB_CONTROLLER/usb_controller.c" -o "$BUILD_DIR/usb_controller.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "-I$DRIVERS_USB_CONTROLLER"
@@ -276,6 +279,7 @@ BUILD_OBJECTS=(
 	"$BUILD_DIR/idt.o"
 	"$BUILD_DIR/idt_ps2.o"
 	"$BUILD_DIR/pic.o"
+
 	"$BUILD_DIR/ps2_controller.o"
 	"$BUILD_DIR/ps2_keyboard.o"
 	"$BUILD_DIR/keycodes.o"
@@ -285,6 +289,7 @@ BUILD_OBJECTS=(
 	"$BUILD_DIR/ps2_keyboard_key_functions.o"
 	"$BUILD_DIR/ps2_mouse_handler.o"
 	"$BUILD_DIR/ps2_interrupt_handlers.o"
+	"$BUILD_DIR/ps2.o"
 
 	"$BUILD_DIR/usb_controller.o"
 	"$BUILD_DIR/acpi.o"

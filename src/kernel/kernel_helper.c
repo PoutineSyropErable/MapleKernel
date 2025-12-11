@@ -90,28 +90,28 @@ void analyse_code(struct CodeAddressesToAnalyse code)
     terminal_writestring("The value of code at pm16_to_real16_address: \n");
     for (int i = 0; i < 50; i++)
     {
-        print_hex_var(code.pm32_to_pm16_address[i]);
+	print_hex_var(code.pm32_to_pm16_address[i]);
     }
 
     terminal_writestring("\n");
     terminal_writestring("The value of code at pm16_to_real16_address: \n");
     for (int i = 0; i < 50; i++)
     {
-        print_hex_var(code.pm16_to_real16_address[i]);
+	print_hex_var(code.pm16_to_real16_address[i]);
     }
 
     terminal_writestring("\n");
     terminal_writestring("The value of the code at call_real16_function_address: \n");
     for (int i = 0; i < 50; i++)
     {
-        print_hex_var(code.call_real16_function_address[i]);
+	print_hex_var(code.call_real16_function_address[i]);
     }
 
     terminal_writestring("\n");
     terminal_writestring("The value of the code at 0xB0A8: \n");
     for (int i = 0; i < 50; i++)
     {
-        print_hex_var(code.resume32_address[i]);
+	print_hex_var(code.resume32_address[i]);
     }
 }
 
@@ -230,216 +230,3 @@ void kernel_test()
 }
 
 // Macro to call all interrupts in the X-Macro
-
-enum handle_ps2_setup_errors handle_ps2_setup()
-{
-    struct ps2_initialize_device_state device_sates = setup_ps2_controller();
-    kprintf("\n ===== Handling Result ===== \n");
-
-    switch (device_sates.ps2_state_err)
-    {
-    case PS2_ID_ERR_none: goto one_keyboard_one_mouse;
-    case PS2_ID_ERR_two_keyboard: goto two_keyboard;
-    case PS2_ID_ERR_two_mouse: goto two_mouse;
-    case PS2_ID_ERR_no_second_port: goto one_port_only;
-
-    // rather have this then default
-    case PS2_ID_ERR_could_not_init: goto no_port;
-    case PS2_ID_ERR_ps2_controller_does_not_exist: goto no_port;
-    case PS2_ID_ERR_controller_self_test_failed: goto no_port;
-    case PS2_ID_ERR_first_port_self_test_failed: goto no_port;
-    case PS2_ID_ERR_second_port_self_test_failed: goto no_port;
-    case PS2_ID_ERR_could_not_reset_device1: goto no_port;
-    case PS2_ID_ERR_could_not_reset_device2: goto no_port;
-    case PS2_ID_ERR_usb_error: goto no_port;
-    default: abort_msg("Impossible initialize device error!\n");
-    }
-
-one_keyboard_one_mouse:
-    kprintf("One Keyboard, One Mouse\n");
-    enum ps2_device_type port1_type = device_sates.port_one_device_type;
-    enum ps2_device_type port2_type = device_sates.port_two_device_type;
-
-    enum ps2_device_super_type port1_super_type = get_device_super_type(port1_type);
-    enum ps2_device_super_type port2_super_type = get_device_super_type(port2_type);
-    if (port1_super_type == PS2_DST_unknown)
-    {
-        abort_msg("Not treated for now!, treat as a bug!\n");
-        return PS2_HS_ERR_unrecognized_device1;
-    }
-    if (port2_super_type == PS2_DST_unknown)
-    {
-        abort_msg("Not treated for now!, treat as a bug!\n");
-        return PS2_HS_ERR_unrecognized_device2;
-    }
-    // Assert because this is a logic bug that created an impossible scenario.
-    // It should not be handled. The code should be change so it never happens
-    assert(port1_super_type != port2_super_type, "It should be one keyboard, one mouse. Both can't be the same!\n");
-
-    uint8_t              keyboard_port, mouse_port;
-    enum ps2_device_type mouse_type;
-    enum ps2_device_type keyboard_type;
-    uint8_t              keyboard_interrupt_vector;
-    uint8_t              mouse_interrupt_vector;
-
-    if (port1_super_type == PS2_DST_keyboard && port2_super_type == PS2_DST_mouse)
-    {
-        keyboard_port = 1;
-        mouse_port    = 2;
-
-        keyboard_type = port1_type;
-        mouse_type    = port2_type;
-
-        keyboard_interrupt_vector = PS2_PORT1_INTERUPT_VECTOR;
-        mouse_interrupt_vector    = PS2_PORT2_INTERUPT_VECTOR;
-    }
-    else if (port1_super_type == PS2_DST_mouse && port2_super_type == PS2_DST_keyboard)
-    {
-        mouse_port    = 1;
-        keyboard_port = 2;
-
-        mouse_type    = port1_type;
-        keyboard_type = port2_type;
-
-        mouse_interrupt_vector    = PS2_PORT1_INTERUPT_VECTOR;
-        keyboard_interrupt_vector = PS2_PORT2_INTERUPT_VECTOR;
-    }
-    else
-    {
-        abort_msg("Impossible scenario! Should be bug fixed and prevented\n!");
-    }
-
-    kprintf("\nKeyboard type: |%s|, Mouse type: |%s|\n\n", ps2_device_type_to_string(keyboard_type), ps2_device_type_to_string(mouse_type));
-
-    // TODO: replace the quick enable mouse by the actual enable mouse that will
-    // be implemented
-    quick_enable_mouse();
-    struct idt_init_ps2_fields       args;
-    struct idt_fields_keyboard_mouse args_value;
-    args_value.keyboard_port = keyboard_port;
-    args_value.mouse_port    = mouse_port;
-    args_value.keyboard_type = keyboard_type;
-    args_value.mouse_type    = keyboard_type;
-
-    args.type                          = ITT_one_keyboard_one_mouse;
-    args.value.info_keyboard_and_mouse = args_value;
-
-    set_single_keyboard_port(keyboard_port);
-    set_single_mouse_port(mouse_port);
-    idt_init(args);
-    PIC_remap(PIC_1_OFFSET, PIC_2_OFFSET);
-    initialize_irqs();
-    IRQ_clear_mask(PS2_PORT1_IRQ);
-    IRQ_clear_mask(PS2_PORT2_BRIDGE_IRQ);
-    IRQ_clear_mask(PS2_PORT2_IRQ);
-    kprintf("Normally set the stuff\n");
-    return PS2_HS_ERR_none;
-
-one_port_only:
-    kprintf("One Port only\n");
-
-    enum ps2_device_type       only_port_type       = device_sates.port_one_device_type;
-    enum ps2_device_super_type only_port_super_type = get_device_super_type(only_port_type);
-    if (only_port_super_type == PS2_DST_unknown)
-    {
-        abort_msg("Not treated for now!, treat as a bug!\n");
-        return PS2_HS_ERR_unrecognized_device1;
-    }
-    switch (only_port_super_type)
-    {
-    case PS2_DST_keyboard:
-        enum ps2_device_type         keyboard_type = device_sates.port_one_device_type;
-        struct idt_init_ps2_fields   args_keyboard;
-        struct idt_fields_1_keyboard args_keyboard_value;
-        args_keyboard_value.keyboard_type = keyboard_type;
-
-        args_keyboard.type                  = ITT_one_keyboard;
-        args_keyboard.value.info_1_keyboard = args_keyboard_value;
-        set_single_keyboard_port(1);
-        idt_init(args_keyboard);
-        PIC_remap(PIC_1_OFFSET, PIC_2_OFFSET);
-        initialize_irqs();
-        IRQ_clear_mask(PS2_PORT1_IRQ);
-        return PS2_HS_ERR_one_port_only;
-
-    case PS2_DST_mouse:
-        enum ps2_device_type       mouse_type = device_sates.port_one_device_type;
-        struct idt_init_ps2_fields args_mouse;
-        struct idt_fields_1_mouse  args_mouse_value;
-        args_mouse_value.mouse_type = mouse_type;
-
-        args_mouse.type               = ITT_one_mouse;
-        args_mouse.value.info_1_mouse = args_mouse_value;
-        set_single_mouse_port(1);
-        idt_init(args_mouse);
-        PIC_remap(PIC_1_OFFSET, PIC_2_OFFSET);
-        initialize_irqs();
-        IRQ_clear_mask(PS2_PORT1_IRQ);
-
-        return PS2_HS_ERR_one_port_only;
-    case PS2_DST_unknown: abort_msg("Not treated for now!, treat as a bug!\n"); return PS2_HS_ERR_unrecognized_device1;
-    }
-
-    return PS2_HS_ERR_one_port_only;
-
-two_keyboard:
-
-    kprintf("Two keyboards\n");
-    enum ps2_device_type       keyboard1_type       = device_sates.port_one_device_type;
-    enum ps2_device_type       keyboard2_type       = device_sates.port_two_device_type;
-    enum ps2_device_super_type keyboard1_super_type = get_device_super_type(keyboard1_type);
-    enum ps2_device_super_type keyboard2_super_type = get_device_super_type(keyboard2_type);
-    assert(keyboard1_super_type == keyboard2_super_type && keyboard1_super_type == PS2_DST_keyboard,
-        "Inconsistent super types. Should be two keyboard. This is an "
-        "impossible scenario and should never happen. If it does, it needs to "
-        "be bug fixed. Not error treated \n");
-
-    struct idt_init_ps2_fields   args_two_keyboard;
-    struct idt_fields_2_keyboard args_two_keyboard_value = {.keyboard1_port = 1, .keyboard2_port = 2};
-    args_two_keyboard_value.keyboard1_type               = keyboard1_type;
-    args_two_keyboard_value.keyboard2_type               = keyboard2_type;
-    // Kinda obvious that the keyboard 1 is in keyboard port 1...
-    // hmm... the function itself could assume
-
-    args_two_keyboard.type                  = ITT_two_keyboard;
-    args_two_keyboard.value.info_2_keyboard = args_two_keyboard_value;
-    set_dual_keyboard_port();
-    idt_init(args_two_keyboard);
-    PIC_remap(PIC_1_OFFSET, PIC_2_OFFSET);
-    initialize_irqs();
-    IRQ_clear_mask(PS2_PORT1_IRQ);
-    IRQ_clear_mask(PS2_PORT2_BRIDGE_IRQ);
-    IRQ_clear_mask(PS2_PORT2_IRQ);
-    return PS2_HS_ERR_two_keyboard;
-
-two_mouse:
-    kprintf("Two Mouse\n");
-    enum ps2_device_type       mouse1_type       = device_sates.port_one_device_type;
-    enum ps2_device_type       mouse2_type       = device_sates.port_one_device_type;
-    enum ps2_device_super_type mouse1_super_type = get_device_super_type(mouse1_type);
-    enum ps2_device_super_type mouse2_super_type = get_device_super_type(mouse2_type);
-    assert(mouse1_super_type == mouse2_super_type && mouse1_super_type == PS2_DST_keyboard,
-        "Inconsistent super types. Should be two mouse. Not treated for now, "
-        "assumed as a bug!\n");
-
-    struct idt_init_ps2_fields args_two_mouse;
-    struct idt_fields_2_mouse  args_two_mouse_value = {.mouse1_port = 1, .mouse2_port = 2};
-    args_two_mouse_value.mouse1_type                = mouse1_type;
-    args_two_mouse_value.mouse2_type                = mouse2_type;
-
-    args_two_mouse.type               = ITT_two_keyboard;
-    args_two_mouse.value.info_2_mouse = args_two_mouse_value;
-    set_dual_mouse_port();
-    idt_init(args_two_mouse);
-    PIC_remap(PIC_1_OFFSET, PIC_2_OFFSET);
-    initialize_irqs();
-    IRQ_clear_mask(PS2_PORT1_IRQ);
-    IRQ_clear_mask(PS2_PORT2_BRIDGE_IRQ);
-    IRQ_clear_mask(PS2_PORT2_IRQ);
-    return PS2_HS_ERR_two_mouse;
-
-no_port:
-    // Already done, no need for a todo
-    kprintf("No PS2 Devices\n");
-    return PS2_HS_ERR_no_port;
-}

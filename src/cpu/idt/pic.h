@@ -1,6 +1,5 @@
 #pragma once
-
-#include "idt.h"
+#include <stdint.h>
 
 #define PIC1 0x20 /* IO base address for master PIC */
 #define PIC2 0xA0 /* IO base address for slave PIC */
@@ -26,8 +25,8 @@ static const uint8_t PS2_PORT2_INTERUPT_VECTOR = (START_OF_USER_ALLOCATABLE_INTE
 static const uint8_t PIC_1_OFFSET = START_OF_USER_ALLOCATABLE_INTERRUPT;
 static const uint8_t PIC_2_OFFSET = START_OF_USER_ALLOCATABLE_INTERRUPT + NUMBER_OF_IRQ_PER_PIC;
 
-static const uint8_t bad_port = 255;
-static const uint8_t bad_irq = 255;
+static const uint8_t bad_port                    = 255;
+static const uint8_t bad_irq                     = 255;
 static const uint8_t interrupt_vector_of_port[3] = {
     [0] = bad_port,
     [1] = PS2_PORT1_INTERUPT_VECTOR,

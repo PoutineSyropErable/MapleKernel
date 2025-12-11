@@ -29,6 +29,7 @@
 #include "kernel_helper.h"
 #include "symbols.h"
 
+#include "ps2.h"
 #include "stdlib.h"
 
 GDT_ROOT *GDT16_ROOT = &GDT16_DESCRIPTOR;
@@ -61,12 +62,12 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
     bool is_proper_multiboot = is_proper_multiboot_32;
     if (is_proper_multiboot)
     {
-        kprintf("It's proper multiboot\n");
+	kprintf("It's proper multiboot\n");
     }
     else
     {
-        abort_msg("Not proper multiboot\n");
-        // The abbort might not be needed anyway.
+	abort_msg("Not proper multiboot\n");
+	// The abbort might not be needed anyway.
     }
 
 #ifndef DEBUG
@@ -117,8 +118,6 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
     kprintf("rsdp = %h, type=%s\n", rsdp, name);
 #endif
 
-    return;
-
     // init_paging();
     // init_page_bitmap();
 
@@ -143,7 +142,7 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 
     while (true)
     {
-        // kernel main loop
+	// kernel main loop
     }
 
     return;
