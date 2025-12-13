@@ -9,6 +9,7 @@
 #include "kernel_zig.h"
 #include "os_registers.c"
 #include "pic.h"
+#include "realmode_functions.h"
 
 #include "stdio.h"
 #include "stdlib.h"
@@ -33,9 +34,12 @@ GDT_ROOT *GDT16_ROOT = &GDT16_DESCRIPTOR;
 void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_multiboot_32)
 {
 
-	// initialize_terminal();
-	// terminal_set_scroll(0);
+#define GRUB_FRAMEBUFFER
+#ifndef GRUB_FRAMEBUFFER
+	initialize_terminal();
+	terminal_set_scroll(0);
 	kprintf("\n===========Terminal Initialized=============\n");
+#endif
 
 	kprintf("addr = %u, magic = %h, is_proper_multiboot_32 = %u\n", mb2_info_addr, magic, is_proper_multiboot_32);
 
@@ -52,7 +56,6 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 
 #ifndef DEBUG
 
-#	define GRUB_FRAMEBUFFER
 #	define BIOS_FRAMEBUFFER_HACK
 #	ifdef GRUB_FRAMEBUFFER
 	struct framebuffer_info_t grub_fb_info = get_framebuffer(mb2_info_addr);
@@ -101,13 +104,8 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 	// init_paging();
 	// init_page_bitmap();
 
-	/* Initialize terminal interface */
-
-	kernel_test();
-	test_printf();
-	test_assert(); // gd, and set to false and play with it
-
 	setup_interrupts(); // needed to have a working wait
+	setup_keyboard();
 
 	for (uint32_t i = 3; i > 0; i--)
 	{
@@ -118,18 +116,18 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 	for (float t = 0; t < 60; t += 0.5)
 	{
 		kprintf("t = %f.2\n", t);
-		wait(0.5);
+		wait(0.5); // attend 0.5 s. Desactive lordinateur pendant l'attente
 	}
 
 	kprintf("Out of loop!\n");
 
-	// test_ps2_keyboard_commands();
-	setup_keyboard();
-
-	terminal_writestring("\n====kernel main entering loop====\n");
+	to_real16_test();
+	test_printf2();
+	test_assert(); // gd, and set to false and play with it
 
 	cpp_main();
 	zig_main();
+	terminal_writestring("\n====kernel main entering loop====\n");
 
 	while (true)
 	{

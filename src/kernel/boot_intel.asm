@@ -39,19 +39,20 @@ header_start:
 
 	
 	; === Framebuffer request tag ===
-	%ifdef DEBUG
-	; Don't request the framebuffer in debug mode
+	%ifdef DEBUG 
+		; Don't request the framebuffer in debug mode
 	%else
-	; %define GRUB_FRAMEBUFFER
-	; %ifdef GRUB_FRAMEBUFFER
-    dw MB2_TAG_FRAMEBUFFER         ; Type: framebuffer
-    dw 0                  ; Flags
-    dd 24                 ; Size of this tag
-    dd WIDTH              ; Width (desired)
-    dd HEIGHT             ; Height (desired)
-    dd 32                 ; Bits per pixel
-    ; dd 0                  ; Framebuffer type: 0 = RGB, 1 = EGA text
-    dd 0                  ; Padding/reserved
+		%define GRUB_FRAMEBUFFER
+		%ifdef GRUB_FRAMEBUFFER 
+			dw MB2_TAG_FRAMEBUFFER         ; Type: framebuffer
+			dw 0                  ; Flags
+			dd 24                 ; Size of this tag
+			dd WIDTH              ; Width (desired)
+			dd HEIGHT             ; Height (desired)
+			dd 32                 ; Bits per pixel
+			; dd 0                  ; Framebuffer type: 0 = RGB, 1 = EGA text
+			dd 0                  ; Padding/reserved
+		%endif
 	%endif
     
     ; Required end tag

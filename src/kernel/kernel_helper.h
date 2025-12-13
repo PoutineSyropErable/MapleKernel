@@ -1,5 +1,5 @@
 #pragma once
 
-void kernel_test();
+void to_real16_test();
 
 void setup_interrupts();
