@@ -75,7 +75,7 @@ NASM_FLAGS32=("-f" "elf32")
 NASM_FLAGS16=("-f" "elf")
 
 DEBUG_OPT_LVL="-O0"
-RELEASE_OPT_LVL="-O3"
+RELEASE_OPT_LVL="-O2"
 QEMU_DBG_FLAGS=()
 
 if [[ "$DEBUG_OR_RELEASE" == "debug" ]]; then

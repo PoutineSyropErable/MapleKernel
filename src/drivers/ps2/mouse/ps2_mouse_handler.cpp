@@ -10,7 +10,7 @@
 
 #define packet_3_size sizeof(ps2_mouse::generic_3_packet)
 
-volatile struct mouse_pos g_mouse_pos;
+volatile struct mouse_properties g_mouse_prop;
 namespace
 {
 ps2_mouse::generic_3_packet global_3_packet{};
@@ -191,28 +191,37 @@ void mouse_handler(uint8_t scancode, uint8_t port_number)
 			kprintf("xmovement: %d, y_movement: %d\n\n", dx, dy);
 		}
 
-		uint16_t old_x = g_mouse_pos.x;
-		uint16_t old_y = g_mouse_pos.y;
+		uint16_t old_x = g_mouse_prop.x;
+		uint16_t old_y = g_mouse_prop.y;
 
-		g_mouse_pos.x += dx;
-		g_mouse_pos.y -= dy; // (since this means y = up. But for screen, y = down)
-		if (g_mouse_pos.x < 0)
+		g_mouse_prop.x += dx;
+		g_mouse_prop.y -= dy; // (since this means y = up. But for screen, y = down)
+		if (g_mouse_prop.x < 0)
 		{
-			g_mouse_pos.x = 0;
+			g_mouse_prop.x = 0;
 		}
 
-		if (g_mouse_pos.y < 0)
+		if (g_mouse_prop.y < 0)
 		{
-			g_mouse_pos.y = 0;
+			g_mouse_prop.y = 0;
 		}
 
 		if (mouse_button_event.left_button_pressed)
 		{
-			framebuffer::g_framebuffer.draw_line({.x0 = old_x,
-				.y0									  = old_y,
-				.x1									  = static_cast<uint16_t>(g_mouse_pos.x),
-				.y1									  = static_cast<uint16_t>(g_mouse_pos.y),
-				.color								  = framebuffer::Color(0xfabc12)});
+			framebuffer::g_framebuffer.draw_line_quick({.x0 = old_x,
+				.y0											= old_y,
+				.x1											= static_cast<uint16_t>(g_mouse_prop.x),
+				.y1											= static_cast<uint16_t>(g_mouse_prop.y),
+				.color										= {g_mouse_prop.b, g_mouse_prop.g, g_mouse_prop.r, g_mouse_prop.a}});
+		}
+		if (mouse_button_event.right_button_pressed)
+		{
+			framebuffer::Color color_of_mouse = framebuffer::g_framebuffer.get_pixel(g_mouse_prop.x + 1, g_mouse_prop.y);
+			// + 1 is a temporary hack because the trail pixel is there. Normally, use two buffers.
+			g_mouse_prop.r = color_of_mouse.r;
+			g_mouse_prop.g = color_of_mouse.g;
+			g_mouse_prop.b = color_of_mouse.b;
+			g_mouse_prop.a = color_of_mouse.a;
 		}
 	}
 	else

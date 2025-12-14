@@ -72,12 +72,67 @@ void FrameBuffer::draw_line(const DrawLineArgs &args)
 	float dx_abs = abs(dx);
 	float dy_abs = abs(dy);
 
+	if (dy == 0)
+	{
+		draw_horizontal_line({.y = args.y0, .x_start = args.x0, .x_end = args.x1, .color = args.color});
+		return;
+	}
+	else if (dx == 0)
+	{
+		draw_vertical_line({.x = args.x0, .y_start = args.y0, .y_end = args.y1, .color = args.color});
+		return;
+	}
+
+	if (dy_abs <= dx_abs)
+	{
+		// nearly horizontal line, regular cartesian;
+		float m = dy / dx;
+		float b = args.y0 - args.x0 * m;
+	}
+	else
+	{
+		// Nearly vertical line. Divide by dy
+		float m_i = dx / dy;
+		float b_i = args.x0 - args.y0 * m_i;
+	}
+
+	// Temporary method?
 	float l = sqrt(dx * dx + dy * dy);
 	for (double t = 0; t < 1; t += 1 / l)
 	{
 		double x = args.x0 + dx * t;
 		double y = args.y0 + dy * t;
 		set_pixel(x, y, args.color);
+	}
+}
+
+void FrameBuffer::draw_line_quick(const DrawLineArgs &args)
+{
+	int x0 = args.x0, y0 = args.y0;
+	int x1 = args.x1, y1 = args.y1;
+
+	int dx	= abs(x1 - x0);
+	int dy	= abs(y1 - y0);
+	int sx	= (x0 < x1) ? 1 : -1;
+	int sy	= (y0 < y1) ? 1 : -1;
+	int err = dx - dy;
+
+	while (true)
+	{
+		set_pixel(x0, y0, args.color);
+		if (x0 == x1 && y0 == y1)
+			break;
+		int e2 = 2 * err;
+		if (e2 > -dy)
+		{
+			err -= dy;
+			x0 += sx;
+		}
+		if (e2 < dx)
+		{
+			err += dx;
+			y0 += sy;
+		}
 	}
 }
 

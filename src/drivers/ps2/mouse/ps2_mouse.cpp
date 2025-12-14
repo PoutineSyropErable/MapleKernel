@@ -39,7 +39,12 @@ void quick_enable_mouse()
 	uint8_t res = ps2_recieve_raw_response();
 	assert(res = 0xFA, "mouse must work");
 
-	g_mouse_pos.x = 0;
-	g_mouse_pos.y = 0;
-	g_mouse_pos.z = 0;
+	g_mouse_prop.x = 0;
+	g_mouse_prop.y = 0;
+	g_mouse_prop.z = 0;
+
+	g_mouse_prop.r = 0xff;
+	g_mouse_prop.g = 0xff;
+	g_mouse_prop.b = 0xff;
+	g_mouse_prop.a = 0xff;
 }

@@ -21,12 +21,13 @@ int cpp_event_loop(void)
 	// The order is important
 	if (!first_itt)
 		framebuffer::g_framebuffer.set_pixel(old_x, old_y, old_color);
-	current_color = framebuffer::g_framebuffer.get_pixel(g_mouse_pos.x, g_mouse_pos.y);
-	framebuffer::g_framebuffer.set_pixel(g_mouse_pos.x, g_mouse_pos.y, framebuffer::Color(0xffffff));
+	current_color = framebuffer::g_framebuffer.get_pixel(g_mouse_prop.x, g_mouse_prop.y);
+	// current_color.print();
+	framebuffer::g_framebuffer.set_pixel(g_mouse_prop.x, g_mouse_prop.y, framebuffer::Color(0xffffff));
 
-	old_x	  = g_mouse_pos.x;
-	old_y	  = g_mouse_pos.y;
+	old_x	  = g_mouse_prop.x;
+	old_y	  = g_mouse_prop.y;
 	old_color = current_color;
-	first_itt = true;
+	first_itt = false;
 	return 0;
 }

@@ -1,4 +1,5 @@
 #pragma once
+#include "stdio.h"
 #include <stdint.h>
 
 namespace framebuffer
@@ -60,6 +61,11 @@ struct __attribute__((packed)) Color
 		r = other.r;
 		a = other.a;
 		return *this;
+	}
+
+	void print()
+	{
+		kprintf("red = %u, g = %u, b = %u, a = %u\n", r, g, b, a);
 	}
 };
 
@@ -146,11 +152,9 @@ class FrameBuffer
 		// Pitch is counted in byte count, not dword counts.
 		// So, Pitch >= Width * 4
 
-		uint32_t idx		= y * effective_pitch + x;
-		base_address[idx].r = color.r;
-		base_address[idx].g = color.g;
-		base_address[idx].b = color.b;
-		base_address[idx].a = color.a;
+		uint32_t idx = y * effective_pitch + x;
+		*reinterpret_cast<volatile uint32_t *>(&base_address[idx]) =
+			(uint32_t(color.a) << 24) | (uint32_t(color.r) << 16) | (uint32_t(color.g) << 8) | (uint32_t(color.b));
 		// should compile to mov [base + idx*4], %reg
 
 		return 0;
@@ -174,12 +178,16 @@ class FrameBuffer
 		// So, Pitch >= Width * 4
 
 		uint32_t idx = y * effective_pitch + x;
-		return Color(base_address[idx]); // Uses volatile copy constructor
+		// Atomic 32-bit read
+		uint32_t raw = *reinterpret_cast<volatile uint32_t *>(&base_address[idx]);
+		return Color(raw);
+		// return Color(base_address[idx]); // Uses volatile copy constructor
 	}
 
 	int	 draw_horizontal_line(const DrawHorizontalLineArgs &args);
 	int	 draw_vertical_line(const DrawVerticalLineArgs &args);
 	void draw_line(const DrawLineArgs &args);
+	void draw_line_quick(const DrawLineArgs &args);
 	int	 draw_rectangle(const DrawRectangleArgs &args);
 	int	 draw_bitmap(const DrawBitmapArgs &args);
 
