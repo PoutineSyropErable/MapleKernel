@@ -215,6 +215,7 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/stdio.c" -o "$BUILD_DIR/stdio.o" "-I$STDI
 
 #compile misc helper functions
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDLIB/stdlib.c" -o "$BUILD_DIR/stdlib.o" "-I$STDLIB" "-I$STDIO"
+i686-elf-gcc "${CFLAGS[@]}" -c "$STDLIB/math.c" -o "$BUILD_DIR/math.o" "-I$STDLIB" "-I$STDIO"
 
 i686-elf-gcc "${CFLAGS[@]}" -c "$GDT/f1_binary_operation.c" -o "$BUILD_DIR/f1_binary_operation.o" "-I$STDIO" "-I$GDT"
 i686-elf-gcc "${CFLAGS[@]}" -c "$GDT/f3_segment_descriptor_internals.c" -o "$BUILD_DIR/f3_segment_descriptor_internals.o" "-I$STDIO" "-I$GDT" "-I$STDLIB"
@@ -237,7 +238,7 @@ i686-elf-g++ "${CPPFLAGS[@]}" -c "$PS2_KEYBOARD_CPP/scancodes_to_keycodes.cpp" -
 i686-elf-gcc "${CFLAGS[@]}" -c "$PS2_KEYBOARD/ps2_keyboard_key_functions.c" -o "$BUILD_DIR/ps2_keyboard_key_functions.o" "-I$PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO"
 
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$PS2_MOUSE/ps2_mouse.cpp" -o "$BUILD_DIR/ps2_mouse.o" "-I$IDT" "-I$GDT" "-I$PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO"
-i686-elf-g++ "${CPPFLAGS[@]}" -c "$PS2_MOUSE/ps2_mouse_handler.cpp" -o "$BUILD_DIR/ps2_mouse_handler.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "${PS2_SUPER_INCLUDE[@]}"
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$PS2_MOUSE/ps2_mouse_handler.cpp" -o "$BUILD_DIR/ps2_mouse_handler.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "${PS2_SUPER_INCLUDE[@]}" "-I$FRAMEBUFER"
 
 i686-elf-gcc "${CFLAGS[@]}" -c "$PS2/ps2.c" -o "$BUILD_DIR/ps2.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "${PS2_SUPER_INCLUDE[@]}"
 
@@ -283,6 +284,7 @@ BUILD_OBJECTS=(
 	"$BUILD_DIR/multiboot.o"
 
 	"$BUILD_DIR/stdlib.o"
+	"$BUILD_DIR/math.o"
 
 	"$BUILD_DIR/address_getter.o"
 

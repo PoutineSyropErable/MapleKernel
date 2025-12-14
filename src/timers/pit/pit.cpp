@@ -219,6 +219,24 @@ extern "C"
 		return pit::wait(seconds);
 	}
 
+	void wait_test()
+	{
+
+		for (uint32_t i = 3; i > 0; i--)
+		{
+			kprintf("Doing wait test in %u seconds\n", i);
+			pit::wait(1);
+		}
+
+		for (float t = 0; t < 60; t += 0.5)
+		{
+			kprintf("t = %f.2\n", t);
+			pit::wait(0.5); // attend 0.5 s. Desactive lordinateur pendant l'attente
+		}
+
+		kprintf("Out of loop!\n");
+	}
+
 // =============== End of C stuff
 #ifdef __cplusplus
 }

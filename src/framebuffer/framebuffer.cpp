@@ -1,90 +1,36 @@
 #include "assert.h"
 #include "framebuffer.h"
-#include "framebuffer_class.hpp"
+#include "framebuffer.hpp"
+#include "math.h"
+#include "math.hpp"
 #include "stdio.h"
 #include <stdint.h>
 
 using namespace framebuffer;
 
-FrameBuffer g_framebuffer;
+FrameBuffer framebuffer::g_framebuffer;
 
-class FrameBuffer
+FrameBuffer::FrameBuffer() noexcept
 {
-  private:
-	volatile Color *base_address;
-	uint16_t		width;
-	uint16_t		height;
-	uint16_t		effective_pitch; // in pixels
+}
 
-  public:
-	FrameBuffer() noexcept;
+void FrameBuffer::initialize(volatile Color *base, uint16_t w, uint16_t h, uint16_t eff_pitch)
+{
+	base_address	= base;
+	width			= w;
+	height			= h;
+	effective_pitch = eff_pitch;
+}
 
-	void initialize(volatile Color *base, uint16_t w, uint16_t h, uint16_t eff_pitch)
-	{
-		base_address	= base;
-		width			= w;
-		height			= h;
-		effective_pitch = eff_pitch;
-	}
+int FrameBuffer::draw_horizontal_line(const struct DrawHorizontalLineArgs &args)
+{
 
-	int set_pixel(uint16_t x, uint16_t y, Color color)
+	for (uint16_t thick_offset = 0; thick_offset < args.thickness; thick_offset++)
 	{
 
-#ifdef DEBUG
-		if (x > width)
+		for (uint32_t x = args.x_start; x < args.x_end; x++)
 		{
-			return 1;
-		}
-		if (y > height)
-		{
-			return 2;
-		}
-#endif
-
-		// Pitch is counted in byte count, not dword counts.
-		// So, Pitch >= Width * 4
-
-		uint32_t idx		= y * effective_pitch + x;
-		base_address[idx].r = color.r;
-		base_address[idx].g = color.g;
-		base_address[idx].b = color.b;
-		base_address[idx].a = color.a;
-		// should compile to mov [base + idx*4], %reg
-
-		return 0;
-	}
-
-	int draw_horizontal_line(struct DrawHorizontalLineArgs &args)
-	{
-
-		for (uint16_t thick_offset = 0; thick_offset < args.thickness; thick_offset++)
-		{
-
-			for (uint32_t x = args.x_start; x < args.x_end; x++)
-			{
-				[[maybe_unused]] uint32_t ret = set_pixel(x, args.y + thick_offset, args.color);
-
-#ifdef DEBUG
-				if (ret)
-				{
-					return ret;
-				}
-#endif
-			}
-		}
-		return 0;
-	}
-
-	int draw_vertical_line(const DrawVerticalLineArgs &args)
-	{
-		kprintf("red: %h, green: %h, blue: %h, a:%h\n", args.color.r, args.color.g, args.color.b, args.color.a);
-
-		for (uint16_t y = args.y_start; y < args.y_end; y++)
-		{
-			for (uint16_t thick_offset = 0; thick_offset < args.thickness; thick_offset++)
-			{
-				[[maybe_unused]] uint32_t ret = set_pixel(args.x + thick_offset, y, args.color);
-			}
+			[[maybe_unused]] uint32_t ret = set_pixel(x, args.y + thick_offset, args.color);
 
 #ifdef DEBUG
 			if (ret)
@@ -93,57 +39,94 @@ class FrameBuffer
 			}
 #endif
 		}
-		return 0;
 	}
+	return 0;
+}
 
-	int draw_rectangle(const DrawRectangleArgs &args)
+int FrameBuffer::draw_vertical_line(const DrawVerticalLineArgs &args)
+{
+	kprintf("red: %h, green: %h, blue: %h, a:%h\n", args.color.r, args.color.g, args.color.b, args.color.a);
+
+	for (uint16_t y = args.y_start; y < args.y_end; y++)
 	{
-
-		for (uint32_t y = args.top_left_y; y < args.top_left_y + args.height; y++)
+		for (uint16_t thick_offset = 0; thick_offset < args.thickness; thick_offset++)
 		{
-			for (uint32_t x = args.top_left_x; x < args.top_left_x + args.width; x++)
-			{
-				[[maybe_unused]] uint32_t ret = set_pixel(x, y, args.color);
+			[[maybe_unused]] uint32_t ret = set_pixel(args.x + thick_offset, y, args.color);
+		}
 
 #ifdef DEBUG
-				if (ret)
-				{
-					return ret;
-				}
-#endif
-			}
-		}
-		return 0;
-	}
-
-	int draw_bitmap(const DrawBitmapArgs &args)
-	{
-		const struct Bitmap &bitmap = args.bitmap;
-		for (uint32_t j = 0; j < args.bitmap.height; j++)
+		if (ret)
 		{
-			for (uint32_t i = 0; i < args.bitmap.width; i++)
-			{
-				uint16_t x = args.top_left_x + i;
-				uint16_t y = args.top_left_y + j;
+			return ret;
+		}
+#endif
+	}
+	return 0;
+}
 
-				// bitmap pitch = width *4
-				uint32_t				  b_idx = j * bitmap.effective_pitch + i;
-				[[maybe_unused]] uint32_t ret	= set_pixel(x, y, args.bitmap.data[b_idx]);
+void FrameBuffer::draw_line(const DrawLineArgs &args)
+{
+	float dx = args.x1 - args.x0;
+	float dy = args.y1 - args.y0;
+
+	float dx_abs = abs(dx);
+	float dy_abs = abs(dy);
+
+	float l = sqrt(dx * dx + dy * dy);
+	for (double t = 0; t < 1; t += 1 / l)
+	{
+		double x = args.x0 + dx * t;
+		double y = args.y0 + dy * t;
+		set_pixel(x, y, args.color);
+	}
+}
+
+int FrameBuffer::draw_rectangle(const DrawRectangleArgs &args)
+{
+
+	for (uint32_t y = args.top_left_y; y < args.top_left_y + args.height; y++)
+	{
+		for (uint32_t x = args.top_left_x; x < args.top_left_x + args.width; x++)
+		{
+			[[maybe_unused]] uint32_t ret = set_pixel(x, y, args.color);
 
 #ifdef DEBUG
-				if (ret)
-				{
-					return ret;
-				}
-#endif
+			if (ret)
+			{
+				return ret;
 			}
+#endif
 		}
-		return 0;
 	}
+	return 0;
+}
 
-	uint16_t get_width() const;
-	uint16_t get_height() const;
-};
+int FrameBuffer::draw_bitmap(const DrawBitmapArgs &args)
+{
+	const struct Bitmap &bitmap = args.bitmap;
+	for (uint32_t j = 0; j < args.bitmap.height; j++)
+	{
+		for (uint32_t i = 0; i < args.bitmap.width; i++)
+		{
+			uint16_t x = args.top_left_x + i;
+			uint16_t y = args.top_left_y + j;
+
+			// bitmap pitch = width *4
+			uint32_t				  b_idx = j * bitmap.effective_pitch + i;
+			[[maybe_unused]] uint32_t ret	= set_pixel(x, y, args.bitmap.data[b_idx]);
+
+#ifdef DEBUG
+			if (ret)
+			{
+				return ret;
+			}
+#endif
+		}
+	}
+	return 0;
+}
+
+// End of class function declaration
 
 void draw_rgb_lines(uint8_t line_thickness, uint16_t starting_y)
 {

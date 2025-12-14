@@ -107,19 +107,7 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 	setup_interrupts(); // needed to have a working wait
 	setup_keyboard();
 
-	for (uint32_t i = 3; i > 0; i--)
-	{
-		kprintf("Doing wait test in %u seconds\n", i);
-		wait(1);
-	}
-
-	for (float t = 0; t < 60; t += 0.5)
-	{
-		kprintf("t = %f.2\n", t);
-		wait(0.5); // attend 0.5 s. Desactive lordinateur pendant l'attente
-	}
-
-	kprintf("Out of loop!\n");
+	// wait_test();
 
 	to_real16_test();
 	test_printf2();

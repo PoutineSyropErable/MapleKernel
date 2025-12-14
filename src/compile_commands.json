@@ -336,6 +336,26 @@
       "-O3",
       "-DQEMU",
       "-c",
+      "-Istdlib",
+      "-Istdio",
+      "-o",
+      "build/math.o",
+      "stdlib/math.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/stdlib/math.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/build/math.o"
+  },
+  {
+    "arguments": [
+      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O3",
+      "-DQEMU",
+      "-c",
       "-Istdio",
       "-I./cpu/gdt",
       "-o",
@@ -637,6 +657,7 @@
       "-I./drivers/ps2/mouse",
       "-I./cpu/pic",
       "-I./cpu/",
+      "-I./framebuffer",
       "-o",
       "build/ps2_mouse_handler.o",
       "./drivers/ps2/mouse/ps2_mouse_handler.cpp"

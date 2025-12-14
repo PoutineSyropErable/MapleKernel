@@ -6,6 +6,8 @@
 #include "ps2_mouse_handler_internal.hpp"
 #include "stdio.h"
 
+#include "framebuffer.hpp"
+
 #define packet_3_size sizeof(ps2_mouse::generic_3_packet)
 
 volatile struct mouse_pos g_mouse_pos;
@@ -189,8 +191,11 @@ void mouse_handler(uint8_t scancode, uint8_t port_number)
 			kprintf("xmovement: %d, y_movement: %d\n\n", dx, dy);
 		}
 
+		uint16_t old_x = g_mouse_pos.x;
+		uint16_t old_y = g_mouse_pos.y;
+
 		g_mouse_pos.x += dx;
-		g_mouse_pos.y += dy;
+		g_mouse_pos.y -= dy; // (since this means y = up. But for screen, y = down)
 		if (g_mouse_pos.x < 0)
 		{
 			g_mouse_pos.x = 0;
@@ -199,6 +204,15 @@ void mouse_handler(uint8_t scancode, uint8_t port_number)
 		if (g_mouse_pos.y < 0)
 		{
 			g_mouse_pos.y = 0;
+		}
+
+		if (mouse_button_event.left_button_pressed)
+		{
+			framebuffer::g_framebuffer.draw_line({.x0 = old_x,
+				.y0									  = old_y,
+				.x1									  = static_cast<uint16_t>(g_mouse_pos.x),
+				.y1									  = static_cast<uint16_t>(g_mouse_pos.y),
+				.color								  = framebuffer::Color(0xfabc12)});
 		}
 	}
 	else
