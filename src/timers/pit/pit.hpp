@@ -103,7 +103,8 @@ enum class PIT_Error
 };
 
 // =============== End
-int send_wait_count_command(uint32_t freq_divider_count);
-int wait(float seconds);
+void send_wait_count_command(uint32_t freq_divider_count);
+void start_loop_wait(uint32_t freq_divider_count);
+int	 wait(float seconds);
 
 } // namespace pit

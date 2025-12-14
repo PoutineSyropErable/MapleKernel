@@ -9,14 +9,13 @@
 #include "ps2_mouse_public.h"
 #include "stdio.h"
 
-// =================================== PS2 Setup Handling ==================================
+void quick_enable_mouse();
+// =================================== PS2 Setup Declaring ==================================
 enum handle_ps2_setup_status handle_ps2_setup_one_keyboard_one_mouse(struct ps2_initialize_device_state device_sates);
 enum handle_ps2_setup_status handle_ps2_setup_one_port_only(struct ps2_initialize_device_state device_sates);
 enum handle_ps2_setup_status handle_ps2_setup_two_keyboard(struct ps2_initialize_device_state device_sates);
 enum handle_ps2_setup_status handle_ps2_setup_two_mouse(struct ps2_initialize_device_state device_sates);
 enum handle_ps2_setup_status handle_ps2_setup_no_port();
-
-void quick_enable_mouse();
 
 enum handle_ps2_setup_status handle_ps2_setup()
 {

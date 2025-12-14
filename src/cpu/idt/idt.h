@@ -285,6 +285,7 @@ _Static_assert(sizeof(interrupt_information_64_error_t) == 48, "64-bit LM with e
 // #define C_TEST
 
 #ifdef C_TEST
+// Doing in software what the hardware do
 
 void push(uint32_t *esp, uint32_t stack_base, interrupt_information_32_t information)
 {
@@ -366,22 +367,6 @@ void do_tss_stuff(segment_descriptor_t *gdt, segment_selector_t ts)
 
 #endif
 
-/*
-Offset: 32 bit value, split into two parts.
-	Represents the entry point of the interrupt service routine
-
-Selector: A segment seclector, must point to a valid *GDT* entry! (No LDT)
-
-Gate Type: A 4 bit value which define the type of the gate this *Interupt Desciptor* represents. There are 4 valid types
-	0b0101 or 0x5: Task Gate, note that in this case, the *Offset* value is unused and should be set to zero
-	0b0110 or 0x6: 16 Bit Interrupt Gate
-	0b0111 or 0x7: 16 Bit Trap Gate
-	0b1110 or 0xe: 32 bit interrupt gate
-	0b1111 or 0xf: 32 bit trap gate
-
-DPL: A 2 bit value which define the CPU Priviledge level which are allowed to access this interrupt via the INT instructions. Hardware
-interrupts ignore this mechanism. P: Present bit, must be set (1) for the descriptor to be valid.
-*/
 enum gate_type32_t
 {
 	GT32_TASK_GATE = 0x5,
@@ -404,6 +389,22 @@ static inline bool is_valid_gate_type32(enum gate_type32_t gt)
 	}
 }
 
+/*
+Offset: 32 bit value, split into two parts.
+	Represents the entry point of the interrupt service routine
+
+Selector: A segment seclector, must point to a valid *GDT* entry! (No LDT)
+
+Gate Type: A 4 bit value which define the type of the gate this *Interupt Desciptor* represents. There are 4 valid types
+	0b0101 or 0x5: Task Gate, note that in this case, the *Offset* value is unused and should be set to zero
+	0b0110 or 0x6: 16 Bit Interrupt Gate
+	0b0111 or 0x7: 16 Bit Trap Gate
+	0b1110 or 0xe: 32 bit interrupt gate
+	0b1111 or 0xf: 32 bit trap gate
+
+DPL: A 2 bit value which define the CPU Priviledge level which are allowed to access this interrupt via the INT instructions. Hardware
+interrupts ignore this mechanism. P: Present bit, must be set (1) for the descriptor to be valid.
+*/
 typedef struct PACKED idt32_entry
 {
 	uint16_t		   isr_offset_low;

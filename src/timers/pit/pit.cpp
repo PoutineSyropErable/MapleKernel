@@ -51,6 +51,9 @@ uint16_t read_pit_count(void)
 	return count;
 }
 
+/*
+This function disable interrupts, after calling it, interrupts must be re-enabled some way.
+*/
 void set_pit_count(uint16_t count)
 {
 	// Disable interrupts
@@ -62,8 +65,22 @@ void set_pit_count(uint16_t count)
 }
 
 // ================= Implementation of usefull functions =====================
-int pit::send_wait_count_command(uint32_t freq_divider_count)
+/*
+This function also sets the current operation modes, in loop, it's not needed.
+It causes a repeat.
+
+Precondition: freq_divider_count <= MAX_FREQ_DIVIDER + 1 (65536, or 2^something)
+	- If in debug, it will be checked and abbort.
+	- If not in debug, undefined behavior.
+	- This is an internal function, it shouldn't be called externally anyway.
+
+*/
+void pit::send_wait_count_command(uint32_t freq_divider_count)
 {
+
+#ifdef DEBUG
+	assert(freq_divider_count <= MAX_FREQ_DIVIDER + 1, "Too high a count, undefined behavior!\n");
+#endif
 	if (freq_divider_count == (MAX_FREQ_DIVIDER + 1))
 	{
 		freq_divider_count = 0;
@@ -78,8 +95,33 @@ int pit::send_wait_count_command(uint32_t freq_divider_count)
 	// kprintf("The command byte: %b:8\n", wait_command);
 
 	set_pit_count(freq_divider_count);
+}
 
-	return 0;
+// This function will disable interrupts. We need something else to re-enable it
+// It will setup a frequency rate generator. That sends an interrupt every PIT_FREQ_HZ / freq_divider_count
+// Precondition: freq_divider_count <= MAX_FREQ_DIVIDER + 1 (65536, or 2^something)
+// 	- If in debug, it will be checked and abbort.
+// 	- If not in debug, undefined behavior.
+// 	- This is an internal function, it shouldn't be called externally anyway.
+void pit::start_loop_wait(uint32_t freq_divider_count)
+{
+#ifdef DEBUG
+	assert(freq_divider_count <= MAX_FREQ_DIVIDER + 1, "Too high a count, undefined behavior!\n");
+#endif
+	if (freq_divider_count == (MAX_FREQ_DIVIDER + 1))
+	{
+		freq_divider_count = 0;
+	}
+
+	mode_command_register wait_command = {//
+		.bcd_binary_mode = MCR::Bit_0::binary16,
+		.operating_mode	 = MCR::Bit_1_3::rate_generator,
+		.access_mode	 = MCR::Bit_4_5::low_then_high_byte,
+		.channel		 = MCR::Bit_6_7::channel_0};
+	set_operation_mode(wait_command);
+	// kprintf("The command byte: %b:8\n", wait_command);
+
+	set_pit_count(freq_divider_count);
 }
 
 // ================= Implementation of  wait =====================
@@ -106,27 +148,49 @@ constexpr pit_wait_split compute_pit_wait(float seconds, float max_single_wait, 
 	return {full, remainder_pit_count};
 }
 
-inline void wait_lte_one_cycle(uint32_t pit_freq_divider)
+inline void wait_till_pit_interrupt()
 {
-	send_wait_count_command(pit_freq_divider);
 	pit_interrupt_handled = false;
 	__sti();
 	do
 	{
 		__hlt();
+		// The pit interrupt handler will set the global variable pit_interrupt_handled to true.
+		// any other interrupt will just cause another loop, where halt will be called.
+		// halting the cpu untill the next interrupt.
 	} while (!pit_interrupt_handled);
+}
+
+/*
+This command also changes the mode.
+Which is a redundant operation if we are looping single shot interrupt.
+But, it works because it changes the interrupt from multishot to single shot.
+
+*/
+inline void wait_lte_one_cycle(uint32_t pit_freq_divider)
+{
+	send_wait_count_command(pit_freq_divider);
+	wait_till_pit_interrupt();
 }
 
 int pit::wait(float seconds)
 {
-	IRQ_clear_mask(PIT_IRQ);
+	if (seconds <= 0)
+	{
+		return 1;
+	}
 	pit_wait_split sp = compute_pit_wait(seconds, max_single_wait, MAX_FREQ_DIVIDER);
 
+	// check we are in single core mode?
+
+	IRQ_clear_mask(PIT_IRQ);
+	start_loop_wait(MAX_FREQ_DIVIDER + 1);
 	for (uint32_t cycle_idx = 0; cycle_idx < sp.full_cycles; cycle_idx++)
 	{
-		wait_lte_one_cycle(MAX_FREQ_DIVIDER + 1);
+		wait_till_pit_interrupt();
 	}
 
+	// The mode change of this command will stop the frequency.
 	wait_lte_one_cycle(sp.reminder_pit_count);
 
 	IRQ_set_mask(PIT_IRQ);
@@ -139,6 +203,14 @@ extern "C"
 {
 #endif
 	// ================ Start of C stuff
+	/*
+	use pit to wait for x seconds.
+	Only works for single core state
+	Precondition: seconds > 0
+	- Violating this will return 1.
+	- Might make it a -DEBUG dependant abort() in the future
+
+	*/
 	int wait(float seconds)
 	{
 		return pit::wait(seconds);
