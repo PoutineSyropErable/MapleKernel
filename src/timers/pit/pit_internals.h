@@ -9,6 +9,7 @@ extern "C"
 #endif
 	// ================ Start
 
+	// because shared by code and isr, need volatile
 	extern volatile bool pit_interrupt_handled;
 
 	// =============== End

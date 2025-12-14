@@ -6,10 +6,14 @@
 #include <stddef.h>
 #include <stdint.h>
 
-int cpp_main(void) {
-	constexpr auto s = cpp_err_to_string(kernel_cpp::ErrorCode::Invalid);
-	// s is a string_view pointing to static literal, no allocation
-	kprintf2("Hello from C++, kernel_cpp::ErrorCode::Invalid = %s\n", s);
+// #include "framebuffer.h"
+// #include "framebuffer.hpp"
+#include "ps2_mouse_handler.h"
+
+int cpp_event_loop(void)
+{
+
+	// framebuffer::set_pixel(g_mouse_pos.x, g_mouse_pos.y, framebuffer::create_color(0xffabcd));
 
 	return 0;
 }

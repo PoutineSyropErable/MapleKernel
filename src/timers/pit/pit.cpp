@@ -184,7 +184,10 @@ int pit::wait(float seconds)
 	// check we are in single core mode?
 
 	IRQ_clear_mask(PIT_IRQ);
-	start_loop_wait(MAX_FREQ_DIVIDER + 1);
+	if (sp.full_cycles > 0)
+	{
+		start_loop_wait(MAX_FREQ_DIVIDER + 1);
+	}
 	for (uint32_t cycle_idx = 0; cycle_idx < sp.full_cycles; cycle_idx++)
 	{
 		wait_till_pit_interrupt();

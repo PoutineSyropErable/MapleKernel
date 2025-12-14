@@ -1,6 +1,8 @@
 #include "assert.h"
 #include "ps2_controller.h"
 #include "ps2_mouse.h"
+#include "ps2_mouse_handler.h"
+#include "ps2_mouse_handler_internal.hpp"
 #include "ps2_mouse_public.h"
 
 uint8_t _number_of_mouse;
@@ -8,6 +10,8 @@ uint8_t _single_mouse_port;
 
 uint8_t _mouse1_port;
 uint8_t _mouse2_port;
+
+using namespace ps2_mouse;
 
 void set_single_mouse_port(uint8_t single_mouse_port)
 {
@@ -34,4 +38,8 @@ void quick_enable_mouse()
 	}
 	uint8_t res = ps2_recieve_raw_response();
 	assert(res = 0xFA, "mouse must work");
+
+	g_mouse_pos.x = 0;
+	g_mouse_pos.y = 0;
+	g_mouse_pos.z = 0;
 }

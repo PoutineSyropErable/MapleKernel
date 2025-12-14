@@ -3,11 +3,12 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-// C-visible entry point to transfer control to C++ code
-int cpp_main(void);
+	// C-visible entry point to transfer control to C++ code
+	int cpp_event_loop(void);
 
 #ifdef __cplusplus
 }

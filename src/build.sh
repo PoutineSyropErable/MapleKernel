@@ -68,7 +68,7 @@ BUILD_DIR="build"
 ISO_DIR="isodir"
 
 CFLAGS=("-std=gnu23" "-ffreestanding" "-Wall" "-Wextra")
-CPPFLAGS=("-std=gnu++23" "-ffreestanding" "-Wall" "-Wextra")
+CPPFLAGS=("-std=gnu++23" "-ffreestanding" "-Wall" "-Wextra" "-fno-threadsafe-statics")
 CFLAGS16=("-std=gnu99" "-ffreestanding" "-Wall" "-Wextra")
 LDFLAGS=("-ffreestanding" "-nostdlib" "-lgcc" "-fno-eliminate-unused-debug-symbols")
 NASM_FLAGS32=("-f" "elf32")
@@ -264,7 +264,7 @@ nasm "${NASM_FLAGS32[@]}" "$REAL16_WRAPPERS/call_realmode_function_wrapper32.asm
 ia16-elf-gcc "${CFLAGS16[@]}" -c "$REAL_FUNC/realmode_functions.c" -o "$BUILD_DIR/realmode_functions.o"
 
 # Compile other languages files
-i686-elf-g++ "${CPPFLAGS[@]}" -c "$CPP/kernel_cpp.cpp" -o "$BUILD_DIR/kernel_cpp.o" "-I$STDIO" "-I$STDLIB"
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$CPP/kernel_cpp.cpp" -o "$BUILD_DIR/kernel_cpp.o" "${SUPER_INCLUDE[@]}"
 
 printf "\n\n============Start of Zig Build ============\n\n"
 ./z_otherLang/zig/build.sh
