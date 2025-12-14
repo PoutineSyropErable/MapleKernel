@@ -35,9 +35,6 @@ constexpr struct color_t create_color(uint32_t color_hex)
 
 // Single pixel draw — simple enough, keep as-is
 
-constexpr struct color_t create_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
-constexpr struct color_t create_color(uint32_t color_hex);
-
 // Horizontal line
 struct draw_horizontal_line_args
 {
