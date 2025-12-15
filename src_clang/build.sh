@@ -72,6 +72,12 @@ CLANG_KERNEL_FLAGS=("${CLANG_FLAGS[@]}" "${KERNEL_EXTRA_FLAGS[@]}")
 CLANGPP_KERNEL_FLAGS=("${CLANGPP_FLAGS[@]}" "${KERNEL_EXTRA_FLAGS[@]}")
 
 # ============================================================================
+# MODULE FORMAT SELECTION
+# ============================================================================
+# Set this to either "ixx" for single-file modules or "cppm" for two-file modules
+MODULE_FORMAT="ixx" # Change to "cppm" if using two-file modules
+
+# ============================================================================
 # COMPILATION (using Clang)
 # ============================================================================
 echo "Building bootloader..."
@@ -80,49 +86,32 @@ nasm "${NASM_FLAGS32[@]}" "boot_intel.asm" -o "$BUILD_DIR/boot.o"
 echo "Building C kernel..."
 clang "${CLANG_KERNEL_FLAGS[@]}" -c "kernel.c" -o "$BUILD_DIR/kernel.o"
 
-# Check if we're using C++20 modules
-if [ -d "$MODULES_DIR" ] && [ -f "$MODULES_DIR/module.ixx" ]; then
-	echo "Building C++20 module interface..."
-	# Compile module interface first (creates .pcm file)
+if [ "$MODULE_FORMAT" = "ixx" ]; then
+	# Single-file module (.ixx)
+	echo "Building single-file module (module.ixx)..."
 	clang "${CLANGPP_KERNEL_FLAGS[@]}" \
 		-c "$MODULES_DIR/module.ixx" \
 		-Xclang -emit-module-interface \
 		-o "$BUILD_DIR/module.pcm"
 
-	echo "Building C++ module implementation (if exists)..."
-	# Check if we have separate implementation
-	if [ -f "$MODULES_DIR/module.cpp" ]; then
-		clang "${CLANGPP_KERNEL_FLAGS[@]}" \
-			-c "$MODULES_DIR/module.cpp" \
-			-fmodule-file=kernel.module="$BUILD_DIR/module.pcm" \
-			-o "$BUILD_DIR/module.o"
-	fi
+	clang "${CLANGPP_KERNEL_FLAGS[@]}" \
+		-c "$MODULES_DIR/module.ixx" \
+		-fmodule-file=kernel.module="$BUILD_DIR/module.pcm" \
+		-o "$BUILD_DIR/module.o"
 
-	echo "Building C++ main (importing module)..."
-	# Main file importing the module
-	if [ -f "cpp_main.cpp" ]; then
-		clang "${CLANGPP_KERNEL_FLAGS[@]}" \
-			-c "cpp_main.cpp" \
-			-fmodule-file=kernel.module="$BUILD_DIR/module.pcm" \
-			-o "$BUILD_DIR/cpp_main.o"
-	elif [ -f "$KERNEL_DIR/cpp_main.cpp" ]; then
-		clang "${CLANGPP_KERNEL_FLAGS[@]}" \
-			-c "$KERNEL_DIR/cpp_main.cpp" \
-			-fmodule-file=kernel.module="$BUILD_DIR/module.pcm" \
-			-o "$BUILD_DIR/cpp_main.o"
-	fi
-else
-	# Fallback to regular C++ (non-modules)
-	echo "Building regular C++ code..."
-	if [ -f "cpp_main.cpp" ]; then
-		clang "${CLANGPP_KERNEL_FLAGS[@]}" \
-			-c "cpp_main.cpp" \
-			-o "$BUILD_DIR/cpp_main.o"
-	elif [ -f "$KERNEL_DIR/cpp_main.cpp" ]; then
-		clang "${CLANGPP_KERNEL_FLAGS[@]}" \
-			-c "$KERNEL_DIR/cpp_main.cpp" \
-			-o "$BUILD_DIR/cpp_main.o"
-	fi
+elif [ "$MODULE_FORMAT" = "cppm" ]; then
+	# Two-file module (.cppm + .cpp)
+	echo "Building two-file module interface (module.cppm)..."
+	clang "${CLANGPP_KERNEL_FLAGS[@]}" \
+		-c "$MODULES_DIR/module.cppm" \
+		-Xclang -emit-module-interface \
+		-o "$BUILD_DIR/module.pcm"
+
+	echo "Building module implementation (module.cpp)..."
+	clang "${CLANGPP_KERNEL_FLAGS[@]}" \
+		-c "$MODULES_DIR/module.cpp" \
+		-fmodule-file=kernel.module="$BUILD_DIR/module.pcm" \
+		-o "$BUILD_DIR/module_impl.o"
 fi
 
 # ============================================================================
@@ -130,29 +119,26 @@ fi
 # ============================================================================
 echo "Linking kernel..."
 
-# Collect all object files for linking
-LINK_OBJECTS=("$BUILD_DIR/boot.o" "$BUILD_DIR/kernel.o")
+Collect all object files for linking
+LINK_OBJECTS=(
+	"$BUILD_DIR/boot.o"
+	"$BUILD_DIR/kernel.o"
+	"$BUILD_DIR/kernel_main.o"
+)
 
-# Add C++ object files if they exist
-if [ -f "$BUILD_DIR/cpp_main.o" ]; then
-	LINK_OBJECTS+=("$BUILD_DIR/cpp_main.o")
-fi
-if [ -f "$BUILD_DIR/module.o" ]; then
+# Add module object files based on format
+if [ "$MODULE_FORMAT" = "ixx" ] && [ -f "$BUILD_DIR/module.o" ]; then
 	LINK_OBJECTS+=("$BUILD_DIR/module.o")
+elif [ "$MODULE_FORMAT" = "cppm" ]; then
+	if [ -f "$BUILD_DIR/module_impl.o" ]; then
+		LINK_OBJECTS+=("$BUILD_DIR/module_impl.o")
+	fi
 fi
 
-# For C++ code, we need to link with g++ to get proper C++ support
-if [ -f "$BUILD_DIR/cpp_main.o" ] || [ -f "$BUILD_DIR/module.o" ]; then
-	echo "Linking with C++ support (g++)..."
-	i686-elf-g++ -T linker.ld -o "$BUILD_DIR/myos.elf" \
-		"${LDFLAGS[@]}" \
-		"${LINK_OBJECTS[@]}"
-else
-	echo "Linking with C only (gcc)..."
-	i686-elf-gcc -T linker.ld -o "$BUILD_DIR/myos.elf" \
-		"${LDFLAGS[@]}" \
-		"${LINK_OBJECTS[@]}"
-fi
+echo "Linking with C++ support (g++)..."
+i686-elf-g++ -T linker.ld -o "$BUILD_DIR/myos.elf" \
+	"${LDFLAGS[@]}" \
+	"${LINK_OBJECTS[@]}"
 
 # ============================================================================
 # MULTIBOOT VERIFICATION
