@@ -1,4 +1,4 @@
-// kernel/modules/module.ixx
+// kernel/modules/module.cppm
 export module kernel.module;
 
 export class Module {

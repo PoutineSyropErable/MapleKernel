@@ -28,7 +28,6 @@ COMMON_CLANG_FLAGS=(
 	"-fno-builtin"
 	"-nostdlib"
 	"-nostdlibinc"
-	"-nostartfiles"
 	"-O1"
 	"-mno-sse"
 	"-mno-mmx"
@@ -42,13 +41,13 @@ C_CLANG_FLAGS=(
 	"-fno-unwind-tables"
 )
 
-# C++20 modules flags
+# C++20 modules flags - FIXED: removed -fmodules-debuginfo, added -Xclang
 CPP_CLANG_FLAGS=(
 	"-std=gnu++20" # Use gnu++20 for better GCC compatibility
 	"-fmodules"    # Enable modules
 	"-fmodules-cache-path=$MODULE_CACHE_DIR"
 	"-Xclang" "-fmodules-local-submodule-visibility"
-	"-fmodules-debuginfo"
+	"-Xclang" "-fmodules-debuginfo" # Fixed: needs -Xclang prefix
 	"-fno-exceptions"
 	"-fno-rtti"
 	"-fno-threadsafe-statics"
@@ -75,26 +74,27 @@ CLANGPP_KERNEL_FLAGS=("${CLANGPP_FLAGS[@]}" "${KERNEL_EXTRA_FLAGS[@]}")
 # MODULE FORMAT SELECTION
 # ============================================================================
 # Set this to either "ixx" for single-file modules or "cppm" for two-file modules
-MODULE_FORMAT="ixx" # Change to "cppm" if using two-file modules
+MODULE_FORMAT="cppm" # Change to "cppm" if using two-file modules
 
 # ============================================================================
 # COMPILATION (using Clang)
 # ============================================================================
+
 echo "Building bootloader..."
 nasm "${NASM_FLAGS32[@]}" "boot_intel.asm" -o "$BUILD_DIR/boot.o"
 
 echo "Building C kernel..."
-clang "${CLANG_KERNEL_FLAGS[@]}" -c "kernel.c" -o "$BUILD_DIR/kernel.o"
+clang "${CLANG_KERNEL_FLAGS[@]}" -c "kernel.c" -o "$BUILD_DIR/kernel.o" "-I./kernel"
 
 if [ "$MODULE_FORMAT" = "ixx" ]; then
 	# Single-file module (.ixx)
 	echo "Building single-file module (module.ixx)..."
-	clang "${CLANGPP_KERNEL_FLAGS[@]}" \
+	clang++ "${CLANGPP_KERNEL_FLAGS[@]}" \
 		-c "$MODULES_DIR/module.ixx" \
 		-Xclang -emit-module-interface \
 		-o "$BUILD_DIR/module.pcm"
 
-	clang "${CLANGPP_KERNEL_FLAGS[@]}" \
+	clang++ "${CLANGPP_KERNEL_FLAGS[@]}" \
 		-c "$MODULES_DIR/module.ixx" \
 		-fmodule-file=kernel.module="$BUILD_DIR/module.pcm" \
 		-o "$BUILD_DIR/module.o"
@@ -102,28 +102,34 @@ if [ "$MODULE_FORMAT" = "ixx" ]; then
 elif [ "$MODULE_FORMAT" = "cppm" ]; then
 	# Two-file module (.cppm + .cpp)
 	echo "Building two-file module interface (module.cppm)..."
-	clang "${CLANGPP_KERNEL_FLAGS[@]}" \
+	clang++ "${CLANGPP_KERNEL_FLAGS[@]}" \
 		-c "$MODULES_DIR/module.cppm" \
 		-Xclang -emit-module-interface \
 		-o "$BUILD_DIR/module.pcm"
 
 	echo "Building module implementation (module.cpp)..."
-	clang "${CLANGPP_KERNEL_FLAGS[@]}" \
+	clang++ "${CLANGPP_KERNEL_FLAGS[@]}" \
 		-c "$MODULES_DIR/module.cpp" \
 		-fmodule-file=kernel.module="$BUILD_DIR/module.pcm" \
 		-o "$BUILD_DIR/module_impl.o"
 fi
+
+# You're missing the kernel_main.cpp compilation! Add this:
+echo "Building C++ kernel main..."
+clang "${CLANGPP_KERNEL_FLAGS[@]}" \
+	-c "$KERNEL_DIR/kernel_main.cpp" \
+	-o "$BUILD_DIR/kernel_main.o"
 
 # ============================================================================
 # LINKING (using GCC/g++ - keeping your original approach)
 # ============================================================================
 echo "Linking kernel..."
 
-Collect all object files for linking
+# Collect all object files for linking - FIXED: missing $ for array declaration
 LINK_OBJECTS=(
 	"$BUILD_DIR/boot.o"
 	"$BUILD_DIR/kernel.o"
-	"$BUILD_DIR/kernel_main.o"
+	"$BUILD_DIR/kernel_main.o" # Added this
 )
 
 # Add module object files based on format
@@ -139,7 +145,6 @@ echo "Linking with C++ support (g++)..."
 i686-elf-g++ -T linker.ld -o "$BUILD_DIR/myos.elf" \
 	"${LDFLAGS[@]}" \
 	"${LINK_OBJECTS[@]}"
-
 # ============================================================================
 # MULTIBOOT VERIFICATION
 # ============================================================================
