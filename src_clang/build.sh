@@ -3,17 +3,160 @@ set -euo pipefail
 
 BUILD_DIR="build"
 ISO_DIR="isodir"
+KERNEL_DIR="kernel"
+MODULES_DIR="$KERNEL_DIR/modules"
+MODULE_CACHE_DIR="$BUILD_DIR/module_cache"
 
-mkdir -p "$BUILD_DIR" "$ISO_DIR/boot/grub"
+mkdir -p "$BUILD_DIR" "$ISO_DIR/boot/grub" "$MODULE_CACHE_DIR"
 
+# ============================================================================
+# GCC FLAGS (for linking)
+# ============================================================================
 CFLAGS=("-std=gnu23" "-ffreestanding" "-Wall" "-Wextra")
 NASM_FLAGS32=("-f" "elf32")
 LDFLAGS=("-ffreestanding" "-nostdlib" "-lgcc" "-fno-eliminate-unused-debug-symbols")
 
-nasm "${NASM_FLAGS32[@]}" "boot_intel.asm" -o "$BUILD_DIR/boot.o"
-i686-elf-gcc "${CFLAGS[@]}" -c "kernel.c" -o "$BUILD_DIR/kernel.o"
-i686-elf-g++ -T linker.ld -o "$BUILD_DIR/myos.elf" "${LDFLAGS[@]}" "$BUILD_DIR/boot.o" "$BUILD_DIR/kernel.o"
+# ============================================================================
+# CLANG FLAGS (for compilation)
+# ============================================================================
+# Common flags for both C and C++
+COMMON_CLANG_FLAGS=(
+	"-target" "i686-elf"
+	"-ffreestanding"
+	"-Wall"
+	"-Wextra"
+	"-fno-builtin"
+	"-nostdlib"
+	"-nostdlibinc"
+	"-nostartfiles"
+	"-O1"
+	"-mno-sse"
+	"-mno-mmx"
+	"-m32"
+	"-fno-stack-protector"
+)
 
+# C-specific flags
+C_CLANG_FLAGS=(
+	"-std=gnu23"
+	"-fno-unwind-tables"
+)
+
+# C++20 modules flags
+CPP_CLANG_FLAGS=(
+	"-std=gnu++20" # Use gnu++20 for better GCC compatibility
+	"-fmodules"    # Enable modules
+	"-fmodules-cache-path=$MODULE_CACHE_DIR"
+	"-Xclang" "-fmodules-local-submodule-visibility"
+	"-fmodules-debuginfo"
+	"-fno-exceptions"
+	"-fno-rtti"
+	"-fno-threadsafe-statics"
+	"-fno-use-cxa-atexit"
+	"-fno-unwind-tables"
+)
+
+# Kernel extra flags
+KERNEL_EXTRA_FLAGS=(
+	"-mno-red-zone"
+	"-mgeneral-regs-only"
+	"-fno-pic"
+	"-fno-pie"
+	"-fno-omit-frame-pointer"
+)
+
+# Combined flag sets
+CLANG_FLAGS=("${COMMON_CLANG_FLAGS[@]}" "${C_CLANG_FLAGS[@]}")
+CLANGPP_FLAGS=("${COMMON_CLANG_FLAGS[@]}" "${CPP_CLANG_FLAGS[@]}")
+CLANG_KERNEL_FLAGS=("${CLANG_FLAGS[@]}" "${KERNEL_EXTRA_FLAGS[@]}")
+CLANGPP_KERNEL_FLAGS=("${CLANGPP_FLAGS[@]}" "${KERNEL_EXTRA_FLAGS[@]}")
+
+# ============================================================================
+# COMPILATION (using Clang)
+# ============================================================================
+echo "Building bootloader..."
+nasm "${NASM_FLAGS32[@]}" "boot_intel.asm" -o "$BUILD_DIR/boot.o"
+
+echo "Building C kernel..."
+clang "${CLANG_KERNEL_FLAGS[@]}" -c "kernel.c" -o "$BUILD_DIR/kernel.o"
+
+# Check if we're using C++20 modules
+if [ -d "$MODULES_DIR" ] && [ -f "$MODULES_DIR/module.ixx" ]; then
+	echo "Building C++20 module interface..."
+	# Compile module interface first (creates .pcm file)
+	clang "${CLANGPP_KERNEL_FLAGS[@]}" \
+		-c "$MODULES_DIR/module.ixx" \
+		-Xclang -emit-module-interface \
+		-o "$BUILD_DIR/module.pcm"
+
+	echo "Building C++ module implementation (if exists)..."
+	# Check if we have separate implementation
+	if [ -f "$MODULES_DIR/module.cpp" ]; then
+		clang "${CLANGPP_KERNEL_FLAGS[@]}" \
+			-c "$MODULES_DIR/module.cpp" \
+			-fmodule-file=kernel.module="$BUILD_DIR/module.pcm" \
+			-o "$BUILD_DIR/module.o"
+	fi
+
+	echo "Building C++ main (importing module)..."
+	# Main file importing the module
+	if [ -f "cpp_main.cpp" ]; then
+		clang "${CLANGPP_KERNEL_FLAGS[@]}" \
+			-c "cpp_main.cpp" \
+			-fmodule-file=kernel.module="$BUILD_DIR/module.pcm" \
+			-o "$BUILD_DIR/cpp_main.o"
+	elif [ -f "$KERNEL_DIR/cpp_main.cpp" ]; then
+		clang "${CLANGPP_KERNEL_FLAGS[@]}" \
+			-c "$KERNEL_DIR/cpp_main.cpp" \
+			-fmodule-file=kernel.module="$BUILD_DIR/module.pcm" \
+			-o "$BUILD_DIR/cpp_main.o"
+	fi
+else
+	# Fallback to regular C++ (non-modules)
+	echo "Building regular C++ code..."
+	if [ -f "cpp_main.cpp" ]; then
+		clang "${CLANGPP_KERNEL_FLAGS[@]}" \
+			-c "cpp_main.cpp" \
+			-o "$BUILD_DIR/cpp_main.o"
+	elif [ -f "$KERNEL_DIR/cpp_main.cpp" ]; then
+		clang "${CLANGPP_KERNEL_FLAGS[@]}" \
+			-c "$KERNEL_DIR/cpp_main.cpp" \
+			-o "$BUILD_DIR/cpp_main.o"
+	fi
+fi
+
+# ============================================================================
+# LINKING (using GCC/g++ - keeping your original approach)
+# ============================================================================
+echo "Linking kernel..."
+
+# Collect all object files for linking
+LINK_OBJECTS=("$BUILD_DIR/boot.o" "$BUILD_DIR/kernel.o")
+
+# Add C++ object files if they exist
+if [ -f "$BUILD_DIR/cpp_main.o" ]; then
+	LINK_OBJECTS+=("$BUILD_DIR/cpp_main.o")
+fi
+if [ -f "$BUILD_DIR/module.o" ]; then
+	LINK_OBJECTS+=("$BUILD_DIR/module.o")
+fi
+
+# For C++ code, we need to link with g++ to get proper C++ support
+if [ -f "$BUILD_DIR/cpp_main.o" ] || [ -f "$BUILD_DIR/module.o" ]; then
+	echo "Linking with C++ support (g++)..."
+	i686-elf-g++ -T linker.ld -o "$BUILD_DIR/myos.elf" \
+		"${LDFLAGS[@]}" \
+		"${LINK_OBJECTS[@]}"
+else
+	echo "Linking with C only (gcc)..."
+	i686-elf-gcc -T linker.ld -o "$BUILD_DIR/myos.elf" \
+		"${LDFLAGS[@]}" \
+		"${LINK_OBJECTS[@]}"
+fi
+
+# ============================================================================
+# MULTIBOOT VERIFICATION
+# ============================================================================
 USE_MULTIBOOT1=false
 if [ "$USE_MULTIBOOT1" == true ]; then
 	if grub-file --is-x86-multiboot "$BUILD_DIR/myos.elf"; then
@@ -29,17 +172,32 @@ else
 		echo "The file is not multiboot 2"
 		exit 1
 	fi
-
 fi
 
-# Copy the kernel binary and GRUB configuration to the ISO directory
+# ============================================================================
+# CREATE ISO
+# ============================================================================
 cp "$BUILD_DIR/myos.elf" "$ISO_DIR/boot/myos.elf"
-cp "$ISO_DIR/grub.cfg" "$ISO_DIR/boot/grub/grub.cfg"
+if [ -f "$ISO_DIR/grub.cfg" ]; then
+	cp "$ISO_DIR/grub.cfg" "$ISO_DIR/boot/grub/grub.cfg"
+elif [ -f "grub.cfg" ]; then
+	cp "grub.cfg" "$ISO_DIR/boot/grub/grub.cfg"
+else
+	echo "Warning: No grub.cfg found, creating default..."
+	cat >"$ISO_DIR/boot/grub/grub.cfg" <<'EOF'
+menuentry "MyOS" {
+    multiboot2 /boot/myos.elf
+    boot
+}
+EOF
+fi
 
-# Create the ISO image
 grub-mkrescue -o "$BUILD_DIR/myos.iso" "$ISO_DIR"
 echo "ISO created successfully: $BUILD_DIR/myos.iso"
 
+# ============================================================================
+# RUN QEMU
+# ============================================================================
 QEMU32=qemu-system-i386
 QEMU64=qemu-system-x86_64
 QEMU="$QEMU64"
@@ -53,24 +211,28 @@ fi
 
 $QEMU \
 	-cdrom "$BUILD_DIR/myos.iso" \
-	\
 	-no-reboot \
-	-serial stdio & # -vga vmware \
+	-serial stdio &
 
 QEMU_PID=$!
 
 sleep 1
 
 # Launch VNC viewer
-vncviewer localhost:5900 &
-VNC_PID=$!
+if command -v vncviewer >/dev/null 2>&1; then
+	vncviewer localhost:5900 &
+	VNC_PID=$!
 
-# sleep 1
-if [[ "$MOVE_VNC" == "move" ]]; then
-	move_pid_to_workspace $VNC_PID 21
+	# sleep 1
+	if [[ "${MOVE_VNC:-}" == "move" ]]; then
+		move_pid_to_workspace $VNC_PID 21 2>/dev/null || true
+	fi
+
+	wait $VNC_PID 2>/dev/null || true
+else
+	echo "vncviewer not found, continuing without VNC..."
+	wait $QEMU_PID
 fi
 
-wait $VNC_PID
-
 # After you close the VNC viewer, kill QEMU
-kill $QEMU_PID 2>/dev/null
+kill $QEMU_PID 2>/dev/null || true
