@@ -1,0 +1,18 @@
+[
+  {
+    "arguments": [
+      "/usr/local/bin/i686-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-c",
+      "-o",
+      "build/kernel.o",
+      "kernel.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src_clang",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src_clang/kernel.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src_clang/build/kernel.o"
+  }
+]

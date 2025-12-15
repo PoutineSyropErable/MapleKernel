@@ -1,0 +1,8 @@
+CompileFlags:
+  Add:
+    - -std=c
+    - -I.
+    - -Wall
+    - -Wextra
+    - -fprebuilt-module-path=./build
+
