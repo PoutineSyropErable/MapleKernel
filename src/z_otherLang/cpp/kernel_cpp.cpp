@@ -10,6 +10,11 @@
 #include "framebuffer.hpp"
 #include "ps2_mouse_handler.h"
 
+int cpp_main()
+{
+	return 0;
+}
+
 int cpp_event_loop(void)
 {
 	static int16_t			  old_x = 0;

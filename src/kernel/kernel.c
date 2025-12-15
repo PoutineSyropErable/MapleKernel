@@ -116,12 +116,13 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 	zig_main();
 	terminal_writestring("\n====kernel main entering loop====\n");
 
+	cpp_main();
 	while (true)
 	{
 		// kernel main loop
 		cpp_event_loop();
 
-		wait(1.f / 60);
+		wait(1.f / 60.f);
 	}
 
 	return;

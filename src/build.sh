@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 set -eou pipefail
+shopt -s nullglob
+
 DEBUG_OR_RELEASE="${1:-release}"
 QEMU_OR_REAL_MACHINE="${2:-qemu}"
 MACHINE_BITNESS="${3:-32}"
@@ -94,6 +96,8 @@ else
 	CFLAGS16+=("$RELEASE_OPT_LVL")
 	LDFLAGS+=("$RELEASE_OPT_LVL")
 fi
+
+MODULE_FLAG="-fmodules-ts"
 
 if [[ "$QEMU_OR_REAL_MACHINE" == "qemu" ]]; then
 	CFLAGS+=("-DQEMU")
@@ -202,10 +206,7 @@ nasm "${NASM_FLAGS32[@]}" "$KERNEL/boot_intel.asm" -o "$BUILD_DIR/boot.o"
 i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/kernel.c" -o "$BUILD_DIR/kernel.o"
 i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/symbols.c" -o "$BUILD_DIR/symbols.o"
 i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/kernel_helper.c" -o "$BUILD_DIR/kernel_helper.o"
-
-# Move this to firmware maybe?
 i686-elf-g++ "${CPPFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$MULTIBOOT/multiboot.cpp" -o "$BUILD_DIR/multiboot.o"
-i686-elf-g++ "${CPPFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$FRAMEBUFER/framebuffer.cpp" -o "$BUILD_DIR/framebuffer.o"
 
 # Compile the print functions.
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/string_helper.c" -o "$BUILD_DIR/string_helper.o"
@@ -217,32 +218,31 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/stdio.c" -o "$BUILD_DIR/stdio.o" "-I$STDI
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDLIB/stdlib.c" -o "$BUILD_DIR/stdlib.o" "-I$STDLIB" "-I$STDIO"
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDLIB/math.c" -o "$BUILD_DIR/math.o" "-I$STDLIB" "-I$STDIO"
 
+# Compile Drivers CPU structures
 i686-elf-gcc "${CFLAGS[@]}" -c "$GDT/f1_binary_operation.c" -o "$BUILD_DIR/f1_binary_operation.o" "-I$STDIO" "-I$GDT"
 i686-elf-gcc "${CFLAGS[@]}" -c "$GDT/f3_segment_descriptor_internals.c" -o "$BUILD_DIR/f3_segment_descriptor_internals.o" "-I$STDIO" "-I$GDT" "-I$STDLIB"
 i686-elf-gcc "${CFLAGS[@]}" -c "$GDT/gdt.c" -o "$BUILD_DIR/gdt.o" "-I$STDIO" "-I$GDT" "-I$STDLIB"
-
-# Compile Drivers CPU structures
 i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/idt.c" -o "$BUILD_DIR/idt.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "${PS2_SUPER_INCLUDE[@]}"
 i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/idt_ps2.c" -o "$BUILD_DIR/idt_ps2.o" "-I$IDT" "-I$GDT" "-I$PIC" "-I$STDLIB" "-I$STDIO" "${PS2_SUPER_INCLUDE[@]}"
 nasm "${NASM_FLAGS32[@]}" "$IDT/exception_handler.asm" -o "$BUILD_DIR/exception_handler.o"
+i686-elf-gcc "${CFLAGS[@]}" -c "$PIC/pic.c" -o "$BUILD_DIR/pic.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "-I$CPU"
 
-# Compile Drivers
+# =============== Compile Drivers ==============
+
+# PS2 Controller, Interrupt Handler And Enable Wrapper
 nasm "${NASM_FLAGS32[@]}" "$PS2/ps2_interrupt_handlers.asm" -o "$BUILD_DIR/ps2_interrupt_handlers.o"
 i686-elf-gcc "${CFLAGS[@]}" -c "$PS2_CONTROLLER/ps2_controller.c" -o "$BUILD_DIR/ps2_controller.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$DRIVERS_USB_CONTROLLER"
-
+i686-elf-gcc "${CFLAGS[@]}" -c "$PS2/ps2.c" -o "$BUILD_DIR/ps2.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "${PS2_SUPER_INCLUDE[@]}"
+# PS2 Keyboard
 i686-elf-gcc "${CFLAGS[@]}" -c "$PS2_KEYBOARD/ps2_keyboard.c" -o "$BUILD_DIR/ps2_keyboard.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "${PS2_SUPER_INCLUDE[@]}"
 i686-elf-gcc "${CFLAGS[@]}" -c "$PS2_KEYBOARD/ps2_keyboard_handler.c" -o "$BUILD_DIR/ps2_keyboard_handler.o" \
 	-I"$IDT" -I"$GDT" -I"$STDLIB" -I"$STDIO" "${PS2_SUPER_INCLUDE[@]}"
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$PS2_KEYBOARD_CPP/keycodes.cpp" -o "$BUILD_DIR/keycodes.o" "-I$STDIO" "-I$STDLIB" "-I$PS2_KEYBOARD_CPP"
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$PS2_KEYBOARD_CPP/scancodes_to_keycodes.cpp" -o "$BUILD_DIR/scancodes_to_keycodes.o" "-I$STDIO" "-I$STDLIB" "-I$PS2_KEYBOARD" "-I$PS2_KEYBOARD_CPP"
 i686-elf-gcc "${CFLAGS[@]}" -c "$PS2_KEYBOARD/ps2_keyboard_key_functions.c" -o "$BUILD_DIR/ps2_keyboard_key_functions.o" "-I$PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO"
-
+# PS2 Mouse
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$PS2_MOUSE/ps2_mouse.cpp" -o "$BUILD_DIR/ps2_mouse.o" "-I$IDT" "-I$GDT" "-I$PS2_CONTROLLER" "-I$STDLIB" "-I$STDIO"
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$PS2_MOUSE/ps2_mouse_handler.cpp" -o "$BUILD_DIR/ps2_mouse_handler.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "${PS2_SUPER_INCLUDE[@]}" "-I$FRAMEBUFER"
-
-i686-elf-gcc "${CFLAGS[@]}" -c "$PS2/ps2.c" -o "$BUILD_DIR/ps2.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "${PS2_SUPER_INCLUDE[@]}"
-
-i686-elf-gcc "${CFLAGS[@]}" -c "$PIC/pic.c" -o "$BUILD_DIR/pic.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "-I$CPU"
 
 # Temporary stuff. Will properly program them one day.
 i686-elf-gcc "${CFLAGS[@]}" -c "$DRIVERS_USB_CONTROLLER/usb_controller.c" -o "$BUILD_DIR/usb_controller.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "-I$DRIVERS_USB_CONTROLLER"
@@ -255,7 +255,9 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$PIT/idt_pit.c" -o "$BUILD_DIR/idt_pit.o" "-I$ST
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$PIT/pit_interrupt_handler.cpp" -o "$BUILD_DIR/pit_interrupt_handler.o" "-I$STDLIB" "-I$STDIO" "-I$PIC" "-I$CPU"
 nasm "${NASM_FLAGS32[@]}" "$PIT/pit_interrupt_handler.asm" -o "$BUILD_DIR/pit_interrupt_handler_asm.o" "-I$STDLIB" "-I$STDIO" "-I$PIC" "-I$CPU"
 
-# Just another thing
+i686-elf-g++ "${CPPFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$FRAMEBUFER/framebuffer.cpp" -o "$BUILD_DIR/framebuffer.o"
+
+# Super Misc
 i686-elf-gcc "${CFLAGS[@]}" -c "$CODE_ANALYSIS/address_getter.c" -o "$BUILD_DIR/address_getter.o" "-I$REAL_FUNC" "-I$REAL16_WRAPPERS" "-I$GDT" "-I$STDLIB"
 
 # Compile the real mode 16 code and it's wrappers
@@ -264,7 +266,7 @@ nasm "${NASM_FLAGS16[@]}" "$REAL16_WRAPPERS/call_realmode_function_wrapper16.asm
 nasm "${NASM_FLAGS32[@]}" "$REAL16_WRAPPERS/call_realmode_function_wrapper32.asm" -o "$BUILD_DIR/call_realmode_function_wrapper32.o" "-I$REAL16_WRAPPERS"
 ia16-elf-gcc "${CFLAGS16[@]}" -c "$REAL_FUNC/realmode_functions.c" -o "$BUILD_DIR/realmode_functions.o"
 
-# Compile other languages files
+# Compile Other language projects (Library written entirely in ~(C or ASM))
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$CPP/kernel_cpp.cpp" -o "$BUILD_DIR/kernel_cpp.o" "${SUPER_INCLUDE[@]}"
 
 printf "\n\n============Start of Zig Build ============\n\n"
@@ -274,65 +276,16 @@ printf "\n\n============Start of Rust Build ============\n\n"
 ./z_otherLang/rust/build.sh
 
 # Link the kernel and generate the final binary
-printf "\n\n====== Start of Linking =====\n\n"
 
-BUILD_OBJECTS=(
-	"$BUILD_DIR/boot.o"
-	"$BUILD_DIR/kernel.o"
-	"$BUILD_DIR/symbols.o"
-	"$BUILD_DIR/kernel_helper.o"
-	"$BUILD_DIR/multiboot.o"
-
-	"$BUILD_DIR/stdlib.o"
-	"$BUILD_DIR/math.o"
-
-	"$BUILD_DIR/address_getter.o"
-
-	"$BUILD_DIR/string_helper.o"
-	"$BUILD_DIR/bit_hex_string.o"
-	"$BUILD_DIR/vga_terminal.o"
-	"$BUILD_DIR/stdio.o"
-
-	"$BUILD_DIR/exception_handler.o"
-	"$BUILD_DIR/idt.o"
-	"$BUILD_DIR/idt_ps2.o"
-	"$BUILD_DIR/pic.o"
-
-	"$BUILD_DIR/ps2_controller.o"
-	"$BUILD_DIR/ps2_keyboard.o"
-	"$BUILD_DIR/keycodes.o"
-	"$BUILD_DIR/scancodes_to_keycodes.o"
-	"$BUILD_DIR/ps2_mouse.o"
-	"$BUILD_DIR/ps2_keyboard_handler.o"
-	"$BUILD_DIR/ps2_keyboard_key_functions.o"
-	"$BUILD_DIR/ps2_mouse_handler.o"
-	"$BUILD_DIR/ps2_interrupt_handlers.o"
-	"$BUILD_DIR/ps2.o"
-
-	"$BUILD_DIR/usb_controller.o"
-	"$BUILD_DIR/acpi.o"
-	"$BUILD_DIR/virtual_memory.o"
-
-	"$BUILD_DIR/f1_binary_operation.o"
-	"$BUILD_DIR/f3_segment_descriptor_internals.o"
-	"$BUILD_DIR/gdt.o"
-
-	"$BUILD_DIR/call_realmode_function_wrapper32.o"
-	"$BUILD_DIR/call_realmode_function_wrapper16.o"
-	"$BUILD_DIR/realmode_functions.o"
-	"$BUILD_DIR/call_real16_wrapper.o"
-
-	"$BUILD_DIR/kernel_cpp.o"
-	"$BUILD_DIR/kernel_zig.o"
-
-	"$BUILD_DIR/framebuffer.o"
-	"$BUILD_DIR/pit.o"
-	"$BUILD_DIR/pit_interrupt_handler.o"
-	"$BUILD_DIR/pit_interrupt_handler_asm.o"
-	"$BUILD_DIR/idt_pit.o"
-)
+# fails
+BUILD_OBJECTS=("$BUILD_DIR"/*.o)
+if false; then
+	BUILD_OBJECTS+=("$BUILD_DIR"/banana/*.o) # banana subdir
+	BUILD_OBJECTS+=("$BUILD_DIR"/apple/*.o)  # apple subdir
+fi
 
 # ========= Static library setup ============
+printf "\n\n====== Start of Static Library Setup =====\n\n"
 
 # Library configuration
 LIBRARY_PATHS=(
@@ -356,6 +309,7 @@ for lib in "${LIBRARY_FILES[@]}"; do
 done
 
 # ============= Linking ==============
+printf "\n\n====== Start of Linking =====\n\n"
 # could also use g++. But as long as no runtime support, gcc will work
 i686-elf-g++ -T linker.ld -o "$BUILD_DIR/myos_s.elf" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}" "${LIBRARY_ARGS[@]}"
 
@@ -376,12 +330,14 @@ echo "File sizes:"
 ls -la build/symtab_raw.bin build/strtab_raw.bin
 echo "First 16 bytes of symtab_raw.bin:"
 
+mkdir -p "$BUILD_DIR/first_excluded"
 # 3. Assemble (need to be in src directory)
-i686-elf-as -o "$BUILD_DIR/copy_symbols.o" "$KERNEL/copy_symbols.S"
+i686-elf-as "$KERNEL/copy_symbols.S" -o "$BUILD_DIR/first_excluded/copy_symbols.o"
 
+printf "\n\n==================The final link==================\n\n"
 # 4. Link with copied symbols
 i686-elf-g++ -T linker.ld -o "$BUILD_DIR/myos.elf" \
-	"${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}" "$BUILD_DIR/copy_symbols.o" "${LIBRARY_ARGS[@]}"
+	"${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}" "$BUILD_DIR/first_excluded/copy_symbols.o" "${LIBRARY_ARGS[@]}"
 
 printf "\n\n====== End of Linking =====\n\n"
 

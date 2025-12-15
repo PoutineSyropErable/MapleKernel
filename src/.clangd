@@ -59,6 +59,18 @@ CompileFlags:
     - -fno-exceptions
     - -fno-rtti
 
+
+If:
+  PathMatch: ".*\\.cppm$"
+CompileFlags:
+  Add:
+    - -std=c++23
+    - -I.
+    - -fno-exceptions
+    - -fno-rtti
+    - -fprebuilt-module-path=./build
+
+
 # Optional per-file overrides for 16-bit realmode code
 If:
   PathMatch: "realmode_functions/.*\\.c"
