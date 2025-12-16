@@ -88,45 +88,45 @@ nasm "${NASM_FLAGS32[@]}" "boot_intel.asm" -o "$BUILD_DIR/boot.o"
 echo "Building C kernel..."
 clang "${CLANG_KERNEL_FLAGS[@]}" -c "kernel.c" -o "$BUILD_DIR/kernel.o" "-I./kernel"
 
-if [ "$MODULE_FORMAT" = "ixx" ]; then
-	# Single-file module (.ixx)
-	echo "Building single-file module (module.ixx)..."
-	clang++ "${CLANGPP_KERNEL_FLAGS[@]}" \
-		-c "$MODULES_DIR/module.ixx" \
-		-Xclang -emit-module-interface \
-		-o "$BUILD_DIR/module.pcm"
-
-	clang++ "${CLANGPP_KERNEL_FLAGS[@]}" \
-		-c "$MODULES_DIR/module.ixx" \
-		-fmodule-file=kernel.module="$BUILD_DIR/module.pcm" \
-		-o "$BUILD_DIR/module.o"
-
-elif [ "$MODULE_FORMAT" = "cppm" ]; then
-	# Two-file module (.cppm + .cpp)
-	echo "Building two-file module interface (module.cppm)..."
-	clang++ "${CLANGPP_KERNEL_FLAGS[@]}" \
-		-c "$MODULES_DIR/module.cppm" \
-		-Xclang -emit-module-interface \
-		-o "$BUILD_DIR/module.pcm"
-
-	echo "Building module implementation (module.cpp)..."
-	clang++ "${CLANGPP_KERNEL_FLAGS[@]}" \
-		-c "$MODULES_DIR/module.cpp" \
-		-fmodule-file=kernel.module="$BUILD_DIR/module.pcm" \
-		-o "$BUILD_DIR/module_impl.o"
-fi
+# if [ "$MODULE_FORMAT" = "ixx" ]; then
+# 	# Single-file module (.ixx)
+# 	echo "Building single-file module (module.ixx)..."
+# 	clang++ "${CLANGPP_KERNEL_FLAGS[@]}" \
+# 		-c "$MODULES_DIR/module.ixx" \
+# 		-Xclang -emit-module-interface \
+# 		-o "$BUILD_DIR/module.pcm"
+#
+# 	clang++ "${CLANGPP_KERNEL_FLAGS[@]}" \
+# 		-c "$MODULES_DIR/module.ixx" \
+# 		-fmodule-file=kernel.module="$BUILD_DIR/module.pcm" \
+# 		-o "$BUILD_DIR/module.o"
+#
+# elif [ "$MODULE_FORMAT" = "cppm" ]; then
+# 	# Two-file module (.cppm + .cpp)
+# 	echo "Building two-file module interface (module.cppm)..."
+# 	clang++ "${CLANGPP_KERNEL_FLAGS[@]}" \
+# 		-c "$MODULES_DIR/module.cppm" \
+# 		-Xclang -emit-module-interface \
+# 		-o "$BUILD_DIR/module.pcm"
+#
+# 	echo "Building module implementation (module.cpp)..."
+# 	clang++ "${CLANGPP_KERNEL_FLAGS[@]}" \
+# 		-c "$MODULES_DIR/module.cpp" \
+# 		-fmodule-file=kernel.module="$BUILD_DIR/module.pcm" \
+# 		-o "$BUILD_DIR/module_impl.o"
+# fi
 
 # You're missing the kernel_main.cpp compilation! Add this:
-echo "Building C++ kernel main..."
-clang++ "${CLANGPP_KERNEL_FLAGS[@]}" \
-	-c "$KERNEL_DIR/kernel_main.cpp" \
-	-o "$BUILD_DIR/kernel_main.o"
+# echo "Building C++ kernel main..."
+# clang++ "${CLANGPP_KERNEL_FLAGS[@]}" \
+# 	-c "$KERNEL_DIR/kernel_main.cpp" \
+# 	-o "$BUILD_DIR/kernel_main.o"
 
-clang "${CLANGPP_KERNEL_FLAGS[@]}" \
+clang "${CLANG_KERNEL_FLAGS[@]}" \
 	-c "$STDIO_DIR/stdio.c" \
 	-o "$BUILD_DIR/stdio.o"
 
-# ./modules/build.sh
+./modules/build.sh
 
 # ============================================================================
 # LINKING (using GCC/g++ - keeping your original approach)
@@ -137,7 +137,16 @@ echo "Linking kernel..."
 LINK_OBJECTS=(
 	"$BUILD_DIR/boot.o"
 	"$BUILD_DIR/kernel.o"
-	"$BUILD_DIR/kernel_main.o" # Added this
+	"$BUILD_DIR/stdio.o"
+	"$BUILD_DIR/A.o"
+	"$BUILD_DIR/B.o"
+	"$BUILD_DIR/C.o"
+	"$BUILD_DIR/D.o"
+	"$BUILD_DIR/C_impl.o"
+	"$BUILD_DIR/D_impl.o"
+	"$BUILD_DIR/Main.o"
+	"$BUILD_DIR/Main_cpp.o"
+
 )
 
 # Add module object files based on format

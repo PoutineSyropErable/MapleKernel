@@ -18,8 +18,8 @@ set -eou pipefail
 
 cd "$(dirname "$0")"
 
-BUILD="./build"
-# BUILD="../build"
+# BUILD="./build"
+BUILD="../build"
 mkdir -p "$BUILD"
 
 MOD1="./mod1/"
