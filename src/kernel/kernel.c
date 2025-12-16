@@ -27,11 +27,13 @@
 
 #include "kernel_helper.h"
 
+#include "Main.h"
 #include "pit.h"
 
-GDT_ROOT* GDT16_ROOT = &GDT16_DESCRIPTOR;
+GDT_ROOT *GDT16_ROOT = &GDT16_DESCRIPTOR;
 
-void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_multiboot_32) {
+void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_multiboot_32)
+{
 
 #define GRUB_FRAMEBUFFER
 #ifndef GRUB_FRAMEBUFFER
@@ -43,57 +45,60 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 	kprintf("addr = %u, magic = %h, is_proper_multiboot_32 = %u\n", mb2_info_addr, magic, is_proper_multiboot_32);
 
 	bool is_proper_multiboot = is_proper_multiboot_32;
-	if (is_proper_multiboot) {
+	if (is_proper_multiboot)
+	{
 		kprintf("It's proper multiboot\n");
-	} else {
+	}
+	else
+	{
 		abort_msg("Not proper multiboot\n");
 		// The abbort might not be needed anyway.
 	}
 
 #ifndef DEBUG
 
-#define BIOS_FRAMEBUFFER_HACK
-#ifdef GRUB_FRAMEBUFFER
+#	define BIOS_FRAMEBUFFER_HACK
+#	ifdef GRUB_FRAMEBUFFER
 	struct framebuffer_info_t grub_fb_info = get_framebuffer(mb2_info_addr);
 
-	uint8_t bpp = grub_fb_info.bit_per_pixel;
-	bool type = grub_fb_info.type;
+	uint8_t bpp	 = grub_fb_info.bit_per_pixel;
+	bool	type = grub_fb_info.type;
 
 	kprintf("FB addr: %h %h, pitch=%u, w=%u, h=%u, bpp=%u, type=%u\n", grub_fb_info.base_addr_high, grub_fb_info.base_addr_low,
-	        grub_fb_info.pitch, grub_fb_info.width, grub_fb_info.height, bpp, grub_fb_info.type);
+		grub_fb_info.pitch, grub_fb_info.width, grub_fb_info.height, bpp, grub_fb_info.type);
 	assert(bpp == 32, "Need 32 bit per pixel, else we are fucked!\n");
 	assert(type == 1, "Need color support\n");
 
-	uint32_t width = grub_fb_info.width;
-	uint32_t height = grub_fb_info.height;
-	uint32_t pitch = grub_fb_info.pitch;
-	volatile struct color_t* base_address = (struct color_t*)grub_fb_info.base_addr_low;
+	uint32_t				 width		  = grub_fb_info.width;
+	uint32_t				 height		  = grub_fb_info.height;
+	uint32_t				 pitch		  = grub_fb_info.pitch;
+	volatile struct color_t *base_address = (struct color_t *)grub_fb_info.base_addr_low;
 
-#elifdef BIOS_FRAMEBUFFER_HACK
+#	elifdef BIOS_FRAMEBUFFER_HACK
 	kprintf("in elif\n\n\n");
-	uint32_t width = 1024;
-	uint32_t height = 768;
-	uint32_t pitch = 0;
-	volatile struct color_t* base_address = (struct color_t*)0;
+	uint32_t				 width		  = 1024;
+	uint32_t				 height		  = 768;
+	uint32_t				 pitch		  = 0;
+	volatile struct color_t *base_address = (struct color_t *)0;
 
 	uint16_t result = call_real_mode_function(add16_ref, width, height); // argc automatically calculated
 	print_args16(&args16_start);
-#endif
+#	endif
 
-#define VIS_TEST
-#ifdef VIS_TEST
+#	define VIS_TEST
+#	ifdef VIS_TEST
 	do_test_c(base_address, width, height, pitch);
-#endif
+#	endif
 
 #endif // DEBUG
 
 #define GET_RSDP
 #ifdef GET_RSDP
 	// Eventually, learn to get rsdp from bios and uefi function calls
-	struct rsdp_tagged_c rsdp_tagged = get_rsdp_grub(mb2_info_addr);
-	char* rsdp_type_names[] = {"NULL", "OLD", "NEW"};
-	char* name = rsdp_type_names[rsdp_tagged.new_or_old];
-	void* rsdp = rsdp_tagged.rsdp;
+	struct rsdp_tagged_c rsdp_tagged	   = get_rsdp_grub(mb2_info_addr);
+	char				*rsdp_type_names[] = {"NULL", "OLD", "NEW"};
+	char				*name			   = rsdp_type_names[rsdp_tagged.new_or_old];
+	void				*rsdp			   = rsdp_tagged.rsdp;
 	kprintf("rsdp = %h, type=%s\n", rsdp, name);
 #endif
 
@@ -113,7 +118,9 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 	terminal_writestring("\n====kernel main entering loop====\n");
 
 	cpp_main();
-	while (true) {
+	module_main();
+	while (true)
+	{
 		// kernel main loop
 		cpp_event_loop();
 

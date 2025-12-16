@@ -4,6 +4,7 @@ set -euo pipefail
 BUILD_DIR="build"
 ISO_DIR="isodir"
 KERNEL_DIR="kernel"
+STDIO_DIR="./stdio"
 MODULES_DIR="$KERNEL_DIR/modules"
 MODULE_CACHE_DIR="$BUILD_DIR/module_cache"
 
@@ -33,6 +34,7 @@ COMMON_CLANG_FLAGS=(
 	"-mno-mmx"
 	"-m32"
 	"-fno-stack-protector"
+	"-I.$STDIO_DIR"
 )
 
 # C-specific flags
@@ -116,9 +118,15 @@ fi
 
 # You're missing the kernel_main.cpp compilation! Add this:
 echo "Building C++ kernel main..."
-clang "${CLANGPP_KERNEL_FLAGS[@]}" \
+clang++ "${CLANGPP_KERNEL_FLAGS[@]}" \
 	-c "$KERNEL_DIR/kernel_main.cpp" \
 	-o "$BUILD_DIR/kernel_main.o"
+
+clang "${CLANGPP_KERNEL_FLAGS[@]}" \
+	-c "$STDIO_DIR/stdio.c" \
+	-o "$BUILD_DIR/stdio.o"
+
+# ./modules/build.sh
 
 # ============================================================================
 # LINKING (using GCC/g++ - keeping your original approach)

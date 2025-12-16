@@ -144,6 +144,8 @@ FRAMEBUFER="./framebuffer"
 TIMERS="./timers"
 PIT="./timers/pit"
 
+MODULES="./modules/"
+
 INCLUDE_DIRS=(
 	"$KERNEL"
 	"$REAL16_WRAPPERS"
@@ -178,6 +180,7 @@ INCLUDE_DIRS=(
 	"$CPP"
 	"$RUST"
 	"$ZIG"
+	"$MODULES"
 )
 
 PS2_INCLUDE_DIRS=(
@@ -269,6 +272,9 @@ ia16-elf-gcc "${CFLAGS16[@]}" -c "$REAL_FUNC/realmode_functions.c" -o "$BUILD_DI
 # Compile Other language projects (Library written entirely in ~(C or ASM))
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$CPP/kernel_cpp.cpp" -o "$BUILD_DIR/kernel_cpp.o" "${SUPER_INCLUDE[@]}"
 
+printf "\n\n============Start of Module Build ============\n\n"
+./modules/build.sh
+
 printf "\n\n============Start of Zig Build ============\n\n"
 ./z_otherLang/zig/build.sh
 
@@ -279,9 +285,10 @@ printf "\n\n============Start of Rust Build ============\n\n"
 
 # fails
 BUILD_OBJECTS=("$BUILD_DIR"/*.o)
-if false; then
-	BUILD_OBJECTS+=("$BUILD_DIR"/banana/*.o) # banana subdir
-	BUILD_OBJECTS+=("$BUILD_DIR"/apple/*.o)  # apple subdir
+if true; then
+	# BUILD_OBJECTS+=("$BUILD_DIR"/banana/*.o) # banana subdir
+	# BUILD_OBJECTS+=("$BUILD_DIR"/apple/*.o)  # apple subdir
+	BUILD_OBJECTS+=("$MODULES"/build/*.o) # modules build object subdir
 fi
 
 # ========= Static library setup ============
