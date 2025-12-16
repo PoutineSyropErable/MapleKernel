@@ -41,15 +41,16 @@ COMMON_FLAGS=(
 	-fno-exceptions      # No C++ exceptions (bare metal)
 	-fno-rtti            # No RTTI (bare metal)
 	-fno-stack-protector # No stack protection
-	-m32                 # 32-bit mode
-	-march=i686          # i686 architecture
-	-mno-red-zone        # No red zone (SysV ABI)
-	-mno-mmx             # Disable MMX
-	-mno-sse             # Disable SSE
-	-mno-sse2            # Disable SSE2
-	-mno-80387           # Disable FPU (optional)
-	-I"$STDIO_INC"       # Custom stdio headers
-	-I"$STDLIB_INC"      # Custom stdlib headers
+	-fno-single-precision-constant
+	-m32            # 32-bit mode
+	-march=i686     # i686 architecture
+	-mno-red-zone   # No red zone (SysV ABI)
+	-mno-mmx        # Disable MMX
+	-mno-sse        # Disable SSE
+	-mno-sse2       # Disable SSE2
+	-mno-80387      # Disable FPU (optional)
+	-I"$STDIO_INC"  # Custom stdio headers
+	-I"$STDLIB_INC" # Custom stdlib headers
 )
 
 # ==================================================

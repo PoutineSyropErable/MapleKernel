@@ -5,7 +5,9 @@ BUILD_DIR="build"
 ISO_DIR="isodir"
 KERNEL_DIR="kernel"
 STDIO_DIR="./stdio"
-MODULES_DIR="$KERNEL_DIR/modules"
+
+CLANG_INSERTS_DIR="./clang_helpers"
+MODULES_DIR="./modules"
 MODULE_CACHE_DIR="$BUILD_DIR/module_cache"
 
 mkdir -p "$BUILD_DIR" "$ISO_DIR/boot/grub" "$MODULE_CACHE_DIR"
@@ -34,7 +36,10 @@ COMMON_CLANG_FLAGS=(
 	"-mno-mmx"
 	"-m32"
 	"-fno-stack-protector"
-	"-I.$STDIO_DIR"
+	"-fno-single-precision-constant"
+	"-I$STDIO_DIR"
+	"-I$CLANG_INSERTS_DIR"
+	"-I$MODULES_DIR"
 )
 
 # C-specific flags
@@ -93,6 +98,10 @@ clang "${CLANG_KERNEL_FLAGS[@]}" \
 	-c "$STDIO_DIR/stdio.c" \
 	-o "$BUILD_DIR/stdio.o"
 
+clang "${CLANG_KERNEL_FLAGS[@]}" \
+	-c "$CLANG_INSERTS_DIR/float_helpers.c" \
+	-o "$BUILD_DIR/float_helpers.o"
+
 ./modules/build.sh
 
 # ============================================================================
@@ -105,6 +114,7 @@ LINK_OBJECTS=(
 	"$BUILD_DIR/boot.o"
 	"$BUILD_DIR/kernel.o"
 	"$BUILD_DIR/stdio.o"
+	"$BUILD_DIR/float_helpers.o"
 	"$BUILD_DIR/A.o"
 	"$BUILD_DIR/B.o"
 	"$BUILD_DIR/C.o"

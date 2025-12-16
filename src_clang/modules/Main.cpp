@@ -25,6 +25,6 @@ extern "C" int module_main_cpp() {
 	int c = lolc();
 	float d = lol_d();
 	kprintf("\n C result: %d\n", c);
-	// kprintf("\n D result: %f\n", d);
+	kprintf("\n D result: %f\n", (double)d);
 	return 0;
 }

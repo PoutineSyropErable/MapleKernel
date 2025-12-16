@@ -2,83 +2,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
-// COM1 I/O port
-#define COM1_PORT 0x3F8
-
-// Minimal I/O functions (x86)
-static inline void outb(uint16_t port, uint8_t val) {
-	asm volatile("outb %0, %1" : : "a"(val), "Nd"(port));
-}
-
-static inline uint8_t inb(uint16_t port) {
-	uint8_t ret;
-	asm volatile("inb %1, %0" : "=a"(ret) : "Nd"(port));
-	return ret;
-}
-
-// Wait until serial port is ready to send
-static int serial_is_transmit_empty() {
-	return (inb(COM1_PORT + 5) & 0x20) != 0;
-}
-
-// Write a single byte to COM1
-static void serial_write_char(char c) {
-	while (!serial_is_transmit_empty())
-		;
-	outb(COM1_PORT, c);
-}
-
-// Write a string to COM1
-void serial_write_string(const char* str) {
-	while (*str) {
-		serial_write_char(*str++);
-	}
-}
-
-// Convert uint32_t to hexadecimal and print
-void serial_write_hex(uint32_t value) {
-	static const char hex_digits[] = "0123456789ABCDEF";
-	serial_write_string("0x");
-
-	for (int i = 7; i >= 0; i--) {
-		uint8_t nibble = (value >> (i * 4)) & 0xF;
-		serial_write_char(hex_digits[nibble]);
-	}
-}
-
-void serial_write_uint(uint32_t value) {
-	char buffer[10]; // max digits for 32-bit uint32_t
-	int i = 0;
-
-	if (value == 0) {
-		serial_write_char('0');
-		return;
-	}
-
-	// Convert to string in reverse
-	while (value > 0) {
-		buffer[i++] = '0' + (value % 10);
-		value /= 10;
-	}
-
-	// Print in correct order
-	for (int j = i - 1; j >= 0; j--) {
-		serial_write_char(buffer[j]);
-	}
-}
-
-// Example printf for one uint32_t
-void serial_printf(const char* prefix, uint32_t value, bool decNotHex) {
-	serial_write_string(prefix);
-	if (decNotHex) {
-
-		serial_write_uint(value);
-	} else {
-
-		serial_write_hex(value);
-	}
-	serial_write_string("\n");
-}
+#include "Main.h"
+#include "float_helpers.h"
+#include "stdio.h"
 
 struct info {
 	uint32_t total_size;
@@ -198,4 +124,6 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 			pixels[offset] = 0xFF00FF; // Magenta
 		}
 	}
+
+	module_main();
 }
