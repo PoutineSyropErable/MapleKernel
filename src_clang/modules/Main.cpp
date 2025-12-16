@@ -11,8 +11,7 @@ import B;
 import C;
 import D;
 
-extern "C" int module_main_cpp()
-{
+extern "C" int module_main_cpp() {
 	kprintf("Start of greet A, %u\n", 1);
 	greetA();
 	kprintf("\nStart of greet B, %f\n", 1.5);
@@ -23,9 +22,9 @@ extern "C" int module_main_cpp()
 	greetD();
 	[[maybe_unused]] int x = FUNNY_NUMBER;
 
-	int	  c = lolc();
+	int c = lolc();
 	float d = lol_d();
 	kprintf("\n C result: %d\n", c);
-	kprintf("\n D result: %f\n", d);
+	// kprintf("\n D result: %f\n", d);
 	return 0;
 }
