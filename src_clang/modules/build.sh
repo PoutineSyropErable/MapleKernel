@@ -41,7 +41,7 @@ COMMON_FLAGS=(
 	-fno-exceptions      # No C++ exceptions (bare metal)
 	-fno-rtti            # No RTTI (bare metal)
 	-fno-stack-protector # No stack protection
-	-fno-single-precision-constant
+	# -fno-single-precision-constant
 	-m32            # 32-bit mode
 	-march=i686     # i686 architecture
 	-mno-red-zone   # No red zone (SysV ABI)

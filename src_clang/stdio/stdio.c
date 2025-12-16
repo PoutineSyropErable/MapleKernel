@@ -78,14 +78,17 @@ static void serial_write_int(int32_t value) {
 // Super simple float printer (bad but works)
 static void serial_write_float(float f) {
 	// Handle sign
+	serial_write_string("got here 0\n");
 	if (f < 0) {
 		serial_write_char('-');
 		f = -f;
 	}
+	serial_write_string("got here 1\n");
 
 	// Integer part
 	int32_t int_part = (int32_t)f;
 	serial_write_int(int_part);
+	serial_write_string("got here 2\n");
 
 	// Decimal point
 	serial_write_char('.');
@@ -139,8 +142,13 @@ void kprintf(const char* fmt, ...) {
 				break;
 			}
 			case 'f': { // %f - float (promoted to double)
+				serial_write_string("Chose %f\n");
 				double val = va_arg(args, double);
-				serial_write_float((float)val); // Cast back to float
+				serial_write_string("got here\n");
+				float r = (float)val;
+				serial_write_string("converted\n");
+				serial_write_float(r); // Cast back to float
+				serial_write_string("finished function\n");
 				break;
 			}
 			case 'c': {                             // %c - char

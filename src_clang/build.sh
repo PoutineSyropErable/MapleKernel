@@ -36,7 +36,7 @@ COMMON_CLANG_FLAGS=(
 	"-mno-mmx"
 	"-m32"
 	"-fno-stack-protector"
-	"-fno-single-precision-constant"
+	# "-fno-single-precision-constant"
 	"-I$STDIO_DIR"
 	"-I$CLANG_INSERTS_DIR"
 	"-I$MODULES_DIR"
@@ -137,8 +137,9 @@ fi
 
 echo "Linking with C++ support (g++)..."
 i686-elf-g++ -T linker.ld -o "$BUILD_DIR/myos.elf" \
-	"${LDFLAGS[@]}" \
-	"${LINK_OBJECTS[@]}"
+	"${LINK_OBJECTS[@]}" \
+	"${LDFLAGS[@]}"
+
 # ============================================================================
 # MULTIBOOT VERIFICATION
 # ============================================================================
