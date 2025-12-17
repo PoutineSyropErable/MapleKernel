@@ -34,6 +34,18 @@
 
 GDT_ROOT *GDT16_ROOT = &GDT16_DESCRIPTOR;
 
+float fpu_add(float a, float b)
+{
+	float result;
+	asm volatile("fld %1;"	// Load 'a' onto the FPU stack
+				 "fadd %2;" // Add 'b' to ST(0)
+				 "fstp %0;" // Store the result into 'result' and pop the stack
+		: "=m"(result)		// output
+		: "m"(a), "m"(b)	// inputs
+	);
+	return result;
+}
+
 void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_multiboot_32)
 {
 
@@ -63,7 +75,12 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 	kprintf("Brand string= %s\n", brand_string);
 
 	struct fpu_features fpu_activated_features = init_fpu();
-	return;
+
+	if (fpu_activated_features.fpu)
+	{
+		float res = fpu_add(23.1, 42.6);
+		kprintf("result of fpu addition: %f\n", res);
+	}
 
 #define GRUB_FRAMEBUFFER
 #if !defined(GRUB_FRAMEBUFFER) || defined(QEMU)
@@ -121,6 +138,8 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 #	endif
 
 #endif // DEBUG
+
+	return;
 
 #define GET_RSDP
 #ifdef GET_RSDP

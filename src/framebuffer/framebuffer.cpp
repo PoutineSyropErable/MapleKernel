@@ -45,7 +45,6 @@ int FrameBuffer::draw_horizontal_line(const struct DrawHorizontalLineArgs &args)
 
 int FrameBuffer::draw_vertical_line(const DrawVerticalLineArgs &args)
 {
-	kprintf("red: %h, green: %h, blue: %h, a:%h\n", args.color.r, args.color.g, args.color.b, args.color.a);
 
 	for (uint16_t y = args.y_start; y < args.y_end; y++)
 	{
