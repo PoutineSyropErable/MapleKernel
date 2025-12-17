@@ -17,14 +17,13 @@ extern "C"
 		uint32_t edx;
 	};
 
+	struct cpuid_reg _cpuid(uint32_t cpuid_function, uint32_t subleaf);
+
 	struct cpuid_max_basic_feature_and_vendor
 	{
 		struct cpuid_reg regs;
 		char			*vendor;
 	};
-
-	struct cpuid_reg _cpuid(uint32_t cpuid_function, uint32_t subleaf);
-
 	const char *get_cpuid_vendor();
 	uint32_t	get_cpuid_max();
 	uint32_t	get_cpuid_max_extended();

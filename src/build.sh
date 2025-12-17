@@ -131,6 +131,8 @@ MULTIBOOT="./firmware/multiboot"
 ACPI="./firmware/acpi"
 
 CPU="./cpu/"
+FPU="./cpu/fpu"
+CONTROL_REGISTERS="./cpu/control_registers"
 CPUID="./cpu/cpuid"
 PIC="./cpu/pic"
 APIC="./cpu/apic"
@@ -166,6 +168,8 @@ INCLUDE_DIRS=(
 
 	"$CPU"
 	"$CPUID"
+	"$FPU"
+	"$CONTROL_REGISTERS"
 	"$GDT"
 	"$IDT"
 	"$PIC"
@@ -221,11 +225,13 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/stdio.c" -o "$BUILD_DIR/stdio.o" "-I$STDI
 
 #compile misc helper functions
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDLIB/stdlib.c" -o "$BUILD_DIR/stdlib.o" "-I$STDLIB" "-I$STDIO"
+i686-elf-gcc "${CFLAGS[@]}" -c "$STDLIB/string.c" -o "$BUILD_DIR/string.o" "-I$STDLIB" "-I$STDIO"
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDLIB/math.c" -o "$BUILD_DIR/math.o" "-I$STDLIB" "-I$STDIO"
 
 # Compile Drivers CPU structures
 i686-elf-gcc "${CFLAGS[@]}" -c "$CPUID/cpuid.c" -o "$BUILD_DIR/cpuid_c.o"
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$CPUID/cpuid.cpp" -o "$BUILD_DIR/cpuid.o" "-I$STDLIB" "-I$STDIO"
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$FPU/fpu.cpp" -o "$BUILD_DIR/fpo.o" "-I$STDLIB" "-I$STDIO" "-I$CPUID" "-I$CONTROL_REGISTERS"
 
 # Compile Drivers CPU structures
 i686-elf-gcc "${CFLAGS[@]}" -c "$GDT/f1_binary_operation.c" -o "$BUILD_DIR/f1_binary_operation.o" "-I$STDIO" "-I$GDT"

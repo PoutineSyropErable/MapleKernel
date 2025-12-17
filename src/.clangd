@@ -27,6 +27,9 @@ CompileFlags:
     - -Iruntime_code_analysis
 
     - -I./cpu/
+    - -I./cpu/fpu
+    - -I./cpu/control_registers
+    - -I./cpu/cpuid
     - -I./cpu/gdt 
     - -I./cpu/idt
     - -I./cpu/pic

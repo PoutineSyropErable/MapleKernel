@@ -29,6 +29,7 @@
 
 #include "Main.h"
 #include "cpuid.h"
+#include "fpu.h"
 #include "pit.h"
 
 GDT_ROOT *GDT16_ROOT = &GDT16_DESCRIPTOR;
@@ -51,11 +52,17 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 	}
 	const char *vendor = get_cpuid_vendor();
 	kprintf("Cpuid Vendor = %s\n", vendor);
-	uint32_t max_cpuid = get_cpuid_max_extended();
+
+	uint32_t max_cpuid = get_cpuid_max();
 	kprintf("Max cpuid command= %h\n", max_cpuid);
+
+	uint32_t max_extended_cpuid = get_cpuid_max_extended();
+	kprintf("Max cpuid command= %h\n", max_extended_cpuid);
 
 	const char *brand_string = get_cpuid_brand_string();
 	kprintf("Brand string= %s\n", brand_string);
+
+	struct fpu_features fpu_activated_features = init_fpu();
 	return;
 
 #define GRUB_FRAMEBUFFER

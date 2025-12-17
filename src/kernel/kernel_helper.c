@@ -23,6 +23,7 @@
 #include "pic_public.h"
 #include "ps2.h"
 #include "stdlib.h"
+#include "string.h"
 #include "symbols.h"
 
 #include "idt_pit.h"
