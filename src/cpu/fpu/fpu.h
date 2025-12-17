@@ -27,6 +27,8 @@ extern "C"
 
 	struct fpu_features init_fpu(void);
 
+	void test_sse_alignment(void);
+
 #ifdef __cplusplus
 }
 #endif
