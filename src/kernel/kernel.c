@@ -36,17 +36,30 @@ GDT_ROOT *GDT16_ROOT = &GDT16_DESCRIPTOR;
 void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_multiboot_32)
 {
 
+#ifdef QEMU
+	kprintf("\n\n=========Start of Kernel Main==========\n\n");
+#endif
+
 	uint32_t cpuid_supp_test = cpuid_supported_check();
-	kprintf("Supp = %u", cpuid_supp_test);
+	kprintf("Cpuid Support Test (must not be 0) = %h\n", cpuid_supp_test);
 	bool cpuid_supported = (cpuid_supp_test != 0);
 	if (!cpuid_supported)
 	{
-		kprintf("We are fucked, cpuid isn't supported. I'm not gonna support dinosaur code\n");
+		abort_msg("We are fucked, cpuid isn't supported. I'm not gonna support dinosaur computers\n");
 		// Though, you will never see this message. The kernel will just insta stall
+		// As there's nothing to print this too.
 	}
+	const char *vendor = get_cpuid_vendor();
+	kprintf("Cpuid Vendor = %s\n", vendor);
+	uint32_t max_cpuid = get_cpuid_max_extended();
+	kprintf("Max cpuid command= %h\n", max_cpuid);
+
+	const char *brand_string = get_cpuid_brand_string();
+	kprintf("Brand string= %s\n", brand_string);
+	return;
 
 #define GRUB_FRAMEBUFFER
-#ifndef GRUB_FRAMEBUFFER
+#if !defined(GRUB_FRAMEBUFFER) || defined(QEMU)
 	initialize_terminal();
 	terminal_set_scroll(0);
 	kprintf("\n===========Terminal Initialized=============\n");

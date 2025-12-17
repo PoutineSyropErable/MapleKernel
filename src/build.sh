@@ -70,7 +70,7 @@ BUILD_DIR="build"
 ISO_DIR="isodir"
 
 CFLAGS=("-std=gnu23" "-ffreestanding" "-Wall" "-Wextra")
-CPPFLAGS=("-std=gnu++23" "-ffreestanding" "-Wall" "-Wextra" "-fno-threadsafe-statics")
+CPPFLAGS=("-std=gnu++23" "-ffreestanding" "-Wall" "-Wextra" "-fno-threadsafe-statics" "-fno-rtti" "-fno-exceptions")
 CFLAGS16=("-std=gnu99" "-ffreestanding" "-Wall" "-Wextra")
 LDFLAGS=("-ffreestanding" "-nostdlib" "-lgcc" "-fno-eliminate-unused-debug-symbols")
 NASM_FLAGS32=("-f" "elf32")
@@ -225,6 +225,7 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$STDLIB/math.c" -o "$BUILD_DIR/math.o" "-I$STDLI
 
 # Compile Drivers CPU structures
 i686-elf-gcc "${CFLAGS[@]}" -c "$CPUID/cpuid.c" -o "$BUILD_DIR/cpuid_c.o"
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$CPUID/cpuid.cpp" -o "$BUILD_DIR/cpuid.o" "-I$STDLIB" "-I$STDIO"
 
 # Compile Drivers CPU structures
 i686-elf-gcc "${CFLAGS[@]}" -c "$GDT/f1_binary_operation.c" -o "$BUILD_DIR/f1_binary_operation.o" "-I$STDIO" "-I$GDT"

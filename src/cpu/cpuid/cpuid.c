@@ -28,3 +28,25 @@ uint32_t cpuid_supported_check()
 
 	return result;
 }
+
+struct cpuid_reg _cpuid(uint32_t function, uint32_t subleaf)
+{
+
+	struct cpuid_reg regs;
+	asm volatile(".intel_syntax noprefix\n" // Switch to Intel syntax
+
+				 // mov eax, function
+				 // mov ecx, subleaf
+
+				 "cpuid\n"				// Call CPUID
+				 ".att_syntax prefix\n" // Switch back to AT&T syntax
+		: "=a"(regs.eax),				// output: EAX
+		"=b"(regs.ebx),					// output: EBX
+		"=c"(regs.ecx),					// output: ECX
+		"=d"(regs.edx)					// output: EDX
+		: "a"(function),				// EAX input: CPUID function
+		"c"(subleaf)					// ECX input: subleaf
+	);
+
+	return regs;
+}
