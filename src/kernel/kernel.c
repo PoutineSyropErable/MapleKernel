@@ -28,12 +28,22 @@
 #include "kernel_helper.h"
 
 #include "Main.h"
+#include "cpuid.h"
 #include "pit.h"
 
 GDT_ROOT *GDT16_ROOT = &GDT16_DESCRIPTOR;
 
 void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_multiboot_32)
 {
+
+	uint32_t cpuid_supp_test = cpuid_supported_check();
+	kprintf("Supp = %u", cpuid_supp_test);
+	bool cpuid_supported = (cpuid_supp_test != 0);
+	if (!cpuid_supported)
+	{
+		kprintf("We are fucked, cpuid isn't supported. I'm not gonna support dinosaur code\n");
+		// Though, you will never see this message. The kernel will just insta stall
+	}
 
 #define GRUB_FRAMEBUFFER
 #ifndef GRUB_FRAMEBUFFER

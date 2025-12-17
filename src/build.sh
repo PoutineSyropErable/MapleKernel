@@ -131,6 +131,7 @@ MULTIBOOT="./firmware/multiboot"
 ACPI="./firmware/acpi"
 
 CPU="./cpu/"
+CPUID="./cpu/cpuid"
 PIC="./cpu/pic"
 APIC="./cpu/apic"
 GDT="./cpu/gdt"
@@ -164,6 +165,7 @@ INCLUDE_DIRS=(
 	"$DRIVERS_USB_CONTROLLER"
 
 	"$CPU"
+	"$CPUID"
 	"$GDT"
 	"$IDT"
 	"$PIC"
@@ -220,6 +222,9 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/stdio.c" -o "$BUILD_DIR/stdio.o" "-I$STDI
 #compile misc helper functions
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDLIB/stdlib.c" -o "$BUILD_DIR/stdlib.o" "-I$STDLIB" "-I$STDIO"
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDLIB/math.c" -o "$BUILD_DIR/math.o" "-I$STDLIB" "-I$STDIO"
+
+# Compile Drivers CPU structures
+i686-elf-gcc "${CFLAGS[@]}" -c "$CPUID/cpuid.c" -o "$BUILD_DIR/cpuid_c.o"
 
 # Compile Drivers CPU structures
 i686-elf-gcc "${CFLAGS[@]}" -c "$GDT/f1_binary_operation.c" -o "$BUILD_DIR/f1_binary_operation.o" "-I$STDIO" "-I$GDT"
