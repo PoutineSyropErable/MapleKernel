@@ -22,144 +22,63 @@ section .text
 extern kprintf_argc
 
 ; =================================================== KEYBOARD =======================================
+
+section .text
+
 extern keyboard_handler
-global keyboard_interrupt_handler_port1
-keyboard_interrupt_handler_port1:
-	push ebp
-	mov ebp, esp
-
-	pusha               ; save registers
-    push ds
-    push es
-    push fs
-    push gs
-
-	mov eax, 0
-	in al, PS2_DATA_PORT_RW
-
-
-	push PORT_ONE
-	push eax 
-	call keyboard_handler
-	add esp, 8
-
-
-	pop gs
-    pop fs
-    pop es
-    pop ds
-    popa
-
-	mov esp, ebp
-	pop ebp
-
-	iret
-
-
-
-global keyboard_interrupt_handler_port2
-keyboard_interrupt_handler_port2:
-	push ebp
-	mov ebp, esp
-
-	; ALIGN STACK TO 16 BYTES FOR SSE SAFETY
-    and esp, -16
-    sub esp, 32          ; Allocate space (multiple of 16)
-
-
-	pusha               ; save registers
-    push ds
-    push es
-    push fs
-    push gs
-
-	mov eax, 0
-	in al, PS2_DATA_PORT_RW
-
-	push PORT_TWO
-	push eax 
-	call keyboard_handler
-	add esp, 8
-
-
-	pop gs
-    pop fs
-    pop es
-    pop ds
-    popa
-
-	mov esp, ebp
-	pop ebp
-
-	iret
-
-
-
-
-
-; =================================================== MOUSE =======================================
 extern mouse_handler
-global mouse_interrupt_handler_port1
-mouse_interrupt_handler_port1:
-	push ebp
-	mov ebp, esp
 
-	pusha               ; save registers
+%macro INTERRUPT_HANDLER 2  ; %1=port, %2=handler_name
+global %2_interrupt_handler_port%1
+%2_interrupt_handler_port%1:
+    push ebp
+    mov ebp, esp
+
+	sub esp,4 ; Location to save esp
+    
+    ; Save all registers
+    pusha
     push ds
     push es
     push fs
     push gs
 
-	mov eax, 0
-	in al, PS2_DATA_PORT_RW
+	; Save original ESP at [EBP-4] (safe from nested interrupts)
+    mov [ebp-4], esp
+    
+    ; Align stack for C call (SSE safety)
+    and esp, -16
+    sub esp, 32
+    
+    
+    ; Get data and call handler
+    mov eax, 0
+    in al, PS2_DATA_PORT_RW
+    push dword %1         ; Port number
+    push eax			  ; scancode/data
+    call %2_handler       ; C function
+    add esp, 8
+    
+    ; Restore original ESP
+	mov esp, [ebp-4]
 
-	push PORT_ONE
-	push eax 
-	call mouse_handler
-	add esp, 8
-
-
-	pop gs
+    
+    ; Restore registers
+    pop gs
     pop fs
     pop es
     pop ds
     popa
 
-	mov esp, ebp
-	pop ebp
+	; Undo saved esp location
+	add esp, 4
 
-	iret
+    mov esp, ebp
+    pop ebp
+    iret
+%endmacro
 
-
-
-global mouse_interrupt_handler_port2
-mouse_interrupt_handler_port2:
-	push ebp
-	mov ebp, esp
-
-	pusha               ; save registers
-    push ds
-    push es
-    push fs
-    push gs
-
-
-	mov eax, 0
-	in al, PS2_DATA_PORT_RW
-
-	push PORT_TWO
-	push eax 
-	call mouse_handler
-	add esp, 8
-
-
-	pop gs
-    pop fs
-    pop es
-    pop ds
-    popa
-
-	mov esp, ebp
-	pop ebp
-
-	iret
+INTERRUPT_HANDLER 1, keyboard
+INTERRUPT_HANDLER 2, keyboard  
+INTERRUPT_HANDLER 1, mouse
+INTERRUPT_HANDLER 2, mouse
