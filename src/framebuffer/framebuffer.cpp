@@ -51,14 +51,13 @@ int FrameBuffer::draw_vertical_line(const DrawVerticalLineArgs &args)
 		for (uint16_t thick_offset = 0; thick_offset < args.thickness; thick_offset++)
 		{
 			[[maybe_unused]] uint32_t ret = set_pixel(args.x + thick_offset, y, args.color);
-		}
-
 #ifdef DEBUG
-		if (ret)
-		{
-			return ret;
-		}
+			if (ret)
+			{
+				return ret;
+			}
 #endif
+		}
 	}
 	return 0;
 }

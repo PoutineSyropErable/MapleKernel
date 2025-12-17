@@ -12,6 +12,12 @@ PORT_TWO equ 2
 PS2_DATA_PORT_RW equ 0x60
 
 
+section .bss 
+	keyboard1_esp: dw 
+	keyboard2_esp: dw 
+	mouse1_esp: dw 
+	mouse2_esp: dw 
+
 section .text
 extern kprintf_argc
 
@@ -55,6 +61,11 @@ global keyboard_interrupt_handler_port2
 keyboard_interrupt_handler_port2:
 	push ebp
 	mov ebp, esp
+
+	; ALIGN STACK TO 16 BYTES FOR SSE SAFETY
+    and esp, -16
+    sub esp, 32          ; Allocate space (multiple of 16)
+
 
 	pusha               ; save registers
     push ds

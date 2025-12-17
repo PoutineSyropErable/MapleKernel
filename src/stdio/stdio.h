@@ -25,6 +25,9 @@ extern "C"
 #	define kprintf(...) kprintf_argc(PP_NARG(__VA_ARGS__), __VA_ARGS__)
 #else
 #	ifdef CHECK_ARGC
+/*
+Needs fpu support. Call terminal writestring otherwise
+*/
 #		define kprintf(...) kprintf2_argc_check(PP_NARG(__VA_ARGS__), __VA_ARGS__)
 #	else
 #		define kprintf(...) kprintf2(__VA_ARGS__)

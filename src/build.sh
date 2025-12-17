@@ -97,11 +97,44 @@ else
 	LDFLAGS+=("$RELEASE_OPT_LVL")
 fi
 
-MODULE_FLAG="-fmodules-ts"
-
 if [[ "$QEMU_OR_REAL_MACHINE" == "qemu" ]]; then
 	CFLAGS+=("-DQEMU")
 fi
+
+# QEMU-Compatible FPU flags for 32-bit
+FPU32_FLAGS_COMMON=(
+	"-m32"
+	"-march=pentium4" # QEMU supports SSE2, SSE3
+	"-mfpmath=sse"    # Use SSE registers instead of x87
+	"-msse"           # Enable SSE
+	"-msse2"          # Enable SSE2
+	"-msse3"          # Enable SSE3
+)
+
+# GCC-specific FPU extras
+FPU32_FLAGS_GCC=(
+	"${FPU32_FLAGS_COMMON[@]}"
+	"-mtune=generic" # GCC-specific tuning
+	"-mno-avx"       # Disable AVX (QEMU doesn't have it)
+	"-mno-avx2"      # Disable AVX2
+	"-mno-avx512f"   # Disable AVX512
+	"-mstackrealign" # Backup/extra safety. Stack alligned to 16 byte. So, some sse operation don't crash
+	# But this, will and might cause issues in my embedded assembly code
+)
+
+# Clang-specific FPU extras
+FPU32_FLAGS_CLANG=(
+	"${FPU32_FLAGS_COMMON[@]}"
+	"-mstackrealign" # Clang needs this for 32-bit
+	"-mno-avx"       # Disable AVX
+	"-mno-avx2"      # Disable AVX2
+	"-mno-avx512f"   # Disable AVX512
+)
+
+CFLAGS_NOFPU=("${CFLAGS[@]}")
+CPPFLAGS_NOFPU=("${CPPFLAGS[@]}")
+CFLAGS+=("${FPU32_FLAGS_GCC[@]}")
+CPPFLAGS+=("${FPU32_FLAGS_GCC[@]}")
 
 # Create necessary directories
 mkdir -p "$BUILD_DIR" "$ISO_DIR/boot/grub"
@@ -229,9 +262,9 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$STDLIB/string.c" -o "$BUILD_DIR/string.o" "-I$S
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDLIB/math.c" -o "$BUILD_DIR/math.o" "-I$STDLIB" "-I$STDIO"
 
 # Compile Drivers CPU structures
-i686-elf-gcc "${CFLAGS[@]}" -c "$CPUID/cpuid.c" -o "$BUILD_DIR/cpuid_c.o"
-i686-elf-g++ "${CPPFLAGS[@]}" -c "$CPUID/cpuid.cpp" -o "$BUILD_DIR/cpuid.o" "-I$STDLIB" "-I$STDIO"
-i686-elf-g++ "${CPPFLAGS[@]}" -c "$FPU/fpu.cpp" -o "$BUILD_DIR/fpo.o" "-I$STDLIB" "-I$STDIO" "-I$CPUID" "-I$CONTROL_REGISTERS"
+i686-elf-gcc "${CFLAGS_NOFPU[@]}" -c "$CPUID/cpuid.c" -o "$BUILD_DIR/cpuid_c.o"
+i686-elf-g++ "${CPPFLAGS_NOFPU[@]}" -c "$CPUID/cpuid.cpp" -o "$BUILD_DIR/cpuid.o" "-I$STDLIB" "-I$STDIO"
+i686-elf-g++ "${CPPFLAGS_NOFPU[@]}" -c "$FPU/fpu.cpp" -o "$BUILD_DIR/fpo.o" "-I$STDLIB" "-I$STDIO" "-I$CPUID" "-I$CONTROL_REGISTERS"
 
 # Compile Drivers CPU structures
 i686-elf-gcc "${CFLAGS[@]}" -c "$GDT/f1_binary_operation.c" -o "$BUILD_DIR/f1_binary_operation.o" "-I$STDIO" "-I$GDT"

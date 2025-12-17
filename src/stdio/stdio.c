@@ -423,6 +423,8 @@ void vkprintf(const char *fmt, va_list args)
 	}
 
 	struct PRINTF_FIELD_PROPERTIES printf_information[len];
+
+	// This functions needs sse support.
 	set_types_and_pos(fmt, printf_information, len);
 
 	uint16_t format_len = strlen(fmt);

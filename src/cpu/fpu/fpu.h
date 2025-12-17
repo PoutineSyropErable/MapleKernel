@@ -16,9 +16,14 @@ extern "C"
 		bool ssse3;
 		bool sse41;
 		bool sse42;
-		bool avx;
-		bool xsave; // needed for AVX
+		bool avx_256;
+		bool xsave; // needed for AVX 256
+
+		bool avx_512;
+		bool avx2;
 	};
+
+	void print_activated_fpu_features(const struct fpu_features fpu_features);
 
 	struct fpu_features init_fpu(void);
 

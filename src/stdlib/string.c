@@ -1,3 +1,4 @@
+#include "assert.h"
 #include "string.h"
 
 // memcpy usually goes in <string.h>

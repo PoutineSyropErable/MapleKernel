@@ -1,3 +1,4 @@
+#include "assert.h"
 #include "intrinsics.h"
 #include "irq.h"
 #include "pairs.hpp"

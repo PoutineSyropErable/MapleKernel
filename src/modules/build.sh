@@ -44,12 +44,36 @@ COMMON_FLAGS=(
 	-m32                 # 32-bit mode
 	-march=i686          # i686 architecture
 	-mno-red-zone        # No red zone (SysV ABI)
-	-mno-mmx             # Disable MMX
-	-mno-sse             # Disable SSE
-	-mno-sse2            # Disable SSE2
-	-mno-80387           # Disable FPU (optional)
 	-I"$STDIO_INC"       # Custom stdio headers
 	-I"$STDLIB_INC"      # Custom stdlib headers
+)
+
+# QEMU-Compatible FPU flags for 32-bit
+FPU32_FLAGS_COMMON=(
+	"-m32"
+	"-march=pentium4" # QEMU supports SSE2, SSE3
+	"-mfpmath=sse"    # Use SSE registers instead of x87
+	"-msse"           # Enable SSE
+	"-msse2"          # Enable SSE2
+	"-msse3"          # Enable SSE3
+)
+
+# GCC-specific FPU extras
+FPU32_FLAGS_GCC=(
+	"${FPU32_FLAGS_COMMON[@]}"
+	"-mtune=generic" # GCC-specific tuning
+	"-mno-avx"       # Disable AVX (QEMU doesn't have it)
+	"-mno-avx2"      # Disable AVX2
+	"-mno-avx512f"   # Disable AVX512
+)
+
+# Clang-specific FPU extras
+FPU32_FLAGS_CLANG=(
+	"${FPU32_FLAGS_COMMON[@]}"
+	"-mstackrealign" # Clang needs this for 32-bit
+	"-mno-avx"       # Disable AVX
+	"-mno-avx2"      # Disable AVX2
+	"-mno-avx512f"   # Disable AVX512
 )
 
 # ==================================================
@@ -57,10 +81,11 @@ COMMON_FLAGS=(
 # ==================================================
 
 CFLAGS=(
-	"${COMMON_FLAGS[@]}" # Include all common flags
-	-std=c23             # C23 standard
-	-Wall                # All warnings
-	-Wextra              # Extra warnings
+	"${COMMON_FLAGS[@]}"      # Include all common flags
+	"${FPU32_FLAGS_CLANG[@]}" # Include all fpu flags for clang/clang++
+	-std=c23                  # C23 standard
+	-Wall                     # All warnings
+	-Wextra                   # Extra warnings
 )
 
 # ==================================================
@@ -70,6 +95,7 @@ CFLAGS=(
 
 CXXFLAGS=(
 	"${COMMON_FLAGS[@]}"            # Include all common flags
+	"${FPU32_FLAGS_CLANG[@]}"       # Include all fpu flags for clang/clang++
 	-std=c++23                      # C++23 with modules
 	-Wall                           # All warnings
 	-Wextra                         # Extra warnings
