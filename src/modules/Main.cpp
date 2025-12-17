@@ -23,8 +23,8 @@ extern "C" int module_main_cpp()
 	greetD();
 	[[maybe_unused]] int x = FUNNY_NUMBER;
 
-	int	  c = lolc();
-	float d = lol_d();
+	int	   c = lolc();
+	double d = lol_d();
 	kprintf("\n C result: %d\n", c);
 	kprintf("\n D result: %f\n", d);
 	return 0;
