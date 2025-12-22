@@ -1,23 +1,12 @@
 #pragma once
+#include "acpi_shared.hpp"
+#include "madt.hpp"
 #include "static_assert.h"
 #include <stddef.h>
 #include <stdint.h>
 
 namespace acpi
 {
-
-struct ACPISDTHeader
-{
-	char	 Signature[4];
-	uint32_t Length;
-	uint8_t	 Revision;
-	uint8_t	 Checksum;
-	char	 OEMID[6];
-	char	 OEMTableID[8];
-	uint32_t OEMRevision;
-	uint32_t CreatorID;
-	uint32_t CreatorRevision;
-};
 
 struct RSDT
 {
@@ -55,23 +44,8 @@ struct XSDP_t
 } __attribute__((packed));
 
 // ================ Start of MADT ===============
-struct MADTEntry
-{
-	uint8_t type;
-	uint8_t length;
-	uint8_t data[]; // actual entry data (length-2 bytes)
-} __attribute__((packed));
+madt::MADT *findMADT(RSDT *rsdt);
 
-struct MADT
-{
-	struct ACPISDTHeader header;
-	uint32_t			 lapic_address; // for the boot processor (core 0). must be transformed to a (volatile LAPIC*)
-	uint32_t			 flags;
-	struct MADTEntry	 entries[];
-} __attribute__((packed));
-
-void  print_madt(const MADT *madt);
-MADT *findMADT(RSDT *rsdt);
 // ============== END of MADT
 
 void print_rsdp(const RSDP *rsdp);

@@ -1,5 +1,6 @@
 #pragma once
 #include "ppnargs.h"
+#include "printf_check.h"
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -27,6 +28,9 @@ extern "C"
 #	ifdef CHECK_ARGC
 /*
 Needs fpu support. Call terminal writestring otherwise
+*/
+/*
+	No support for 64 bit value in 32bit. It will cause a bug;
 */
 #		define kprintf(...) kprintf2_argc_check(PP_NARG(__VA_ARGS__), __VA_ARGS__)
 #	else

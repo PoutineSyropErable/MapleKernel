@@ -54,24 +54,6 @@ void acpi::print_header(const ACPISDTHeader *header, const char *table_name)
 	kprintf("}\n");
 }
 
-void acpi::print_madt(const MADT *madt)
-{
-	if (!madt)
-	{
-		kprintf("%s MADT: NULL\n", madt);
-		return;
-	}
-	ACPISDTHeader aligned_header = madt->header;
-	print_header(&aligned_header, "MADT");
-
-	kprintf("MADT {\n");
-	kprintf("lapic address = %h\n", madt->lapic_address);
-	kprintf("flags = %b\n", madt->flags);
-	// kprintf("entry_type %u\n", madt->entry_type);
-	// kprintf("record_length = %u\n", madt->record_length);
-	kprintf("}\n");
-}
-
 void acpi::print_rsdt(const RSDT *rsdt)
 {
 
@@ -104,7 +86,7 @@ void *findFACP(RSDT *RootSDT)
 	return NULL;
 }
 
-MADT *acpi::findMADT(RSDT *rsdt)
+madt::MADT *acpi::findMADT(RSDT *rsdt)
 {
 	int entries = (rsdt->header.Length - sizeof(rsdt->header)) / 4;
 
@@ -114,7 +96,7 @@ MADT *acpi::findMADT(RSDT *rsdt)
 		if (!strncmp(h->Signature, "APIC", 4))
 		{
 			// print_header(h, "MADT?\n");
-			return (MADT *)h;
+			return (madt::MADT *)h;
 		}
 	}
 

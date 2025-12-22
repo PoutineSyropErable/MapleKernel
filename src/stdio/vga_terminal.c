@@ -256,16 +256,7 @@ void terminal_putchar(char c)
 	{
 		return;
 	}
-	serial_write_char(c);
 
-	// serial_write_char(c);
-	if (c == '\n')
-	{
-		term.current_write_column = 0;
-		terminal_increase_row();
-
-		return;
-	}
 	if (c == '\t')
 	{
 		uint8_t spaceToAdd = 4;
@@ -278,6 +269,16 @@ void terminal_putchar(char c)
 		{
 			terminal_putchar(' ');
 		}
+		return;
+	}
+	serial_write_char(c);
+
+	// serial_write_char(c);
+	if (c == '\n')
+	{
+		term.current_write_column = 0;
+		terminal_increase_row();
+
 		return;
 	}
 

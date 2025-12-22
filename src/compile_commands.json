@@ -304,6 +304,7 @@
       "-Istdlib",
       "-Istdio",
       "-I./firmware/acpi/madt",
+      "-I./firmware/acpi",
       "-o",
       "build/acpi.o",
       "./firmware/acpi/acpi.cpp"
@@ -339,6 +340,7 @@
       "-Istdio",
       "-I./firmware/acpi",
       "-I./cpu/apic",
+      "-I./firmware/acpi/madt",
       "-o",
       "build/madt.o",
       "./firmware/acpi/madt/madt.cpp"

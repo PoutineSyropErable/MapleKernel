@@ -254,8 +254,8 @@ i686-elf-g++ "${CPPFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$MULTIBOOT/multiboot.cpp
 
 # Firmware
 i686-elf-gcc "${CPPFLAGS[@]}" -c "$ACPI/acpi.c" -o "$BUILD_DIR/acpi_c.o" "-I$STDLIB" "-I$STDIO"
-i686-elf-g++ "${CPPFLAGS[@]}" -c "$ACPI/acpi.cpp" -o "$BUILD_DIR/acpi.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI/madt"
-i686-elf-g++ "${CPPFLAGS[@]}" -c "$ACPI/madt/madt.cpp" -o "$BUILD_DIR/madt.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$APIC"
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$ACPI/acpi.cpp" -o "$BUILD_DIR/acpi.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI/madt" "-I$ACPI"
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$ACPI/madt/madt.cpp" -o "$BUILD_DIR/madt.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$APIC" "-I$ACPI/madt"
 
 # Compile the print functions.
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/string_helper.c" -o "$BUILD_DIR/string_helper.o"
@@ -468,8 +468,10 @@ else
 	# Choose QEMU based on machine bitness
 	if [[ "$MACHINE_BITNESS" == "64" ]]; then
 		QEMU="$QEMU64"
+		printf "\n\nOn a 64 bit machine\n\n"
 	else
 		QEMU="$QEMU32"
+		printf "\n\nOn a 32 bit machine\n\n"
 	fi
 
 	# Check if QEMU is already running, kill only if it exists
@@ -486,6 +488,7 @@ else
 		"${QEMU_DBG_FLAGS[@]}" \
 		-d in_asm,int,cpu_reset \
 		-D qemu_instr.log \
+		-smp 4 \
 		-serial stdio & # -vga vmware \
 
 	QEMU_PID=$!

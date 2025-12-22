@@ -45,11 +45,15 @@ int cpp_main(struct cpp_main_args args)
 	kprintf("rsdt address: %h\n", rsdt);
 	acpi::print_rsdt(rsdt);
 
-	acpi::MADT *madt = acpi::findMADT(rsdt);
+	acpi::madt::MADT *madt = acpi::findMADT(rsdt);
 	kprintf("madt = %h\n", madt);
-	acpi::print_madt(madt);
+	acpi::madt::print_madt(madt);
 
 	disable_pic();
+
+	struct acpi::madt::MADTParseResult parsed_madt = acpi::madt::parse_madt(madt);
+	kprintf("\n\n\n\n======================\n\n\n\n");
+	acpi::madt::print_parsed_madt(parsed_madt);
 
 	terminal_writestring("\n====kernel main entering loop====\n");
 	while (true)
