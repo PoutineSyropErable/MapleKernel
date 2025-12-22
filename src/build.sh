@@ -481,6 +481,18 @@ else
 		sleep 1 # Give it time to die
 	fi
 
+	QEMU_CPU_FLAG=()
+	# default CPU flags empty
+	QEMU_CPU_FLAG=()
+
+	# False for now, as I'm making an MMIO apic based driver
+	ENABLE_X2APIC=false
+
+	# conditional addition
+	if [ "$ENABLE_X2APIC" = true ]; then
+		QEMU_CPU_FLAG+=("-cpu" "+x2apic")
+	fi
+
 	$QEMU \
 		-cdrom "$BUILD_DIR/myos.iso" \
 		\
@@ -489,6 +501,7 @@ else
 		-d in_asm,int,cpu_reset \
 		-D qemu_instr.log \
 		-smp 4 \
+		"${QEMU_CPU_FLAG[@]}" \
 		-serial stdio & # -vga vmware \
 
 	QEMU_PID=$!

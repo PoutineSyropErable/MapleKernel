@@ -49,12 +49,19 @@ int cpp_main(struct cpp_main_args args)
 	kprintf("madt = %h\n", madt);
 	acpi::madt::print_madt(madt);
 
-	disable_pic();
-
 	struct acpi::madt::MADTParseResult parsed_madt = acpi::madt::parse_madt(madt);
 	kprintf("\n\n\n\n======================\n\n\n\n");
 	acpi::madt::print_parsed_madt(parsed_madt);
 
+	void *lapic_address	  = (void *)madt->lapic_address; // The main one
+	void *io_apic_address = (void *)parsed_madt.io_apics[0]->io_apic_address;
+
+	kprintf("lapic_address = %h\n", lapic_address);
+	kprintf("io_apic_address = %h\n", io_apic_address);
+
+	disable_pic();
+
+	// Setup lapic irq handling
 	terminal_writestring("\n====kernel main entering loop====\n");
 	while (true)
 	{

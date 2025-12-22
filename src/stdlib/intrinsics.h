@@ -54,6 +54,21 @@ extern "C"
 		__asm__ volatile("hlt");
 	}
 
+	// Read MSR into eax/edx
+	static inline void readmsr(uint32_t msr_index, uint32_t *eax, uint32_t *edx)
+	{
+		__asm__ volatile("rdmsr"
+			: "=a"(*eax), "=d"(*edx) // outputs
+			: "c"(msr_index)		 // input
+		);
+	}
+
+	// Write MSR from eax/edx
+	static inline void writemsr(uint32_t msr_index, uint32_t eax, uint32_t edx)
+	{
+		__asm__ volatile("wrmsr" : : "c"(msr_index), "a"(eax), "d"(edx));
+	}
+
 #define __int_O0(n) __asm__ volatile("int %0" : : "i"(n) : "memory")
 
 #ifdef __cplusplus
