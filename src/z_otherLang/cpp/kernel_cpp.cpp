@@ -60,6 +60,7 @@ int cpp_main(struct cpp_main_args args)
 	kprintf("io_apic_address = %h\n", io_apic_address);
 
 	disable_pic();
+	// Disabling the pic will be done rather late
 
 	// Setup lapic irq handling
 	terminal_writestring("\n====kernel main entering loop====\n");

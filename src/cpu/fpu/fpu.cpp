@@ -120,6 +120,7 @@ extern "C" struct fpu_features init_fpu()
 		set_cr4(cr4);
 
 		// Enable avx_256. (TODO, learn about xgetbv and xsetbv. This little bit of code is vibe coded)
+		// TODO: It doesn't work even with avx256 enabled. So... Problems
 		ret.avx_256 = true;
 		uint32_t eax, edx;
 		asm volatile("xgetbv" : "=a"(eax), "=d"(edx) : "c"(0));

@@ -115,18 +115,6 @@ struct realmode_address get_realmode_function_address(void (*func)(void))
 uint16_t call_real_mode_function_with_argc(uint32_t argc, ...)
 {
 
-	bool optional = false;
-	if (optional)
-	{
-		// This is done later anyway. But might as well for now
-		GDT_ROOT gdt_root	  = get_gdt_root();
-		args16_start.gdt_root = gdt_root;
-
-		uint32_t esp_value;
-		__asm__ volatile("mov %%esp, %0" : "=r"(esp_value));
-		args16_start.esp = esp_value;
-	}
-
 	va_list args;
 	va_start(args, argc);
 

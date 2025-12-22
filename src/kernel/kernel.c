@@ -158,8 +158,8 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 	kprintf("rsdp = %h, type=%s\n", rsdp_v, name);
 #endif
 
-	setup_interrupts(); // needed to have a working wait
-	setup_keyboard();	// crash here
+	setup_interrupts_and_ps2(); // needed to have a working wait
+	setup_keyboard();			// crash here
 
 	// wait_test();
 

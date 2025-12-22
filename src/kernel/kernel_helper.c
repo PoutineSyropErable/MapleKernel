@@ -30,7 +30,7 @@
 
 static GDT_ROOT *GDT16_ROOT = &GDT16_DESCRIPTOR;
 
-void setup_interrupts()
+void setup_interrupts_and_ps2()
 {
 
 	idt_init();

@@ -2,4 +2,4 @@
 
 void to_real16_test();
 
-void setup_interrupts();
+void setup_interrupts_and_ps2();
