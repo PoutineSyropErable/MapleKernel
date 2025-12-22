@@ -1,7 +1,6 @@
 #include "address_getter.h"
 #include "bit_hex_string.h"
 #include "call_real16_wrapper.h"
-#include "f3_segment_descriptor_internals.h"
 #include "idt_master.h"
 #include "intrinsics.h"
 #include "irq.h"
@@ -26,6 +25,7 @@
 #include "string.h"
 #include "symbols.h"
 
+#include "gdt.h"
 #include "idt_pit.h"
 
 static GDT_ROOT *GDT16_ROOT = &GDT16_DESCRIPTOR;
@@ -91,7 +91,7 @@ void gdt_analize(GDT_ENTRY *gdt, size_t index)
 
 	// terminal_write_uint_no_newline("\n===== Analize of GDT[", index);
 	// terminal_writestring("] =====\n\n");
-	SegmentDescriptor *sd = &gdt[index];
+	segment_descriptor_t *sd = &gdt[index];
 
 #ifdef SET_TEST
 	setType(sd, 0b100);
@@ -106,29 +106,27 @@ void gdt_analize(GDT_ENTRY *gdt, size_t index)
 	setBaseAddress(sd, 0xfedc1234);
 #endif
 
-	printBinary(sd->higher, "higher");
-	printBinary(sd->lower, "lower");
-
-	terminal_writestring("----- Parsed Fields -----\n");
-	uint32_t baseAddress = getBaseAddress(sd);
-	printBinary(baseAddress, "Base Address");
-	printBinarySize(getSegmentLimit(sd), "SegmentLimit (bits 0-19)", 20);
-
-	terminal_writestring("\n");
-	printFlags(sd);
-	printAccess(sd);
-	terminal_writestring("\n");
-
-	terminal_write_uint("Granularity = ", getGranularity(sd));
-	terminal_write_uint("DefaultOperationSize = ", getDefaultOperationSize(sd));
-	terminal_write_uint("LongMode = ", getLongMode(sd));
-	terminal_write_uint("AVL = ", getAVL(sd));
-
-	terminal_writestring("\n");
-	terminal_write_uint("Present = ", getPresent(sd));
-	printBinarySize(getPriviledgeDPL(sd), "DPL (bits 13-14)", 2);
-	terminal_write_uint("DescriptorTypeS = ", getDescriptorTypeS(sd));
-	printBinarySize(getType(sd), "Type (bits 8-11)", 4);
+	// terminal_writestring("----- Parsed Fields -----\n");
+	// uint32_t baseAddress = get_segment_descriptor_base(sd);
+	// uint32_t limit		 = get_segment_descriptor_limit(sd);
+	// printBinary(baseAddress, "Base Address");
+	// printBinarySize(limit, "SegmentLimit (bits 0-19)", 20);
+	//
+	// terminal_writestring("\n");
+	// // printFlags(sd);
+	// // printAccess(sd);
+	// terminal_writestring("\n");
+	//
+	// terminal_write_uint("Granularity = ", getGranularity(sd));
+	// terminal_write_uint("DefaultOperationSize = ", getDefaultOperationSize(sd));
+	// terminal_write_uint("LongMode = ", getLongMode(sd));
+	// terminal_write_uint("AVL = ", getAVL(sd));
+	//
+	// terminal_writestring("\n");
+	// terminal_write_uint("Present = ", getPresent(sd));
+	// printBinarySize(getPriviledgeDPL(sd), "DPL (bits 13-14)", 2);
+	// terminal_write_uint("DescriptorTypeS = ", getDescriptorTypeS(sd));
+	// printBinarySize(getType(sd), "Type (bits 8-11)", 4);
 
 	// terminal_writestring("\n===== End of Analize of GDT=====\n\n");
 }
@@ -198,9 +196,12 @@ void to_real16_test()
 	print_extern_address16("\nThe value of fs: ", get_fs_selector);
 	print_extern_address16("\nThe value of gs: ", get_gs_selector);
 
-	GDT_ROOT   gdt_descriptor = get_gdt_root();
-	GDT_ENTRY *gdt32		  = gdt_descriptor.base;
-	terminal_write_ptr("gdt base address = ", gdt_descriptor.base);
+	gdtr32_t   gdt_descriptor = get_gdt_root();
+	GDT_ENTRY *gdt32		  = gdt_descriptor.base_address;
+
+	kprintf("gdt32.length = %u\n", gdt_descriptor.limit);
+
+	terminal_write_ptr("gdt base address = ", gdt_descriptor.base_address);
 	terminal_write_uint("gdt size limit = ", gdt_descriptor.limit);
 
 	GDT_ENTRY				 *gdt16	  = GDT16_DESCRIPTOR.base;
@@ -226,6 +227,8 @@ void to_real16_test()
 	before();
 
 	[[gnu::unused]] uint16_t result5 = call_real_mode_function(ret_5); // argc automatically calculated
+
+	kprintf("after\n");
 
 	print_args16(&args16_start);
 	kprintf("\n====ok====\n");

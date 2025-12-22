@@ -142,6 +142,7 @@ mkdir -p "$BUILD_DIR" "$ISO_DIR/boot/grub"
 
 # The variable for the dirs:
 KERNEL="kernel"
+KERNEL_CPP="kernel/cpp"
 REAL16_WRAPPERS="real16_wrappers"
 REAL_FUNC="realmode_functions"
 STDIO="stdio"
@@ -218,7 +219,7 @@ INCLUDE_DIRS=(
 	"$FRAMEBUFER"
 	"$PIT"
 
-	"$CPP"
+	"$KERNEL_CPP"
 	"$RUST"
 	"$ZIG"
 	"$MODULES"
@@ -251,6 +252,7 @@ i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/kernel.c" -o "$BUI
 i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/symbols.c" -o "$BUILD_DIR/symbols.o"
 i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/kernel_helper.c" -o "$BUILD_DIR/kernel_helper.o"
 i686-elf-g++ "${CPPFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$MULTIBOOT/multiboot.cpp" -o "$BUILD_DIR/multiboot.o"
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$KERNEL_CPP/kernel_cpp.cpp" -o "$BUILD_DIR/kernel_cpp.o" "${SUPER_INCLUDE[@]}"
 
 # Firmware
 i686-elf-gcc "${CPPFLAGS[@]}" -c "$ACPI/acpi.c" -o "$BUILD_DIR/acpi_c.o" "-I$STDLIB" "-I$STDIO"
@@ -324,7 +326,6 @@ nasm "${NASM_FLAGS32[@]}" "$REAL16_WRAPPERS/call_realmode_function_wrapper32.asm
 ia16-elf-gcc "${CFLAGS16[@]}" -c "$REAL_FUNC/realmode_functions.c" -o "$BUILD_DIR/realmode_functions.o"
 
 # Compile Other language projects (Library written entirely in ~(C or ASM))
-i686-elf-g++ "${CPPFLAGS[@]}" -c "$CPP/kernel_cpp.cpp" -o "$BUILD_DIR/kernel_cpp.o" "${SUPER_INCLUDE[@]}"
 
 printf "\n\n============Start of Module Build ============\n\n"
 ./modules/build.sh
@@ -483,14 +484,14 @@ else
 
 	CPU_MODEL=""
 	if [[ "$MACHINE_BITNESS" == "64" ]]; then
-		CPU_MODEL="host"
-		# CPU_MODEL="qemu64"
+		# CPU_MODEL="host"
+		CPU_MODEL="qemu64"
 	else
 		CPU_MODEL="qemu32"
 	fi
 
 	# False for now, as I'm making an MMIO apic based driver
-	ENABLE_X2APIC=true
+	ENABLE_X2APIC=false
 
 	# conditional addition
 	if [ "$ENABLE_X2APIC" = true ]; then
@@ -509,10 +510,9 @@ else
 		"${QEMU_DBG_FLAGS[@]}" \
 		-d in_asm,int,cpu_reset \
 		-D qemu_instr.log \
-		-smp 4 \
-		"${QEMU_CPU_FLAG[@]}" \
-		-enable-kvm \
-		-serial stdio & # -vga vmware \
+		-serial stdio & # "${QEMU_CPU_FLAG[@]}" \
+	# -smp 1 \
+	# -vga vmware \
 
 	QEMU_PID=$!
 

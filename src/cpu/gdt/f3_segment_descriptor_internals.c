@@ -5,6 +5,7 @@
 #include "bit_hex_string.h"
 #include "f1_binary_operation.h"
 #include "f3_segment_descriptor_internals.h"
+#include "gdt.h"
 #include "vga_terminal.h"
 #include <stdbool.h>
 

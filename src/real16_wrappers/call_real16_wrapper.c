@@ -8,15 +8,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-GDT_ROOT get_gdt_root(void)
-{
-
-	GDT_ROOT gdt_root;
-	__asm__ volatile("sgdt %0" : "=m"(gdt_root));
-
-	return gdt_root;
-}
-
 // =============== Start of mics
 
 uint32_t min(uint32_t a, uint32_t b)
@@ -37,18 +28,9 @@ void print_args16(const Args16 *args)
 
 	terminal_writestring("GDT Root:\n");
 	printBinarySize(args->gdt_root.limit, "GDT Size: ", 8);
-	printBinarySize((uint32_t)args->gdt_root.base, "GDT Base (bits 0-32)", 32);
+	printBinarySize((uint32_t)args->gdt_root.base_address, "GDT Base (bits 0-32)", 32);
 
 	terminal_writestring("\n");
-
-	if (args->gdt_root.base)
-	{
-		printBinarySize((uint32_t)args->gdt_root.base[2].lower, "Code Base Descriptor Lower (bits 0-32)", 32);
-		printBinarySize((uint32_t)args->gdt_root.base[2].higher, "Code Base Descriptor Higher (bits 33-64)", 32);
-		printBinarySize((uint32_t)args->gdt_root.base[3].lower, "Data Base Descriptor Lower (bits 0-32)", 32);
-		printBinarySize((uint32_t)args->gdt_root.base[3].higher, "Data Base Descriptor Higher (bits 33-64)", 32);
-		terminal_writestring("\n");
-	}
 
 	terminal_write_hex("ESP: ", args->esp);
 	terminal_writestring("\n");
@@ -122,6 +104,16 @@ uint16_t call_real_mode_function_with_argc(uint32_t argc, ...)
 	struct realmode_address rm_address = get_realmode_function_address((function_t *)func);
 	args16_start.func				   = rm_address.func_address;
 	args16_start.func_cs			   = rm_address.func_cs;
+
+	uint8_t	 *raw_args16 = (uint8_t *)&args16_start;
+	uint32_t *val		 = (uint32_t *)&raw_args16[20];
+
+	uint8_t *start = (uint8_t *)&args16_start;
+	uint8_t *end   = (uint8_t *)&args16_start.func;
+	uint8_t	 diff  = end - start;
+	kprintf("function offset %h\n", *val);
+	kprintf("function offset (func field): %h\n", args16_start.func);
+	kprintf("Diff = %u\n", diff);
 
 	args16_start.argc = argc - 1;
 
