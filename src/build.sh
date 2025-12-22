@@ -5,7 +5,7 @@ shopt -s nullglob
 
 DEBUG_OR_RELEASE="${1:-release}"
 QEMU_OR_REAL_MACHINE="${2:-qemu}"
-MACHINE_BITNESS="${3:-32}"
+MACHINE_BITNESS="${3:-64}"
 MOVE_VNC="${4:-move}"
 
 # Check for help argument
@@ -16,7 +16,7 @@ Usage: ./build.sh [debug|release] [QEMU|REAL] [32|64] [move|nomove]
 Arguments:
   debug|release       Build mode. Defaults to release if omitted.
   qemu|real           Whether to run in QEMU or on a real machine. Defaults to QEMU.
-  32|64               Machine bitness. Defaults to 32.
+  32|64               Machine bitness. Defaults to 64.
   move|nomove         Whether to move VNC window to workspace. Defaults to move.
 
 Examples:
@@ -481,17 +481,22 @@ else
 		sleep 1 # Give it time to die
 	fi
 
-	QEMU_CPU_FLAG=()
-	# default CPU flags empty
-	QEMU_CPU_FLAG=()
+	CPU_MODEL=""
+	if [[ "$MACHINE_BITNESS" == "64" ]]; then
+		CPU_MODEL="host"
+	else
+		CPU_MODEL="qemu32"
+	fi
 
 	# False for now, as I'm making an MMIO apic based driver
-	ENABLE_X2APIC=false
+	ENABLE_X2APIC=true
 
 	# conditional addition
 	if [ "$ENABLE_X2APIC" = true ]; then
-		QEMU_CPU_FLAG+=("-cpu" "+x2apic")
+		CPU_MODEL="${CPU_MODEL},+x2apic" # note: no spaces
 	fi
+
+	QEMU_CPU_FLAG=("-cpu" "$CPU_MODEL")
 
 	$QEMU \
 		-cdrom "$BUILD_DIR/myos.iso" \
@@ -502,6 +507,7 @@ else
 		-D qemu_instr.log \
 		-smp 4 \
 		"${QEMU_CPU_FLAG[@]}" \
+		-enable-kvm \
 		-serial stdio & # -vga vmware \
 
 	QEMU_PID=$!
