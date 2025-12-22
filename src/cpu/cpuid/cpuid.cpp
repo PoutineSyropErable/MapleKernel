@@ -1,4 +1,5 @@
 #include "assert.h"
+#include "cast.h"
 #include "cpuid.h"
 #include "cpuid.hpp"
 

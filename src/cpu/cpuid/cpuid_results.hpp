@@ -53,7 +53,7 @@ struct cpuid_basic_edx
 	uint32_t pae : 1;		// Physical Address Extension
 	uint32_t mce : 1;		// Machine Check Exception
 	uint32_t cx8 : 1;		// CMPXCHG8 instruction
-	uint32_t apic : 1;		// APIC on-chip
+	uint32_t apic : 1;		// APIC on-chip.
 	uint32_t reserved1 : 1; // reserved
 	uint32_t sep : 1;		// SYSENTER/SYSEXIT
 	uint32_t mtrr : 1;		// Memory Type Range Registers

@@ -59,6 +59,7 @@ static inline enum PRINTF_FMT_OPTION char_to_fmt_option(char c)
 	{
 	case ':': return FMT_OPTION_PAD;
 	case '.': return FMT_OPTION_PRECISION;
+	case ';': return FMT_OPTION_STRLEN;
 	default: return FMT_OPTION_NONE;
 	}
 }
@@ -132,7 +133,7 @@ struct PRINTF_FIELD_PROPERTIES get_single_format_properties(const char *fmt)
 
 	struct PRINTF_FIELD_PROPERTIES properties;
 	properties.type		 = char_to_printf_tag(fmt_type);
-	char possible_option = *(fmt + 2); // "%p:"
+	char possible_option = *(fmt + 2); // "%p:" points at ':'
 	properties.option	 = char_to_fmt_option(possible_option);
 
 	if (properties.option == FMT_OPTION_NONE)
@@ -142,7 +143,7 @@ struct PRINTF_FIELD_PROPERTIES get_single_format_properties(const char *fmt)
 		return properties;
 	}
 
-	const char *option_number_char_ptr = fmt + 3; // ("%p:2")
+	const char *option_number_char_ptr = fmt + 3; // ("%p:2") -- points at '2
 	if (!is_digit(*option_number_char_ptr))
 	{
 		properties.option = FMT_OPTION_NOT_IMPLEMENTED;
@@ -456,8 +457,19 @@ void vkprintf(const char *fmt, va_list args)
 		}
 		case PRINTF_TAG_STRING:
 		{
-			const char *v = va_arg(args, const char *);
-			terminal_writestring(v);
+			const char					  *v	= va_arg(args, const char *);
+			struct PRINTF_FIELD_PROPERTIES info = printf_information[i];
+			if (info.option == FMT_OPTION_STRLEN)
+			{
+				// kprintf("fmt strlen\n");
+				// terminal_write_uint("The option num: ", info.option_num);
+				terminal_write(v, info.option_num);
+			}
+			else
+			{
+				terminal_writestring(v);
+			}
+
 			break;
 		}
 		case PRINTF_TAG_INT:
@@ -471,6 +483,7 @@ void vkprintf(const char *fmt, va_list args)
 		{
 			uint32_t					   v	= va_arg(args, uint32_t);
 			struct PRINTF_FIELD_PROPERTIES info = printf_information[i];
+			// kprintf("option_num = %u\n", info.option_num);
 			print_uint_f(v, info.option == FMT_OPTION_PAD ? info.option_num : 0);
 			break;
 		}

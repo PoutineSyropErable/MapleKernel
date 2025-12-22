@@ -32,6 +32,8 @@
 #include "fpu.h"
 #include "pit.h"
 
+#include "acpi.h"
+
 GDT_ROOT *GDT16_ROOT = &GDT16_DESCRIPTOR;
 
 float fpu_add(float a, float b)
@@ -52,6 +54,8 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 #if defined(QEMU)
 	kprintf("\n\n=========Start of Kernel Main==========\n\n");
 #endif
+	// init_paging();
+	// init_page_bitmap();
 
 	uint32_t cpuid_supp_test = cpuid_supported_check();
 	bool	 cpuid_supported = (cpuid_supp_test != 0);
@@ -147,12 +151,9 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 	struct rsdp_tagged_c rsdp_tagged	   = get_rsdp_grub(mb2_info_addr);
 	char				*rsdp_type_names[] = {"NULL", "OLD", "NEW"};
 	char				*name			   = rsdp_type_names[rsdp_tagged.new_or_old];
-	void				*rsdp			   = rsdp_tagged.rsdp;
-	kprintf("rsdp = %h, type=%s\n", rsdp, name);
+	void				*rsdp_v			   = rsdp_tagged.rsdp;
+	kprintf("rsdp = %h, type=%s\n", rsdp_v, name);
 #endif
-
-	// init_paging();
-	// init_page_bitmap();
 
 	setup_interrupts(); // needed to have a working wait
 	setup_keyboard();	// crash here
@@ -163,25 +164,18 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 	test_printf2();
 	test_assert(); // gd, and set to false and play with it
 
-	zig_main();
-	terminal_writestring("\n====kernel main entering loop====\n");
-
-	cpp_main();
 	module_main();
-	while (true)
+	zig_main();
+
+	// char s[6] = {'a', 'b', 'c', 'd', 'e', 'f'};
+	// kprintf("sig : %s;5\n", s);
+	// kprintf("Number, %u:7", 0x24f);
+
+	struct cpp_main_args cpp_args = {.rsdp_v = rsdp_v};
+	int					 cpp_err  = cpp_main(cpp_args);
+	if (cpp_err)
 	{
-		// kernel main loop
-		cpp_event_loop();
-
-		wait(1.f / 60.f);
+		kprintf("\n\n\nMajor fucky wucky happened\n");
 	}
-
 	return;
-
-	// int* big_array = (int*)kmalloc(1024 * 1024 * 1024);
-	// for (int i = 0; i < 100000; i++) {
-	// 	big_array[i] = i;
-	// }
-	//
-	// print_array_terminal(&term, big_array, 100000);
 }

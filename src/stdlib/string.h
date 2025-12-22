@@ -49,6 +49,8 @@ extern "C"
 	 */
 	int strcmp(const char *s1, const char *s2);
 
+	int strncmp(const char *s1, const char *s2, size_t len);
+
 	int find_string_offset(const char *haystack, int haystack_len, const char *needle);
 
 #ifdef __cplusplus

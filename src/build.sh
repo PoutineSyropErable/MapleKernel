@@ -77,7 +77,8 @@ NASM_FLAGS32=("-f" "elf32")
 NASM_FLAGS16=("-f" "elf")
 
 DEBUG_OPT_LVL="-O0"
-RELEASE_OPT_LVL="-O2"
+RELEASE_OPT_LVL="-O3"
+# -O1 in Cpp breaks printf option number and i have no idea why
 QEMU_DBG_FLAGS=()
 
 if [[ "$DEBUG_OR_RELEASE" == "debug" ]]; then
@@ -212,6 +213,7 @@ INCLUDE_DIRS=(
 	"$UEFI"
 	"$MULTIBOOT"
 	"$ACPI"
+	"$ACPI/madt"
 
 	"$FRAMEBUFER"
 	"$PIT"
@@ -250,6 +252,11 @@ i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/symbols.c" -o "$BU
 i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/kernel_helper.c" -o "$BUILD_DIR/kernel_helper.o"
 i686-elf-g++ "${CPPFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$MULTIBOOT/multiboot.cpp" -o "$BUILD_DIR/multiboot.o"
 
+# Firmware
+i686-elf-gcc "${CPPFLAGS[@]}" -c "$ACPI/acpi.c" -o "$BUILD_DIR/acpi_c.o" "-I$STDLIB" "-I$STDIO"
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$ACPI/acpi.cpp" -o "$BUILD_DIR/acpi.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI/madt"
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$ACPI/madt/madt.cpp" -o "$BUILD_DIR/madt.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$APIC"
+
 # Compile the print functions.
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/string_helper.c" -o "$BUILD_DIR/string_helper.o"
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/bit_hex_string.c" -o "$BUILD_DIR/bit_hex_string.o" -std=gnu99 "-I$STDIO" "-I$STDLIB"
@@ -275,6 +282,9 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/idt_ps2.c" -o "$BUILD_DIR/idt_ps2.o" "-I$ID
 nasm "${NASM_FLAGS32[@]}" "$IDT/exception_handler.asm" -o "$BUILD_DIR/exception_handler.o"
 i686-elf-gcc "${CFLAGS[@]}" -c "$PIC/pic.c" -o "$BUILD_DIR/pic.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "-I$CPU"
 
+# CPU/APIC
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$APIC/apic.cpp" -o "$BUILD_DIR/apic.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$CPUID"
+
 # =============== Compile Drivers ==============
 
 # PS2 Controller, Interrupt Handler And Enable Wrapper
@@ -294,7 +304,6 @@ i686-elf-g++ "${CPPFLAGS[@]}" -c "$PS2_MOUSE/ps2_mouse_handler.cpp" -o "$BUILD_D
 
 # Temporary stuff. Will properly program them one day.
 i686-elf-gcc "${CFLAGS[@]}" -c "$DRIVERS_USB_CONTROLLER/usb_controller.c" -o "$BUILD_DIR/usb_controller.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "-I$DRIVERS_USB_CONTROLLER"
-i686-elf-gcc "${CFLAGS[@]}" -c "$ACPI/acpi.c" -o "$BUILD_DIR/acpi.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "-I$ACPI"
 i686-elf-gcc "${CFLAGS[@]}" -c "$OTHER/virtual_memory.c" -o "$BUILD_DIR/virtual_memory.o"
 
 # Timers

@@ -7,11 +7,55 @@
 #include <stdint.h>
 
 // #include "framebuffer.h"
+#include "acpi.hpp"
+#include "apic.hpp"
+#include "assert.h"
 #include "framebuffer.hpp"
+#include "madt.hpp"
+#include "pit.hpp"
 #include "ps2_mouse_handler.h"
 
-int cpp_main()
+#include "pic_public.h"
+
+void print_test()
 {
+	// -O1 Cpp is wack
+	kprintf("Number With no option: %u\n", 0x24f);
+	char s[6] = {'a', 'b', 'c', 'd', 'e', 'f'};
+	kprintf("string with option: %s;5\n", s);
+	kprintf("Number with option: %u:7\n", 0x24f);
+}
+
+int cpp_main(struct cpp_main_args args)
+{
+
+	kprintf("\n\n================= Start of CPP Main =================\n\n");
+	bool has_apic = apic::has_apic();
+	kprintf("Has apic: %b\n\n", has_apic);
+	assert(has_apic, "Must have apic\n");
+
+	struct acpi::RSDP *rsdp = (struct acpi::RSDP *)args.rsdp_v;
+	kprintf("rsdp address: %h\n", rsdp);
+	acpi::print_rsdp(rsdp);
+
+	acpi::RSDT *rsdt = rsdp->RsdtAddress;
+	kprintf("rsdt address: %h\n", rsdt);
+	acpi::print_rsdt(rsdt);
+
+	acpi::MADT *madt = acpi::findMADT(rsdt);
+	kprintf("madt = %h\n", madt);
+	acpi::print_madt(madt);
+
+	disable_pic();
+
+	terminal_writestring("\n====kernel main entering loop====\n");
+	while (true)
+	{
+		// kernel main loop
+		cpp_event_loop();
+
+		pit::wait(1.f / 60.f);
+	}
 	return 0;
 }
 

@@ -68,3 +68,31 @@ int strcmp(const char *s1, const char *s2)
 	// This gives correct ordering based on ASCII values
 	return (int)*us1 - (int)*us2;
 }
+
+int strncmp(const char *s1, const char *s2, size_t len)
+{
+	if (len == 0)
+		return 0;
+
+#ifdef DEBUG
+	if (s1 == NULL || s2 == NULL)
+	{
+		abort_msg("s1 = %u, s2 = %u. One if Null\n", s1, s2);
+	}
+
+#endif
+
+	const unsigned char *us1 = (const unsigned char *)s1;
+	const unsigned char *us2 = (const unsigned char *)s2;
+
+	for (size_t idx = 0; idx < len; idx++)
+	{
+		if (us1[idx] != us2[idx])
+			return (int)us1[idx] - (int)us2[idx];
+
+		if (us1[idx] == '\0') // If equal and one is null, both are null
+			return 0;
+	}
+
+	return 0; // All len characters matched
+}

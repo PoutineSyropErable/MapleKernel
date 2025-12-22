@@ -9,7 +9,12 @@ extern "C"
 
 	// C-visible entry point to transfer control to C++ code
 	int cpp_event_loop(void);
-	int cpp_main();
+
+	struct cpp_main_args
+	{
+		void *rsdp_v;
+	};
+	int cpp_main(struct cpp_main_args args);
 
 #ifdef __cplusplus
 }

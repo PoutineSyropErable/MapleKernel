@@ -1,4 +1,5 @@
 #include "assert.h"
+#include "cast.h"
 #include "control_registers.h"
 #include "cpuid.hpp"
 #include "fpu.h"
@@ -48,14 +49,8 @@ extern "C" struct fpu_features init_fpu()
 		cpuid_fpu_1_ecx fpu_ecx;
 		cpuid_fpu_1_edx fpu_edx;
 	};
-	union
-	{
-		struct cpuid_reg  raw_regs;
-		struct fpu_1_regs typed_regs;
-	} regs_uts;
 
-	regs_uts.raw_regs			   = cpuid_1.regs;
-	fpu_1_regs fpu_cpuid1_features = regs_uts.typed_regs;
+	fpu_1_regs fpu_cpuid1_features = BITCAST(struct fpu_1_regs, cpuid_1.regs);
 	if (fpu_cpuid1_features.fpu_edx.fpu)
 	{
 		ret.fpu = true;

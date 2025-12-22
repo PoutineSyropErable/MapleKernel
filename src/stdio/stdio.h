@@ -40,7 +40,8 @@ Needs fpu support. Call terminal writestring otherwise
 		FMT_OPTION_NOT_IMPLEMENTED	 = 1,
 		FMT_OPTION_COULD_NOT_CONVERT = 2,
 		FMT_OPTION_PAD				 = ':',
-		FMT_OPTION_PRECISION		 = '.'
+		FMT_OPTION_PRECISION		 = '.',
+		FMT_OPTION_STRLEN			 = ';'
 	};
 
 	enum PRINTF_TYPE
