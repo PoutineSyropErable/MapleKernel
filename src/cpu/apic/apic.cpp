@@ -4,7 +4,7 @@
 #include "cpuid.hpp"
 #include "cpuid_results.hpp"
 
-bool apic::has_apic()
+struct apic::apic_support apic::has_apic()
 {
 
 	struct cpuid::cpuid_verified_result cpuid_1 = cpuid::call_cpuid(cpuid::CpuidFunction::ProcessorInfo, {.raw = 0});
@@ -14,5 +14,6 @@ bool apic::has_apic()
 	}
 
 	struct cpuid_basic_edx edx = BITCAST(struct cpuid_basic_edx, cpuid_1.regs.edx);
-	return edx.apic;
+	struct cpuid_basic_ecx ecx = BITCAST(struct cpuid_basic_ecx, cpuid_1.regs.ecx);
+	return apic::apic_support{edx.apic, ecx.x2apic};
 }

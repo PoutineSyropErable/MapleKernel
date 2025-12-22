@@ -30,8 +30,11 @@ int cpp_main(struct cpp_main_args args)
 {
 
 	kprintf("\n\n================= Start of CPP Main =================\n\n");
-	bool has_apic = apic::has_apic();
-	kprintf("Has apic: %b\n\n", has_apic);
+
+	struct apic::apic_support apic_support = apic::has_apic();
+	kprintf("Support:\n  Apic: %b\n  x2Apic: %b\n\n\n", apic_support.apic, apic_support.x2apic);
+
+	bool has_apic = apic_support.apic || apic_support.x2apic;
 	assert(has_apic, "Must have apic\n");
 
 	struct acpi::RSDP *rsdp = (struct acpi::RSDP *)args.rsdp_v;
