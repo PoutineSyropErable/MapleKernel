@@ -15,7 +15,10 @@
 #include "pit.hpp"
 #include "ps2_mouse_handler.h"
 
+#include "gdt.h"
+#include "multicore_gdt.hpp"
 #include "pic_public.h"
+#include "string.h"
 
 void print_test()
 {
@@ -59,11 +62,31 @@ int cpp_main(struct cpp_main_args args)
 	kprintf("lapic_address = %h\n", lapic_address);
 	kprintf("io_apic_address = %h\n", io_apic_address);
 
+	multicore_gdt::init_multicore_gdt();
+	multicore_gdt::set_fs_or_segment_selector(0, false);
+	multicore_gdt::set_fs_or_segment_selector(0, true);
+	multicore_gdt::get_fs_struct()->core_id = 0;
+	multicore_gdt::get_gs_struct()->core_id = 0;
+	// other core will do it properly. Naturally, we'll use the apic to get the core_id;
+
+	// initiate the apic_io of this core.
+
+	// Apic timers calibration
+
+	// wake cores
+	for (uint8_t i = 0; i < MAX_CORE_COUNT; i++)
+	{
+		// TODO: Must implement these functions.
+		// Make is so every interrupt also does a last core recieved thing
+		apic::wake_core(i, apic::core_bootstrap, apic::core_main);
+		apic::wait_till_interrupt(INTERRUPT_ENTERED_MAIN);
+	}
+
 	disable_pic();
 	// Disabling the pic will be done rather late
 
 	// Setup lapic irq handling
-	terminal_writestring("\n====kernel main entering loop====\n");
+	terminal_writestring("\n====kernel cpp entering main loop====\n");
 	while (true)
 	{
 		// kernel main loop

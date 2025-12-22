@@ -253,6 +253,7 @@ i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/symbols.c" -o "$BU
 i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/kernel_helper.c" -o "$BUILD_DIR/kernel_helper.o"
 i686-elf-g++ "${CPPFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$MULTIBOOT/multiboot.cpp" -o "$BUILD_DIR/multiboot.o"
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$KERNEL_CPP/kernel_cpp.cpp" -o "$BUILD_DIR/kernel_cpp.o" "${SUPER_INCLUDE[@]}"
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$KERNEL_CPP/multicore_gdt.cpp" -o "$BUILD_DIR/multicore_gdt.o" "${SUPER_INCLUDE[@]}"
 
 # Firmware
 i686-elf-gcc "${CPPFLAGS[@]}" -c "$ACPI/acpi.c" -o "$BUILD_DIR/acpi_c.o" "-I$STDLIB" "-I$STDIO"
@@ -502,17 +503,28 @@ else
 
 	QEMU_CPU_FLAG=("-cpu" "$CPU_MODEL")
 
+	# Array of QEMU debug options
+	ENABLE_QEMU_DEBUG=true
+	DEBUG_LOG_OPTS=()
+
+	# Check if debug flag is set
+	if [[ "$ENABLE_QEMU_DEBUG" == true ]]; then
+		DEBUG_LOG_OPTS+=(
+			"-d" "in_asm,int,cpu_reset"
+			"-D" "qemu_instr.log"
+		)
+	fi
+
 	# TODO: Make -d and -D conditional.
 	$QEMU \
 		-cdrom "$BUILD_DIR/myos.iso" \
-		\
 		-no-reboot \
 		"${QEMU_DBG_FLAGS[@]}" \
-		-d in_asm,int,cpu_reset \
-		-D qemu_instr.log \
-		-serial stdio & # "${QEMU_CPU_FLAG[@]}" \
-	# -smp 1 \
-	# -vga vmware \
+		"${DEBUG_LOG_OPTS[@]}" \
+		-smp 4 \
+		"${QEMU_CPU_FLAG[@]}" \
+		-enable-kvm \
+		-serial stdio & # -vga vmware \
 
 	QEMU_PID=$!
 

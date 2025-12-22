@@ -1,4 +1,5 @@
 #pragma once
+#include "apic_internals.hpp"
 #include <stddef.h>
 #include <stdint.h>
 
@@ -12,5 +13,12 @@ struct apic_support
 };
 
 struct apic_support has_apic();
+
+uint8_t get_core_id();
+
+extern "C" void core_bootstrap();
+void			core_main();
+void			wake_core(uint8_t core_id, void core_bootstrap(), void core_main());
+void			wait_till_interrupt(uint8_t interrupt_number);
 
 } // namespace apic

@@ -7,8 +7,6 @@
 
 #include "gdt.h"
 
-typedef segment_descriptor_t GDT_ENTRY;
-
 typedef struct __attribute__((packed, aligned(4)))
 {
 	uint32_t lower;
