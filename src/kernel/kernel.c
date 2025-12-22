@@ -76,7 +76,7 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 	// ========================== INITIALIZING FPU (NEEDED for fpu optimized code)=========================
 	struct fpu_features fpu_activated_features = init_fpu();
 
-// #define GRUB_FRAMEBUFFER
+#define GRUB_FRAMEBUFFER
 #if !defined(GRUB_FRAMEBUFFER) || defined(QEMU)
 	initialize_terminal();
 	terminal_set_scroll(0);
@@ -84,9 +84,9 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 #endif
 
 	kprintf("Brand string= %s\n", brand_string);
-	kprintf("Max cpuid command= %h\n", max_extended_cpuid);
-	kprintf("Cpuid Vendor = %s\n", vendor);
 	kprintf("Max cpuid command= %h\n", max_cpuid);
+	kprintf("Max extended cpuid command= %h\n", max_extended_cpuid);
+	kprintf("Cpuid Vendor = %s\n", vendor);
 	print_activated_fpu_features(fpu_activated_features);
 	if (fpu_activated_features.fpu)
 	{

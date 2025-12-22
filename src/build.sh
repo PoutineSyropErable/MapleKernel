@@ -497,6 +497,8 @@ else
 		CPU_MODEL="${CPU_MODEL},+x2apic" # note: no spaces
 	fi
 
+	CPU_MODEL="${CPU_MODEL},+avx" # note: no spaces
+
 	QEMU_CPU_FLAG=("-cpu" "$CPU_MODEL")
 
 	# TODO: Make -d and -D conditional.
