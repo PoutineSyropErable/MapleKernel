@@ -76,7 +76,7 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 	// ========================== INITIALIZING FPU (NEEDED for fpu optimized code)=========================
 	struct fpu_features fpu_activated_features = init_fpu();
 
-#define GRUB_FRAMEBUFFER
+// #define GRUB_FRAMEBUFFER
 #if !defined(GRUB_FRAMEBUFFER) || defined(QEMU)
 	initialize_terminal();
 	terminal_set_scroll(0);
@@ -110,7 +110,7 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 
 #ifndef DEBUG
 
-#	define BIOS_FRAMEBUFFER_HACK
+// #	define BIOS_FRAMEBUFFER_HACK
 #	ifdef GRUB_FRAMEBUFFER
 	struct framebuffer_info_t grub_fb_info = get_framebuffer(mb2_info_addr);
 
@@ -127,6 +127,8 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 	uint32_t				 pitch		  = grub_fb_info.pitch;
 	volatile struct color_t *base_address = (struct color_t *)grub_fb_info.base_addr_low;
 
+	do_test_c(base_address, width, height, pitch);
+
 #	elifdef BIOS_FRAMEBUFFER_HACK
 	kprintf("in elif\n\n\n");
 	uint32_t				 width		  = 1024;
@@ -136,11 +138,12 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 
 	uint16_t result = call_real_mode_function(add16_ref, width, height); // argc automatically calculated
 	print_args16(&args16_start);
-#	endif
 
-#	define VIS_TEST
-#	ifdef VIS_TEST
+#		define VIS_TEST
+#		ifdef VIS_TEST
 	do_test_c(base_address, width, height, pitch);
+#		endif
+
 #	endif
 
 #endif // DEBUG

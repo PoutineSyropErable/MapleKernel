@@ -484,6 +484,7 @@ else
 	CPU_MODEL=""
 	if [[ "$MACHINE_BITNESS" == "64" ]]; then
 		CPU_MODEL="host"
+		# CPU_MODEL="qemu64"
 	else
 		CPU_MODEL="qemu32"
 	fi
@@ -498,6 +499,7 @@ else
 
 	QEMU_CPU_FLAG=("-cpu" "$CPU_MODEL")
 
+	# TODO: Make -d and -D conditional.
 	$QEMU \
 		-cdrom "$BUILD_DIR/myos.iso" \
 		\
