@@ -70,7 +70,8 @@ BUILD_DIR="build"
 ISO_DIR="isodir"
 
 CFLAGS=("-std=gnu23" "-ffreestanding" "-Wall" "-Wextra")
-CPPFLAGS=("-std=gnu++23" "-ffreestanding" "-Wall" "-Wextra" "-fno-threadsafe-statics" "-fno-rtti" "-fno-exceptions")
+CPPFLAGS=("-std=gnu++23" "-ffreestanding" "-Wall" "-Wextra" "-fno-threadsafe-statics" "-fno-rtti" "-fno-exceptions" "-fno-strict-aliasing")
+# Being generous with the cppflag
 CFLAGS16=("-std=gnu99" "-ffreestanding" "-Wall" "-Wextra")
 LDFLAGS=("-ffreestanding" "-nostdlib" "-lgcc" "-fno-eliminate-unused-debug-symbols")
 NASM_FLAGS32=("-f" "elf32")

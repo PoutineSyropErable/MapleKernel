@@ -5,6 +5,7 @@
 #include "cpuid.hpp"
 #include "cpuid_results.hpp"
 #include "intrinsics.h"
+// This file needs -fno-strict-aliasing
 
 using namespace apic;
 
@@ -27,13 +28,54 @@ struct apic::apic_support apic::has_apic()
 	return apic::apic_support{edx.apic, ecx.x2apic};
 }
 
+extern "C" uint8_t test_cmd()
+{
+
+	const std::mmio_ptr<apic::interrupt_command_register_high> ptr((volatile apic::interrupt_command_register_high *)0xb00000);
+	apic::interrupt_command_register_high					   local{.local_apic_id_of_target = 5};
+	ptr.write(local);
+
+	return 1;
+	// return res.local_apic_id_of_target;
+}
+
 void apic::read_apic_msr(apic_msr_eax *eax, apic_msr_edx *edx)
 {
 	uint32_t eax_raw, edx_raw;
 	read_msr(apic::apic_msr, &eax_raw, &edx_raw);
 
-	*eax = *(apic::apic_msr_eax *)eax_raw;
-	*edx = *(apic::apic_msr_edx *)edx_raw;
+	constexpr bool fast = true;
+	if (fast)
+	{
+		// requires -fno-strict-aliasing, otherwise undefined behavior, and the compiler could optimize this write away.
+		// BUT, fno-strict-aliasing is present anyway. Might as well use the most optimized read
+		// If it's not present, it's an error on the build-script writter (me)
+		*eax = *(apic::apic_msr_eax *)eax_raw;
+		*edx = *(apic::apic_msr_edx *)edx_raw;
+	}
+	else
+	{
+		// This might be stupid, and do multiple move for each bitfield.
+		// Idk if it will.
+		// This doesn't require -fno-strict-aliasing (On G++ and CLANG++, because it's an extension)
+		// Not standard C++, but fuck standard C++
+		union
+		{
+			uint32_t	 raw;
+			apic_msr_eax val;
+		} u_a;
+
+		union
+		{
+			uint32_t	 raw;
+			apic_msr_edx val;
+		} u_d;
+
+		u_a.raw = eax_raw;
+		u_d.raw = edx_raw;
+		*eax	= u_a.val;
+		*edx	= u_d.val;
+	}
 }
 void apic::write_apic_msr(apic::apic_msr_eax eax, apic::apic_msr_edx edx)
 {
@@ -70,17 +112,6 @@ enum apic::error apic::init_apic()
 	write_apic_msr(eax, edx);
 
 	return apic::error::none;
-}
-
-extern "C" uint8_t test_cmd()
-{
-
-	const std::mmio_ptr<apic::interrupt_command_register_high> ptr((volatile apic::interrupt_command_register_high *)0xb00000);
-	apic::interrupt_command_register_high					   local{.local_apic_id_of_target = 5};
-	ptr.write(local);
-
-	return 1;
-	// return res.local_apic_id_of_target;
 }
 
 enum apic::error apic::init_lapic()

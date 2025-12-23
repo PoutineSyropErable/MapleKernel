@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 // REQUIRES: -fno-strict-aliasing
+// We can't apply it to just the header, that makes optimization completly die
 
 namespace std
 {
