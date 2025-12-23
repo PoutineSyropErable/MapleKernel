@@ -29,5 +29,41 @@ void test_special_pointers()
 
 	// Test reads deref
 	// kprintf("\nTesting local read deref (local = *proxy)\n");
-	Reg16x2 r = ptr.read();
+	// Reg16x2 r = ptr.read();
+}
+
+void test_special_pointers2()
+{
+
+	// Raw MMIO pointer
+	const std::mmio_ptr<Reg16x2> ptr((volatile Reg16x2 *)0xb00000);
+
+	// Reg16x2 val{.low = 7, .high = 8};
+	// ptr.write(val);
+
+	// // Set-once read/write
+	uint8_t which = 2;
+
+	if (which == 1)
+	{
+		std::set_once<std::mmio_ptr<Reg16x2>> global_mmio;
+		global_mmio.set(&ptr); // can only call once
+		global_mmio.write(Reg16x2{.low = 5, .high = 2});
+	}
+
+	if (which == 2)
+	{
+		std::set_once_ro<std::mmio_ptr<Reg16x2>> global_mmio_ro;
+		global_mmio_ro.set(&ptr); // can only call once
+		Reg16x2 reg_read = global_mmio_ro.read();
+		// Sadly read must use a stack variable to save the result.
+		// It's so dumb. But, it's an impossible to remove optimisation
+	}
+
+	if (which == 3)
+	{
+		std::set_once<std::mmio_ptr<Reg16x2>> global_mmio_wo;
+		global_mmio_wo.set(&ptr); // can only call once
+		global_mmio_wo.write(Reg16x2{.low = 5, .high = 2});
+	}
 }

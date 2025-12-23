@@ -222,8 +222,8 @@ class LapicRegisters
 	std::set_once_ptr<volatile const uint32_t> error_status;
 	std::set_once_ptr<volatile uint32_t>	   lvt_cmci;
 
-	std::set_once_ptr<volatile interrupt_command_register_low>	command_low;
-	std::set_once_ptr<volatile interrupt_command_register_high> command_high;
+	std::set_once<std::mmio_ptr<interrupt_command_register_low>> command_low;
+	std::set_once_ptr<volatile interrupt_command_register_high>	 command_high;
 
 	std::set_once_ptr<volatile uint32_t> lvt_timer;
 	std::set_once_ptr<volatile uint32_t> lvt_thermal_sensor;
