@@ -5,9 +5,6 @@
 
 // REQUIRES: -fno-strict-aliasing
 
-#pragma GCC push_options
-#pragma GCC optimize("no-strict-aliasing")
-
 namespace std
 {
 
@@ -375,7 +372,5 @@ template <typename MMIO> struct set_once_wo
 };
 
 } // namespace std
-
-#pragma GCC pop_options
 
 void test_special_pointers();
