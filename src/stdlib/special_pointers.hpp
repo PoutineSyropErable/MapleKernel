@@ -3,6 +3,11 @@
 #include "std.hpp"
 #include <stdint.h>
 
+// REQUIRES: -fno-strict-aliasing
+
+#pragma GCC push_options
+#pragma GCC optimize("no-strict-aliasing")
+
 namespace std
 {
 
@@ -42,55 +47,34 @@ template <typename T> struct set_once_primitive_ptr
 	}
 };
 
-template <typename T> struct mmio_pointer
+template <typename T> struct primitive_mmio_ptr
 {
-	volatile T *ptr;
 
-	static_assert(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4, "mmio_pointer only supports types of size 1, 2, or 4 bytes");
+  private:
+	volatile T *ptr; // mutable pointer. But never
 
-	// Determine underlying integer type for type-punning
-	using underlying_t =
-		typename conditional<sizeof(T) == 1, uint8_t, typename conditional<sizeof(T) == 2, uint16_t, uint32_t>::type>::type;
+  public:
+	using value_type = T;
 
-	constexpr mmio_pointer(volatile T *p = nullptr) : ptr(p)
+	// construct from raw pointer
+	constexpr primitive_mmio_ptr(volatile T *p = nullptr) : ptr(p)
 	{
 	}
 
 	T read() const
 	{
-#ifdef DEBUG
-		assert(ptr != nullptr, "Can't read a null mmio_ptr!\n");
-#endif
-
-		// Force a stack allocation. ARRRGH
-		union
-		{
-			volatile underlying_t raw;
-			T					  val;
-		} u;
-		u.raw = *(volatile underlying_t *)ptr; // safe volatile read
-
-		return u.val;
+		return *ptr;
 	}
 
-	void write(T val) const
+	void write(const T val) const
 	{
-#ifdef DEBUG
-		assert(ptr != nullptr, "Can't read a null mmio_ptr!\n");
-#endif
-		union
-		{
-			T			 val;
-			underlying_t raw;
-		} u;
-		u.val						  = val;
-		*(volatile underlying_t *)ptr = u.raw;
+		*ptr = val;
 	}
 };
 
-// ======================================================
-// Read/Write MMIO pointer
-// ======================================================
+// ======================================================================
+// Modifiable (but private) MMIO pointer (This is the one you should use)
+// ======================================================================
 template <typename T> struct mmio_ptr
 {
 	static_assert(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4, "mmio_ptr only supports 1, 2, or 4 byte types");
@@ -135,11 +119,32 @@ template <typename T> struct mmio_ptr
 		u.val						  = val;
 		*(volatile underlying_t *)ptr = u.raw;
 	}
+
+#ifdef MALOC_VERSION
+	T read_m() const
+	{
+		uint32_t raw = *(volatile uint32_t *)ptr; // FULL register read
+		T		 val;
+		__builtin_memcpy(&val, &raw, sizeof(T)); // copy into struct
+		return val;
+	}
+
+	void write_m(const T v) const
+	{
+		uint32_t raw = 0;
+		__builtin_memcpy(&raw, &v, sizeof(T)); // copy struct → raw
+		*(volatile uint32_t *)ptr = raw;	   // FULL register write
+	}
+#endif
 };
 
 // ======================================================
 // Const MMIO pointer (Can't change the pointer)
 // ======================================================
+/*
+	This one isn't really needed. The other should compile to something as fast as this.
+	But, if it doesn't, well you have this.
+*/
 template <typename T> struct const_mmio_ptr
 {
 	static_assert(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4, "mmio_ptr only supports 1, 2, or 4 byte types");
@@ -179,7 +184,24 @@ template <typename T> struct const_mmio_ptr
 		*(volatile underlying_t *)ptr = u.raw;
 	}
 
+#ifdef MALOC_VERSION
+	T read_m() const
+	{
+		uint32_t raw = *(volatile uint32_t *)ptr; // FULL register read
+		T		 val;
+		__builtin_memcpy(&val, &raw, sizeof(T)); // copy into struct
+		return val;
+	}
+
+	void write_m(const T &v) const
+	{
+		uint32_t raw = 0;
+		__builtin_memcpy(&raw, &v, sizeof(T)); // copy struct → raw
+		*(volatile uint32_t *)ptr = raw;	   // FULL register write
+	}
+
 	// no write() method — read-only
+#endif
 };
 
 // ======================================================
@@ -232,6 +254,24 @@ template <typename MMIO> struct set_once
 #endif
 		mmio.write(v);
 	}
+
+#ifdef MALOC_VERSION
+	value_type read_m() const
+	{
+#	ifdef DEBUG
+		assert(is_set, "ptr must be set to read it\n");
+#	endif
+		return mmio.read_m();
+	}
+
+	void write_m(const value_type &v) const
+	{
+#	ifdef DEBUG
+		assert(is_set, "ptr must be set to write it\n");
+#	endif
+		mmio.write_m(v);
+	}
+#endif
 };
 
 // ======================================================
@@ -272,6 +312,16 @@ template <typename MMIO> struct set_once_ro
 
 	// Delete write to enforce read-only access
 	void write(const value_type &) const = delete;
+
+#ifdef MALOC_VERSION
+	value_type read_m() const
+	{
+#	ifdef DEBUG
+		assert(is_set, "ptr must be set to read it\n");
+#	endif
+		return mmio.read_m();
+	}
+#endif
 };
 
 // ======================================================
@@ -312,8 +362,20 @@ template <typename MMIO> struct set_once_wo
 
 	// Delete read to enforce write-only access
 	value_type read() const = delete;
+
+#ifdef MALOC_VERSION
+	void write_m(const value_type &v) const
+	{
+#	ifdef DEBUG
+		assert(is_set, "ptr must be set to write it\n");
+#	endif
+		mmio.write_m(v);
+	}
+#endif
 };
 
 } // namespace std
+
+#pragma GCC pop_options
 
 void test_special_pointers();

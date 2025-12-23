@@ -1,12 +1,37 @@
 #pragma once
 #include "apic.hpp"
+#include "intrinsics.h"
 #include "special_pointers.hpp"
+#include "static_assert.h"
 #include "string.h"
 #include <stddef.h>
 #include <stdint.h>
 
 namespace apic
 {
+
+constexpr uint8_t apic_msr = 0x1B;
+
+struct apic_msr_eax
+{
+	uint32_t reserved0 : 8; // 0–7
+	uint32_t bsp : 1;		// 8
+	uint32_t reserved1 : 1; // 9
+	uint32_t x2apic : 1;	// 10
+	uint32_t apic_en : 1;	// 11
+	uint32_t base_low : 20; // 12–31
+};
+STATIC_ASSERT(sizeof(apic_msr_eax) == 4, "Must be 32 bit");
+
+struct apic_msr_edx
+{
+	uint32_t base_high : 4; // 32–35
+	uint32_t reserved : 28; // 36–63
+};
+STATIC_ASSERT(sizeof(apic_msr_edx) == 4, "Must be 32 bit");
+
+void read_apic_msr(apic_msr_eax *eax, apic_msr_edx *edx);
+void write_apic_msr(apic_msr_eax eax, apic_msr_edx edx);
 
 enum class lapic_registers_offset : uint16_t
 {
@@ -86,8 +111,6 @@ struct __attribute__((packed)) interrupt_command_register_low
 };
 STATIC_ASSERT(sizeof(interrupt_command_register_low) == 4, "ICR low must be 32 bit");
 
-#pragma GCC push_options
-#pragma GCC optimize("no-strict-aliasing")
 struct __attribute__((packed)) interrupt_command_register_high
 {
 	// TODO: Unfucked the default constructor here.
@@ -98,72 +121,7 @@ struct __attribute__((packed)) interrupt_command_register_high
 	uint32_t local_apic_id_of_target : 4;
 	uint32_t unused : 4;
 	// Putting nothing else here makes the highest 4 bits reserved, and unaccessible
-
-	interrupt_command_register_high()
-	{
-		*reinterpret_cast<uint32_t *>(this) = 0;
-	}
-
-	// Read operator - does a volatile load
-	operator uint32_t() const volatile
-	{
-		uint32_t result;
-		asm volatile("movl %1, %0" : "=r"(result) : "m"(*((volatile uint32_t *)this)) : "memory");
-		return result;
-	}
-
-	// Write operator - does a volatile store
-	volatile interrupt_command_register_high &operator=(uint32_t value) volatile
-	{
-		asm volatile("movl %1, %0" : "=m"(*((volatile uint32_t *)this)) : "r"(value) : "memory");
-		return *this;
-	}
-
-	// Non-volatile versions for completeness
-	operator uint32_t() const
-	{
-		uint32_t result;
-		asm volatile("movl %1, %0" : "=r"(result) : "m"(*(const uint32_t *)this) : "memory");
-		return result;
-	}
-
-	interrupt_command_register_high &operator=(uint32_t value)
-	{
-		asm volatile("movl %1, %0" : "=m"(*(uint32_t *)this) : "r"(value) : "memory");
-		return *this;
-	}
-
-	/*
-		volatile T* src;
-		T dst = *src;  // Uses: T(const volatile T&)
-	*/
-	__attribute__((always_inline)) interrupt_command_register_high(const volatile interrupt_command_register_high &other)
-	{
-		union
-		{
-			volatile const interrupt_command_register_high *vptr;
-			volatile const uint32_t						   *uptr;
-		} pun = {&other};
-
-		uint32_t val						= *pun.uptr;
-		*reinterpret_cast<uint32_t *>(this) = val;
-	}
-
-	/*
-		volatile T* this;
-		T other;
-		*this = other;  // Needs: volatile T& operator=(const
-	*/
-	__attribute__((always_inline)) volatile interrupt_command_register_high &operator=(
-		const interrupt_command_register_high &other) volatile
-	{
-		uint32_t val = static_cast<uint32_t>(other); // Convert non-volatile to uint32_t
-		*this		 = val;							 // Use your existing volatile operator=(uint32_t)
-		return *this;
-	}
 };
-
-#pragma GCC pop_options
 
 STATIC_ASSERT(sizeof(interrupt_command_register_high) == 4, "ICR high must be 32 bit");
 
@@ -204,6 +162,13 @@ template <typename ToType> constexpr std::mmio_ptr<ToType> get_mmio_ptr(volatile
 	return ptr;
 }
 
+template <typename ToType>
+constexpr std::primitive_mmio_ptr<ToType> get_primitive_mmio_ptr(volatile void *base, lapic_registers_offset offset)
+{
+	std::primitive_mmio_ptr<ToType> ptr(get_mmio_address<ToType>(base, offset));
+	return ptr;
+}
+
 constexpr enum lapic_registers_offset add_offset(lapic_registers_offset lapic_offset, uint8_t offset)
 {
 	uint8_t loff = (uint8_t)lapic_offset + offset;
@@ -222,10 +187,10 @@ class LapicRegisters
 	std::set_once_primitive_ptr<volatile const uint32_t> arbitration_priority;
 	std::set_once_primitive_ptr<volatile const uint32_t> process_priority;
 	// End of interrupt (private field). Write only
-	std::set_once_primitive_ptr<volatile uint32_t>							 remote_read;
-	std::set_once_primitive_ptr<volatile uint32_t>							 logical_destination;
-	std::set_once_primitive_ptr<volatile uint32_t>							 destination_format;
-	std::set_once_primitive_ptr<volatile spurious_interrupt_vector_register> spurious_interrupt_vector;
+	std::set_once_ro<std::primitive_mmio_ptr<uint32_t>>				 remote_read;
+	std::set_once_primitive_ptr<volatile uint32_t>					 logical_destination;
+	std::set_once_primitive_ptr<volatile uint32_t>					 destination_format;
+	std::set_once<std::mmio_ptr<spurious_interrupt_vector_register>> spurious_interrupt_vector;
 
 	std::set_once_primitive_ptr<volatile const uint32_t> in_service[8];
 	std::set_once_primitive_ptr<volatile const uint32_t> trigger_mode[8];
@@ -234,8 +199,8 @@ class LapicRegisters
 	std::set_once_primitive_ptr<volatile const uint32_t> error_status;
 	std::set_once_primitive_ptr<volatile uint32_t>		 lvt_cmci;
 
-	std::set_once<std::mmio_ptr<interrupt_command_register_low>>		  command_low;
-	std::set_once_primitive_ptr<volatile interrupt_command_register_high> command_high;
+	std::set_once<std::mmio_ptr<interrupt_command_register_low>>  command_low;
+	std::set_once<std::mmio_ptr<interrupt_command_register_high>> command_high;
 
 	std::set_once_primitive_ptr<volatile uint32_t> lvt_timer;
 	std::set_once_primitive_ptr<volatile uint32_t> lvt_thermal_sensor;
@@ -265,11 +230,11 @@ class LapicRegisters
 
 		end_of_interrupt.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::end_of_interrupt));
 
-		remote_read.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::remote_read));
+		remote_read.set(get_primitive_mmio_ptr<uint32_t>(lapic_address, lapic_registers_offset::remote_read));
 		logical_destination.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::logical_destination));
 		destination_format.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::destination_format));
 		spurious_interrupt_vector.set(
-			get_mmio_address<spurious_interrupt_vector_register>(lapic_address, lapic_registers_offset::spurious_interrupt_vector));
+			get_mmio_ptr<spurious_interrupt_vector_register>(lapic_address, lapic_registers_offset::spurious_interrupt_vector));
 
 		for (uint8_t i = 0; i < 8; i++)
 		{
@@ -282,8 +247,8 @@ class LapicRegisters
 		error_status.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::error_status));
 		lvt_cmci.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::lvt_cmci));
 
-		// command_low.set(get_mmio_ptr<interrupt_command_register_low>(lapic_address, lapic_registers_offset::command_low));
-		command_high.set(get_mmio_address<interrupt_command_register_high>(lapic_address, lapic_registers_offset::command_high));
+		command_low.set(get_mmio_ptr<interrupt_command_register_low>(lapic_address, lapic_registers_offset::command_low));
+		command_high.set(get_mmio_ptr<interrupt_command_register_high>(lapic_address, lapic_registers_offset::command_high));
 
 		lvt_timer.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::lvt_timer));
 		lvt_thermal_sensor.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::lvt_thermal_sensor));
@@ -316,7 +281,7 @@ class LapicRegisters
 		// command_high->local_apic_id_of_target = 5;
 		// interrupt_command_register_high ch{.local_apic_id_of_target = 5};
 		// *command_high						= ch;
-		volatile interrupt_command_register_high ch2 = *command_high;
+		interrupt_command_register_high ch2 = command_high.read();
 		kprintf("ch2: %u\n", ch2.local_apic_id_of_target);
 		// *command_high = ch2;
 		// command_low->vector_number			= 1;

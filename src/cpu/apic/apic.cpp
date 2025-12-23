@@ -6,6 +6,8 @@
 #include "cpuid_results.hpp"
 #include "intrinsics.h"
 
+using namespace apic;
+
 volatile void *apic::lapic_address;
 volatile void *apic::io_appic_address;
 
@@ -25,21 +27,57 @@ struct apic::apic_support apic::has_apic()
 	return apic::apic_support{edx.apic, ecx.x2apic};
 }
 
+void apic::read_apic_msr(apic_msr_eax *eax, apic_msr_edx *edx)
+{
+	uint32_t eax_raw, edx_raw;
+	read_msr(apic::apic_msr, &eax_raw, &edx_raw);
+
+	*eax = *(apic::apic_msr_eax *)eax_raw;
+	*edx = *(apic::apic_msr_edx *)edx_raw;
+}
+void apic::write_apic_msr(apic::apic_msr_eax eax, apic::apic_msr_edx edx)
+{
+
+	union
+	{
+		apic_msr_eax eax;
+		uint32_t	 raw;
+	} eax_u;
+
+	union
+	{
+		apic_msr_edx edx;
+		uint32_t	 raw;
+	} edx_u;
+
+	eax_u.eax = eax;
+	edx_u.edx = edx;
+
+	uint32_t eax_raw = eax_u.raw;
+	uint32_t edx_raw = edx_u.raw;
+	write_msr(apic::apic_msr, eax_raw, edx_raw);
+}
+
 enum apic::error apic::init_apic()
 {
+	// Done once for global enable.
 	g_lapic_register.init();
-	// There's no actual hardware apic init. Only lapic (core local, must do for every core)
+
+	apic_msr_eax eax;
+	apic_msr_edx edx;
+	read_apic_msr(&eax, &edx);
+	eax.apic_en = true;
+	write_apic_msr(eax, edx);
+
 	return apic::error::none;
 }
 
 extern "C" uint8_t test_cmd()
 {
 
-	volatile apic::interrupt_command_register_high *const volatile_mmio_addr = (volatile apic::interrupt_command_register_high *const)0x50;
-	apic::interrupt_command_register_high				  local;
-	// local.local_apic_id_of_target = 5;
-	// *volatile_mmio_addr			  = local;
-	local = *volatile_mmio_addr;
+	const std::mmio_ptr<apic::interrupt_command_register_high> ptr((volatile apic::interrupt_command_register_high *)0xb00000);
+	apic::interrupt_command_register_high					   local{.local_apic_id_of_target = 5};
+	ptr.write(local);
 
 	return 1;
 	// return res.local_apic_id_of_target;
@@ -48,6 +86,10 @@ extern "C" uint8_t test_cmd()
 enum apic::error apic::init_lapic()
 {
 
+	apic::spurious_interrupt_vector_register spivr = g_lapic_register.spurious_interrupt_vector.read();
+	spivr.apic_enable							   = true;
+	spivr.eoi_suppress							   = false;
+	g_lapic_register.spurious_interrupt_vector.write(spivr);
 	return apic::error::none;
 }
 

@@ -270,6 +270,7 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/stdio.c" -o "$BUILD_DIR/stdio.o" "-I$STDI
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDLIB/stdlib.c" -o "$BUILD_DIR/stdlib.o" "-I$STDLIB" "-I$STDIO"
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDLIB/string.c" -o "$BUILD_DIR/string.o" "-I$STDLIB" "-I$STDIO"
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDLIB/math.c" -o "$BUILD_DIR/math.o" "-I$STDLIB" "-I$STDIO"
+printf -- "\n\n\n======================== Special pointers ==============\n\n\n"
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$STDLIB/special_pointers.cpp" -o "$BUILD_DIR/special_pointers.o" "-I$STDLIB" "-I$STDIO" -fno-strict-aliasing
 
 # Compile Drivers CPU structures
@@ -287,6 +288,7 @@ nasm "${NASM_FLAGS32[@]}" "$IDT/exception_handler.asm" -o "$BUILD_DIR/exception_
 i686-elf-gcc "${CFLAGS[@]}" -c "$PIC/pic.c" -o "$BUILD_DIR/pic.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "-I$CPU"
 
 # CPU/APIC
+printf -- "\n\n\n======================== APIC ==============\n\n\n"
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$APIC/apic.cpp" -o "$BUILD_DIR/apic.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$CPUID"
 
 # =============== Compile Drivers ==============
