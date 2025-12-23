@@ -86,11 +86,13 @@ struct __attribute__((packed)) interrupt_command_register_low
 };
 STATIC_ASSERT(sizeof(interrupt_command_register_low) == 4, "ICR low must be 32 bit");
 
+#pragma GCC push_options
+#pragma GCC optimize("no-strict-aliasing")
 struct __attribute__((packed)) interrupt_command_register_high
 {
 	uint32_t reserved : 24;
 	uint32_t local_apic_id_of_target : 4;
-	// uint32_t unused : 4 = 0;
+	uint32_t unused : 4;
 	// Putting nothing else here makes the highest 4 bits reserved, and unaccessible
 
 	// Read operator - does a volatile load
@@ -122,23 +124,49 @@ struct __attribute__((packed)) interrupt_command_register_high
 		return *this;
 	}
 
-	// Copy constructor for volatile -> non-volatile
-	interrupt_command_register_high(const volatile interrupt_command_register_high &other)
+	/*
+		volatile T* src;
+		T dst = *src;  // Uses: T(const volatile T&)
+	*/
+	__attribute__((always_inline)) interrupt_command_register_high(const volatile interrupt_command_register_high &other)
 	{
-		// Read once from volatile source directly into our bitfields
-		// Use a temporary register to avoid storing full 32-bit to stack
-		uint32_t temp;
-		asm volatile("movl %1, %0"
-			: "=r"(temp)												// Output to register
-			: "m"(*reinterpret_cast<const volatile uint32_t *>(&other)) // Input from memory
-			: /* no clobbers */);
+		union
+		{
+			volatile const interrupt_command_register_high *vptr;
+			volatile const uint32_t						   *uptr;
+		} pun = {&other};
 
-		// Set bitfields directly (compiler will optimize these assignments)
-		reserved				= temp & 0x00FFFFFF;	 // Lower 24 bits
-		local_apic_id_of_target = (temp >> 24) & 0b1111; // Bits 24-27
-														 // Highest 4 bits remain uninitialized (they're padding anyway)
+		uint32_t val						= *pun.uptr;
+		*reinterpret_cast<uint32_t *>(this) = val;
+	}
+
+	/*
+		volatile T* this;
+		T other;
+		*this = other;  // Needs: volatile T& operator=(const
+	*/
+	__attribute__((always_inline)) volatile interrupt_command_register_high &operator=(
+		const interrupt_command_register_high &other) volatile
+	{
+		uint32_t val = static_cast<uint32_t>(other); // Convert non-volatile to uint32_t
+		*this		 = val;							 // Use your existing volatile operator=(uint32_t)
+		return *this;
+	}
+
+	__attribute__((always_inline)) void operator=(const volatile interrupt_command_register_high &rhs) volatile
+	{
+		union
+		{
+			volatile const interrupt_command_register_high *vptr;
+			volatile const uint32_t						   *uptr;
+		} pun = {&rhs};
+
+		uint32_t val								 = *pun.uptr;
+		*reinterpret_cast<volatile uint32_t *>(this) = val;
 	}
 };
+
+#pragma GCC pop_options
 
 STATIC_ASSERT(sizeof(interrupt_command_register_high) == 4, "ICR high must be 32 bit");
 
