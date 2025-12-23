@@ -13,13 +13,17 @@ template <typename T> struct set_once_ptr
   public:
 	void set(T *p)
 	{
+#ifdef DEBUG
 		assert(ptr == nullptr, "Pointer already set!");
+#endif
 		ptr = p;
 	}
 
 	T *get() const
 	{
+#ifdef DEBUG
 		assert(ptr != nullptr, "Pointer not initialized!");
+#endif
 		return ptr;
 	}
 

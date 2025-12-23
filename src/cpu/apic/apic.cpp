@@ -28,8 +28,21 @@ struct apic::apic_support apic::has_apic()
 enum apic::error apic::init_apic()
 {
 	g_lapic_register.init();
+	// There's no actual hardware apic init. Only lapic (core local, must do for every core)
+	return apic::error::none;
+}
 
-	// implement the msr part that initiate the apic
+extern "C" uint8_t test_cmd()
+{
+
+	const volatile apic::interrupt_command_register_high *reg = (const volatile apic::interrupt_command_register_high *)0x50;
+	const apic::interrupt_command_register_high			  res = *reg;
+
+	return res.local_apic_id_of_target;
+}
+
+enum apic::error apic::init_lapic()
+{
 
 	return apic::error::none;
 }

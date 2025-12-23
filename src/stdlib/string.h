@@ -35,6 +35,8 @@ extern "C"
 	 */
 	void *memcpy(void *dest, const void *src, size_t n);
 
+	void *memcpy32(void *dest, const void *src, size_t n);
+
 	/**
 	 * strcmp - Compare two strings
 	 * @s1: First string

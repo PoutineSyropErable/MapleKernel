@@ -66,6 +66,7 @@ void multicore_setup(void *rsdp_void)
 	uint8_t core_count = parsed_madt.entry_counts.processor_local_apic;
 
 	apic::init_apic();
+	apic::init_lapic();
 
 #define BOOT_CORE_ID 0
 	uint8_t core_id = BOOT_CORE_ID;

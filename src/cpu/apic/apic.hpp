@@ -18,7 +18,11 @@ enum class error
 	none = 0,
 };
 
+// APIC initiation itself
 enum apic::error init_apic();
+
+// The lapic initiation (For the running core)
+enum apic::error init_lapic();
 enum apic::error init_io_apic();
 
 /*

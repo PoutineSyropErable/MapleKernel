@@ -69,6 +69,8 @@ enum class lapic_registers_offset : uint16_t
 
 };
 
+/* ============================= Special structs for important registers =============================*/
+
 struct __attribute__((packed)) interrupt_command_register_low
 {
 	uint8_t	 vector_number;
@@ -86,12 +88,56 @@ STATIC_ASSERT(sizeof(interrupt_command_register_low) == 4, "ICR low must be 32 b
 
 struct __attribute__((packed)) interrupt_command_register_high
 {
-	uint32_t reserved : 24 = 0;
+	uint32_t reserved : 24;
 	uint32_t local_apic_id_of_target : 4;
+	// uint32_t unused : 4 = 0;
 	// Putting nothing else here makes the highest 4 bits reserved, and unaccessible
 
-	// Default constructor
-	// constexpr interrupt_command_register_high() = default;
+	// Read operator - does a volatile load
+	operator uint32_t() const volatile
+	{
+		uint32_t result;
+		asm volatile("movl %1, %0" : "=r"(result) : "m"(*((volatile uint32_t *)this)) : "memory");
+		return result;
+	}
+
+	// Write operator - does a volatile store
+	volatile interrupt_command_register_high &operator=(uint32_t value) volatile
+	{
+		asm volatile("movl %1, %0" : "=m"(*((volatile uint32_t *)this)) : "r"(value) : "memory");
+		return *this;
+	}
+
+	// Non-volatile versions for completeness
+	operator uint32_t() const
+	{
+		uint32_t result;
+		asm volatile("movl %1, %0" : "=r"(result) : "m"(*(const uint32_t *)this) : "memory");
+		return result;
+	}
+
+	interrupt_command_register_high &operator=(uint32_t value)
+	{
+		asm volatile("movl %1, %0" : "=m"(*(uint32_t *)this) : "r"(value) : "memory");
+		return *this;
+	}
+
+	// Copy constructor for volatile -> non-volatile
+	interrupt_command_register_high(const volatile interrupt_command_register_high &other)
+	{
+		// Read once from volatile source directly into our bitfields
+		// Use a temporary register to avoid storing full 32-bit to stack
+		uint32_t temp;
+		asm volatile("movl %1, %0"
+			: "=r"(temp)												// Output to register
+			: "m"(*reinterpret_cast<const volatile uint32_t *>(&other)) // Input from memory
+			: /* no clobbers */);
+
+		// Set bitfields directly (compiler will optimize these assignments)
+		reserved				= temp & 0x00FFFFFF;	 // Lower 24 bits
+		local_apic_id_of_target = (temp >> 24) & 0b1111; // Bits 24-27
+														 // Highest 4 bits remain uninitialized (they're padding anyway)
+	}
 };
 
 STATIC_ASSERT(sizeof(interrupt_command_register_high) == 4, "ICR high must be 32 bit");
@@ -103,6 +149,17 @@ STATIC_ASSERT(sizeof(interrupt_command_register_high) == 4, "ICR high must be 32
 		ret;                                                                                                                               \
 	})
 
+struct __attribute__((packed)) spurious_interrupt_vector_register
+{
+	uint8_t	 vector;		   // bits 0-7
+	bool	 apic_enable : 1;  // bit 8
+	uint8_t	 reserved1 : 3;	   // bits 9-11
+	bool	 eoi_suppress : 1; // bit 12
+	uint32_t reserved2 : 19;   // bits 13-31
+};
+STATIC_ASSERT(sizeof(spurious_interrupt_vector_register) == 4, "SVR must be 32-bit");
+
+/* ============================= Constexpr helpers =============================*/
 extern volatile void *lapic_address;
 
 template <typename ToType> constexpr volatile ToType *get_mmio_address(volatile void *base, lapic_registers_offset offset)
@@ -116,19 +173,22 @@ constexpr enum lapic_registers_offset add_offset(lapic_registers_offset lapic_of
 	return (lapic_registers_offset)loff;
 }
 
+/* ============================= The Class =============================*/
 class LapicRegisters
 {
   public:
+	// TODO: Give the other then uint32_t a special type.
+	// Stuff like,
 	std::set_once_ptr<volatile uint32_t>	   lapic_id;
 	std::set_once_ptr<volatile uint32_t>	   lapic_version;
 	std::set_once_ptr<volatile uint32_t>	   task_priority;
 	std::set_once_ptr<volatile const uint32_t> arbitration_priority;
 	std::set_once_ptr<volatile const uint32_t> process_priority;
 	// End of interrupt (private field). Write only
-	std::set_once_ptr<volatile uint32_t> remote_read;
-	std::set_once_ptr<volatile uint32_t> logical_destination;
-	std::set_once_ptr<volatile uint32_t> destination_format;
-	std::set_once_ptr<volatile uint32_t> spurious_interrupt_vector;
+	std::set_once_ptr<volatile uint32_t>						   remote_read;
+	std::set_once_ptr<volatile uint32_t>						   logical_destination;
+	std::set_once_ptr<volatile uint32_t>						   destination_format;
+	std::set_once_ptr<volatile spurious_interrupt_vector_register> spurious_interrupt_vector;
 
 	std::set_once_ptr<volatile const uint32_t> in_service[8];
 	std::set_once_ptr<volatile const uint32_t> trigger_mode[8];
@@ -154,7 +214,12 @@ class LapicRegisters
 
 	void init()
 	{
-		assert(!initiated, "Can't init multiple time\n");
+		if (initiated)
+		{
+			kprintf("Already initiated!\n");
+			return;
+		}
+
 		lapic_id.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::lapic_id));
 		lapic_version.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::lapic_version));
 		task_priority.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::task_priority));
@@ -166,7 +231,8 @@ class LapicRegisters
 		remote_read.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::remote_read));
 		logical_destination.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::logical_destination));
 		destination_format.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::destination_format));
-		spurious_interrupt_vector.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::spurious_interrupt_vector));
+		spurious_interrupt_vector.set(
+			get_mmio_address<spurious_interrupt_vector_register>(lapic_address, lapic_registers_offset::spurious_interrupt_vector));
 
 		for (uint8_t i = 0; i < 8; i++)
 		{
@@ -209,10 +275,14 @@ class LapicRegisters
 	void test()
 	{
 		// Write first to high, then to low
-		uint32_t la							  = *lapic_id;
-		command_high->local_apic_id_of_target = 5;
-		interrupt_command_register_high ch{.local_apic_id_of_target = 5};
-		command_low->vector_number = 1;
+		// uint32_t la							  = *lapic_id;
+		// command_high->local_apic_id_of_target = 5;
+		// interrupt_command_register_high ch{.local_apic_id_of_target = 5};
+		// *command_high						= ch;
+		volatile interrupt_command_register_high ch2 = *command_high;
+		kprintf("ch2: %u\n", ch2.local_apic_id_of_target);
+		// *command_high = ch2;
+		// command_low->vector_number			= 1;
 	}
 
   private:

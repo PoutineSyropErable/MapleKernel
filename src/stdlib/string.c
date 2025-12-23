@@ -24,6 +24,28 @@ void *memcpy(void *restrict dest, const void *restrict src, size_t n)
 	return dest; // mimic standard memcpy return value
 }
 
+void *memcpy32(void *restrict dest, const void *restrict src, size_t n)
+{
+	// Cast to unsigned char pointers for byte-wise copy
+	uint32_t	   *d = dest;
+	const uint32_t *s = src;
+
+#ifdef DEBUG
+	// Check for overlap in debug mode
+	if ((d > s && d < s + n) || (s > d && s < d + n))
+	{
+		abort_msg("Overlapping memcopy!\n");
+	}
+#endif
+
+	for (size_t i = 0; i < n; i++)
+	{
+		d[i] = s[i];
+	}
+
+	return dest; // mimic standard memcpy return value
+}
+
 // memset usually goes in <string.h>
 void *memset(void *dest, int value, size_t n)
 {
