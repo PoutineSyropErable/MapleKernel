@@ -8,6 +8,18 @@ extern "C"
 {
 #endif
 
+	static inline __attribute__((noreturn)) void exit(int exit_code)
+	{
+		if (exit_code)
+		{
+			kprintf("Exited with exit code %d\n", exit_code);
+		}
+		while (true)
+		{
+			__asm__ volatile("cli; hlt");
+		}
+	}
+
 	static inline __attribute__((noreturn)) void _abort(void)
 	{
 		terminal_writestring("ABORTED\n");

@@ -105,20 +105,26 @@ void multicore_gdt::init_multicore_gdt()
 	add_multicore_gdt_entry();
 }
 
-void multicore_gdt::set_fs_or_segment_selector(uint8_t core_id, bool gs_not_fs)
+void multicore_gdt::set_fs_or_segment_selector(uint8_t core_id, enum fs_or_gs segment_selector)
 {
 	segment_selector_t seg;
 	seg.rpl	  = 0;
 	seg.ti	  = 0;
-	seg.index = 4 + (core_id * 2) + gs_not_fs;
+	seg.index = 4 + (core_id * 2) + (uint16_t)segment_selector;
 
-	if (gs_not_fs)
+	switch (segment_selector)
+	{
+
+	case fs_or_gs::fs:
 	{
 		__asm__ volatile("movw %0, %%gs" : : "r"(seg) : "memory");
+		break;
 	}
-	else
+	case fs_or_gs::gs:
 	{
 		__asm__ volatile("movw %0, %%fs" : : "r"(seg) : "memory");
+		break;
+	}
 	}
 }
 

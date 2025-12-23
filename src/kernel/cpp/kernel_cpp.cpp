@@ -29,10 +29,8 @@ void print_test()
 	kprintf("Number with option: %u:7\n", 0x24f);
 }
 
-int cpp_main(struct cpp_main_args args)
+void multicore_setup(void *rsdp_void)
 {
-
-	kprintf("\n\n================= Start of CPP Main =================\n\n");
 
 	struct apic::apic_support apic_support = apic::has_apic();
 	kprintf("Support:\n  Apic: %b\n  x2Apic: %b\n\n\n", apic_support.apic, apic_support.x2apic);
@@ -40,7 +38,7 @@ int cpp_main(struct cpp_main_args args)
 	bool has_apic = apic_support.apic || apic_support.x2apic;
 	assert(has_apic, "Must have apic\n");
 
-	struct acpi::RSDP *rsdp = (struct acpi::RSDP *)args.rsdp_v;
+	struct acpi::RSDP *rsdp = (struct acpi::RSDP *)rsdp_void;
 	kprintf("rsdp address: %h\n", rsdp);
 	acpi::print_rsdp(rsdp);
 
@@ -62,28 +60,64 @@ int cpp_main(struct cpp_main_args args)
 	kprintf("lapic_address = %h\n", lapic_address);
 	kprintf("io_apic_address = %h\n", io_apic_address);
 
+	apic::lapic_address	   = (volatile void *)lapic_address;
+	apic::io_appic_address = (volatile void *)io_apic_address;
+
+	uint8_t core_count = parsed_madt.entry_counts.processor_local_apic;
+
+	apic::init_apic();
+
+#define BOOT_CORE_ID 0
+	uint8_t core_id = BOOT_CORE_ID;
 	multicore_gdt::init_multicore_gdt();
-	multicore_gdt::set_fs_or_segment_selector(0, false);
-	multicore_gdt::set_fs_or_segment_selector(0, true);
-	multicore_gdt::get_fs_struct()->core_id = 0;
-	multicore_gdt::get_gs_struct()->core_id = 0;
-	// other core will do it properly. Naturally, we'll use the apic to get the core_id;
+	multicore_gdt::set_fs_or_segment_selector(core_id, multicore_gdt::fs_or_gs::fs); // sets fs so it has the correct gdt entry.
+	multicore_gdt::set_fs_or_segment_selector(core_id, multicore_gdt::fs_or_gs::gs);
+	multicore_gdt::get_fs_struct()->core_id		= core_id;
+	multicore_gdt::get_gs_struct()->other_stuff = 69;
+
+	if (false)
+	{
+		uint8_t local_core_id = apic::get_core_id();
+		// Other cores will do this using get_core id;
+
+		multicore_gdt::set_fs_or_segment_selector(local_core_id, multicore_gdt::fs_or_gs::fs); // sets fs so it has the correct gdt entry.
+		multicore_gdt::set_fs_or_segment_selector(local_core_id, multicore_gdt::fs_or_gs::gs);
+		multicore_gdt::get_fs_struct()->core_id		= local_core_id;
+		multicore_gdt::get_gs_struct()->other_stuff = 69;
+	}
 
 	// initiate the apic_io of this core.
+	apic::init_io_apic();
 
-	// Apic timers calibration
+	// Apic timers calibration using pit
+	apic::calibrate_lapic_timer();
 
-	// wake cores
-	for (uint8_t i = 0; i < MAX_CORE_COUNT; i++)
+	// wake cores. We are already on core 0.
+	for (uint8_t i = 0; i < core_count; i++)
 	{
+		uint8_t core_id = parsed_madt.processor_local_apics[i]->apic_id;
+		if (core_id == BOOT_CORE_ID)
+		{
+			// nothing says the parse is in order. We are on core 0.
+			// So, skip that itteration
+			continue;
+		}
 		// TODO: Must implement these functions.
 		// Make is so every interrupt also does a last core recieved thing
-		apic::wake_core(i, apic::core_bootstrap, apic::core_main);
+		apic::wake_core(core_id, apic::core_bootstrap, apic::core_main);
 		apic::wait_till_interrupt(INTERRUPT_ENTERED_MAIN);
 	}
 
 	disable_pic();
 	// Disabling the pic will be done rather late
+}
+
+int cpp_main(struct cpp_main_args args)
+{
+
+	multicore_setup(args.rsdp_v);
+
+	kprintf("\n\n================= Start of CPP Main =================\n\n");
 
 	// Setup lapic irq handling
 	terminal_writestring("\n====kernel cpp entering main loop====\n");

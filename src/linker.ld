@@ -17,6 +17,25 @@ SECTIONS
         *(.multiboot)         /* multiboot header */
     }
 
+	  /* ============================================
+       AP TRAMPOLINE (SMP bootstrapping)
+       ============================================ */
+    . = 0x8000;              /* Standard AP trampoline location */
+    
+    .ap_trampoline : ALIGN(4K)
+    {
+        __ap_trampoline_start = .;
+        KEEP(*(.ap_trampoline_text))  /* AP startup code */
+        __ap_trampoline_end = .;
+    }
+    
+    .ap_trampoline_data (NOLOAD) : ALIGN(4)
+    {
+        __ap_trampoline_data_start = .;
+        KEEP(*(.ap_trampoline_data))  /* AP shared variables */
+        __ap_trampoline_data_end = .;
+    }
+
     /* 16-bit stack */
     .stack16 (NOLOAD) : ALIGN(16)
     {

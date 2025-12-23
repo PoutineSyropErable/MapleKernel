@@ -1,5 +1,4 @@
 #pragma once
-#include "apic_internals.hpp"
 #include <stddef.h>
 #include <stdint.h>
 
@@ -14,7 +13,28 @@ struct apic_support
 
 struct apic_support has_apic();
 
+enum class error
+{
+	none = 0,
+};
+
+enum apic::error init_apic();
+enum apic::error init_io_apic();
+
+/*
+Method using lapic.
+*/
 uint8_t get_core_id();
+
+/*
+method using fs/gs.
+*/
+uint8_t get_core_id_fast();
+
+extern volatile void *lapic_address;
+extern volatile void *io_appic_address;
+
+void calibrate_lapic_timer();
 
 extern "C" void core_bootstrap();
 void			core_main();

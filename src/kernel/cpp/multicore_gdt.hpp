@@ -15,7 +15,7 @@ struct FS_CONTENT
 
 struct GS_CONTENT
 {
-	uint8_t core_id;
+	uint32_t other_stuff;
 };
 
 struct FS_GS
@@ -23,6 +23,14 @@ struct FS_GS
 	struct FS_CONTENT fs;
 	struct GS_CONTENT gs;
 };
+
+enum class fs_or_gs
+{
+	fs = 0,
+	gs = 1,
+};
+
+void set_fs_or_segment_selector(uint8_t core_id, enum fs_or_gs segment_selector);
 
 void set_fs_or_segment_selector(uint8_t core_id, bool gs_not_fs);
 void init_multicore_gdt();
