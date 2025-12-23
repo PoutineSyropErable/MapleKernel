@@ -110,7 +110,7 @@ template <typename ToType> constexpr volatile ToType *get_mmio_address(volatile 
 	return reinterpret_cast<volatile ToType *>(reinterpret_cast<uintptr_t>(base) + (uint16_t)offset);
 }
 
-constexpr enum lapic_registers_offset add_off(lapic_registers_offset lapic_offset, uint8_t offset)
+constexpr enum lapic_registers_offset add_offset(lapic_registers_offset lapic_offset, uint8_t offset)
 {
 	uint8_t loff = (uint8_t)lapic_offset + offset;
 	return (lapic_registers_offset)loff;
@@ -123,31 +123,87 @@ class LapicRegisters
 	std::set_once_ptr<volatile uint32_t>	   lapic_version;
 	std::set_once_ptr<volatile uint32_t>	   task_priority;
 	std::set_once_ptr<volatile const uint32_t> arbitration_priority;
+	std::set_once_ptr<volatile const uint32_t> process_priority;
+	// End of interrupt (private field). Write only
+	std::set_once_ptr<volatile uint32_t> remote_read;
+	std::set_once_ptr<volatile uint32_t> logical_destination;
+	std::set_once_ptr<volatile uint32_t> destination_format;
+	std::set_once_ptr<volatile uint32_t> spurious_interrupt_vector;
 
 	std::set_once_ptr<volatile const uint32_t> in_service[8];
 	std::set_once_ptr<volatile const uint32_t> trigger_mode[8];
 	std::set_once_ptr<volatile const uint32_t> interrupt_request[8];
 
+	std::set_once_ptr<volatile const uint32_t> error_status;
+	std::set_once_ptr<volatile uint32_t>	   lvt_cmci;
+
 	std::set_once_ptr<volatile interrupt_command_register_low>	command_low;
 	std::set_once_ptr<volatile interrupt_command_register_high> command_high;
 
+	std::set_once_ptr<volatile uint32_t> lvt_timer;
+	std::set_once_ptr<volatile uint32_t> lvt_thermal_sensor;
+	std::set_once_ptr<volatile uint32_t> lvt_performance_monitoring_counters;
+	std::set_once_ptr<volatile uint32_t> lvt_lint0;
+	std::set_once_ptr<volatile uint32_t> lvt_lint1;
+	std::set_once_ptr<volatile uint32_t> lvt_error;
+
+	std::set_once_ptr<volatile uint32_t>	   initial_count;
+	std::set_once_ptr<volatile const uint32_t> current_count;
+
+	std::set_once_ptr<volatile uint32_t> divide_configuration_register;
+
 	void init()
 	{
+		assert(!initiated, "Can't init multiple time\n");
 		lapic_id.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::lapic_id));
 		lapic_version.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::lapic_version));
 		task_priority.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::task_priority));
 		arbitration_priority.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::arbitration_priority));
+		process_priority.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::process_priority));
+
+		end_of_interrupt.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::end_of_interrupt));
+
+		remote_read.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::remote_read));
+		logical_destination.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::logical_destination));
+		destination_format.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::destination_format));
+		spurious_interrupt_vector.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::spurious_interrupt_vector));
 
 		for (uint8_t i = 0; i < 8; i++)
 		{
-			in_service[i].set(get_mmio_address<uint32_t>(lapic_address, add_off(lapic_registers_offset::in_service_0, 0x10 * i)));
-			trigger_mode[i].set(get_mmio_address<uint32_t>(lapic_address, add_off(lapic_registers_offset::trigger_mode_0, 0x10 * i)));
+			in_service[i].set(get_mmio_address<uint32_t>(lapic_address, add_offset(lapic_registers_offset::in_service_0, 0x10 * i)));
+			trigger_mode[i].set(get_mmio_address<uint32_t>(lapic_address, add_offset(lapic_registers_offset::trigger_mode_0, 0x10 * i)));
 			interrupt_request[i].set(
-				get_mmio_address<uint32_t>(lapic_address, add_off(lapic_registers_offset::interrupt_request_0, 0x10 * i)));
+				get_mmio_address<uint32_t>(lapic_address, add_offset(lapic_registers_offset::interrupt_request_0, 0x10 * i)));
 		}
+
+		error_status.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::error_status));
+		lvt_cmci.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::lvt_cmci));
 
 		command_low.set(get_mmio_address<interrupt_command_register_low>(lapic_address, lapic_registers_offset::command_low));
 		command_high.set(get_mmio_address<interrupt_command_register_high>(lapic_address, lapic_registers_offset::command_high));
+
+		lvt_timer.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::lvt_timer));
+		lvt_thermal_sensor.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::lvt_thermal_sensor));
+		lvt_performance_monitoring_counters.set(
+			get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::lvt_performance_monitoring_counters));
+		lvt_lint0.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::lvt_lint0));
+		lvt_lint1.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::lvt_lint1));
+		lvt_error.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::lvt_error));
+
+		initial_count.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::initial_count));
+		current_count.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::current_count));
+
+		divide_configuration_register.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::divide_configuration_register));
+
+		initiated = true;
+	}
+
+	void send_eoi()
+	{
+		constexpr uint32_t eoi_safe_val = 0;
+		// Writing something not 0 might cause a general protection fault
+		*end_of_interrupt = eoi_safe_val;
+		// Since, lapic is core dependant, then we don't need to send this anywhere else. It's that easy
 	}
 
 	void test()
@@ -160,6 +216,8 @@ class LapicRegisters
 	}
 
   private:
+	std::set_once_ptr<volatile uint32_t> end_of_interrupt;
+	bool								 initiated = false;
 };
 
 extern LapicRegisters g_lapic_register;
