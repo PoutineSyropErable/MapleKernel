@@ -9,7 +9,7 @@
 volatile void *apic::lapic_address;
 volatile void *apic::io_appic_address;
 
-apic::LapicRegistersV2 apic::g_lapic_register;
+apic::LapicRegisters apic::g_lapic_register;
 
 struct apic::apic_support apic::has_apic()
 {
