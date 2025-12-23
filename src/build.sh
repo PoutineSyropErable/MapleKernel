@@ -410,7 +410,7 @@ printf "\n\n====== End of Linking =====\n\n"
 
 objdump -D -h "$BUILD_DIR/myos.elf" >"$BUILD_DIR/myos.dump"
 
-objdump -D -h "$BUILD_DIR/apic.o" >"$BUILD_DIR/apic.dump"
+objdump -D -h -M intel "$BUILD_DIR/apic.o" >"$BUILD_DIR/apic.dump"
 objdump -D -h -M intel "$BUILD_DIR/special_pointers.o" >"$BUILD_DIR/special_pointers.dump"
 
 # Check if the kernel is multiboot-compliant

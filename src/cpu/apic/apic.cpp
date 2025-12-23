@@ -44,38 +44,8 @@ void apic::read_apic_msr(apic_msr_eax *eax, apic_msr_edx *edx)
 	uint32_t eax_raw, edx_raw;
 	read_msr(apic::apic_msr, &eax_raw, &edx_raw);
 
-	constexpr bool fast = true;
-	if (fast)
-	{
-		// requires -fno-strict-aliasing, otherwise undefined behavior, and the compiler could optimize this write away.
-		// BUT, fno-strict-aliasing is present anyway. Might as well use the most optimized read
-		// If it's not present, it's an error on the build-script writter (me)
-		*eax = *(apic::apic_msr_eax *)eax_raw;
-		*edx = *(apic::apic_msr_edx *)edx_raw;
-	}
-	else
-	{
-		// This might be stupid, and do multiple move for each bitfield.
-		// Idk if it will.
-		// This doesn't require -fno-strict-aliasing (On G++ and CLANG++, because it's an extension)
-		// Not standard C++, but fuck standard C++
-		union
-		{
-			uint32_t	 raw;
-			apic_msr_eax val;
-		} u_a;
-
-		union
-		{
-			uint32_t	 raw;
-			apic_msr_edx val;
-		} u_d;
-
-		u_a.raw = eax_raw;
-		u_d.raw = edx_raw;
-		*eax	= u_a.val;
-		*edx	= u_d.val;
-	}
+	*eax = from_uint32<apic_msr_eax>(eax_raw);
+	*edx = from_uint32<apic_msr_edx>(edx_raw);
 }
 void apic::write_apic_msr(apic::apic_msr_eax eax, apic::apic_msr_edx edx)
 {
