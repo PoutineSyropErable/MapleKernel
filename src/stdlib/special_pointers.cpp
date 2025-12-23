@@ -36,26 +36,37 @@ void test_special_pointers2(uintptr_t addr)
 {
 
 	// Raw MMIO pointer
-	volatile Reg16x2 *ptr_raw = (volatile Reg16x2 *)addr;
+	uint8_t which = 0;
 
-	const std::mmio_ptr<Reg16x2> ptr(ptr_raw);
+	if (which == 0)
+	{
+		volatile Reg16x2				  *ptr_raw = (volatile Reg16x2 *)addr;
+		const std::const_mmio_ptr<Reg16x2> ptr(ptr_raw);
 
-	// Reg16x2 val{.low = 7, .high = 8};
-	// ptr.write(val);
+		Reg16x2 val{.low = 7, .high = 8};
+		ptr.write(val);
+	}
 
 	// // Set-once read/write
-	uint8_t which = 2;
 
 	if (which == 1)
 	{
+		volatile Reg16x2			*ptr_raw = (volatile Reg16x2 *)addr;
+		const std::mmio_ptr<Reg16x2> ptr(ptr_raw);
+
 		std::set_once<std::mmio_ptr<Reg16x2>> global_mmio;
 		global_mmio.set(ptr); // can only call once
+
 		global_mmio.write(Reg16x2{.low = 5, .high = 2});
 	}
 
 	if (which == 2)
 	{
+		volatile Reg16x2			*ptr_raw = (volatile Reg16x2 *)addr;
+		const std::mmio_ptr<Reg16x2> ptr(ptr_raw);
+
 		std::set_once_ro<std::mmio_ptr<Reg16x2>> global_mmio_ro;
+
 		global_mmio_ro.set(ptr); // can only call once
 		Reg16x2 reg_read = global_mmio_ro.read();
 		// Sadly read must use a stack variable to save the result.
@@ -64,7 +75,11 @@ void test_special_pointers2(uintptr_t addr)
 
 	if (which == 3)
 	{
+		volatile Reg16x2			*ptr_raw = (volatile Reg16x2 *)addr;
+		const std::mmio_ptr<Reg16x2> ptr(ptr_raw);
+
 		std::set_once<std::mmio_ptr<Reg16x2>> global_mmio_wo;
+
 		global_mmio_wo.set(ptr); // can only call once
 		global_mmio_wo.write(Reg16x2{.low = 5, .high = 2});
 	}

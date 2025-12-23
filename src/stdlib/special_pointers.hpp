@@ -88,8 +88,10 @@ template <typename T> struct mmio_pointer
 	}
 };
 
-// Simple MMIO pointer abstraction
-template <typename T, bool IsConst = true> struct mmio_ptr
+// ======================================================
+// Read/Write MMIO pointer
+// ======================================================
+template <typename T> struct mmio_ptr
 {
 	static_assert(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4, "mmio_ptr only supports 1, 2, or 4 byte types");
 
@@ -97,26 +99,21 @@ template <typename T, bool IsConst = true> struct mmio_ptr
 	using underlying_t =
 		typename conditional<sizeof(T) == 1, uint8_t, typename conditional<sizeof(T) == 2, uint16_t, uint32_t>::type>::type;
 
-	// Choose pointer type based on IsConst
-	using ptr_type = typename conditional<IsConst,
-		volatile T *const,	 // if wrapper is const
-		volatile T *>::type; // otherwise
-
-	ptr_type ptr; // underlying pointer
+	volatile T *ptr; // mutable pointer. But never
 
   public:
-	using value_type = T; // <-- This is needed for wrappers like set_once
-	// Construct with the raw pointer
+	using value_type = T;
+
+	// construct from raw pointer
 	constexpr explicit mmio_ptr(volatile T *p) : ptr(p)
 	{
 	}
 
-	// Default constructor → pointer is null
+	// default constructor → pointer is null
 	constexpr mmio_ptr() : ptr(nullptr)
 	{
 	}
 
-	// Read value (for read-capable pointers)
 	T read() const
 	{
 		union
@@ -124,11 +121,10 @@ template <typename T, bool IsConst = true> struct mmio_ptr
 			volatile underlying_t raw;
 			T					  val;
 		} u;
-		u.raw = *(volatile underlying_t *)ptr; // safe volatile read
+		u.raw = *(volatile underlying_t *)ptr;
 		return u.val;
 	}
 
-	// Write value (for write-capable pointers)
 	void write(const T val) const
 	{
 		union
@@ -136,10 +132,54 @@ template <typename T, bool IsConst = true> struct mmio_ptr
 			T			 val;
 			underlying_t raw;
 		} u;
-
 		u.val						  = val;
 		*(volatile underlying_t *)ptr = u.raw;
 	}
+};
+
+// ======================================================
+// Const MMIO pointer (Can't change the pointer)
+// ======================================================
+template <typename T> struct const_mmio_ptr
+{
+	static_assert(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4, "mmio_ptr only supports 1, 2, or 4 byte types");
+
+  private:
+	using underlying_t =
+		typename conditional<sizeof(T) == 1, uint8_t, typename conditional<sizeof(T) == 2, uint16_t, uint32_t>::type>::type;
+
+	volatile T *const ptr; // pointer is const, can't be reassigned
+
+  public:
+	using value_type = T;
+
+	constexpr explicit const_mmio_ptr(volatile T *p) : ptr(p)
+	{
+	}
+
+	T read() const
+	{
+		union
+		{
+			volatile underlying_t raw;
+			T					  val;
+		} u;
+		u.raw = *(volatile underlying_t *)ptr;
+		return u.val;
+	}
+
+	void write(const T val) const
+	{
+		union
+		{
+			T			 val;
+			underlying_t raw;
+		} u;
+		u.val						  = val;
+		*(volatile underlying_t *)ptr = u.raw;
+	}
+
+	// no write() method — read-only
 };
 
 // ======================================================

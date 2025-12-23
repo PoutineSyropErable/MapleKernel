@@ -198,9 +198,9 @@ template <typename ToType> constexpr const std::mmio_ptr<ToType> get_const_mmio_
 	return ptr;
 }
 
-template <typename ToType> constexpr std::mmio_ptr<ToType, false> get_mmio_ptr(volatile void *base, lapic_registers_offset offset)
+template <typename ToType> constexpr std::mmio_ptr<ToType> get_mmio_ptr(volatile void *base, lapic_registers_offset offset)
 {
-	std::mmio_ptr<ToType, false> ptr(get_mmio_address<ToType>(base, offset));
+	std::mmio_ptr<ToType> ptr(get_mmio_address<ToType>(base, offset));
 	return ptr;
 }
 
@@ -282,7 +282,7 @@ class LapicRegisters
 		error_status.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::error_status));
 		lvt_cmci.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::lvt_cmci));
 
-		command_low.set(get_mmio_ptr<interrupt_command_register_low>(lapic_address, lapic_registers_offset::command_low));
+		// command_low.set(get_mmio_ptr<interrupt_command_register_low>(lapic_address, lapic_registers_offset::command_low));
 		command_high.set(get_mmio_address<interrupt_command_register_high>(lapic_address, lapic_registers_offset::command_high));
 
 		lvt_timer.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::lvt_timer));
