@@ -192,6 +192,18 @@ template <typename ToType> constexpr volatile ToType *get_mmio_address(volatile 
 	return reinterpret_cast<volatile ToType *>(reinterpret_cast<uintptr_t>(base) + (uint16_t)offset);
 }
 
+template <typename ToType> constexpr const std::mmio_ptr<ToType> get_const_mmio_ptr(volatile void *base, lapic_registers_offset offset)
+{
+	const std::mmio_ptr<ToType> ptr(get_mmio_address<ToType>(base, offset));
+	return ptr;
+}
+
+template <typename ToType> constexpr std::mmio_ptr<ToType, false> get_mmio_ptr(volatile void *base, lapic_registers_offset offset)
+{
+	std::mmio_ptr<ToType, false> ptr(get_mmio_address<ToType>(base, offset));
+	return ptr;
+}
+
 constexpr enum lapic_registers_offset add_offset(lapic_registers_offset lapic_offset, uint8_t offset)
 {
 	uint8_t loff = (uint8_t)lapic_offset + offset;
@@ -204,38 +216,38 @@ class LapicRegisters
   public:
 	// TODO: Give the other then uint32_t a special type.
 	// Stuff like,
-	std::set_once_ptr<volatile uint32_t>	   lapic_id;
-	std::set_once_ptr<volatile uint32_t>	   lapic_version;
-	std::set_once_ptr<volatile uint32_t>	   task_priority;
-	std::set_once_ptr<volatile const uint32_t> arbitration_priority;
-	std::set_once_ptr<volatile const uint32_t> process_priority;
+	std::set_once_primitive_ptr<volatile uint32_t>		 lapic_id;
+	std::set_once_primitive_ptr<volatile uint32_t>		 lapic_version;
+	std::set_once_primitive_ptr<volatile uint32_t>		 task_priority;
+	std::set_once_primitive_ptr<volatile const uint32_t> arbitration_priority;
+	std::set_once_primitive_ptr<volatile const uint32_t> process_priority;
 	// End of interrupt (private field). Write only
-	std::set_once_ptr<volatile uint32_t>						   remote_read;
-	std::set_once_ptr<volatile uint32_t>						   logical_destination;
-	std::set_once_ptr<volatile uint32_t>						   destination_format;
-	std::set_once_ptr<volatile spurious_interrupt_vector_register> spurious_interrupt_vector;
+	std::set_once_primitive_ptr<volatile uint32_t>							 remote_read;
+	std::set_once_primitive_ptr<volatile uint32_t>							 logical_destination;
+	std::set_once_primitive_ptr<volatile uint32_t>							 destination_format;
+	std::set_once_primitive_ptr<volatile spurious_interrupt_vector_register> spurious_interrupt_vector;
 
-	std::set_once_ptr<volatile const uint32_t> in_service[8];
-	std::set_once_ptr<volatile const uint32_t> trigger_mode[8];
-	std::set_once_ptr<volatile const uint32_t> interrupt_request[8];
+	std::set_once_primitive_ptr<volatile const uint32_t> in_service[8];
+	std::set_once_primitive_ptr<volatile const uint32_t> trigger_mode[8];
+	std::set_once_primitive_ptr<volatile const uint32_t> interrupt_request[8];
 
-	std::set_once_ptr<volatile const uint32_t> error_status;
-	std::set_once_ptr<volatile uint32_t>	   lvt_cmci;
+	std::set_once_primitive_ptr<volatile const uint32_t> error_status;
+	std::set_once_primitive_ptr<volatile uint32_t>		 lvt_cmci;
 
-	std::set_once<std::mmio_ptr<interrupt_command_register_low>> command_low;
-	std::set_once_ptr<volatile interrupt_command_register_high>	 command_high;
+	std::set_once<std::mmio_ptr<interrupt_command_register_low>>		  command_low;
+	std::set_once_primitive_ptr<volatile interrupt_command_register_high> command_high;
 
-	std::set_once_ptr<volatile uint32_t> lvt_timer;
-	std::set_once_ptr<volatile uint32_t> lvt_thermal_sensor;
-	std::set_once_ptr<volatile uint32_t> lvt_performance_monitoring_counters;
-	std::set_once_ptr<volatile uint32_t> lvt_lint0;
-	std::set_once_ptr<volatile uint32_t> lvt_lint1;
-	std::set_once_ptr<volatile uint32_t> lvt_error;
+	std::set_once_primitive_ptr<volatile uint32_t> lvt_timer;
+	std::set_once_primitive_ptr<volatile uint32_t> lvt_thermal_sensor;
+	std::set_once_primitive_ptr<volatile uint32_t> lvt_performance_monitoring_counters;
+	std::set_once_primitive_ptr<volatile uint32_t> lvt_lint0;
+	std::set_once_primitive_ptr<volatile uint32_t> lvt_lint1;
+	std::set_once_primitive_ptr<volatile uint32_t> lvt_error;
 
-	std::set_once_ptr<volatile uint32_t>	   initial_count;
-	std::set_once_ptr<volatile const uint32_t> current_count;
+	std::set_once_primitive_ptr<volatile uint32_t>		 initial_count;
+	std::set_once_primitive_ptr<volatile const uint32_t> current_count;
 
-	std::set_once_ptr<volatile uint32_t> divide_configuration_register;
+	std::set_once_primitive_ptr<volatile uint32_t> divide_configuration_register;
 
 	void init()
 	{
@@ -270,7 +282,7 @@ class LapicRegisters
 		error_status.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::error_status));
 		lvt_cmci.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::lvt_cmci));
 
-		command_low.set(get_mmio_address<interrupt_command_register_low>(lapic_address, lapic_registers_offset::command_low));
+		command_low.set(get_mmio_ptr<interrupt_command_register_low>(lapic_address, lapic_registers_offset::command_low));
 		command_high.set(get_mmio_address<interrupt_command_register_high>(lapic_address, lapic_registers_offset::command_high));
 
 		lvt_timer.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::lvt_timer));
@@ -311,8 +323,8 @@ class LapicRegisters
 	}
 
   private:
-	std::set_once_ptr<volatile uint32_t> end_of_interrupt;
-	bool								 initiated = false;
+	std::set_once_primitive_ptr<volatile uint32_t> end_of_interrupt;
+	bool										   initiated = false;
 };
 
 extern LapicRegisters g_lapic_register;
