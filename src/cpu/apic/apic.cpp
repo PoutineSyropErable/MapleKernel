@@ -35,10 +35,14 @@ enum apic::error apic::init_apic()
 extern "C" uint8_t test_cmd()
 {
 
-	const volatile apic::interrupt_command_register_high *reg = (const volatile apic::interrupt_command_register_high *)0x50;
-	const apic::interrupt_command_register_high			  res = *reg;
+	volatile apic::interrupt_command_register_high *const volatile_mmio_addr = (volatile apic::interrupt_command_register_high *const)0x50;
+	apic::interrupt_command_register_high				  local;
+	// local.local_apic_id_of_target = 5;
+	// *volatile_mmio_addr			  = local;
+	local = *volatile_mmio_addr;
 
-	return res.local_apic_id_of_target;
+	return 1;
+	// return res.local_apic_id_of_target;
 }
 
 enum apic::error apic::init_lapic()

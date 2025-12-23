@@ -90,10 +90,19 @@ STATIC_ASSERT(sizeof(interrupt_command_register_low) == 4, "ICR low must be 32 b
 #pragma GCC optimize("no-strict-aliasing")
 struct __attribute__((packed)) interrupt_command_register_high
 {
+	// TODO: Unfucked the default constructor here.
+	// Make them not suck mega dick.
+	// and just use a mov uint32_t.
+	// Learn what these operators are.
 	uint32_t reserved : 24;
 	uint32_t local_apic_id_of_target : 4;
 	uint32_t unused : 4;
 	// Putting nothing else here makes the highest 4 bits reserved, and unaccessible
+
+	interrupt_command_register_high()
+	{
+		*reinterpret_cast<uint32_t *>(this) = 0;
+	}
 
 	// Read operator - does a volatile load
 	operator uint32_t() const volatile
@@ -151,18 +160,6 @@ struct __attribute__((packed)) interrupt_command_register_high
 		uint32_t val = static_cast<uint32_t>(other); // Convert non-volatile to uint32_t
 		*this		 = val;							 // Use your existing volatile operator=(uint32_t)
 		return *this;
-	}
-
-	__attribute__((always_inline)) void operator=(const volatile interrupt_command_register_high &rhs) volatile
-	{
-		union
-		{
-			volatile const interrupt_command_register_high *vptr;
-			volatile const uint32_t						   *uptr;
-		} pun = {&rhs};
-
-		uint32_t val								 = *pun.uptr;
-		*reinterpret_cast<volatile uint32_t *>(this) = val;
 	}
 };
 

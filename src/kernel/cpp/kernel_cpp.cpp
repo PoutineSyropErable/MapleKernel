@@ -20,6 +20,8 @@
 #include "pic_public.h"
 #include "string.h"
 
+#include "special_pointers.hpp"
+
 void print_test()
 {
 	// -O1 Cpp is wack
@@ -116,7 +118,9 @@ void multicore_setup(void *rsdp_void)
 int cpp_main(struct cpp_main_args args)
 {
 
-	multicore_setup(args.rsdp_v);
+	test_special_pointers();
+	disable_pic();
+	// multicore_setup(args.rsdp_v);
 
 	kprintf("\n\n================= Start of CPP Main =================\n\n");
 

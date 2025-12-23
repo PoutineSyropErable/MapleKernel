@@ -270,6 +270,7 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$STDIO/stdio.c" -o "$BUILD_DIR/stdio.o" "-I$STDI
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDLIB/stdlib.c" -o "$BUILD_DIR/stdlib.o" "-I$STDLIB" "-I$STDIO"
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDLIB/string.c" -o "$BUILD_DIR/string.o" "-I$STDLIB" "-I$STDIO"
 i686-elf-gcc "${CFLAGS[@]}" -c "$STDLIB/math.c" -o "$BUILD_DIR/math.o" "-I$STDLIB" "-I$STDIO"
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$STDLIB/special_pointers.cpp" -o "$BUILD_DIR/special_pointers.o" "-I$STDLIB" "-I$STDIO" -fno-strict-aliasing
 
 # Compile Drivers CPU structures
 i686-elf-gcc "${CFLAGS_NOFPU[@]}" -c "$CPUID/cpuid.c" -o "$BUILD_DIR/cpuid_c.o"
@@ -407,6 +408,7 @@ printf "\n\n====== End of Linking =====\n\n"
 objdump -D -h "$BUILD_DIR/myos.elf" >"$BUILD_DIR/myos.dump"
 
 objdump -D -h "$BUILD_DIR/apic.o" >"$BUILD_DIR/apic.dump"
+objdump -D -h -M intel "$BUILD_DIR/special_pointers.o" >"$BUILD_DIR/special_pointers.dump"
 
 # Check if the kernel is multiboot-compliant
 USE_MULTIBOOT1=false
