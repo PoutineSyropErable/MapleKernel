@@ -84,8 +84,8 @@ QEMU_DBG_FLAGS=()
 
 if [[ "$DEBUG_OR_RELEASE" == "debug" ]]; then
 	echo "Debug mode enabled"
-	CFLAGS+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG")
-	CPPFLAGS+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG")
+	CFLAGS+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG" "fno-omit-frame-pointer" "-fno-optimize-sibling-calls")
+	CPPFLAGS+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG" "fno-omit-frame-pointer" "-fno-optimize-sibling-calls")
 	CFLAGS16+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG")
 	LDFLAGS+=("-g")
 	NASM_FLAGS32+=("-g" "-F" "dwarf" "-DDEBUG")
