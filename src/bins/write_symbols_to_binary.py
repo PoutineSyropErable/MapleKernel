@@ -70,6 +70,9 @@ def write_symbols_binary(symbols: List[Tuple[int, str]], output_file: str = "sym
 
     try:
         with open(output_file, "wb") as f:
+
+            f.write(b"6\n7\n")
+
             # 1. Write all addresses (4 bytes each, little-endian)
             for address, _ in symbols:
                 f.write(struct.pack("<I", address))  # 32-bit little-endian
