@@ -77,11 +77,13 @@ template <typename T> struct mmio_ptr
 {
 	static_assert(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4, "mmio_ptr only supports 1, 2, or 4 byte types");
 
+	static constexpr bool T_is_uintX_t = is_same<T, uint8_t>::value || is_same<T, uint16_t>::value || is_same<T, uint32_t>::value;
+
   private:
 	using underlying_t =
 		typename conditional<sizeof(T) == 1, uint8_t, typename conditional<sizeof(T) == 2, uint16_t, uint32_t>::type>::type;
 
-	volatile T *ptr; // mutable pointer. But never
+	volatile T *ptr; // mutable pointer. But never modified
 
   public:
 	using value_type = T;
@@ -98,24 +100,42 @@ template <typename T> struct mmio_ptr
 
 	T read() const
 	{
-		union
+
+		if constexpr (T_is_uintX_t)
 		{
-			volatile underlying_t raw;
-			T					  val;
-		} u;
-		u.raw = *(volatile underlying_t *)ptr;
-		return u.val;
+			return *ptr;
+		}
+		else
+		{
+
+			union
+			{
+				volatile underlying_t raw;
+				T					  val;
+			} u;
+			u.raw = *(volatile underlying_t *)ptr;
+			return u.val;
+		}
 	}
 
 	void write(const T val) const
 	{
-		union
+
+		if constexpr (T_is_uintX_t)
 		{
-			T			 val;
-			underlying_t raw;
-		} u;
-		u.val						  = val;
-		*(volatile underlying_t *)ptr = u.raw;
+			*ptr = val;
+		}
+		else
+		{
+
+			union
+			{
+				T			 val;
+				underlying_t raw;
+			} u;
+			u.val						  = val;
+			*(volatile underlying_t *)ptr = u.raw;
+		}
 	}
 
 #ifdef MALOC_VERSION
@@ -147,6 +167,8 @@ template <typename T> struct const_mmio_ptr
 {
 	static_assert(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4, "mmio_ptr only supports 1, 2, or 4 byte types");
 
+	static constexpr bool T_is_uintX_t = is_same<T, uint8_t>::value || is_same<T, uint16_t>::value || is_same<T, uint32_t>::value;
+
   private:
 	using underlying_t =
 		typename conditional<sizeof(T) == 1, uint8_t, typename conditional<sizeof(T) == 2, uint16_t, uint32_t>::type>::type;
@@ -162,24 +184,39 @@ template <typename T> struct const_mmio_ptr
 
 	T read() const
 	{
-		union
+		if constexpr (T_is_uintX_t)
 		{
-			volatile underlying_t raw;
-			T					  val;
-		} u;
-		u.raw = *(volatile underlying_t *)ptr;
-		return u.val;
+			return *ptr;
+		}
+		else
+		{
+			union
+			{
+				volatile underlying_t raw;
+				T					  val;
+			} u;
+			u.raw = *(volatile underlying_t *)ptr;
+			return u.val;
+		}
 	}
 
 	void write(const T val) const
 	{
-		union
+		if constexpr (T_is_uintX_t)
 		{
-			T			 val;
-			underlying_t raw;
-		} u;
-		u.val						  = val;
-		*(volatile underlying_t *)ptr = u.raw;
+			*ptr = val;
+		}
+		else
+		{
+
+			union
+			{
+				T			 val;
+				underlying_t raw;
+			} u;
+			u.val						  = val;
+			*(volatile underlying_t *)ptr = u.raw;
+		}
 	}
 
 #ifdef MALOC_VERSION

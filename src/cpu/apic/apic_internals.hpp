@@ -181,7 +181,7 @@ class LapicRegisters
   public:
 	// TODO: Give the other then uint32_t a special type.
 	// Stuff like,
-	std::set_once_primitive_ptr<volatile uint32_t>		 lapic_id;
+	std::set_once<std::mmio_ptr<uint32_t>>				 lapic_id;
 	std::set_once_primitive_ptr<volatile uint32_t>		 lapic_version;
 	std::set_once_primitive_ptr<volatile uint32_t>		 task_priority;
 	std::set_once_primitive_ptr<volatile const uint32_t> arbitration_priority;
@@ -222,7 +222,7 @@ class LapicRegisters
 			return;
 		}
 
-		lapic_id.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::lapic_id));
+		lapic_id.set(get_mmio_ptr<uint32_t>(lapic_address, lapic_registers_offset::lapic_id));
 		lapic_version.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::lapic_version));
 		task_priority.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::task_priority));
 		arbitration_priority.set(get_mmio_address<uint32_t>(lapic_address, lapic_registers_offset::arbitration_priority));

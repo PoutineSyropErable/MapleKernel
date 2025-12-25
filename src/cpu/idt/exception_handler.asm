@@ -242,9 +242,6 @@ EFLAGS_Of3 equ 16
 
 
 
-	cli
-hl13: 
-	jmp hl13
 
 
 	pop gs 

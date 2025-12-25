@@ -10,7 +10,7 @@ struct __attribute__((packed)) Reg16x2
 
 void test_special_pointers()
 {
-	// kprintf("Testing special pointers\n\n");
+	kprintf("Testing special pointers\n\n");
 
 	// volatile Reg16x2 reg1{.low = 5, .high = 6};
 

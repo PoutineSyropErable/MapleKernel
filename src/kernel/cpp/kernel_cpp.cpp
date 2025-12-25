@@ -70,8 +70,8 @@ void multicore_setup(void *rsdp_void)
 	apic::init_apic();
 	apic::init_lapic();
 
-#define BOOT_CORE_ID 0
-	uint8_t core_id = BOOT_CORE_ID;
+	constexpr uint8_t BOOT_CORE_ID = 0;
+	uint8_t			  core_id	   = BOOT_CORE_ID;
 	multicore_gdt::init_multicore_gdt();
 	multicore_gdt::set_fs_or_segment_selector(core_id, multicore_gdt::fs_or_gs::fs); // sets fs so it has the correct gdt entry.
 	multicore_gdt::set_fs_or_segment_selector(core_id, multicore_gdt::fs_or_gs::gs);
@@ -120,7 +120,7 @@ int cpp_main(struct cpp_main_args args)
 
 	test_special_pointers();
 	disable_pic();
-	// multicore_setup(args.rsdp_v);
+	multicore_setup(args.rsdp_v);
 
 	kprintf("\n\n================= Start of CPP Main =================\n\n");
 
