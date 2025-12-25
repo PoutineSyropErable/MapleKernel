@@ -553,8 +553,6 @@ else
 	wait $VNC_PID
 
 	# After you close the VNC viewer, kill QEMU
-	if [[ "$DEBUG_OR_RELEASE" == "release" ]]; then
-		kill $QEMU_PID 2>/dev/null
-	fi
+	kill $QEMU_PID 2>/dev/null
 fi
 # qemu-system-i386 -kernel ./build/myos.elf & # or do this to use the binary directly # -cdrom "$BUILD_DIR/myos.iso" # -kernel "$BUILD_DIR/myos.elf" \

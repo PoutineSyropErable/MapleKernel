@@ -17,6 +17,16 @@ extern "C"
 		__asm__ volatile("outb %0, %1" : : "a"(val), "Nd"(port));
 	}
 
+	static inline void __outw(uint16_t port, uint16_t val)
+	{
+		/*
+
+		%0 = val : Value to output
+		%1 = port: The io port
+		*/
+		__asm__ volatile("outw %0, %1" : : "a"(val), "Nd"(port));
+	}
+
 	static inline uint8_t __inb(uint16_t port)
 	{
 		uint8_t ret;

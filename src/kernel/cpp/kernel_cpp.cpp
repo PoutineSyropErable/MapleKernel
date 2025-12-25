@@ -1,4 +1,5 @@
 // kernel_cpp.cpp
+#include "intrinsics.h"
 #include "kernel_cpp.h"
 #include "kernel_cpp.hpp"
 #include "stdio.h"
@@ -80,8 +81,8 @@ void multicore_setup(void *rsdp_void)
 
 	if (false)
 	{
-		uint8_t local_core_id = apic::get_core_id();
 		// Other cores will do this using get_core id;
+		uint8_t local_core_id = apic::get_core_id();
 
 		multicore_gdt::set_fs_or_segment_selector(local_core_id, multicore_gdt::fs_or_gs::fs); // sets fs so it has the correct gdt entry.
 		multicore_gdt::set_fs_or_segment_selector(local_core_id, multicore_gdt::fs_or_gs::gs);
@@ -123,6 +124,9 @@ int cpp_main(struct cpp_main_args args)
 	multicore_setup(args.rsdp_v);
 
 	kprintf("\n\n================= Start of CPP Main =================\n\n");
+
+	kprintf("got here\n");
+	asm volatile("xchg %%bx, %%bx" ::: "memory");
 
 	// Setup lapic irq handling
 	terminal_writestring("\n====kernel cpp entering main loop====\n");

@@ -241,24 +241,22 @@ EFLAGS_Of3 equ 16
 	add esp, 24
 
 
-	mov eax, [ebp + EIP_Of3]  ; faulting EIP
-	mov dr0, eax               ; store breakpoint address in DR0
-
-	; enable breakpoint 0 for execution, length 1
-	mov eax, dr7
-	or eax, 0x00000001      ; L0 = 1 (enable local DR0)
-	and eax, 0xFFFFFFF0      ; clear G0–G3 bits if needed
-	mov dr7, eax
 
 
-	; another way
-	mov eax, [ebp + EIP_Of3]
-	mov byte [eax], 0xCC   ; int3
+%define hardware_breakpoint 
+%define software_breakpoint
 
-	jmp [ebp + EIP_Of3]
-
-
-
+%ifdef hardware_breakpoint
+    mov eax, [ebp + EIP_Of3]
+    mov dr0, eax
+    
+    ; Set DR7 for instruction execution breakpoint on DR0
+    ; L0=1 (enable), G0=0, LEN0=00 (1-byte), R/W0=00 (execute only)
+    mov eax, dr7
+    and eax, ~0x000F000F  ; Clear DR0 settings
+    or eax, 0x00000001    ; Set L0=1
+    mov dr7, eax
+%endif
 
 
 	pop gs 
@@ -266,7 +264,6 @@ EFLAGS_Of3 equ 16
 	pop es
 	pop ds 
 	popa
-
 
 	mov esp, ebp
 	pop ebp

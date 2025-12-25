@@ -88,7 +88,6 @@ void add_fs_or_gs(void *base_address, uint32_t size)
 	set_segment_descriptor_limit(&entry, size - 1);
 
 	add_gdt_entry(&entry);
-	kprintf("After adding entry\n");
 }
 
 void add_multicore_gdt_entry()
@@ -98,14 +97,11 @@ void add_multicore_gdt_entry()
 		add_fs_or_gs(&all_fs_and_gs[i].fs, sizeof(FS_CONTENT));
 		add_fs_or_gs(&all_fs_and_gs[i].gs, sizeof(GS_CONTENT));
 	}
-
-	kprintf("After add multicore entry\n");
 }
 
 void multicore_gdt::init_multicore_gdt()
 {
 	init_new_gdt();
-	kprintf("will add multicore entries\n!");
 	add_multicore_gdt_entry();
 }
 

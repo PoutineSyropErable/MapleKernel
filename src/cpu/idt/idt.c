@@ -60,6 +60,13 @@ void idt_init()
 	for (uint8_t vector = 0; vector < 32; vector++)
 	{
 
+#ifdef DEBUG
+		if (vector == 3)
+		{
+			continue;
+		}
+#endif
+
 		idt_set_descriptor(vector, isr_stub_table[vector], GT32_IG32, 0, true);
 		vectors[vector] = true;
 	}
