@@ -76,7 +76,7 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 	// ========================== INITIALIZING FPU (NEEDED for fpu optimized code)=========================
 	struct fpu_features fpu_activated_features = init_fpu();
 
-// #define GRUB_FRAMEBUFFER
+#define GRUB_FRAMEBUFFER
 #if !defined(GRUB_FRAMEBUFFER) || defined(QEMU)
 	initialize_terminal();
 	terminal_set_scroll(0);
