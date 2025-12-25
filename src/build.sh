@@ -522,6 +522,8 @@ else
 		)
 	fi
 
+	printf -- "\n\n===========Executing with $QEMU ===========\n\n"
+
 	# TODO: Make -d and -D conditional.
 	$QEMU \
 		-cdrom "$BUILD_DIR/myos.iso" \
@@ -530,8 +532,9 @@ else
 		"${DEBUG_LOG_OPTS[@]}" \
 		-smp 4 \
 		"${QEMU_CPU_FLAG[@]}" \
-		-enable-kvm \
-		-serial stdio & # -vga vmware \
+		\
+		-serial stdio & # -enable-kvm \
+	# -vga vmware \
 
 	QEMU_PID=$!
 
@@ -544,7 +547,7 @@ else
 
 	# sleep 1
 	if [[ "$MOVE_VNC" == "move" ]]; then
-		move_pid_to_workspace $VNC_PID 21
+		move_pid_to_workspace $VNC_PID 11
 	fi
 
 	wait $VNC_PID

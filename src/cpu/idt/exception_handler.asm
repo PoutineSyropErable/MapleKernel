@@ -241,6 +241,23 @@ EFLAGS_Of3 equ 16
 	add esp, 24
 
 
+	mov eax, [ebp + EIP_Of3]  ; faulting EIP
+	mov dr0, eax               ; store breakpoint address in DR0
+
+	; enable breakpoint 0 for execution, length 1
+	mov eax, dr7
+	or eax, 0x00000001      ; L0 = 1 (enable local DR0)
+	and eax, 0xFFFFFFF0      ; clear G0–G3 bits if needed
+	mov dr7, eax
+
+
+	; another way
+	mov eax, [ebp + EIP_Of3]
+	mov byte [eax], 0xCC   ; int3
+
+	jmp [ebp + EIP_Of3]
+
+
 
 
 

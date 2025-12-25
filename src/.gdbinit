@@ -28,7 +28,7 @@ cd-src
 file build/myos.elf
 # rk32
 # tbreak _start
-tbreak kernel_main
+# tbreak kernel_main
 # c
 # activate_dashboard
 
