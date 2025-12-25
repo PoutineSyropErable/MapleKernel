@@ -378,28 +378,10 @@ done
 # ============= Linking ==============
 printf "\n\n====== Start of Linking =====\n\n"
 # could also use g++. But as long as no runtime support, gcc will work
-i686-elf-g++ -T linker.ld -o "$BUILD_DIR/myos_s.elf" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}" "${LIBRARY_ARGS[@]}"
+i686-elf-g++ -T linker.ld -o "$BUILD_DIR/myos.elf" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}" "${LIBRARY_ARGS[@]}"
 
-printf "\n\n====== Copying Symbol Table =====\n\n"
-
-# Use readelf to dump raw section data... But is it actually the raw data? Can i just use a symtab array and strtab text. and it will all work?
-# or is there some extra header that fucks it all?
-# This makes it so it's not just the raw array of stuff. There might be more
-readelf -x .symtab build/myos_s.elf | tail -n +3 | xxd -r -p >build/symtab_raw.bin
-readelf -x .strtab build/myos_s.elf | tail -n +3 | xxd -r -p >build/strtab_raw.bin
-
-# this gives nothing. hence,
-# i686-elf-objcopy -O binary --only-section=.symtab build/myos_s.elf build/symtab_raw.bin
-# i686-elf-objcopy -O binary --only-section=.strtab build/myos_s.elf build/strtab_raw.bin
-
-# Verify
-echo "File sizes:"
-ls -la build/symtab_raw.bin build/strtab_raw.bin
-echo "First 16 bytes of symtab_raw.bin:"
-
-mkdir -p "$BUILD_DIR/first_excluded"
-# 3. Assemble (need to be in src directory)
-i686-elf-as "$KERNEL/copy_symbols.S" -o "$BUILD_DIR/first_excluded/copy_symbols.o"
+# Extract addresses, pad to 8 hex digits, and convert to binary
+# nm -n "$BUILD_DIR/myos_s.elf" | grep " T " | awk '{printf "%08x\n", strtonum("0x" $1)}' | xxd -r -p >addresses.bin
 
 printf "\n\n==================The final link==================\n\n"
 # 4. Link with copied symbols
