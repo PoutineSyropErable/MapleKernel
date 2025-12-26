@@ -47,6 +47,12 @@ extern "C" void pit_interrupt_handler()
 	case pit_ih::mode::game: game_loop();
 	}
 
+	*pit_msg_address[pit_write_index] = pit_msg_value[pit_write_index];
+	if (pit_write_index != 0)
+	{
+		pit_write_index -= 1;
+	}
+
 	// kprintf("C pit interrupt handler!\n");
 	pit_interrupt_handled = true;
 	PIC_sendEOI(PIT_IRQ);

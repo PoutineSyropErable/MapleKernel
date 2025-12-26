@@ -127,5 +127,3 @@ void multicore_gdt::set_fs_or_segment_selector(uint8_t core_id, enum fs_or_gs se
 	}
 	}
 }
-
-extern "C" uint8_t last_interrupt_recieved[MAX_CORE_COUNT] = {0};

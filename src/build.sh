@@ -161,6 +161,7 @@ PS2_KEYBOARD_CPP="./drivers/ps2/keyboard/cpp"
 
 DRIVERS_USB_CONTROLLER="./drivers/usb/controller"
 
+BIOS="./firmware/bios"
 EFI="./firmware/efi"
 UEFI="./firmware/uefi"
 MULTIBOOT="./firmware/multiboot"
@@ -172,6 +173,7 @@ CONTROL_REGISTERS="./cpu/control_registers"
 CPUID="./cpu/cpuid"
 PIC="./cpu/pic"
 APIC="./cpu/apic"
+APIC_IO="./cpu/apic_io"
 MULTICORE="./cpu/multicore"
 GDT="./cpu/gdt"
 IDT="./cpu/idt"
@@ -211,8 +213,10 @@ INCLUDE_DIRS=(
 	"$IDT"
 	"$PIC"
 	"$APIC"
+	"$APIC_IO"
 	"$MULTICORE"
 
+	"$BIOS"
 	"$EFI"
 	"$UEFI"
 	"$MULTIBOOT"
@@ -220,6 +224,7 @@ INCLUDE_DIRS=(
 	"$ACPI/madt"
 
 	"$FRAMEBUFER"
+	"$TIMERS"
 	"$PIT"
 
 	"$KERNEL_CPP"
@@ -258,6 +263,8 @@ i686-elf-g++ "${CPPFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$MULTIBOOT/multiboot.cpp
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$KERNEL_CPP/kernel_cpp.cpp" -o "$BUILD_DIR/kernel_cpp.o" "${SUPER_INCLUDE[@]}"
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$MULTICORE/multicore_gdt.cpp" -o "$BUILD_DIR/multicore_gdt.o" "${SUPER_INCLUDE[@]}"
 
+i686-elf-g++ "${CPPFLAGS[@]}" -c "./find_all_includer.cpp" -o "$BUILD_DIR/find_all.o" "${SUPER_INCLUDE[@]}"
+
 # Firmware
 i686-elf-gcc "${CPPFLAGS[@]}" -c "$ACPI/acpi.c" -o "$BUILD_DIR/acpi_c.o" "-I$STDLIB" "-I$STDIO"
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$ACPI/acpi.cpp" -o "$BUILD_DIR/acpi.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI/madt" "-I$ACPI"
@@ -292,7 +299,8 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$PIC/pic.c" -o "$BUILD_DIR/pic.o" "-I$IDT" "-I$G
 
 # CPU/APIC
 printf -- "\n\n\n======================== APIC ==============\n\n\n"
-i686-elf-g++ "${CPPFLAGS[@]}" -c "$APIC/apic.cpp" -o "$BUILD_DIR/apic.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$CPUID" "-I$MULTICORE"
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$APIC/apic.cpp" -o "$BUILD_DIR/apic.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$CPUID" "-I$MULTICORE" "-I$CPU" "-I$PIT"
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$APIC_IO/apic_io.cpp" -o "$BUILD_DIR/apic_io.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$CPUID" "-I$MULTICORE" "-I$CPU"
 
 # =============== Compile Drivers ==============
 

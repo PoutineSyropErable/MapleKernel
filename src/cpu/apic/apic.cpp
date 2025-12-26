@@ -7,11 +7,19 @@
 #include "intrinsics.h"
 #include "multicore_gdt.hpp"
 // This file needs -fno-strict-aliasing
+#include "multicore.h"
+#include "pit.hpp"
+#include "pit_internals.h"
 
 using namespace apic;
 
 volatile void *apic::lapic_address;
 volatile void *apic::io_appic_address;
+
+volatile uint8_t last_interrupt_received[MAX_CORE_COUNT][MAX_CORE_COUNT];
+volatile bool	 core_has_booted[MAX_CORE_COUNT];			 // [i = reciever][ j = sender]
+volatile bool	 master_tells_core_to_start[MAX_CORE_COUNT]; // [i = reciever][ j = sender]
+void (*core_mains[8])();
 
 // Private (To this file) and global
 static LapicRegisters gp_lapic_register;
@@ -110,11 +118,6 @@ enum apic::error apic::init_apic()
 	return apic::error::none;
 }
 
-uint32_t get_core_id_fast()
-{
-	return multicore_gdt::get_fs_struct()->core_id;
-}
-
 enum apic::error apic::init_lapic()
 {
 
@@ -133,12 +136,6 @@ void apic::calibrate_lapic_timer()
 {
 }
 
-enum apic::error apic::init_io_apic()
-{
-
-	return apic::error::none;
-}
-
 // This will actually be implemented in an assembly file
 extern "C" void core_bootstrap()
 {
@@ -154,16 +151,98 @@ uint8_t apic::get_core_id()
 	return gp_lapic_register.lapic_id.read();
 }
 
-extern "C" uint8_t apic_get_core_id()
+uint8_t apic::get_core_id_fast()
 {
-	return apic::get_core_id();
+	// requires it to have been set once by using the slower method
+	return multicore_gdt::get_fs_struct()->core_id;
 }
 
-void apic::wake_core(uint8_t core_id, void core_bootstrap(), void core_main())
+extern "C" uint8_t apic_get_core_id()
+{
+	return apic::get_core_id_fast();
+}
+
+void send_init_ipi(uint8_t core_id)
 {
 }
-void apic::wait_till_interrupt(uint8_t interrupt_number)
+
+void send_sipi(uint8_t core_id, void core_bootstrap())
 {
+}
+
+enum error apic::wake_core(uint8_t core_id, void (*core_bootstrap)(), void (*core_main)())
+{
+
+	// Sets up the main loop that core will use.
+	core_mains[core_id] = core_main;
+
+	send_init_ipi(core_id);
+	pit::wait(10.f / 1000.f);
+
+	// Send Sipi
+	send_sipi(core_id, core_bootstrap);
+	uint32_t finished = false;
+	pit::short_timeout(0.001f, &finished, true);
+	while (true)
+	{
+
+		if (core_has_booted[core_id])
+		{
+
+			master_tells_core_to_start[core_id] = true;
+			return apic::error::none;
+		}
+		else if (finished)
+		{
+			goto long_poll;
+		}
+	}
+
+long_poll:
+	send_sipi(core_id, core_bootstrap);
+	constexpr uint16_t long_timeout_ms = 1000;
+	constexpr uint16_t short_timeut_ms = 50;
+	constexpr uint8_t  timeout_count   = long_timeout_ms / short_timeut_ms;
+	for (uint8_t i = 0; i < timeout_count; i++)
+	{
+		pit::short_timeout((float)short_timeut_ms / 1000.f, &finished, false);
+		while (true)
+		{
+			if (core_has_booted[core_id])
+			{
+
+				master_tells_core_to_start[core_id] = true;
+				return apic::error::none;
+			}
+			else if (finished)
+			{
+				continue;
+			}
+		}
+	}
+	return apic::error::boot_core_timeout;
+}
+
+void apic::wait_till_interrupt(uint8_t interrupt_vector)
+{
+	assert(interrupt_vector != NO_INTERRUPT, "make no sense to wait for a never interrupt\n");
+	uint32_t core_id = get_core_id_fast();
+	while (true)
+	{
+		__hlt();
+		// Check if any of the sender sent it.
+		for (uint8_t sender_id = 0; sender_id < runtime_core_count; sender_id++)
+		{
+			uint8_t lir = last_interrupt_received[core_id][sender_id];
+			if (lir == interrupt_vector)
+			{
+				last_interrupt_received[core_id][sender_id] = NO_INTERRUPT;
+				break;
+				// TODO: Warning, some multicore shenanigans and race condition possible here
+				// Should be safe when used to init core and wait till interrupt
+			}
+		}
+	}
 }
 
 /* =========================== C OSDEV ===================== */

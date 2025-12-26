@@ -16,6 +16,7 @@ struct apic_support has_apic();
 enum class error
 {
 	none = 0,
+	boot_core_timeout,
 };
 
 // APIC initiation itself
@@ -42,9 +43,9 @@ extern volatile void *io_appic_address;
 
 void calibrate_lapic_timer();
 
-extern "C" void core_bootstrap();
-void			core_main();
-void			wake_core(uint8_t core_id, void core_bootstrap(), void core_main());
-void			wait_till_interrupt(uint8_t interrupt_number);
+extern "C" void	 core_bootstrap();
+void			 core_main();
+enum apic::error wake_core(uint8_t core_id, void (*core_bootstrap)(), void (*core_main)());
+void			 wait_till_interrupt(uint8_t interrupt_number);
 
 } // namespace apic

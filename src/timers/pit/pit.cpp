@@ -6,6 +6,7 @@
 #include "pit.h"
 #include "pit.hpp"
 #include "pit_internals.h"
+#include "pit_internals.hpp"
 #include "stdio.h"
 // ===================== Start of CPP stuff
 using namespace pit;
@@ -129,7 +130,10 @@ void pit::start_loop_wait(uint32_t freq_divider_count)
 // pit.cpp
 extern "C"
 {
-	volatile bool pit_interrupt_handled;
+	volatile bool	   pit_interrupt_handled;
+	volatile uint8_t   pit_write_index = 0;
+	volatile uint32_t *pit_msg_address[PIT_MAX_MSG];
+	volatile uint32_t  pit_msg_value[PIT_MAX_MSG];
 }
 struct pit_wait_split
 {
@@ -198,6 +202,39 @@ int pit::wait(float seconds)
 	wait_lte_one_cycle(sp.reminder_pit_count);
 
 	IRQ_set_mask(PIT_IRQ);
+	return 0;
+}
+
+int pit::short_timeout(float seconds, uint32_t *finished, bool new_timeout = true)
+{
+	if (seconds <= 0)
+	{
+		return 1;
+	}
+	pit_wait_split sp = compute_pit_wait(seconds, max_single_wait, MAX_FREQ_DIVIDER);
+
+	// check we are in single core mode?
+
+	if (sp.full_cycles > 0)
+	{
+		return 2;
+	}
+
+	uint32_t pit_freq_divider = sp.reminder_pit_count;
+
+	assert(pit_write_index < PIT_MAX_MSG, "Overflowed, too many mesg, out of space\n");
+	if (!new_timeout)
+	{
+		pit_write_index += 1;
+		// :TODO: Note, using this case is dangerous the moment more then one core is active.
+		// :RACE Condition:
+	}
+
+	*finished						 = 0;
+	pit_msg_address[pit_write_index] = finished;
+	pit_msg_value[pit_write_index]	 = 1;
+	send_wait_count_command(pit_freq_divider);
+
 	return 0;
 }
 // ===================== End of Cpp Stuff

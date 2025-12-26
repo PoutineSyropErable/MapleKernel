@@ -10,6 +10,7 @@
 // #include "framebuffer.h"
 #include "acpi.hpp"
 #include "apic.hpp"
+#include "apic_io.hpp"
 #include "assert.h"
 #include "framebuffer.hpp"
 #include "madt.hpp"
@@ -20,6 +21,7 @@
 #include "multicore.h"
 #include "multicore_gdt.hpp"
 #include "pic_public.h"
+#include "stdlib.h"
 #include "string.h"
 
 #include "special_pointers.hpp"
@@ -32,6 +34,8 @@ void print_test()
 	kprintf("string with option: %s;5\n", s);
 	kprintf("Number with option: %u:7\n", 0x24f);
 }
+
+uint8_t runtime_core_count;
 
 void multicore_setup(void *rsdp_void)
 {
@@ -60,7 +64,7 @@ void multicore_setup(void *rsdp_void)
 
 	uint32_t lapic_address_msr = apic::get_base_address();
 
-	// This reads the lapic address from the madt. Which is firmware
+	// This reads the lapic address from the madt. Which is firmware. Technically, the gdt base address from msr is better.
 	void *lapic_address	  = (void *)madt->lapic_address; // The main one
 	void *io_apic_address = (void *)parsed_madt.io_apics[0]->io_apic_address;
 
@@ -72,15 +76,14 @@ void multicore_setup(void *rsdp_void)
 	apic::lapic_address	   = (volatile void *)lapic_address;
 	apic::io_appic_address = (volatile void *)io_apic_address;
 
-	uint8_t core_count = parsed_madt.entry_counts.processor_local_apic;
+	runtime_core_count = parsed_madt.entry_counts.processor_local_apic;
 
 	apic::init_apic();
 	apic::init_lapic();
 
 	uint8_t boot_core_id = apic::get_core_id();
 	kprintf("The core id of the bsp: %u\n", boot_core_id);
-	multicore_gdt::init_multicore_gdt();
-	kprintf("Added a new multicore gdt\n");
+	multicore_gdt::init_multicore_gdt();												  //
 	multicore_gdt::set_fs_or_segment_selector(boot_core_id, multicore_gdt::fs_or_gs::fs); // sets fs so it has the correct gdt entry.
 	multicore_gdt::set_fs_or_segment_selector(boot_core_id, multicore_gdt::fs_or_gs::gs);
 	multicore_gdt::get_fs_struct()->core_id		= boot_core_id;
@@ -89,6 +92,9 @@ void multicore_setup(void *rsdp_void)
 	if (false)
 	{
 		// Other cores will do this using get_core id;
+		// Hmm, normally, each core has it's own gdt.
+		// Rather then having a shared gdt with lots of different entries
+		// :TODO: Make it so there's multiple gdt, and each cores has it's own
 		uint8_t local_core_id = apic::get_core_id();
 
 		multicore_gdt::set_fs_or_segment_selector(local_core_id, multicore_gdt::fs_or_gs::fs); // sets fs so it has the correct gdt entry.
@@ -98,13 +104,14 @@ void multicore_setup(void *rsdp_void)
 	}
 
 	// initiate the apic_io of this core.
-	apic::init_io_apic();
+	apic_io::init_io_apic();
 
 	// Apic timers calibration using pit
 	apic::calibrate_lapic_timer();
 
+	bool *core_is_active = (bool *)alloca(sizeof(bool) * runtime_core_count);
 	// wake cores. We are already on core 0.
-	for (uint8_t i = 0; i < core_count; i++)
+	for (uint8_t i = 0; i < runtime_core_count; i++)
 	{
 		uint8_t core_id = parsed_madt.processor_local_apics[i]->apic_id;
 		if (core_id == boot_core_id)
@@ -115,8 +122,22 @@ void multicore_setup(void *rsdp_void)
 		}
 		// TODO: Must implement these functions.
 		// Make is so every interrupt also does a last core recieved thing
-		apic::wake_core(core_id, apic::core_bootstrap, apic::core_main);
-		apic::wait_till_interrupt(INTERRUPT_ENTERED_MAIN);
+		apic::error err = apic::wake_core(core_id, apic::core_bootstrap, apic::core_main);
+		if ((uint8_t)err)
+			core_is_active[core_id] = false;
+		else
+		{
+			core_is_active[core_id] = true;
+			apic::wait_till_interrupt(INTERRUPT_ENTERED_MAIN);
+			// Wait till interrupt is not really usefull, since there's already polling for starting.
+			// But i guess it's a nice way to make sure it entered it's main.
+		}
+	}
+
+	for (uint8_t i = 0; i < runtime_core_count; i++)
+	{
+		uint8_t core_id = parsed_madt.processor_local_apics[i]->apic_id;
+		assert(core_is_active[core_id], "Core %u must be active. All or nothing for now\n", i);
 	}
 
 	disable_pic();
