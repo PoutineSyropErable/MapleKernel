@@ -24,17 +24,22 @@ void (*core_mains[8])();
 // Private (To this file) and global
 static LapicRegisters gp_lapic_register;
 
-void apic::LapicRegisters::doX(uint8_t x, float y)
-{
-	// Do something
-}
+// __attribute__((fastcall)) void apic::LapicRegisters::send_command(interrupt_command_low_register low, interrupt_command_high_register
+// high)
+// {
+// 	// Do something
+// 	command_high.write(high);
+// 	command_low.write(low);
+// }
 
 extern "C" uint8_t test_cmd()
 {
 
-	const std::mmio_ptr<apic::interrupt_command_register_high> ptr((volatile apic::interrupt_command_register_high *)0xb00000);
-	apic::interrupt_command_register_high					   local{.local_apic_id_of_target = 5};
-	ptr.write(local);
+	gp_lapic_register.send_command(
+		{
+			.init_lvl_deassert_clear = 1,
+		},
+		{.local_apic_id_of_target = 1});
 
 	return 1;
 	// return res.local_apic_id_of_target;
@@ -177,6 +182,8 @@ enum error apic::wake_core(uint8_t core_id, void (*core_bootstrap)(), void (*cor
 	core_mains[core_id] = core_main;
 
 	send_init_ipi(core_id);
+	pit::wait(10.f / 1000.f);
+	// send_init_ipi(core_id, deassert);
 	pit::wait(10.f / 1000.f);
 
 	// Send Sipi

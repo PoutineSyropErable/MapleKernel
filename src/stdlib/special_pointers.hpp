@@ -225,7 +225,7 @@ template <typename MMIO> struct set_once
 		return mmio.read();
 	}
 
-	void write(const value_type &v) const
+	void write(const value_type v) const
 	{
 #ifdef DEBUG
 		assert(is_set, "ptr must be set to write it\n");

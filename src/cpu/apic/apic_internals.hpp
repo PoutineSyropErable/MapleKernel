@@ -104,7 +104,7 @@ struct __attribute__((packed)) lapic_version_register
 	uint8_t reserved2;
 };
 
-struct __attribute__((packed)) interrupt_command_register_low
+struct __attribute__((packed)) interrupt_command_low_register
 {
 	uint8_t	 vector_number;
 	uint8_t	 delivery_mode : 3;
@@ -117,9 +117,9 @@ struct __attribute__((packed)) interrupt_command_register_low
 	uint8_t	 destination_type : 2; // bit 18-19
 	uint16_t _reserved3 : 12;	   // bit 20-31
 };
-STATIC_ASSERT(sizeof(interrupt_command_register_low) == 4, "ICR low must be 32 bit");
+STATIC_ASSERT(sizeof(interrupt_command_low_register) == 4, "ICR low must be 32 bit");
 
-struct __attribute__((packed)) interrupt_command_register_high
+struct __attribute__((packed)) interrupt_command_high_register
 {
 	// TODO: Unfucked the default constructor here.
 	// Make them not suck mega dick.
@@ -131,7 +131,7 @@ struct __attribute__((packed)) interrupt_command_register_high
 	// Putting nothing else here makes the highest 4 bits reserved, and unaccessible
 };
 
-STATIC_ASSERT(sizeof(interrupt_command_register_high) == 4, "ICR high must be 32 bit");
+STATIC_ASSERT(sizeof(interrupt_command_high_register) == 4, "ICR high must be 32 bit");
 
 #define GET_ADDRESS(ToType, addr, offset)                                                                                                  \
 	({                                                                                                                                     \
@@ -200,8 +200,8 @@ class LapicRegisters
 	std::set_once_ro<std::mmio_ptr<uint32_t>> error_status;
 	std::set_once<std::mmio_ptr<uint32_t>>	  lvt_cmci;
 
-	std::set_once<std::mmio_ptr<interrupt_command_register_low>>  command_low;
-	std::set_once<std::mmio_ptr<interrupt_command_register_high>> command_high;
+	std::set_once<std::mmio_ptr<interrupt_command_low_register>>  command_low;
+	std::set_once<std::mmio_ptr<interrupt_command_high_register>> command_high;
 
 	std::set_once<std::mmio_ptr<uint32_t>> lvt_timer;
 	std::set_once<std::mmio_ptr<uint32_t>> lvt_thermal_sensor;
@@ -249,8 +249,8 @@ class LapicRegisters
 		error_status.set(get_mmio_ptr<uint32_t>(lapic_address, lapic_registers_offset::error_status));
 		lvt_cmci.set(get_mmio_ptr<uint32_t>(lapic_address, lapic_registers_offset::lvt_cmci));
 
-		command_low.set(get_mmio_ptr<interrupt_command_register_low>(lapic_address, lapic_registers_offset::command_low));
-		command_high.set(get_mmio_ptr<interrupt_command_register_high>(lapic_address, lapic_registers_offset::command_high));
+		command_low.set(get_mmio_ptr<interrupt_command_low_register>(lapic_address, lapic_registers_offset::command_low));
+		command_high.set(get_mmio_ptr<interrupt_command_high_register>(lapic_address, lapic_registers_offset::command_high));
 
 		lvt_timer.set(get_mmio_ptr<uint32_t>(lapic_address, lapic_registers_offset::lvt_timer));
 		lvt_thermal_sensor.set(get_mmio_ptr<uint32_t>(lapic_address, lapic_registers_offset::lvt_thermal_sensor));
@@ -268,7 +268,12 @@ class LapicRegisters
 		initiated = true;
 	}
 
-	void doX(uint8_t x, float y);
+	__attribute__((always_inline, fastcall)) inline void send_command(
+		interrupt_command_low_register low, interrupt_command_high_register high)
+	{
+		command_high.write(high);
+		command_low.write(low);
+	}
 
 	void send_eoi()
 	{
@@ -285,7 +290,7 @@ class LapicRegisters
 		// command_high->local_apic_id_of_target = 5;
 		// interrupt_command_register_high ch{.local_apic_id_of_target = 5};
 		// *command_high						= ch;
-		interrupt_command_register_high ch2 = command_high.read();
+		interrupt_command_high_register ch2 = command_high.read();
 		kprintf("ch2: %u\n", ch2.local_apic_id_of_target);
 		// *command_high = ch2;
 		// command_low->vector_number			= 1;
