@@ -104,18 +104,69 @@ struct __attribute__((packed)) lapic_version_register
 	uint8_t reserved2;
 };
 
+/* =============== Command registers ==================== */
+
+enum class delivery_mode : uint8_t
+{
+	fixed			= 0b000,
+	lowest_priority = 0b001,
+	smi				= 0b010, // System Management Interrupt, to go in (Ring < 0)!
+	remote_read		= 0b11,	 //== remote read. Intel says reserved. Amd says Remote Read
+	nmi				= 0b100,
+	init			= 0b101, // also used for init level deassert
+	start_up		= 0b110
+};
+
+enum class destination_mode : bool
+{
+	physical = 0,
+	logical	 = 1
+};
+
+enum class level : bool
+{
+	deassert = 0,
+	assert	 = 1,
+
+};
+
+enum class trigger_mode : bool
+{
+	edge  = 0,
+	level = 1,
+};
+
+enum class remote_read_status
+{
+	invalid = 0b00,
+	pending = 0b01,
+	done	= 0b10 // Delivery done and access was valid. Data available in Remote Read Register.
+				   // reserved = 0b11
+};
+
+// ALso know as destination shorthand on AMD and Intel's Manual
+enum class destination_type : uint8_t
+{
+	normal			   = 0b00,
+	self			   = 0b01,
+	all_including_self = 0b10,
+	all_excluding_self = 0b11,
+};
+
 struct __attribute__((packed)) interrupt_command_low_register
 {
-	uint8_t	 vector_number;
-	uint8_t	 delivery_mode : 3;
-	bool	 destination_mode : 1;
-	bool	 delivery_status : 1; // cleared when the interrupt has been accepted by the target. Always wait till cleared
-	bool	 _reserved : 1;
-	bool	 init_lvl_deassert_clear : 1;
-	bool	 init_lvl_deassert_set : 1;
-	uint8_t	 _reserved2 : 2;	   // bit 16-17
-	uint8_t	 destination_type : 2; // bit 18-19
-	uint16_t _reserved3 : 12;	   // bit 20-31
+	uint8_t				  vector_number;
+	enum delivery_mode	  delivery_mode : 3 = delivery_mode::fixed;
+	enum destination_mode destination_mode : 1;
+	// Phyiscal: The apic id (command_high) ==  Single Apic id, Logical: The Apic group id.
+	const bool delivery_status_pending : 1 = 1; // cleared when the interrupt has been accepted by the target. Always wait till cleared
+												// delivery status: Read only
+	bool					_reserved : 1		   = 0;
+	enum level				level : 1			   = level::assert;
+	enum trigger_mode		trigger_mode : 1	   = trigger_mode::edge;
+	enum remote_read_status remote_read_status : 2 = remote_read_status::pending; // bit 16-17.
+	enum destination_type	destination_type : 2;								  // bit 18-19
+	uint16_t				_reserved3 : 12 = 0;								  // bit 20-31
 };
 STATIC_ASSERT(sizeof(interrupt_command_low_register) == 4, "ICR low must be 32 bit");
 
@@ -125,21 +176,15 @@ struct __attribute__((packed)) interrupt_command_high_register
 	// Make them not suck mega dick.
 	// and just use a mov uint32_t.
 	// Learn what these operators are.
-	uint32_t reserved : 24;
+	uint32_t reserved : 24 = 0;
 	uint32_t local_apic_id_of_target : 4;
-	uint32_t unused : 4;
+	uint32_t unused : 4 = 0;
 	// Putting nothing else here makes the highest 4 bits reserved, and unaccessible
 };
 
 STATIC_ASSERT(sizeof(interrupt_command_high_register) == 4, "ICR high must be 32 bit");
 
-#define GET_ADDRESS(ToType, addr, offset)                                                                                                  \
-	({                                                                                                                                     \
-		uintptr_t		 _addr = (uintptr_t)(addr) + (uintptr_t)(offset);                                                                  \
-		volatile ToType *ret   = (volatile ToType *)(_addr);                                                                               \
-		ret;                                                                                                                               \
-	})
-
+/* =============== Command registers ==================== */
 struct __attribute__((packed)) spurious_interrupt_vector_register
 {
 	uint8_t	 vector;		   // bits 0-7

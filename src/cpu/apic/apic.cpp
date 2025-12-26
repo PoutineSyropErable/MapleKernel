@@ -35,12 +35,6 @@ static LapicRegisters gp_lapic_register;
 extern "C" uint8_t test_cmd()
 {
 
-	gp_lapic_register.send_command(
-		{
-			.init_lvl_deassert_clear = 1,
-		},
-		{.local_apic_id_of_target = 1});
-
 	return 1;
 	// return res.local_apic_id_of_target;
 }
@@ -167,27 +161,63 @@ extern "C" uint8_t apic_get_core_id()
 	return apic::get_core_id_fast();
 }
 
-void send_init_ipi(uint8_t core_id)
+void send_init(uint8_t core_id)
 {
+	assert(core_id <= 0b1111, "Won't fit\n");
+	gp_lapic_register.send_command(
+		{
+			.vector_number	  = 0,
+			.delivery_mode	  = delivery_mode::init,
+			.destination_mode = destination_mode::physical,
+			.destination_type = destination_type::normal,
+		},
+		{.local_apic_id_of_target = core_id});
+
+	pit::wait(10.f / 1000.f);
+
+	gp_lapic_register.send_command(
+		{
+			.vector_number	  = 0,
+			.delivery_mode	  = delivery_mode::init,
+			.destination_mode = destination_mode::physical,
+			.level			  = level::deassert,
+			.trigger_mode	  = trigger_mode::level,
+			.destination_type = destination_type::normal,
+		},
+		{.local_apic_id_of_target = core_id});
 }
 
-void send_sipi(uint8_t core_id, void core_bootstrap())
+void send_sipi(uint8_t core_id, void (*core_bootstrap)())
 {
+
+	uintptr_t cb = (uintptr_t)core_bootstrap;
+
+	assert(core_id <= 0b1111, "Won't fit\n");
+	assert(cb < 0xFF * 0x1000, "Start address must be a 16bit address");
+	assert((cb & 0xFFF) == 0, "SIPI start address must be 4 KB aligned");
+
+	gp_lapic_register.send_command(
+		{
+			.vector_number	  = static_cast<uint8_t>(cb / 0x1000),
+			.delivery_mode	  = delivery_mode::start_up,
+			.destination_mode = destination_mode::physical,
+			.destination_type = destination_type::normal,
+		},
+		{.local_apic_id_of_target = core_id});
 }
 
 enum error apic::wake_core(uint8_t core_id, void (*core_bootstrap)(), void (*core_main)())
 {
 
+	send_init(core_id);
+
 	// Sets up the main loop that core will use.
 	core_mains[core_id] = core_main;
 
-	send_init_ipi(core_id);
-	pit::wait(10.f / 1000.f);
-	// send_init_ipi(core_id, deassert);
-	pit::wait(10.f / 1000.f);
-
 	// Send Sipi
+	pit::wait(10.f / 1000.f);
 	send_sipi(core_id, core_bootstrap);
+
 	volatile uint32_t finished = false;
 	int				  err	   = pit::short_timeout(0.001f, &finished, true);
 	if (err)

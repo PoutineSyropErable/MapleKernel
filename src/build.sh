@@ -263,7 +263,7 @@ i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/symbols.c" -o "$BU
 i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/kernel_helper.c" -o "$BUILD_DIR/kernel_helper.o"
 i686-elf-g++ "${CPPFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$MULTIBOOT/multiboot.cpp" -o "$BUILD_DIR/multiboot.o"
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$KERNEL_CPP/kernel_cpp.cpp" -o "$BUILD_DIR/kernel_cpp.o" "${SUPER_INCLUDE[@]}"
-i686-elf-g++ "${CPPFLAGS[@]}" -c "$MULTICORE/multicore_gdt.cpp" -o "$BUILD_DIR/multicore_gdt.o" "${SUPER_INCLUDE[@]}"
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$GDT/multicore_gdt.cpp" -o "$BUILD_DIR/multicore_gdt.o" "${SUPER_INCLUDE[@]}"
 
 # Firmware
 i686-elf-gcc "${CPPFLAGS[@]}" -c "$ACPI/acpi.c" -o "$BUILD_DIR/acpi_c.o" "-I$STDLIB" "-I$STDIO"
@@ -299,8 +299,8 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$PIC/pic.c" -o "$BUILD_DIR/pic.o" "-I$IDT" "-I$G
 
 # CPU/APIC
 printf -- "\n\n\n======================== APIC ==============\n\n\n"
-i686-elf-g++ "${CPPFLAGS[@]}" -c "$APIC/apic.cpp" -o "$BUILD_DIR/apic.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$CPUID" "-I$MULTICORE" "-I$CPU" "-I$PIT"
-i686-elf-g++ "${CPPFLAGS[@]}" -c "$APIC_IO/apic_io.cpp" -o "$BUILD_DIR/apic_io.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$CPUID" "-I$MULTICORE" "-I$CPU"
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$APIC/apic.cpp" -o "$BUILD_DIR/apic.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$CPUID" "-I$MULTICORE" "-I$CPU" "-I$PIT" "-I$GDT"
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$APIC_IO/apic_io.cpp" -o "$BUILD_DIR/apic_io.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$CPUID" "-I$MULTICORE" "-I$CPU" "-I$GDT"
 
 # =============== Compile Drivers ==============
 
