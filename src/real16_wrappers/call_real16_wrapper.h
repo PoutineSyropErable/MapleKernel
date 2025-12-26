@@ -11,7 +11,7 @@ typedef struct __attribute__((packed, aligned(4)))
 {
 	uint32_t lower;
 	uint32_t higher;
-} SegmentDescriptor1; // just so it's easily present here now
+} SegmentDescriptor2; // just so it's easily present here now
 
 typedef struct __attribute__((packed, aligned(4)))
 {

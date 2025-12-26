@@ -1,5 +1,6 @@
 #pragma once
 #include "gdt.h"
+#include "static_assert.h"
 #include <stdbool.h>
 #include <stdint.h>
 #define IDT_MAX_VECTOR_COUNT 256
@@ -64,8 +65,8 @@ typedef struct __attribute__((packed)) idtr
 	idt32_entry_t *base_address; // 32 bit adddress
 } idtr_t;
 
-_Static_assert(sizeof(idt32_entry_t) == 8, "IDT entry must be 8 bytes (64 bits) long");
-_Static_assert(sizeof(idtr_t) == 6, "idtr entry must be 6 bytes (48 bits) long");
+STATIC_ASSERT(sizeof(idt32_entry_t) == 8, "IDT entry must be 8 bytes (64 bits) long");
+STATIC_ASSERT(sizeof(idtr_t) == 6, "idtr entry must be 6 bytes (48 bits) long");
 
 /*
 see `idt32_entry_t` for the other fields
@@ -96,7 +97,7 @@ typedef struct PACKED idt64_entry
 
 } idt64_entry_t;
 
-_Static_assert(sizeof(idt64_entry_t) == 16, "IDT64 entry must be 16 bytes (128 bits) long");
+STATIC_ASSERT(sizeof(idt64_entry_t) == 16, "IDT64 entry must be 16 bytes (128 bits) long");
 // iret  is used in 16 bit interrupt handlers
 // iretd is used in 32 bit interrupt handlers
 // iretq is used in 64 bit interupts handlers.

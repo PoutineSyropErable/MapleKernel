@@ -254,6 +254,8 @@ for dir in "${PS2_INCLUDE_DIRS[@]}"; do
 	PS2_SUPER_INCLUDE+=("-I$dir")
 done
 
+i686-elf-g++ "${CPPFLAGS[@]}" -c "./find_all_includer.cpp" -o "$BUILD_DIR/find_all.o" "${SUPER_INCLUDE[@]}"
+
 # Assemble the bootloader assembly
 nasm "${NASM_FLAGS32[@]}" "$KERNEL/boot_intel.asm" -o "$BUILD_DIR/boot.o"
 i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/kernel.c" -o "$BUILD_DIR/kernel.o"
@@ -262,8 +264,6 @@ i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/kernel_helper.c" -
 i686-elf-g++ "${CPPFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$MULTIBOOT/multiboot.cpp" -o "$BUILD_DIR/multiboot.o"
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$KERNEL_CPP/kernel_cpp.cpp" -o "$BUILD_DIR/kernel_cpp.o" "${SUPER_INCLUDE[@]}"
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$MULTICORE/multicore_gdt.cpp" -o "$BUILD_DIR/multicore_gdt.o" "${SUPER_INCLUDE[@]}"
-
-i686-elf-g++ "${CPPFLAGS[@]}" -c "./find_all_includer.cpp" -o "$BUILD_DIR/find_all.o" "${SUPER_INCLUDE[@]}"
 
 # Firmware
 i686-elf-gcc "${CPPFLAGS[@]}" -c "$ACPI/acpi.c" -o "$BUILD_DIR/acpi_c.o" "-I$STDLIB" "-I$STDIO"

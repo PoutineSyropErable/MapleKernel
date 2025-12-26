@@ -1,5 +1,6 @@
 #pragma once
 #include "gdt.h"
+#include "static_assert.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -32,7 +33,7 @@ typedef struct PACKED tss_descriptor_64
 	uint32_t reserved;		 // must be zero
 } tss_descriptor_64_t;
 
-_Static_assert(sizeof(tss_descriptor_64_t) == 16, "64-bit TSS descriptor must be 16 bytes");
+STATIC_ASSERT(sizeof(tss_descriptor_64_t) == 16, "64-bit TSS descriptor must be 16 bytes");
 
 // Normal 32-bit segment descriptor reader
 static inline segment_descriptor_t segment_descriptor_read(segment_descriptor_t *gdt, uint16_t index)
@@ -83,7 +84,7 @@ typedef struct __attribute__((packed)) tss16
 	// uint16_t io_map_base; // I/O map base address
 } tss16_t;
 
-_Static_assert(sizeof(tss16_t) == 44, "16-bit TSS must be 44 bytes");
+STATIC_ASSERT(sizeof(tss16_t) == 44, "16-bit TSS must be 44 bytes");
 
 typedef struct __attribute__((packed)) tss32
 {
@@ -133,7 +134,7 @@ typedef struct __attribute__((packed)) tss32
 	uint16_t		   io_map_base; // I/O map base address
 } tss32_t;
 
-_Static_assert(sizeof(tss32_t) == 104, "32-bit TSS must be 104 bytes");
+STATIC_ASSERT(sizeof(tss32_t) == 104, "32-bit TSS must be 104 bytes");
 
 typedef struct PACKED tss64
 {
@@ -162,7 +163,7 @@ typedef struct PACKED tss64
 	uint16_t iomap_base;
 } tss64_t;
 
-_Static_assert(sizeof(tss64_t) == 104, "x86-64 TSS must be 104 bytes");
+STATIC_ASSERT(sizeof(tss64_t) == 104, "x86-64 TSS must be 104 bytes");
 
 /*
 32-bit PM, no error, same cpl (eq. Keyboard iRQ, `int n` from ring 0)
@@ -175,7 +176,7 @@ typedef struct PACKED
 	uint32_t		   eflags;
 } interrupt_information_32_t;
 
-_Static_assert(sizeof(interrupt_information_32_t) == 12, "32-bit no-error struct must be 12 bytes");
+STATIC_ASSERT(sizeof(interrupt_information_32_t) == 12, "32-bit no-error struct must be 12 bytes");
 
 /*
 32-bit PM, No CPL change, with error code. (eg, page fault from kernel mode)
@@ -192,7 +193,7 @@ typedef struct PACKED
 
 } interrupt_information_32_error_t;
 
-_Static_assert(sizeof(interrupt_information_32_error_t) == 16, "32-bit no CPL change with error code must be 16 bytes");
+STATIC_ASSERT(sizeof(interrupt_information_32_error_t) == 16, "32-bit no CPL change with error code must be 16 bytes");
 
 /*
 32-bit PM, CPl Change (ring3 -> 0), without error code. (Typical software interupt from ring 3)
@@ -211,7 +212,7 @@ typedef struct PACKED
 
 } interrupt_information_32_cplchange_t;
 
-_Static_assert(sizeof(interrupt_information_32_cplchange_t) == 20, "32-bit CPL change without error must be 20 bytes");
+STATIC_ASSERT(sizeof(interrupt_information_32_cplchange_t) == 20, "32-bit CPL change without error must be 20 bytes");
 
 /*
 32-bit PM, change (ring 3 -> 0), with error code (eg, page fault from user mode)
@@ -232,7 +233,7 @@ typedef struct PACKED
 	uint32_t error_code;
 } interrupt_information_32_error_cplchange_t;
 
-_Static_assert(sizeof(interrupt_information_32_error_cplchange_t) == 24, "32-bit CPL change with error code must be 24 bytes");
+STATIC_ASSERT(sizeof(interrupt_information_32_error_cplchange_t) == 24, "32-bit CPL change with error code must be 24 bytes");
 
 /*
 64-bit LM, Any ring changes, without error code (eg, a software interupt)
@@ -253,7 +254,7 @@ typedef struct PACKED
 
 } interrupt_information_64_t;
 
-_Static_assert(sizeof(interrupt_information_64_t) == 40, "64-bit LM without error must be 40 bytes");
+STATIC_ASSERT(sizeof(interrupt_information_64_t) == 40, "64-bit LM without error must be 40 bytes");
 
 /*
 64-bit LM, Any ring changes, with error code (eg, any error interrupt, page fault from anywhere)
@@ -276,7 +277,7 @@ typedef struct PACKED
 	uint32_t _pad_error;
 } interrupt_information_64_error_t;
 
-_Static_assert(sizeof(interrupt_information_64_error_t) == 48, "64-bit LM with error must be 48 bytes");
+STATIC_ASSERT(sizeof(interrupt_information_64_error_t) == 48, "64-bit LM with error must be 48 bytes");
 
 /* =============32-bit PM,  tss process=============== */
 
