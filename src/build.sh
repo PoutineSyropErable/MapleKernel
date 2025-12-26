@@ -529,7 +529,7 @@ else
 
 	# sleep 1
 	if [[ "$MOVE_VNC" == "move" ]]; then
-		move_pid_to_workspace $VNC_PID 11
+		move_pid_to_workspace $VNC_PID 21
 	fi
 
 	wait $VNC_PID
