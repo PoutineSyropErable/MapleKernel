@@ -17,6 +17,7 @@
 #include "ps2_mouse_handler.h"
 
 #include "gdt.h"
+#include "multicore.h"
 #include "multicore_gdt.hpp"
 #include "pic_public.h"
 #include "string.h"
@@ -57,11 +58,16 @@ void multicore_setup(void *rsdp_void)
 	kprintf("\n\n\n\n======================\n\n\n\n");
 	acpi::madt::print_parsed_madt(parsed_madt);
 
+	uint32_t lapic_address_msr = apic::get_base_address();
+
+	// This reads the lapic address from the madt. Which is firmware
 	void *lapic_address	  = (void *)madt->lapic_address; // The main one
 	void *io_apic_address = (void *)parsed_madt.io_apics[0]->io_apic_address;
 
+	kprintf("lapic_address (msr) = %h\n", lapic_address_msr);
 	kprintf("lapic_address = %h\n", lapic_address);
 	kprintf("io_apic_address = %h\n", io_apic_address);
+	kprintf("\n");
 
 	apic::lapic_address	   = (volatile void *)lapic_address;
 	apic::io_appic_address = (volatile void *)io_apic_address;
@@ -71,12 +77,13 @@ void multicore_setup(void *rsdp_void)
 	apic::init_apic();
 	apic::init_lapic();
 
-	constexpr uint8_t BOOT_CORE_ID = 0;
-	uint8_t			  core_id	   = BOOT_CORE_ID;
+	uint8_t boot_core_id = apic::get_core_id();
+	kprintf("The core id of the bsp: %u\n", boot_core_id);
 	multicore_gdt::init_multicore_gdt();
-	multicore_gdt::set_fs_or_segment_selector(core_id, multicore_gdt::fs_or_gs::fs); // sets fs so it has the correct gdt entry.
-	multicore_gdt::set_fs_or_segment_selector(core_id, multicore_gdt::fs_or_gs::gs);
-	multicore_gdt::get_fs_struct()->core_id		= core_id;
+	kprintf("Added a new multicore gdt\n");
+	multicore_gdt::set_fs_or_segment_selector(boot_core_id, multicore_gdt::fs_or_gs::fs); // sets fs so it has the correct gdt entry.
+	multicore_gdt::set_fs_or_segment_selector(boot_core_id, multicore_gdt::fs_or_gs::gs);
+	multicore_gdt::get_fs_struct()->core_id		= boot_core_id;
 	multicore_gdt::get_gs_struct()->other_stuff = 69;
 
 	if (false)
@@ -100,7 +107,7 @@ void multicore_setup(void *rsdp_void)
 	for (uint8_t i = 0; i < core_count; i++)
 	{
 		uint8_t core_id = parsed_madt.processor_local_apics[i]->apic_id;
-		if (core_id == BOOT_CORE_ID)
+		if (core_id == boot_core_id)
 		{
 			// nothing says the parse is in order. We are on core 0.
 			// So, skip that itteration

@@ -5,6 +5,7 @@
 #include "cpuid.hpp"
 #include "cpuid_results.hpp"
 #include "intrinsics.h"
+#include "multicore_gdt.hpp"
 // This file needs -fno-strict-aliasing
 
 using namespace apic;
@@ -12,20 +13,12 @@ using namespace apic;
 volatile void *apic::lapic_address;
 volatile void *apic::io_appic_address;
 
-apic::LapicRegisters apic::g_lapic_register;
+// Private (To this file) and global
+static LapicRegisters gp_lapic_register;
 
-struct apic::apic_support apic::has_apic()
+void apic::LapicRegisters::doX(uint8_t x, float y)
 {
-
-	struct cpuid::cpuid_verified_result cpuid_1 = cpuid::call_cpuid(cpuid::CpuidFunction::ProcessorInfo, {.raw = 0});
-	if (cpuid_1.has_error())
-	{
-		abort_msg("If we can't even get cpuid1, we are fucked anyway\n");
-	}
-
-	struct cpuid_basic_edx edx = BITCAST(struct cpuid_basic_edx, cpuid_1.regs.edx);
-	struct cpuid_basic_ecx ecx = BITCAST(struct cpuid_basic_ecx, cpuid_1.regs.ecx);
-	return apic::apic_support{edx.apic, ecx.x2apic};
+	// Do something
 }
 
 extern "C" uint8_t test_cmd()
@@ -39,6 +32,22 @@ extern "C" uint8_t test_cmd()
 	// return res.local_apic_id_of_target;
 }
 
+struct apic::apic_support apic::has_apic()
+{
+
+	struct cpuid::cpuid_verified_result cpuid_1 = cpuid::call_cpuid(cpuid::CpuidFunction::ProcessorInfo, {.raw = 0});
+	if (cpuid_1.has_error())
+	{
+		abort_msg("If we can't even get cpuid1, we are fucked anyway\n");
+	}
+
+	struct cpuid_basic_edx edx = BITCAST(struct cpuid_basic_edx, cpuid_1.regs.edx);
+	struct cpuid_basic_ecx ecx = BITCAST(struct cpuid_basic_ecx, cpuid_1.regs.ecx);
+	return apic::apic_support{edx.apic, ecx.x2apic};
+	// Technically, I'm only implementing it for the apic (x1).
+	// The mmio version, not the msr version.
+}
+
 void apic::read_apic_msr(apic_msr_eax *eax, apic_msr_edx *edx)
 {
 	uint32_t eax_raw, edx_raw;
@@ -50,47 +59,73 @@ void apic::read_apic_msr(apic_msr_eax *eax, apic_msr_edx *edx)
 void apic::write_apic_msr(apic::apic_msr_eax eax, apic::apic_msr_edx edx)
 {
 
-	union
-	{
-		apic_msr_eax eax;
-		uint32_t	 raw;
-	} eax_u;
-
-	union
-	{
-		apic_msr_edx edx;
-		uint32_t	 raw;
-	} edx_u;
-
-	eax_u.eax = eax;
-	edx_u.edx = edx;
-
-	uint32_t eax_raw = eax_u.raw;
-	uint32_t edx_raw = edx_u.raw;
+	uint32_t eax_raw = to_uint32<apic_msr_eax>(eax);
+	uint32_t edx_raw = to_uint32<apic_msr_edx>(edx);
 	write_msr(apic::apic_msr, eax_raw, edx_raw);
+}
+
+// This assume 4GB max,
+// edx is for the rest of the address;
+uint32_t apic::get_base_address()
+{
+	apic_msr_eax eax;
+	apic_msr_edx edx;
+	read_apic_msr(&eax, &edx);
+	assert(!eax.x2apic, "x2 apic doesn't work with base address mmio, but msr!\n");
+	return eax.base_low_page_idx << 12;
+}
+
+// This assume 4GB max,
+// edx is for the rest of the address;
+void apic::set_base_address(uint32_t base_address)
+{
+	constexpr uint32_t four_kb	 = (1 << 12);
+	constexpr uint32_t page_mask = ((four_kb << 1) - 1);
+	assert((base_address & page_mask) == 0, "Base address must be page aligned!\n");
+
+	apic_msr_eax eax;
+	apic_msr_edx edx;
+	if (false)
+	{
+		edx.base_high = 0b1111; // max base_high value
+	}
+	read_apic_msr(&eax, &edx);
+	assert(!eax.x2apic, "x2 apic doesn't work with base address mmio, but msr!\n");
+	eax.base_low_page_idx = (base_address >> 12);
+	write_apic_msr(eax, edx);
 }
 
 enum apic::error apic::init_apic()
 {
 	// Done once for global enable.
-	g_lapic_register.init();
+	gp_lapic_register.init();
 
 	apic_msr_eax eax;
 	apic_msr_edx edx;
 	read_apic_msr(&eax, &edx);
-	eax.apic_en = true;
+	eax.apic_enable = true;
+	assert(eax.is_bootstrap_processor, "This must only be executed once by the bootstrap processor\n");
 	write_apic_msr(eax, edx);
 
 	return apic::error::none;
 }
 
+uint32_t get_core_id_fast()
+{
+	return multicore_gdt::get_fs_struct()->core_id;
+}
+
 enum apic::error apic::init_lapic()
 {
 
-	apic::spurious_interrupt_vector_register spivr = g_lapic_register.spurious_interrupt_vector.read();
-	spivr.apic_enable							   = true;
-	spivr.eoi_suppress							   = false;
-	g_lapic_register.spurious_interrupt_vector.write(spivr);
+	apic::spurious_interrupt_vector_register spivr					= gp_lapic_register.spurious_interrupt_vector.read();
+	constexpr uint8_t						 number_of_reserved_int = 32;
+	constexpr uint8_t						 number_of_apic_io_irq	= 24;
+	constexpr uint8_t						 vector_when_error		= (number_of_reserved_int + number_of_apic_io_irq);
+	spivr.vector	   = vector_when_error; // Write interrupt handler 56 to handle spurious interrupts
+	spivr.apic_enable  = true;
+	spivr.eoi_suppress = false;
+	gp_lapic_register.spurious_interrupt_vector.write(spivr);
 	return apic::error::none;
 }
 
@@ -116,8 +151,7 @@ void apic::core_main()
 
 uint8_t apic::get_core_id()
 {
-	// TODO
-	return 0;
+	return gp_lapic_register.lapic_id.read();
 }
 
 extern "C" uint8_t apic_get_core_id()

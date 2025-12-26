@@ -37,10 +37,10 @@ template <typename T> constexpr T from_uint32(uint32_t raw)
 {
 	union
 	{
-		uint32_t r;
+		uint32_t raw;
 		T		 val;
 	} u;
-	u.r = raw;
+	u.raw = raw;
 	return u.val;
 }
 
@@ -48,11 +48,11 @@ template <typename T> constexpr uint32_t to_uint32(T val)
 {
 	union
 	{
-		uint32_t r;
+		uint32_t raw;
 		T		 val;
 	} u;
 	u.val = val;
-	return u.r;
+	return u.raw;
 }
 
 // ================ Is same ==========

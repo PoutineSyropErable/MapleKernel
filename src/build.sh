@@ -172,6 +172,7 @@ CONTROL_REGISTERS="./cpu/control_registers"
 CPUID="./cpu/cpuid"
 PIC="./cpu/pic"
 APIC="./cpu/apic"
+MULTICORE="./cpu/multicore"
 GDT="./cpu/gdt"
 IDT="./cpu/idt"
 
@@ -210,6 +211,7 @@ INCLUDE_DIRS=(
 	"$IDT"
 	"$PIC"
 	"$APIC"
+	"$MULTICORE"
 
 	"$EFI"
 	"$UEFI"
@@ -254,7 +256,7 @@ i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/symbols.c" -o "$BU
 i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/kernel_helper.c" -o "$BUILD_DIR/kernel_helper.o"
 i686-elf-g++ "${CPPFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$MULTIBOOT/multiboot.cpp" -o "$BUILD_DIR/multiboot.o"
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$KERNEL_CPP/kernel_cpp.cpp" -o "$BUILD_DIR/kernel_cpp.o" "${SUPER_INCLUDE[@]}"
-i686-elf-g++ "${CPPFLAGS[@]}" -c "$KERNEL_CPP/multicore_gdt.cpp" -o "$BUILD_DIR/multicore_gdt.o" "${SUPER_INCLUDE[@]}"
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$MULTICORE/multicore_gdt.cpp" -o "$BUILD_DIR/multicore_gdt.o" "${SUPER_INCLUDE[@]}"
 
 # Firmware
 i686-elf-gcc "${CPPFLAGS[@]}" -c "$ACPI/acpi.c" -o "$BUILD_DIR/acpi_c.o" "-I$STDLIB" "-I$STDIO"
@@ -290,7 +292,7 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$PIC/pic.c" -o "$BUILD_DIR/pic.o" "-I$IDT" "-I$G
 
 # CPU/APIC
 printf -- "\n\n\n======================== APIC ==============\n\n\n"
-i686-elf-g++ "${CPPFLAGS[@]}" -c "$APIC/apic.cpp" -o "$BUILD_DIR/apic.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$CPUID"
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$APIC/apic.cpp" -o "$BUILD_DIR/apic.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$CPUID" "-I$MULTICORE"
 
 # =============== Compile Drivers ==============
 

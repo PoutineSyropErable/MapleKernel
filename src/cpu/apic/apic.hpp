@@ -24,6 +24,8 @@ enum apic::error init_apic();
 // The lapic initiation (For the running core)
 enum apic::error init_lapic();
 enum apic::error init_io_apic();
+uint32_t		 get_base_address();
+void			 set_base_address(uint32_t base_address);
 
 /*
 Method using lapic.

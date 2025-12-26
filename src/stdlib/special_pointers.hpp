@@ -12,63 +12,6 @@ namespace std
 // #define DEBUG
 
 // Wrapper for a pointer that can only be set once
-template <typename T> struct set_once_primitive_ptr
-{
-  private:
-	T *ptr = nullptr;
-
-  public:
-	void set(T *p)
-	{
-#ifdef DEBUG
-		assert(ptr == nullptr, "Pointer already set!");
-#endif
-		ptr = p;
-	}
-
-	T *get() const
-	{
-#ifdef DEBUG
-		assert(ptr != nullptr, "Pointer not initialized!");
-#endif
-		return ptr;
-	}
-
-	// Convenient operator overloads to use like a pointer
-	T &operator*() const
-	{
-		return *get();
-	}
-	T *operator->() const
-	{
-		return get();
-	}
-};
-
-template <typename T> struct primitive_mmio_ptr
-{
-
-  private:
-	volatile T *ptr; // mutable pointer. But never
-
-  public:
-	using value_type = T;
-
-	// construct from raw pointer
-	constexpr primitive_mmio_ptr(volatile T *p = nullptr) : ptr(p)
-	{
-	}
-
-	T read() const
-	{
-		return *ptr;
-	}
-
-	void write(const T val) const
-	{
-		*ptr = val;
-	}
-};
 
 // ======================================================================
 // Modifiable (but private) MMIO pointer (This is the one you should use)
