@@ -47,10 +47,18 @@ extern "C" void pit_interrupt_handler()
 	case pit_ih::mode::game: game_loop();
 	}
 
-	*pit_msg_address[pit_write_index] = pit_msg_value[pit_write_index];
-	if (pit_write_index != 0)
+	if (pit_write_index != 0 && pit_is_new_timeout)
 	{
 		pit_write_index -= 1;
+	}
+	volatile uint32_t *write_address = pit_msg_address[pit_write_index];
+	// kprintf("The Write index: %u\n", pit_write_index);
+	// kprintf("The Write address: %h\n", write_address);
+	// kprintf("The Write value: %h\n", pit_msg_value[pit_write_index]);
+	if (write_address != nullptr)
+	{
+		*pit_msg_address[pit_write_index] = pit_msg_value[pit_write_index];
+		pit_is_new_timeout				  = false;
 	}
 
 	// kprintf("C pit interrupt handler!\n");

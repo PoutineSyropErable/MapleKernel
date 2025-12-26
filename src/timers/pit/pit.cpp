@@ -60,9 +60,9 @@ void set_pit_count(uint16_t count)
 {
 	// Disable interrupts
 	__cli();
-
 	send_byte_to_pit(IOPort::channel_0_data_port, count & 0xFF);		  // Low byte
 	send_byte_to_pit(IOPort::channel_0_data_port, (count & 0xFF00) >> 8); // High Byte
+	__sti();
 	return;
 }
 
@@ -131,6 +131,7 @@ void pit::start_loop_wait(uint32_t freq_divider_count)
 extern "C"
 {
 	volatile bool	   pit_interrupt_handled;
+	volatile bool	   pit_is_new_timeout;
 	volatile uint8_t   pit_write_index = 0;
 	volatile uint32_t *pit_msg_address[PIT_MAX_MSG];
 	volatile uint32_t  pit_msg_value[PIT_MAX_MSG];
@@ -156,7 +157,6 @@ constexpr pit_wait_split compute_pit_wait(float seconds, float max_single_wait, 
 inline void wait_till_pit_interrupt()
 {
 	pit_interrupt_handled = false;
-	__sti();
 	do
 	{
 		__hlt();
@@ -201,11 +201,11 @@ int pit::wait(float seconds)
 	// The mode change of this command will stop the frequency.
 	wait_lte_one_cycle(sp.reminder_pit_count);
 
-	IRQ_set_mask(PIT_IRQ);
+	// IRQ_set_mask(PIT_IRQ);
 	return 0;
 }
 
-int pit::short_timeout(float seconds, uint32_t *finished, bool new_timeout = true)
+int pit::short_timeout(float seconds, volatile uint32_t *finished, bool new_timeout)
 {
 	if (seconds <= 0)
 	{
@@ -214,25 +214,25 @@ int pit::short_timeout(float seconds, uint32_t *finished, bool new_timeout = tru
 	pit_wait_split sp = compute_pit_wait(seconds, max_single_wait, MAX_FREQ_DIVIDER);
 
 	// check we are in single core mode?
-
 	if (sp.full_cycles > 0)
 	{
 		return 2;
 	}
 
-	uint32_t pit_freq_divider = sp.reminder_pit_count;
-
-	assert(pit_write_index < PIT_MAX_MSG, "Overflowed, too many mesg, out of space\n");
-	if (!new_timeout)
+	if (new_timeout)
 	{
-		pit_write_index += 1;
+		assert(pit_write_index < PIT_MAX_MSG, "Overflowed, too many mesg, out of space\n");
+		*finished						 = 0;
+		pit_msg_address[pit_write_index] = finished;
+		pit_msg_value[pit_write_index]	 = 1;
+		pit_is_new_timeout				 = true;
 		// :TODO: Note, using this case is dangerous the moment more then one core is active.
 		// :RACE Condition:
+		pit_write_index += 1;
 	}
 
-	*finished						 = 0;
-	pit_msg_address[pit_write_index] = finished;
-	pit_msg_value[pit_write_index]	 = 1;
+	IRQ_clear_mask(PIT_IRQ);
+	uint32_t pit_freq_divider = sp.reminder_pit_count;
 	send_wait_count_command(pit_freq_divider);
 
 	return 0;

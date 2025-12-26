@@ -89,6 +89,8 @@ void multicore_setup(void *rsdp_void)
 	multicore_gdt::get_fs_struct()->core_id		= boot_core_id;
 	multicore_gdt::get_gs_struct()->other_stuff = 69;
 
+	kprintf("\nGot through the init multicore gdt\n\n");
+
 	if (false)
 	{
 		// Other cores will do this using get_core id;
@@ -105,11 +107,19 @@ void multicore_setup(void *rsdp_void)
 
 	// initiate the apic_io of this core.
 	apic_io::init_io_apic();
+	kprintf("Initiated io apic\n");
 
 	// Apic timers calibration using pit
 	apic::calibrate_lapic_timer();
+	kprintf("Calibrate lapic timer\n");
 
+	kprintf("\n\n");
 	bool *core_is_active = (bool *)alloca(sizeof(bool) * runtime_core_count);
+	// bool core_is_active[MAX_CORE_COUNT] = {0};
+	core_is_active[0] = true;
+	core_is_active[1] = false;
+	core_is_active[2] = false;
+	core_is_active[3] = false;
 	// wake cores. We are already on core 0.
 	for (uint8_t i = 0; i < runtime_core_count; i++)
 	{
@@ -124,23 +134,34 @@ void multicore_setup(void *rsdp_void)
 		// Make is so every interrupt also does a last core recieved thing
 		apic::error err = apic::wake_core(core_id, apic::core_bootstrap, apic::core_main);
 		if ((uint8_t)err)
+		{
+
 			core_is_active[core_id] = false;
+			kprintf("core %u timed-out (or other bad error)\n", core_id);
+		}
 		else
 		{
+			kprintf("Woke core %u\n", core_id);
 			core_is_active[core_id] = true;
 			apic::wait_till_interrupt(INTERRUPT_ENTERED_MAIN);
+			kprintf("core %u entered it's main function\n", core_id);
 			// Wait till interrupt is not really usefull, since there's already polling for starting.
 			// But i guess it's a nice way to make sure it entered it's main.
 		}
+		kprintf("\n\n");
 	}
+	kprintf("Tried to activate all the cores\n");
 
 	for (uint8_t i = 0; i < runtime_core_count; i++)
 	{
 		uint8_t core_id = parsed_madt.processor_local_apics[i]->apic_id;
-		assert(core_is_active[core_id], "Core %u must be active. All or nothing for now\n", i);
+		kprintf("i: %u, core_id: %u, active: %b\n", i, core_id, core_is_active[core_id]);
+		assert(core_is_active[core_id], "i: %u, Core %u must be active. All or nothing for now\n", i, core_id);
 	}
+	kprintf("Activated all cores\n");
 
 	disable_pic();
+	kprintf("Disabled the pic\n");
 	// Disabling the pic will be done rather late
 }
 

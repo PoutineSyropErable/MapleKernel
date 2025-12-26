@@ -4,12 +4,5 @@
 
 static inline void *alloca(size_t size)
 {
-	void *ptr;
-	asm volatile("subl %1, %%esp\n" // move stack pointer down
-				 "mov %%esp, %0\n"	// return new stack pointer
-		: "=r"(ptr)					// output
-		: "r"(size)					// input
-		: "esp"						// clobbered
-	);
-	return ptr;
+	return __builtin_alloca(size);
 }

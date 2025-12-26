@@ -181,8 +181,13 @@ enum error apic::wake_core(uint8_t core_id, void (*core_bootstrap)(), void (*cor
 
 	// Send Sipi
 	send_sipi(core_id, core_bootstrap);
-	uint32_t finished = false;
-	pit::short_timeout(0.001f, &finished, true);
+	volatile uint32_t finished = false;
+	int				  err	   = pit::short_timeout(0.001f, &finished, true);
+	if (err)
+	{
+		kprintf("There was an error waiting for the short timeout\n");
+		return error::bad_time;
+	}
 	while (true)
 	{
 
@@ -216,10 +221,11 @@ long_poll:
 			}
 			else if (finished)
 			{
-				continue;
+				break;
 			}
 		}
 	}
+	kprintf("Boot timeout happened\n");
 	return apic::error::boot_core_timeout;
 }
 

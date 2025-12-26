@@ -254,7 +254,7 @@ for dir in "${PS2_INCLUDE_DIRS[@]}"; do
 	PS2_SUPER_INCLUDE+=("-I$dir")
 done
 
-i686-elf-g++ "${CPPFLAGS[@]}" -c "./find_all_includer.cpp" -o "$BUILD_DIR/find_all.o" "${SUPER_INCLUDE[@]}"
+# i686-elf-g++ "${CPPFLAGS[@]}" -c "./find_all_includer.cpp" -o "$BUILD_DIR/find_all.o" "${SUPER_INCLUDE[@]}"
 
 # Assemble the bootloader assembly
 nasm "${NASM_FLAGS32[@]}" "$KERNEL/boot_intel.asm" -o "$BUILD_DIR/boot.o"

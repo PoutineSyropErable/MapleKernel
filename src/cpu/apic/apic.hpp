@@ -17,6 +17,7 @@ enum class error
 {
 	none = 0,
 	boot_core_timeout,
+	bad_time,
 };
 
 // APIC initiation itself
