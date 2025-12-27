@@ -154,7 +154,7 @@ void multicore_setup(void *rsdp_void)
 		{
 			core_is_active[core_id] = true;
 			// apic::send_ipi(core_id, INTERRUPT_ENTERED_MAIN);
-			apic::wait_till_interrupt(INTERRUPT_ENTERED_MAIN);
+			// apic::wait_till_interrupt(INTERRUPT_ENTERED_MAIN);
 			// kprintf("core %u entered it's main function\n", core_id);
 			// Wait till interrupt is not really usefull, since there's already polling for starting.
 			// But i guess it's a nice way to make sure it entered it's main.

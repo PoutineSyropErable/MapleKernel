@@ -434,6 +434,7 @@ void vkprintf(const char *fmt, va_list args)
 {
 	uint32_t flags = irq_save();
 	spinlock(&kprintf_lock);
+	// TODO: Make sure it does lock at the start.
 	uint8_t len = count_char(fmt, '%');
 
 	if (len == 0)

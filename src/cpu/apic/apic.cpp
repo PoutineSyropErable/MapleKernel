@@ -246,7 +246,9 @@ enum error apic::send_ipi(uint8_t core_id, uint8_t int_vector)
 
 	uint8_t this_core_id						   = get_core_id_fast();
 	last_interrupt_received[core_id][this_core_id] = int_vector;
-	kprintf("Core %u sending interrupt %u to core %u\n", this_core_id, int_vector, core_id);
+	// kprintf("Core %u sending interrupt %u to core %u\n\n", this_core_id, int_vector, core_id);
+	// without this print, it fucks
+	// TODO: Fix the weird deadlocks
 
 	gp_lapic_register.send_command(
 		{
