@@ -26,7 +26,7 @@ template <typename T> struct mmio_ptr
 	using underlying_t =
 		typename conditional<sizeof(T) == 1, uint8_t, typename conditional<sizeof(T) == 2, uint16_t, uint32_t>::type>::type;
 
-	volatile T *ptr; // mutable pointer. But never modified
+	volatile T *const ptr; // mutable pointer. But never modified
 
   public:
 	using value_type = T;
@@ -43,70 +43,21 @@ template <typename T> struct mmio_ptr
 
 	T read() const
 	{
-
-		if constexpr (T_is_uintX_t)
-		{
-			return *ptr;
-		}
-		else
-		{
-
-			union
-			{
-				volatile underlying_t raw;
-				T					  val;
-			} u;
-			u.raw = *(volatile underlying_t *)ptr;
-			return u.val;
-		}
-	}
-
-	void write(const T val) const
-	{
-
-		if constexpr (T_is_uintX_t)
-		{
-			*ptr = val;
-		}
-		else
-		{
-
-			union
-			{
-				T			 val;
-				underlying_t raw;
-			} u;
-			u.val						  = val;
-			*(volatile underlying_t *)ptr = u.raw;
-		}
-	}
-
-#ifdef MALOC_VERSION
-	T read_m() const
-	{
 		uint32_t raw = *(volatile uint32_t *)ptr; // FULL register read
 		T		 val;
 		__builtin_memcpy(&val, &raw, sizeof(T)); // copy into struct
 		return val;
 	}
 
-	void write_m(const T v) const
+	void write(const T v) const
 	{
 		uint32_t raw = 0;
 		__builtin_memcpy(&raw, &v, sizeof(T)); // copy struct → raw
 		*(volatile uint32_t *)ptr = raw;	   // FULL register write
 	}
-#endif
 };
 
-// ======================================================
-// Const MMIO pointer (Can't change the pointer)
-// ======================================================
-/*
-	This one isn't really needed. The other should compile to something as fast as this.
-	But, if it doesn't, well you have this.
-*/
-template <typename T> struct const_mmio_ptr
+template <typename T> struct mmio_ptr_ro
 {
 	static_assert(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4, "mmio_ptr only supports 1, 2, or 4 byte types");
 
@@ -116,12 +67,76 @@ template <typename T> struct const_mmio_ptr
 	using underlying_t =
 		typename conditional<sizeof(T) == 1, uint8_t, typename conditional<sizeof(T) == 2, uint16_t, uint32_t>::type>::type;
 
-	volatile T *const ptr; // pointer is const, can't be reassigned
+	volatile T *const ptr; // mutable pointer. But never modified
 
   public:
 	using value_type = T;
 
-	constexpr explicit const_mmio_ptr(volatile T *p) : ptr(p)
+	// construct from raw pointer
+	constexpr explicit mmio_ptr_ro(volatile T *p) : ptr(p)
+	{
+	}
+
+	T read() const
+	{
+		uint32_t raw = *(volatile uint32_t *)ptr; // FULL register read
+		T		 val;
+		__builtin_memcpy(&val, &raw, sizeof(T)); // copy into struct
+		return val;
+	}
+};
+
+template <typename T> struct mmio_ptr_wo
+{
+	static_assert(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4, "mmio_ptr only supports 1, 2, or 4 byte types");
+
+	static constexpr bool T_is_uintX_t = is_same<T, uint8_t>::value || is_same<T, uint16_t>::value || is_same<T, uint32_t>::value;
+
+  private:
+	using underlying_t =
+		typename conditional<sizeof(T) == 1, uint8_t, typename conditional<sizeof(T) == 2, uint16_t, uint32_t>::type>::type;
+
+	volatile T *const ptr; // mutable pointer. But never modified
+
+  public:
+	using value_type = T;
+
+	// construct from raw pointer
+	constexpr explicit mmio_ptr_wo(volatile T *p) : ptr(p)
+	{
+	}
+
+	void write(const T v) const
+	{
+		uint32_t raw = 0;
+		__builtin_memcpy(&raw, &v, sizeof(T)); // copy struct → raw
+		*(volatile uint32_t *)ptr = raw;	   // FULL register write
+	}
+};
+
+// ======================================================
+// Const MMIO pointer (Can't change the pointer)
+// ======================================================
+/*
+	This one isn't really needed. The other should compile to something as fast as this.
+	But, if it doesn't, well you have this.
+*/
+template <typename T> struct mut_mmio_ptr
+{
+	static_assert(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4, "mmio_ptr only supports 1, 2, or 4 byte types");
+
+	static constexpr bool T_is_uintX_t = is_same<T, uint8_t>::value || is_same<T, uint16_t>::value || is_same<T, uint32_t>::value;
+
+  private:
+	using underlying_t =
+		typename conditional<sizeof(T) == 1, uint8_t, typename conditional<sizeof(T) == 2, uint16_t, uint32_t>::type>::type;
+
+	volatile T *ptr; // pointer is const, can't be reassigned
+
+  public:
+	using value_type = T;
+
+	constexpr explicit mut_mmio_ptr(volatile T *p) : ptr(p)
 	{
 	}
 
@@ -162,7 +177,7 @@ template <typename T> struct const_mmio_ptr
 		}
 	}
 
-#ifdef MALOC_VERSION
+#ifdef MEMCPY_VERSION
 	T read_m() const
 	{
 		uint32_t raw = *(volatile uint32_t *)ptr; // FULL register read
@@ -179,176 +194,6 @@ template <typename T> struct const_mmio_ptr
 	}
 
 	// no write() method — read-only
-#endif
-};
-
-// ======================================================
-// Set-once wrappers enforcing access restrictions
-// ======================================================
-
-// Read/Write set-once pointer
-// ======================================================
-// Set-once wrapper (read/write)
-// ======================================================
-template <typename MMIO> struct set_once
-{
-  private:
-	MMIO mmio; // stored MMIO wrapper
-#ifdef DEBUG
-	bool is_set = false; // ensures single initialization
-#endif
-
-  public:
-	using value_type = typename MMIO::value_type;
-
-	constexpr set_once() = default;
-
-	// Set from an mmio_ptr; can only be called once
-	void set(const MMIO &m)
-	{
-#ifdef DEBUG
-
-		assert(!is_set, "Ptr is already set\n");
-#endif
-
-		mmio = m;
-#ifdef DEBUG
-		is_set = true;
-#endif
-	}
-
-	value_type read() const
-	{
-#ifdef DEBUG
-		assert(is_set, "ptr must be set to read it\n");
-#endif
-		return mmio.read();
-	}
-
-	void write(const value_type v) const
-	{
-#ifdef DEBUG
-		assert(is_set, "ptr must be set to write it\n");
-#endif
-		mmio.write(v);
-	}
-
-#ifdef MALOC_VERSION
-	value_type read_m() const
-	{
-#	ifdef DEBUG
-		assert(is_set, "ptr must be set to read it\n");
-#	endif
-		return mmio.read_m();
-	}
-
-	void write_m(const value_type &v) const
-	{
-#	ifdef DEBUG
-		assert(is_set, "ptr must be set to write it\n");
-#	endif
-		mmio.write_m(v);
-	}
-#endif
-};
-
-// ======================================================
-// Read-only set-once pointer
-// ======================================================
-template <typename MMIO> struct set_once_ro
-{
-  private:
-	MMIO mmio; // stored MMIO wrapper
-#ifdef DEBUG
-	bool is_set = false;
-#endif
-
-  public:
-	using value_type = typename MMIO::value_type;
-
-	constexpr set_once_ro() = default;
-
-	// Set the MMIO pointer exactly once
-	void set(const MMIO &m)
-	{
-#ifdef DEBUG
-		assert(!is_set, "Pointer already initialized!\n");
-#endif
-		mmio = m;
-#ifdef DEBUG
-		is_set = true;
-#endif
-	}
-
-	value_type read() const
-	{
-#ifdef DEBUG
-		assert(is_set, "Pointer not initialized!\n");
-#endif
-		return mmio.read();
-	}
-
-	// Delete write to enforce read-only access
-	void write(const value_type &) const = delete;
-
-#ifdef MALOC_VERSION
-	value_type read_m() const
-	{
-#	ifdef DEBUG
-		assert(is_set, "ptr must be set to read it\n");
-#	endif
-		return mmio.read_m();
-	}
-#endif
-};
-
-// ======================================================
-// Write-only set-once pointer
-// ======================================================
-template <typename MMIO> struct set_once_wo
-{
-  private:
-	MMIO mmio; // stored MMIO wrapper
-#ifdef DEBUG
-	bool is_set = false;
-#endif
-
-  public:
-	using value_type = typename MMIO::value_type;
-
-	constexpr set_once_wo() = default;
-
-	// Set the MMIO pointer exactly once
-	void set(const MMIO &m)
-	{
-#ifdef DEBUG
-		assert(!is_set, "Pointer already initialized!\n");
-#endif
-		mmio = m;
-#ifdef DEBUG
-		is_set = true;
-#endif
-	}
-
-	void write(const value_type &v) const
-	{
-#ifdef DEBUG
-		assert(is_set, "Pointer not initialized!\n");
-#endif
-		mmio.write(v);
-	}
-
-	// Delete read to enforce write-only access
-	value_type read() const = delete;
-
-#ifdef MALOC_VERSION
-	void write_m(const value_type &v) const
-	{
-#	ifdef DEBUG
-		assert(is_set, "ptr must be set to write it\n");
-#	endif
-		mmio.write_m(v);
-	}
 #endif
 };
 

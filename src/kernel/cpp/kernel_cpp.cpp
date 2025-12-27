@@ -73,8 +73,9 @@ void multicore_setup(void *rsdp_void)
 	kprintf("io_apic_address = %h\n", io_apic_address);
 	kprintf("\n");
 
-	apic::lapic_address	   = (volatile void *)lapic_address;
-	apic::io_appic_address = (volatile void *)io_apic_address;
+	assert(apic::lapic_address == (volatile void *)lapic_address, "Firmware obtained adddress must be = to hardcoded one\n");
+	assert(apic::lapic_address == (volatile void *)lapic_address_msr, "Msr obtained address be be == to hardcoded one\n");
+	assert(apic::io_apic_address == (volatile uint32_t *)io_apic_address, "io apic, must be equal to hardcoded one\n");
 
 	runtime_core_count = parsed_madt.entry_counts.processor_local_apic;
 

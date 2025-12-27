@@ -39,8 +39,8 @@ void __attribute__((fastcall)) test_special_pointers2(uintptr_t addr)
 
 	if (which == 0)
 	{
-		volatile Reg16x2				  *ptr_raw = (volatile Reg16x2 *)0xb00000;
-		const std::const_mmio_ptr<Reg16x2> ptr(ptr_raw);
+		volatile Reg16x2				*ptr_raw = (volatile Reg16x2 *)0xb00000;
+		const std::mut_mmio_ptr<Reg16x2> ptr(ptr_raw);
 
 		Reg16x2 val{.low = 7, .high = 8};
 		ptr.write(val);
@@ -48,8 +48,8 @@ void __attribute__((fastcall)) test_special_pointers2(uintptr_t addr)
 
 	if (which == 1)
 	{
-		volatile Reg16x2				  *ptr_raw = (volatile Reg16x2 *)addr;
-		const std::const_mmio_ptr<Reg16x2> ptr(ptr_raw);
+		volatile Reg16x2				*ptr_raw = (volatile Reg16x2 *)addr;
+		const std::mut_mmio_ptr<Reg16x2> ptr(ptr_raw);
 
 		Reg16x2 val{.low = 7, .high = 8};
 		ptr.write(val);
@@ -68,47 +68,47 @@ void __attribute__((fastcall)) test_special_pointers2(uintptr_t addr)
 
 	if (which == 2)
 	{
-		volatile Reg16x2			*ptr_raw = (volatile Reg16x2 *)addr;
-		const std::mmio_ptr<Reg16x2> ptr(ptr_raw);
-
-		std::set_once<std::mmio_ptr<Reg16x2>> global_mmio;
-		global_mmio.set(ptr); // can only call once
-
-		global_mmio.write(Reg16x2{.low = 5, .high = 2});
+		// volatile Reg16x2			*ptr_raw = (volatile Reg16x2 *)addr;
+		// const std::mmio_ptr<Reg16x2> ptr(ptr_raw);
+		//
+		// std::set_once<std::mmio_ptr<Reg16x2>> global_mmio;
+		// global_mmio.set(ptr); // can only call once
+		//
+		// global_mmio.write(Reg16x2{.low = 5, .high = 2});
 	}
 
 	if (which == 3)
 	{
-		volatile Reg16x2			*ptr_raw = (volatile Reg16x2 *)addr;
-		const std::mmio_ptr<Reg16x2> ptr(ptr_raw);
-
-		std::set_once_ro<std::mmio_ptr<Reg16x2>> global_mmio_ro;
-
-		global_mmio_ro.set(ptr); // can only call once
-		Reg16x2 reg_read = global_mmio_ro.read();
-		// Sadly read must use a stack variable to save the result.
-		// It's so dumb. But, it's an impossible to remove optimisation
+		// volatile Reg16x2			*ptr_raw = (volatile Reg16x2 *)addr;
+		// const std::mmio_ptr<Reg16x2> ptr(ptr_raw);
+		//
+		// std::set_once_ro<std::mmio_ptr<Reg16x2>> global_mmio_ro;
+		//
+		// global_mmio_ro.set(ptr); // can only call once
+		// Reg16x2 reg_read = global_mmio_ro.read();
+		// // Sadly read must use a stack variable to save the result.
+		// // It's so dumb. But, it's an impossible to remove optimisation
 	}
 
 	if (which == 4)
 	{
-		volatile Reg16x2			*ptr_raw = (volatile Reg16x2 *)addr;
-		const std::mmio_ptr<Reg16x2> ptr(ptr_raw);
-
-		std::set_once<std::mmio_ptr<Reg16x2>> global_mmio_wo;
-
-		global_mmio_wo.set(ptr); // can only call once
-		global_mmio_wo.write(Reg16x2{.low = 5, .high = 2});
+		// volatile Reg16x2			*ptr_raw = (volatile Reg16x2 *)addr;
+		// const std::mmio_ptr<Reg16x2> ptr(ptr_raw);
+		//
+		// std::set_once<std::mmio_ptr<Reg16x2>> global_mmio_wo;
+		//
+		// global_mmio_wo.set(ptr); // can only call once
+		// global_mmio_wo.write(Reg16x2{.low = 5, .high = 2});
 	}
 
 	if (which == 5)
 	{
-		volatile Reg16x2			*ptr_raw = (volatile Reg16x2 *)addr;
-		const std::mmio_ptr<Reg16x2> ptr(ptr_raw);
-
-		std::set_once_wo<std::mmio_ptr<Reg16x2>> global_mmio_wo;
-
-		global_mmio_wo.set(ptr); // can only call once
-								 // global_mmio_wo.write_m(Reg16x2{.low = 5, .high = 2});
+		// volatile Reg16x2			*ptr_raw = (volatile Reg16x2 *)addr;
+		// const std::mmio_ptr<Reg16x2> ptr(ptr_raw);
+		//
+		// std::set_once_wo<std::mmio_ptr<Reg16x2>> global_mmio_wo;
+		//
+		// global_mmio_wo.set(ptr); // can only call once
+		// global_mmio_wo.write_m(Reg16x2{.low = 5, .high = 2});
 	}
 }
