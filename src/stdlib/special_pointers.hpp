@@ -35,6 +35,9 @@ template <typename T> struct mmio_ptr
 	constexpr explicit mmio_ptr(uintptr_t a) : addr(a)
 	{
 	}
+	constexpr explicit mmio_ptr(volatile T *p) : addr((uintptr_t)p)
+	{
+	}
 
 	T read() const
 	{
@@ -64,20 +67,24 @@ template <typename T> struct mmio_ptr_ro
 	using underlying_t =
 		typename conditional<sizeof(T) == 1, uint8_t, typename conditional<sizeof(T) == 2, uint16_t, uint32_t>::type>::type;
 
-	volatile T *const ptr; // mutable pointer. But never modified
+	const uintptr_t addr; // store address as integer
 
   public:
 	using value_type = T;
 
 	// construct from raw pointer
-	constexpr explicit mmio_ptr_ro(volatile T *p) : ptr(p)
+	constexpr explicit mmio_ptr_ro(uintptr_t a) : addr(a)
+	{
+	}
+	constexpr explicit mmio_ptr_ro(volatile T *p) : addr((uintptr_t)p)
 	{
 	}
 
 	T read() const
 	{
-		uint32_t raw = *(volatile uint32_t *)ptr; // FULL register read
-		T		 val;
+		volatile T *p	= reinterpret_cast<volatile T *>(addr);
+		uint32_t	raw = *(volatile underlying_t *)p; // FULL register read
+		T			val;
 		__builtin_memcpy(&val, &raw, sizeof(T)); // copy into struct
 		return val;
 	}
@@ -93,21 +100,27 @@ template <typename T> struct mmio_ptr_wo
 	using underlying_t =
 		typename conditional<sizeof(T) == 1, uint8_t, typename conditional<sizeof(T) == 2, uint16_t, uint32_t>::type>::type;
 
-	volatile T *const ptr; // mutable pointer. But never modified
+	// volatile T *const ptr; // mutable pointer. But never modified
+	const uintptr_t addr; // store address as integer
 
   public:
 	using value_type = T;
 
+	constexpr explicit mmio_ptr_wo(volatile T *p) : addr((uintptr_t)p)
+	{
+	}
+
 	// construct from raw pointer
-	constexpr explicit mmio_ptr_wo(volatile T *p) : ptr(p)
+	constexpr explicit mmio_ptr_wo(uintptr_t a) : addr(a)
 	{
 	}
 
 	void write(const T v) const
 	{
-		uint32_t raw = 0;
+		volatile T	*ptr = reinterpret_cast<volatile T *>(addr);
+		underlying_t raw = 0;
 		__builtin_memcpy(&raw, &v, sizeof(T)); // copy struct → raw
-		*(volatile uint32_t *)ptr = raw;	   // FULL register write
+		*(volatile underlying_t *)ptr = raw;   // FULL register write
 	}
 };
 

@@ -40,7 +40,7 @@ extern "C" uint8_t test_cmd()
 		},
 		{.local_apic_id_of_target = 1});
 
-	// return res.local_apic_id_of_target;
+	return 1;
 }
 
 struct apic::apic_support apic::has_apic()
