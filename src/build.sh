@@ -5,7 +5,7 @@ shopt -s nullglob
 
 DEBUG_OR_RELEASE="${1:-release}"
 QEMU_OR_REAL_MACHINE="${2:-qemu}"
-MACHINE_BITNESS="${3:-64}"
+MACHINE_BITNESS="${3:-32}"
 MOVE_VNC="${4:-move}"
 
 # Check for help argument
@@ -77,7 +77,7 @@ LDFLAGS=("-ffreestanding" "-nostdlib" "-lgcc" "-fno-eliminate-unused-debug-symbo
 NASM_FLAGS32=("-f" "elf32")
 NASM_FLAGS16=("-f" "elf")
 
-DEBUG_OPT_LVL="-O0"
+DEBUG_OPT_LVL="-O3"
 RELEASE_OPT_LVL="-O3"
 # -O1 in Cpp breaks printf option number and i have no idea why
 QEMU_DBG_FLAGS=()
@@ -292,7 +292,7 @@ i686-elf-g++ "${CPPFLAGS_NOFPU[@]}" -c "$FPU/fpu.cpp" -o "$BUILD_DIR/fpo.o" "-I$
 i686-elf-gcc "${CFLAGS[@]}" -c "$GDT/f1_binary_operation.c" -o "$BUILD_DIR/f1_binary_operation.o" "-I$STDIO" "-I$GDT"
 i686-elf-gcc "${CFLAGS[@]}" -c "$GDT/f3_segment_descriptor_internals.c" -o "$BUILD_DIR/f3_segment_descriptor_internals.o" "-I$STDIO" "-I$GDT" "-I$STDLIB"
 i686-elf-gcc "${CFLAGS[@]}" -c "$GDT/gdt.c" -o "$BUILD_DIR/gdt.o" "-I$STDIO" "-I$GDT" "-I$STDLIB"
-i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/idt.c" -o "$BUILD_DIR/idt.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "${PS2_SUPER_INCLUDE[@]}"
+i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/idt.c" -o "$BUILD_DIR/idt.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "-I$MULTICORE" "${PS2_SUPER_INCLUDE[@]}"
 i686-elf-gcc "${CFLAGS[@]}" -c "$IDT/idt_ps2.c" -o "$BUILD_DIR/idt_ps2.o" "-I$IDT" "-I$GDT" "-I$PIC" "-I$STDLIB" "-I$STDIO" "${PS2_SUPER_INCLUDE[@]}"
 nasm "${NASM_FLAGS32[@]}" "$IDT/exception_handler.asm" -o "$BUILD_DIR/exception_handler.o"
 i686-elf-gcc "${CFLAGS[@]}" -c "$PIC/pic.c" -o "$BUILD_DIR/pic.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "-I$CPU"
@@ -301,7 +301,7 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$PIC/pic.c" -o "$BUILD_DIR/pic.o" "-I$IDT" "-I$G
 printf -- "\n\n\n======================== APIC ==============\n\n\n"
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$APIC/apic.cpp" -o "$BUILD_DIR/apic.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$CPUID" "-I$MULTICORE" "-I$CPU" "-I$PIT" "-I$GDT"
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$APIC_IO/apic_io.cpp" -o "$BUILD_DIR/apic_io.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$CPUID" "-I$MULTICORE" "-I$CPU" "-I$GDT"
-i686-elf-g++ "${CPPFLAGS[@]}" -c "$MULTICORE/multicore.cpp" -o "$BUILD_DIR/multicore.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$CPUID" "-I$MULTICORE" "-I$CPU" "-I$GDT"
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$MULTICORE/multicore.cpp" -o "$BUILD_DIR/multicore.o" "-I$STDLIB" "-I$STDIO" "-I$APIC" "-I$CPUID" "-I$MULTICORE" "-I$CPU" "-I$GDT"
 nasm "${NASM_FLAGS16[@]}" "$MULTICORE/multicore_bootstrap16.asm" -o "$BUILD_DIR/multicore_bootstrap16.o"
 nasm "${NASM_FLAGS32[@]}" "$MULTICORE/multicore_bootstrap32.asm" -o "$BUILD_DIR/multicore_bootstrap32.o"
 # =============== Compile Drivers ==============

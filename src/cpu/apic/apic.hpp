@@ -13,11 +13,12 @@ struct apic_support
 
 struct apic_support has_apic();
 
-enum class error
+enum class error : uint8_t
 {
 	none = 0,
 	boot_core_timeout,
 	bad_time,
+	timeout_sending_ipi,
 };
 
 // APIC initiation itself
@@ -46,5 +47,6 @@ void calibrate_lapic_timer();
 
 enum apic::error wake_core(uint8_t core_id, void (*core_bootstrap)(), void (*core_main)());
 void			 wait_till_interrupt(uint8_t interrupt_number);
+enum apic::error send_ipi(uint8_t core_id, uint8_t int_vector);
 
 } // namespace apic

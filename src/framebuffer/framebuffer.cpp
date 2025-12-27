@@ -211,6 +211,7 @@ void do_test(volatile struct color_t *base_address, uint16_t width, uint16_t hei
 	assert(base_address != nullptr, "Null Base Address\n");
 	volatile framebuffer::Color *cpp_base = reinterpret_cast<volatile framebuffer::Color *>(base_address);
 	g_framebuffer.initialize(cpp_base, width, height, pitch / sizeof(Color));
+	kprintf("The framebuffer base is %h\n", cpp_base);
 
 	draw_rgb_lines(10, g_framebuffer.get_height() / 2 - 5);
 	g_framebuffer.draw_rectangle({.top_left_x = 50, .top_left_y = 190, .width = 30, .height = 180, .color = Color(0xff00ff)});

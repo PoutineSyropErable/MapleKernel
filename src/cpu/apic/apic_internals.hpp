@@ -172,17 +172,19 @@ enum type : uint8_t
 struct __attribute__((packed)) interrupt_command_low_register
 {
 	uint8_t						vector_number;
-	enum delivery_mode::type	delivery_mode : 3 = delivery_mode::fixed;
-	enum destination_mode::type destination_mode : 1;
+	enum delivery_mode::type	delivery_mode : 3	 = delivery_mode::fixed;
+	enum destination_mode::type destination_mode : 1 = destination_mode::physical;
 	// Phyiscal: The apic id (command_high) ==  Single Apic id, Logical: The Apic group id.
-	bool delivery_status_pending_ro : 1 = 1; // cleared when the interrupt has been accepted by the target. Always wait till cleared
+	bool delivery_status_pending_ro : 1 = 0; // cleared when the interrupt has been accepted by the target. Always wait till cleared
 											 // delivery status: Read only
-	bool						  _reserved : 1			 = 0;
-	enum level::type			  level : 1				 = level::assert;
+	bool			 _reserved : 1 = 0;
+	enum level::type level : 1 = level::assert; // only one who default to non zero value (This bit is ignored for edge. Only used in level)
 	enum trigger_mode::type		  trigger_mode : 1		 = trigger_mode::edge;
-	enum remote_read_status::type remote_read_status : 2 = remote_read_status::pending; // bit 16-17.
+	enum remote_read_status::type remote_read_status : 2 = remote_read_status::invalid; // bit 16-17.
 	enum destination_type::type	  destination_type : 2	 = destination_type::normal;	// bit 18-19
 	uint16_t					  _reserved3 : 12		 = 0;							// bit 20-31
+
+	// We create this struct when we write, and when we write, delivery status and remote read status should be 0
 };
 STATIC_ASSERT(sizeof(interrupt_command_low_register) == 4, "ICR low must be 32 bit");
 

@@ -11,12 +11,14 @@
 #include "pit.hpp"
 #include "pit_internals.h"
 
+#define TIMEOUT_IPI_PENDING 10'000
+
 using namespace apic;
 
 volatile uint8_t last_interrupt_received[MAX_CORE_COUNT][MAX_CORE_COUNT];
 volatile bool	 core_has_booted[MAX_CORE_COUNT];			 // [i = reciever][ j = sender]
 volatile bool	 master_tells_core_to_start[MAX_CORE_COUNT]; // [i = reciever][ j = sender]
-void (*core_mains[8])();
+void (*volatile core_mains[8])();
 
 // Private (To this file) and global
 static LapicRegisters gp_lapic_register;
@@ -127,7 +129,9 @@ enum apic::error apic::init_lapic()
 	constexpr uint8_t						 number_of_reserved_int = 32;
 	constexpr uint8_t						 number_of_apic_io_irq	= 24;
 	constexpr uint8_t						 vector_when_error		= (number_of_reserved_int + number_of_apic_io_irq);
-	spivr.vector	   = vector_when_error; // Write interrupt handler 56 to handle spurious interrupts
+	spivr.vector = vector_when_error; // Write interrupt handler 56 to handle spurious interrupts
+	// Spurious means fake, it happens when an interrupt is recieved with lower priority then current
+	// aka, an ignored interrupt. Then the spurious is called
 	spivr.apic_enable  = true;
 	spivr.eoi_suppress = false;
 	gp_lapic_register.spurious_interrupt_vector.write(spivr);
@@ -154,7 +158,7 @@ extern "C" uint8_t apic_get_core_id()
 	return apic::get_core_id_fast();
 }
 
-void send_init(uint8_t core_id)
+error send_init(uint8_t core_id)
 {
 	assert(core_id <= 0b1111, "Won't fit\n");
 	gp_lapic_register.send_command(
@@ -166,6 +170,17 @@ void send_init(uint8_t core_id)
 		},
 		{.local_apic_id_of_target = core_id});
 
+	for (uint32_t i = 0; i < TIMEOUT_IPI_PENDING; i++)
+	{
+		bool recieved_pending = gp_lapic_register.command_low.read().delivery_status_pending_ro;
+		if (!recieved_pending)
+		{
+			goto wait;
+		}
+	}
+	return error::timeout_sending_ipi;
+
+wait:
 	pit::wait(10.f / 1000.f);
 
 	gp_lapic_register.send_command(
@@ -178,9 +193,19 @@ void send_init(uint8_t core_id)
 			.destination_type = destination_type::normal,
 		},
 		{.local_apic_id_of_target = core_id});
+
+	for (uint32_t i = 0; i < TIMEOUT_IPI_PENDING; i++)
+	{
+		bool recieved_pending = gp_lapic_register.command_low.read().delivery_status_pending_ro;
+		if (!recieved_pending)
+		{
+			return error::none;
+		}
+	}
+	return error::timeout_sending_ipi;
 }
 
-void send_sipi(uint8_t core_id, void (*core_bootstrap)())
+error send_sipi(uint8_t core_id, void (*core_bootstrap)())
 {
 
 	uintptr_t cb = (uintptr_t)core_bootstrap;
@@ -190,31 +215,79 @@ void send_sipi(uint8_t core_id, void (*core_bootstrap)())
 	assert(cb < 0xFF * 0x1000, "Start address must be a 16bit address");
 	assert((cb & 0xFFF) == 0, "SIPI start address must be 4 KB aligned");
 
-	// gp_lapic_register.send_command(
-	// 	{
-	// 		.vector_number	  = static_cast<uint8_t>(cb / 0x1000),
-	// 		.delivery_mode	  = delivery_mode::start_up,
-	// 		.destination_mode = destination_mode::physical,
-	// 		.destination_type = destination_type::normal,
-	// 	},
-	// 	{.local_apic_id_of_target = core_id});
+	gp_lapic_register.send_command(
+		{
+			.vector_number	  = static_cast<uint8_t>(cb / 0x1000),
+			.delivery_mode	  = delivery_mode::start_up,
+			.destination_mode = destination_mode::physical,
+			.destination_type = destination_type::normal,
+		},
+		{.local_apic_id_of_target = core_id});
+
+	for (uint32_t i = 0; i < TIMEOUT_IPI_PENDING; i++)
+	{
+		bool recieved_pending = gp_lapic_register.command_low.read().delivery_status_pending_ro;
+		if (!recieved_pending)
+		{
+			return error::none;
+		}
+	}
+	return error::timeout_sending_ipi;
+}
+
+enum error apic::send_ipi(uint8_t core_id, uint8_t int_vector)
+{
+
+#ifdef DEBUG
+	assert(core_id <= 0b1111, "Won't fit\n");
+#endif
+
+	uint8_t this_core_id						   = get_core_id_fast();
+	last_interrupt_received[core_id][this_core_id] = int_vector;
+
+	gp_lapic_register.send_command(
+		{
+			.vector_number = int_vector,
+			// The rest default
+		},
+		{.local_apic_id_of_target = core_id});
+
+	for (uint32_t i = 0; i < TIMEOUT_IPI_PENDING; i++)
+	{
+		bool recieved_pending = gp_lapic_register.command_low.read().delivery_status_pending_ro;
+		if (!recieved_pending)
+		{
+			return error::none;
+		}
+	}
+
+	return error::timeout_sending_ipi;
 }
 
 enum error apic::wake_core(uint8_t core_id, void (*core_bootstrap)(), void (*core_main)())
 {
 
-	send_init(core_id);
+	error apic_err = send_init(core_id);
+	if ((uint8_t)apic_err)
+	{
+		return apic_err;
+	}
 
 	// Sets up the main loop that core will use.
 	core_mains[core_id] = core_main;
+	kprintf("Core main = %h\n", core_main);
 
 	// Send Sipi
 	pit::wait(10.f / 1000.f);
-	send_sipi(core_id, core_bootstrap);
+	apic_err = send_sipi(core_id, core_bootstrap);
+	if ((uint8_t)apic_err)
+	{
+		return apic_err;
+	}
 
 	volatile uint32_t finished = false;
-	int				  err	   = pit::short_timeout(0.001f, &finished, true);
-	if (err)
+	int				  pit_err  = pit::short_timeout(0.001f, &finished, true);
+	if (pit_err)
 	{
 		kprintf("There was an error waiting for the short timeout\n");
 		return error::bad_time;
@@ -235,7 +308,11 @@ enum error apic::wake_core(uint8_t core_id, void (*core_bootstrap)(), void (*cor
 	}
 
 long_poll:
-	send_sipi(core_id, core_bootstrap);
+	apic_err = send_sipi(core_id, core_bootstrap);
+	if ((uint8_t)apic_err)
+	{
+		return apic_err;
+	}
 	constexpr uint16_t long_timeout_ms = 1000;
 	constexpr uint16_t short_timeut_ms = 50;
 	constexpr uint8_t  timeout_count   = long_timeout_ms / short_timeut_ms;

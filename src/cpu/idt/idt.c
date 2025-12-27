@@ -3,6 +3,7 @@
 #include "idt_master.h"
 #include "intrinsics.h"
 #include "more_types.h"
+// #include "multicore.h"
 
 // struct idt_init_ps2_fields;
 void idt_init_ps2(struct idt_init_ps2_fields args);

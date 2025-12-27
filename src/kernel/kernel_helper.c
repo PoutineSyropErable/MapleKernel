@@ -28,6 +28,9 @@
 #include "gdt.h"
 #include "idt_pit.h"
 
+extern void core_bootstrap();
+extern void core_bootstrap32();
+
 static GDT_ROOT *GDT16_ROOT = &GDT16_DESCRIPTOR;
 
 void setup_interrupts_and_ps2()
@@ -178,6 +181,8 @@ void before()
 	terminal_writestring("Before the main execution\n");
 }
 
+void init_new_gdt();
+
 void to_real16_test()
 {
 
@@ -188,6 +193,11 @@ void to_real16_test()
 		1, -7, 2, 3.0, 0b11011, 0x123bcd);
 
 	// return;
+
+	// init_new_gdt();
+	// kprintf("cb16 = %h\n", &core_bootstrap);
+	// kprintf("cb32 = %h\n", &core_bootstrap32);
+	// call_real_mode_function(core_bootstrap); // argc automatically calculated
 
 	print_extern_address16("\nThe value of cs: ", get_cs_selector);
 	print_extern_address16("\nThe value of ss: ", get_ss_selector);

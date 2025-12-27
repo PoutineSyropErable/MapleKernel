@@ -8,6 +8,7 @@
 
 #include "gdt.h"
 #include "multicore.h"
+#include "multicore_gdt.h"
 #include "multicore_gdt.hpp"
 #include "string.h"
 
@@ -20,7 +21,8 @@ extern "C"
 
 struct FS_GS all_fs_and_gs[MAX_CORE_COUNT];
 
-void init_new_gdt()
+extern "C" void init_new_gdt();
+void			init_new_gdt()
 {
 
 	gdtr32_t   gdt_descriptor = get_gdt_root();
@@ -103,8 +105,15 @@ void add_multicore_gdt_entry()
 	}
 }
 
+extern "C"
+{
+	extern uint8_t __new_gdt_end; // note: type can be uint8_t
+}
+
 void multicore_gdt::init_multicore_gdt()
 {
+	kprintf("new gdt = %h\n", new_gdt);
+	kprintf("new gdt end = %h\n", &__new_gdt_end);
 	init_new_gdt();
 	add_multicore_gdt_entry();
 }

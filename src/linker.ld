@@ -18,6 +18,16 @@ SECTIONS
         *(.multiboot)         /* multiboot header */
     }
 
+     . = 0x8000;  
+    .ap_trampoline : ALIGN(4K)
+    {
+        /* __ap_trampoline_start = .; */
+        KEEP(*(.text.multicore_bootstrap16))  /* AP startup code */
+        /* __ap_trampoline_end = .; */
+
+
+        KEEP(*(.text.multicore_bootstrap32))  /* AP startup code */
+    }
 
     .ap_trampoline_data (NOLOAD) : ALIGN(4)
     {
@@ -31,17 +41,9 @@ SECTIONS
 		__new_gdt_start = .;
         KEEP(*(.bss.multicore_gdt16))  /* AP startup code */
 		__new_gdt_end = .;
+
+
     }
-
-
-    .ap_trampoline : ALIGN(4K)
-    {
-        __ap_trampoline_start = .;
-        KEEP(*(.text.multicore_bootstrap16))  /* AP startup code */
-        __ap_trampoline_end = .;
-    }
-
-
 
     
 

@@ -35,7 +35,8 @@ void print_test()
 	kprintf("Number with option: %u:7\n", 0x24f);
 }
 
-uint8_t runtime_core_count;
+uint8_t			runtime_core_count;
+extern "C" void multicore_setup(void *rsdp_void);
 
 void multicore_setup(void *rsdp_void)
 {
@@ -121,6 +122,7 @@ void multicore_setup(void *rsdp_void)
 	core_is_active[1] = false;
 	core_is_active[2] = false;
 	core_is_active[3] = false;
+
 	// wake cores. We are already on core 0.
 	for (uint8_t i = 0; i < runtime_core_count; i++)
 	{
