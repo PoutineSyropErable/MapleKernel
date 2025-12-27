@@ -1,5 +1,6 @@
 #include "assert.h"
 #include "bit_hex_string.h"
+#include "multicore.h"
 #include "stdio.h"
 #include "string_helper.h"
 #include "vga_terminal.h"
@@ -220,6 +221,8 @@ struct startAndEnd
 	uint16_t end;
 };
 
+lock_t kprintf_lock = {.is_locked = 0};
+
 /* end not included */
 void terminal_write_offsets(const char *str, uint16_t start, uint16_t end)
 {
@@ -236,6 +239,12 @@ void terminal_write_offsets(const char *str, uint16_t start, uint16_t end)
 void kprintf_argc(const uint32_t argc, const char *fmt, ...)
 {
 
+	// If interrupt while spinlock, deadlock
+	// TODO: Disable interrupt at the start of spinlock.
+	// Renab:warn("%s");
+	uint32_t flags = irq_save();
+	// spinlock(&kprintf_lock);
+
 	uint8_t len = argc - 1;
 	// we don't count the format
 	// This represent the number of %
@@ -247,12 +256,17 @@ void kprintf_argc(const uint32_t argc, const char *fmt, ...)
 		terminal_writestring("len check failed\n");
 		terminal_write_uint("len = ", len);
 		terminal_write_uint("len_check = ", len_check);
+		unlock(&kprintf_lock);
+		irq_restore(flags);
 		abort();
 	}
 
 	if (len == 0)
 	{
-		return terminal_writestring(fmt);
+		terminal_writestring(fmt);
+		unlock(&kprintf_lock);
+		irq_restore(flags);
+		return;
 	}
 
 	struct PRINTF_FIELD_PROPERTIES printf_information[len];
@@ -411,15 +425,22 @@ void kprintf_argc(const uint32_t argc, const char *fmt, ...)
 	}
 
 	va_end(args);
+
+	unlock(&kprintf_lock);
+	irq_restore(flags);
 }
 
 void vkprintf(const char *fmt, va_list args)
 {
+	uint32_t flags = irq_save();
+	spinlock(&kprintf_lock);
 	uint8_t len = count_char(fmt, '%');
 
 	if (len == 0)
 	{
 		terminal_writestring(fmt);
+		unlock(&kprintf_lock);
+		irq_restore(flags);
 		return;
 	}
 
@@ -516,6 +537,9 @@ void vkprintf(const char *fmt, va_list args)
 
 		terminal_write_offsets(fmt, start_and_ends[i + 1].start, start_and_ends[i + 1].end + 1);
 	}
+
+	unlock(&kprintf_lock);
+	irq_restore(flags);
 }
 
 void kprintf2(const char *fmt, ...)
@@ -528,6 +552,7 @@ void kprintf2(const char *fmt, ...)
 
 void kprintf2_argc_check(uint32_t argc, const char *fmt, ...)
 {
+
 	uint8_t len = count_char(fmt, '%');
 	assert(len == argc - 1, "Len (%u) must match argc(%u)-1\n", len, argc);
 

@@ -144,13 +144,15 @@ void apic::calibrate_lapic_timer()
 
 uint8_t apic::get_core_id()
 {
-	return gp_lapic_register.lapic_id.read();
+	return gp_lapic_register.lapic_id.read().apic_id;
 }
 
 uint8_t apic::get_core_id_fast()
 {
 	// requires it to have been set once by using the slower method
-	return multicore_gdt::get_fs_struct()->core_id;
+	uint32_t apic_id;
+	__asm__ volatile("mov %%fs:0, %0" : "=r"(apic_id));
+	return (uint8_t)apic_id; // Cast to uint8_t
 }
 
 extern "C" uint8_t apic_get_core_id()
@@ -244,6 +246,7 @@ enum error apic::send_ipi(uint8_t core_id, uint8_t int_vector)
 
 	uint8_t this_core_id						   = get_core_id_fast();
 	last_interrupt_received[core_id][this_core_id] = int_vector;
+	kprintf("Core %u sending interrupt %u to core %u\n", this_core_id, int_vector, core_id);
 
 	gp_lapic_register.send_command(
 		{
@@ -341,6 +344,8 @@ void apic::wait_till_interrupt(uint8_t interrupt_vector)
 {
 	assert(interrupt_vector != NO_INTERRUPT, "make no sense to wait for a never interrupt\n");
 	uint32_t core_id = get_core_id_fast();
+	uint32_t flags	 = irq_save();
+	__sti();
 	while (true)
 	{
 		__hlt();
@@ -348,10 +353,13 @@ void apic::wait_till_interrupt(uint8_t interrupt_vector)
 		for (uint8_t sender_id = 0; sender_id < runtime_core_count; sender_id++)
 		{
 			uint8_t lir = last_interrupt_received[core_id][sender_id];
+			// kprintf("Lir = %u\n", lir);
 			if (lir == interrupt_vector)
 			{
+				kprintf("recieved\n");
 				last_interrupt_received[core_id][sender_id] = NO_INTERRUPT;
-				break;
+				irq_restore(flags);
+				return;
 				// TODO: Warning, some multicore shenanigans and race condition possible here
 				// Should be safe when used to init core and wait till interrupt
 			}

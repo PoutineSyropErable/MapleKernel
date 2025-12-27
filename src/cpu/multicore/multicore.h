@@ -16,11 +16,40 @@ extern "C"
 	extern volatile uint8_t last_interrupt_received[MAX_CORE_COUNT][MAX_CORE_COUNT]; // [i = reciever][ j = sender]
 	extern uint8_t			runtime_core_count;
 
-#define INTERRUPT_ENTERED_MAIN 41
+#define INTERRUPT_ENTERED_MAIN 57
 #define NO_INTERRUPT 255
 
 	extern void core_bootstrap();
 	extern void application_core_main();
+
+	typedef struct
+	{
+		volatile uint32_t is_locked;
+	} lock_t;
+
+	void spinlock(lock_t *lock);
+	void unlock(lock_t *lock);
+
+	static inline uint32_t irq_save(void)
+	{
+		uint32_t flags;
+		__asm__ volatile("pushf\n\t"
+						 "pop %0\n\t"
+						 "cli"
+			: "=r"(flags)
+			:
+			: "memory");
+		return flags;
+	}
+
+	static inline void irq_restore(uint32_t flags)
+	{
+		__asm__ volatile("push %0\n\t"
+						 "popf"
+			:
+			: "r"(flags)
+			: "memory", "cc");
+	}
 
 #ifdef __cplusplus
 }

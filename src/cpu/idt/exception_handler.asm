@@ -343,6 +343,42 @@ hl11:
 	iret
 
 
+
+global interrupt_56_handler
+interrupt_56_handler:
+	push ebp
+	mov ebp, esp
+
+	push 56
+	push interrupt_printf_fmt  
+	push [argc] 
+	call kprintf_argc
+	; add esp, 12 ; needed if i don't do the prologue and epilogue
+
+	mov esp, ebp
+	pop ebp
+	; mov eax, 1
+	iret
+
+
+global interrupt_57_handler
+interrupt_57_handler:
+	push ebp
+	mov ebp, esp
+
+	; push 57 
+	; push interrupt_printf_fmt  
+	; push [argc] 
+	; call kprintf_argc
+	; add esp, 12 ; needed if i don't do the prologue and epilogue
+
+	mov esp, ebp
+	pop ebp
+	; mov eax, 1
+	iret
+
+
 section .bss
 saved_al resb 1      ; 1 byte for AL
 saved_dx resw 1      ; 2 bytes for DX
+

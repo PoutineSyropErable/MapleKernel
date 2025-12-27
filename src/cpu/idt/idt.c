@@ -28,6 +28,9 @@ extern function_t interrupt_11_handler; // not a function pointer. It's value is
 extern function_t interrupt_13_handler; // not a function pointer. It's value is therefor the first few bytes of code
 extern function_t interrupt_69_handler; // not a function pointer. It's value is therefor the first few bytes of code
 
+extern function_t interrupt_56_handler;
+extern function_t interrupt_57_handler;
+
 // typedef struct PACKED {
 //     uint32_t eip;
 //     uint32_t cs;
@@ -91,6 +94,12 @@ void idt_init()
 
 	idt_set_descriptor(13, &interrupt_13_handler, GT32_IG32, 0, true);
 	vectors[13] = true;
+
+	idt_set_descriptor(56, &interrupt_56_handler, GT32_IG32, 0, true);
+	vectors[56] = true;
+
+	idt_set_descriptor(57, &interrupt_57_handler, GT32_IG32, 0, true);
+	vectors[57] = true;
 }
 
 void idt_finalize()

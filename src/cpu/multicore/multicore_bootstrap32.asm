@@ -42,8 +42,14 @@ global core_bootstrap32
 %define DELIVERY_MODE_SIPI 0x6
 %define DEST_PHYSICAL      0x0
 core_bootstrap32: 
+	mov ax, 0x18
+	mov ds, ax
+	mov es, ax
+	mov ss, ax
+
 	mov eax, dword [ LAPIC_BASE +  LAPIC_ID_OFFSET ]
 	shr eax, 24 ; apic id
+
 
 	mov ebx, eax 
 	shl ebx, 1  ; apic id *2
@@ -55,22 +61,34 @@ core_bootstrap32:
 	shl ecx, 3 ; gs value
 	mov gs, cx 
 
+
+
 	mov fs:[0], eax; quick save apic id
+
 
 	mov edx, [core_mains + 4*eax] ; core_main
 	mov [core_has_booted + eax], 1;
+
+
+	; mov eax, fs:[0]
+	; call fill_color_eax
 
 	; mov eax, multistack_top	
 	; jmp fill_color_eax
 
 	mov esp, multistack_top
-	imul eax, STACK_SIZE
-	sub esp, eax
+	mov ebx, eax
+	imul ebx, STACK_SIZE
+	sub esp, ebx
 
+	mul eax, 0x11
+	mov eax, esp
 
 	push eax
 	call edx
 	pop eax
+
+	call fill_color_eax
 
 	; mov eax, 0x00FFBBCC
 

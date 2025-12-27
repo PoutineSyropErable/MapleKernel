@@ -115,6 +115,11 @@ void multicore_setup(void *rsdp_void)
 	apic::calibrate_lapic_timer();
 	kprintf("Calibrate lapic timer\n");
 
+	bool done_initiating_io_apic = false;
+	if (done_initiating_io_apic)
+		disable_pic();
+	kprintf("Disabled the pic\n");
+
 	kprintf("\n\n");
 	bool *core_is_active = (bool *)alloca(sizeof(bool) * runtime_core_count);
 	// bool core_is_active[MAX_CORE_COUNT] = {0};
@@ -123,7 +128,12 @@ void multicore_setup(void *rsdp_void)
 	core_is_active[2] = false;
 	core_is_active[3] = false;
 
-	// wake cores. We are already on core 0.
+	kprintf("runtime count : %u\n", runtime_core_count);
+
+	// apic::error err = apic::wake_core(1, core_bootstrap, application_core_main);
+	// err				= apic::wake_core(2, core_bootstrap, application_core_main);
+	// err				= apic::wake_core(3, core_bootstrap, application_core_main);
+	// return;
 	for (uint8_t i = 0; i < runtime_core_count; i++)
 	{
 		uint8_t core_id = parsed_madt.processor_local_apics[i]->apic_id;
@@ -138,20 +148,18 @@ void multicore_setup(void *rsdp_void)
 		apic::error err = apic::wake_core(core_id, core_bootstrap, application_core_main);
 		if ((uint8_t)err)
 		{
-
 			core_is_active[core_id] = false;
-			kprintf("core %u timed-out (or other bad error)\n", core_id);
 		}
 		else
 		{
-			kprintf("Woke core %u\n", core_id);
 			core_is_active[core_id] = true;
+			// apic::send_ipi(core_id, INTERRUPT_ENTERED_MAIN);
 			apic::wait_till_interrupt(INTERRUPT_ENTERED_MAIN);
-			kprintf("core %u entered it's main function\n", core_id);
+			// kprintf("core %u entered it's main function\n", core_id);
 			// Wait till interrupt is not really usefull, since there's already polling for starting.
 			// But i guess it's a nice way to make sure it entered it's main.
 		}
-		kprintf("\n\n");
+		// kprintf("\n\n");
 	}
 	kprintf("Tried to activate all the cores\n");
 
@@ -163,8 +171,6 @@ void multicore_setup(void *rsdp_void)
 	}
 	kprintf("Activated all cores\n");
 
-	disable_pic();
-	kprintf("Disabled the pic\n");
 	// Disabling the pic will be done rather late
 }
 
@@ -172,13 +178,11 @@ int cpp_main(struct cpp_main_args args)
 {
 
 	test_special_pointers();
-	disable_pic();
 	multicore_setup(args.rsdp_v);
 
 	kprintf("\n\n================= Start of CPP Main =================\n\n");
 
 	kprintf("got here\n");
-	asm volatile("xchg %%bx, %%bx" ::: "memory");
 
 	// Setup lapic irq handling
 	terminal_writestring("\n====kernel cpp entering main loop====\n");
@@ -187,7 +191,7 @@ int cpp_main(struct cpp_main_args args)
 		// kernel main loop
 		cpp_event_loop();
 
-		pit::wait(1.f / 60.f);
+		// pit::wait(1.f / 60.f);
 	}
 	return 0;
 }

@@ -105,6 +105,12 @@ struct __attribute__((packed)) lapic_version_register
 	uint8_t reserved2;
 };
 
+struct __attribute__((packed)) lapic_id_register
+{
+	uint32_t reserved : 24 = 0;
+	uint8_t	 apic_id;
+};
+
 /* =============== Command registers ==================== */
 
 namespace delivery_mode
@@ -259,7 +265,7 @@ class LapicRegisters
 	// ------------------------------------------------------------------
 	// Read-only / Read-write basic registers
 	// ------------------------------------------------------------------
-	static constexpr std::mmio_ptr_ro<uint32_t> lapic_id{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lapic_id)};
+	static constexpr std::mmio_ptr_ro<lapic_id_register> lapic_id{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lapic_id)};
 	static constexpr std::mmio_ptr<lapic_version_register> lapic_version{
 		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lapic_version)};
 	static constexpr std::mmio_ptr<uint32_t> task_priority{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::task_priority)};
