@@ -8,7 +8,8 @@ SECTIONS
     /* -----------------------------
        16-bit real mode code & data
        ----------------------------- */
-    . = 0x7000;              /* start at 28 KiB, safely below 1 MB */
+     . = 0x7000;  
+	/* start at 28 KiB, safely below 1 MB */ 
 
 
     /* Main text section */
@@ -17,9 +18,31 @@ SECTIONS
         *(.multiboot)         /* multiboot header */
     }
 
-	  /* ============================================
-       AP TRAMPOLINE (SMP bootstrapping)
-       ============================================ */
+
+    .ap_trampoline_data (NOLOAD) : ALIGN(4)
+    {
+        __ap_trampoline_data_start = .;
+        KEEP(*(.rodata.multicore_bootstrap16))  /* AP startup code */
+        KEEP(*(.data.multicore_bootstrap16))  /* AP startup code */
+        KEEP(*(.bss.multicore_bootstrap16))  /* AP startup code */
+        __ap_trampoline_data_end = .;
+
+
+		__new_gdt_start = .;
+        KEEP(*(.bss.multicore_gdt16))  /* AP startup code */
+		__new_gdt_end = .;
+    }
+
+
+    .ap_trampoline : ALIGN(4K)
+    {
+        __ap_trampoline_start = .;
+        KEEP(*(.text.multicore_bootstrap16))  /* AP startup code */
+        __ap_trampoline_end = .;
+    }
+
+
+
     
 
     /* 16-bit stack */
@@ -85,21 +108,11 @@ SECTIONS
 	}
 
 
-    .ap_trampoline : ALIGN(4K)
-    {
-        __ap_trampoline_start = .;
-        KEEP(*(.text.multicore_bootstrap16))  /* AP startup code */
-        __ap_trampoline_end = .;
-    }
+
+	  /* ============================================
+       AP TRAMPOLINE (SMP bootstrapping)
+       ============================================ */
     
-    .ap_trampoline_data (NOLOAD) : ALIGN(4)
-    {
-        __ap_trampoline_data_start = .;
-        KEEP(*(.rodata.multicore_bootstrap16))  /* AP startup code */
-        KEEP(*(.data.multicore_bootstrap16))  /* AP startup code */
-        KEEP(*(.bss.multicore_bootstrap16))  /* AP startup code */
-        __ap_trampoline_data_end = .;
-    }
 
 
 

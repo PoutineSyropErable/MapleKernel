@@ -22,7 +22,7 @@ extern "C"
 	extern void core_bootstrap();
 	extern void application_core_main();
 
-	__attribute__((section(".bss.multicore_bootstrap16"))) extern "C" GDT_ENTRY new_gdt[4 + 2 * MAX_CORE_COUNT];
+	__attribute__((section(".bss.multicore_gdt16"))) extern "C" GDT_ENTRY new_gdt[4 + 2 * MAX_CORE_COUNT];
 
 #ifdef __cplusplus
 }
