@@ -1,4 +1,5 @@
 #pragma once
+#include "gdt.h"
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -17,6 +18,11 @@ extern "C"
 
 #define INTERRUPT_ENTERED_MAIN 41
 #define NO_INTERRUPT 255
+
+	extern void core_bootstrap();
+	extern void application_core_main();
+
+	__attribute__((section(".bss.multicore_bootstrap16"))) extern "C" GDT_ENTRY new_gdt[4 + 2 * MAX_CORE_COUNT];
 
 #ifdef __cplusplus
 }

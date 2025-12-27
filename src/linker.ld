@@ -20,21 +20,7 @@ SECTIONS
 	  /* ============================================
        AP TRAMPOLINE (SMP bootstrapping)
        ============================================ */
-    . = 0x8000;              /* Standard AP trampoline location */
     
-    .ap_trampoline : ALIGN(4K)
-    {
-        __ap_trampoline_start = .;
-        KEEP(*(.ap_trampoline_text))  /* AP startup code */
-        __ap_trampoline_end = .;
-    }
-    
-    .ap_trampoline_data (NOLOAD) : ALIGN(4)
-    {
-        __ap_trampoline_data_start = .;
-        KEEP(*(.ap_trampoline_data))  /* AP shared variables */
-        __ap_trampoline_data_end = .;
-    }
 
     /* 16-bit stack */
     .stack16 (NOLOAD) : ALIGN(16)
@@ -97,6 +83,23 @@ SECTIONS
 		*(.data.misc32.*)
 		*(.text.misc32.*)
 	}
+
+
+    .ap_trampoline : ALIGN(4K)
+    {
+        __ap_trampoline_start = .;
+        KEEP(*(.text.multicore_bootstrap16))  /* AP startup code */
+        __ap_trampoline_end = .;
+    }
+    
+    .ap_trampoline_data (NOLOAD) : ALIGN(4)
+    {
+        __ap_trampoline_data_start = .;
+        KEEP(*(.rodata.multicore_bootstrap16))  /* AP startup code */
+        KEEP(*(.data.multicore_bootstrap16))  /* AP startup code */
+        KEEP(*(.bss.multicore_bootstrap16))  /* AP startup code */
+        __ap_trampoline_data_end = .;
+    }
 
 
 

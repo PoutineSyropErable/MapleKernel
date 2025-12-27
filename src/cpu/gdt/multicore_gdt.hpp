@@ -1,4 +1,5 @@
 #pragma once
+#include "gdt.h"
 #include <stdint.h>
 
 namespace multicore_gdt

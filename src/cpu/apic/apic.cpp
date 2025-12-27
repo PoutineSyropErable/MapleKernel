@@ -138,16 +138,6 @@ void apic::calibrate_lapic_timer()
 {
 }
 
-// This will actually be implemented in an assembly file
-extern "C" void core_bootstrap()
-{
-}
-
-// Idk if this should be implemented here
-void apic::core_main()
-{
-}
-
 uint8_t apic::get_core_id()
 {
 	return gp_lapic_register.lapic_id.read();
@@ -195,6 +185,7 @@ void send_sipi(uint8_t core_id, void (*core_bootstrap)())
 
 	uintptr_t cb = (uintptr_t)core_bootstrap;
 
+	kprintf("Core bootstrap location: %h\n", core_bootstrap);
 	assert(core_id <= 0b1111, "Won't fit\n");
 	assert(cb < 0xFF * 0x1000, "Start address must be a 16bit address");
 	assert((cb & 0xFFF) == 0, "SIPI start address must be 4 KB aligned");

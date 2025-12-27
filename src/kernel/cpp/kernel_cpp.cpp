@@ -73,9 +73,9 @@ void multicore_setup(void *rsdp_void)
 	kprintf("io_apic_address = %h\n", io_apic_address);
 	kprintf("\n");
 
-	// assert(apic::lapic_address == (volatile void *)lapic_address, "Firmware obtained adddress must be = to hardcoded one\n");
-	// assert(apic::lapic_address == (volatile void *)lapic_address_msr, "Msr obtained address be be == to hardcoded one\n");
-	// assert(apic::io_apic_address == (volatile uint32_t *)io_apic_address, "io apic, must be equal to hardcoded one\n");
+	assert(apic::lapic_address == (uintptr_t)lapic_address, "Firmware obtained adddress must be = to hardcoded one\n");
+	assert(apic::lapic_address == (uintptr_t)lapic_address_msr, "Msr obtained address be be == to hardcoded one\n");
+	assert(apic::io_apic_address == (uintptr_t)io_apic_address, "io apic, must be equal to hardcoded one\n");
 
 	runtime_core_count = parsed_madt.entry_counts.processor_local_apic;
 
@@ -133,7 +133,7 @@ void multicore_setup(void *rsdp_void)
 		}
 		// TODO: Must implement these functions.
 		// Make is so every interrupt also does a last core recieved thing
-		apic::error err = apic::wake_core(core_id, apic::core_bootstrap, apic::core_main);
+		apic::error err = apic::wake_core(core_id, core_bootstrap, application_core_main);
 		if ((uint8_t)err)
 		{
 

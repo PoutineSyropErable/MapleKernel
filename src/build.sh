@@ -301,7 +301,9 @@ i686-elf-gcc "${CFLAGS[@]}" -c "$PIC/pic.c" -o "$BUILD_DIR/pic.o" "-I$IDT" "-I$G
 printf -- "\n\n\n======================== APIC ==============\n\n\n"
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$APIC/apic.cpp" -o "$BUILD_DIR/apic.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$CPUID" "-I$MULTICORE" "-I$CPU" "-I$PIT" "-I$GDT"
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$APIC_IO/apic_io.cpp" -o "$BUILD_DIR/apic_io.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$CPUID" "-I$MULTICORE" "-I$CPU" "-I$GDT"
-
+i686-elf-g++ "${CPPFLAGS[@]}" -c "$MULTICORE/multicore.cpp" -o "$BUILD_DIR/multicore.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$CPUID" "-I$MULTICORE" "-I$CPU" "-I$GDT"
+nasm "${NASM_FLAGS16[@]}" "$MULTICORE/multicore_bootstrap16.asm" -o "$BUILD_DIR/multicore_bootstrap16.o"
+nasm "${NASM_FLAGS32[@]}" "$MULTICORE/multicore_bootstrap32.asm" -o "$BUILD_DIR/multicore_bootstrap32.o"
 # =============== Compile Drivers ==============
 
 # PS2 Controller, Interrupt Handler And Enable Wrapper

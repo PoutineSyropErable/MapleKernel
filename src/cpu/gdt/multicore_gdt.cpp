@@ -13,8 +13,8 @@
 
 using namespace multicore_gdt;
 
-GDT_ENTRY	 new_gdt[4 + 2 * MAX_CORE_COUNT];
-struct FS_GS all_fs_and_gs[MAX_CORE_COUNT];
+__attribute__((section(".bss.multicore_bootstrap16"))) GDT_ENTRY new_gdt[4 + 2 * MAX_CORE_COUNT];
+struct FS_GS													 all_fs_and_gs[MAX_CORE_COUNT];
 
 void init_new_gdt()
 {
