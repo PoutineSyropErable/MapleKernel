@@ -253,46 +253,102 @@ constexpr enum lapic_registers_offset add_offset(lapic_registers_offset lapic_of
 class LapicRegisters
 {
   public:
-	// Read/write registers
-	static constexpr std::mmio_ptr_ro<uint32_t> lapic_id{get_mmio_ptr_ro<uint32_t>(lapic_address, lapic_registers_offset::lapic_id)};
-	// static constexpr std::mmio_ptr<lapic_version_register> lapic_version{
-	// 	lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lapic_version)};
-	// static constexpr std::mmio_ptr<uint32_t> task_priority{lapic_address +
-	// static_cast<uintptr_t>(lapic_registers_offset::task_priority)}; static constexpr std::mmio_ptr_ro<uint32_t> arbitration_priority{
-	// 	lapic_address + static_cast<uintptr_t>(lapic_registers_offset::arbitration_priority)};
-	// static constexpr std::mmio_ptr_ro<uint32_t> process_priority{
-	// 	lapic_address + static_cast<uintptr_t>(lapic_registers_offset::process_priority)};
+  public:
+	// ------------------------------------------------------------------
+	// Read-only / Read-write basic registers
+	// ------------------------------------------------------------------
+	static constexpr std::mmio_ptr_ro<uint32_t> lapic_id{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lapic_id)};
+	static constexpr std::mmio_ptr<lapic_version_register> lapic_version{
+		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lapic_version)};
+	static constexpr std::mmio_ptr<uint32_t> task_priority{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::task_priority)};
+	static constexpr std::mmio_ptr_ro<uint32_t> arbitration_priority{
+		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::arbitration_priority)};
+	static constexpr std::mmio_ptr_ro<uint32_t> process_priority{
+		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::process_priority)};
 
-	// std::mmio_ptr_wo<uint32_t>						  remote_read;
-	// std::mmio_ptr<uint32_t>							  logical_destination;
-	// std::mmio_ptr<uint32_t>							  destination_format;
+	// ------------------------------------------------------------------
+	// Destination / formatting
+	// ------------------------------------------------------------------
+	static constexpr std::mmio_ptr_wo<uint32_t> remote_read{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::remote_read)};
+	static constexpr std::mmio_ptr<uint32_t>	logical_destination{
+		   lapic_address + static_cast<uintptr_t>(lapic_registers_offset::logical_destination)};
+	static constexpr std::mmio_ptr<uint32_t> destination_format{
+		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::destination_format)};
 	static constexpr std::mmio_ptr<spurious_interrupt_vector_register> spurious_interrupt_vector{
 		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::spurious_interrupt_vector)};
 
-	// std::mmio_ptr_ro<uint32_t> in_service[8];
-	// std::mmio_ptr_ro<uint32_t> trigger_mode[8];
-	// std::mmio_ptr_ro<uint32_t> interrupt_request[8];
+	// ------------------------------------------------------------------
+	// ISR / TMR / IRR (arrays)
+	// ------------------------------------------------------------------
+	static constexpr std::mmio_ptr_ro<uint32_t> in_service[8] = {
+		std::mmio_ptr_ro<uint32_t>{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::in_service_0)},
+		std::mmio_ptr_ro<uint32_t>{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::in_service_1)},
+		std::mmio_ptr_ro<uint32_t>{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::in_service_2)},
+		std::mmio_ptr_ro<uint32_t>{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::in_service_3)},
+		std::mmio_ptr_ro<uint32_t>{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::in_service_4)},
+		std::mmio_ptr_ro<uint32_t>{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::in_service_5)},
+		std::mmio_ptr_ro<uint32_t>{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::in_service_6)},
+		std::mmio_ptr_ro<uint32_t>{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::in_service_7)},
+	};
 
-	// std::mmio_ptr_ro<uint32_t> error_status;
-	// std::mmio_ptr<uint32_t>	   lvt_cmci;
+	// Trigger Mode Registers
+	static constexpr std::mmio_ptr_ro<uint32_t> trigger_mode[8] = {
+		std::mmio_ptr_ro<uint32_t>{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::trigger_mode_0)},
+		std::mmio_ptr_ro<uint32_t>{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::trigger_mode_1)},
+		std::mmio_ptr_ro<uint32_t>{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::trigger_mode_2)},
+		std::mmio_ptr_ro<uint32_t>{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::trigger_mode_3)},
+		std::mmio_ptr_ro<uint32_t>{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::trigger_mode_4)},
+		std::mmio_ptr_ro<uint32_t>{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::trigger_mode_5)},
+		std::mmio_ptr_ro<uint32_t>{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::trigger_mode_6)},
+		std::mmio_ptr_ro<uint32_t>{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::trigger_mode_7)},
+	};
 
+	// Interrupt Request Registers
+	static constexpr std::mmio_ptr_ro<uint32_t> interrupt_request[8] = {
+		std::mmio_ptr_ro<uint32_t>{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::interrupt_request_0)},
+		std::mmio_ptr_ro<uint32_t>{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::interrupt_request_1)},
+		std::mmio_ptr_ro<uint32_t>{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::interrupt_request_2)},
+		std::mmio_ptr_ro<uint32_t>{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::interrupt_request_3)},
+		std::mmio_ptr_ro<uint32_t>{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::interrupt_request_4)},
+		std::mmio_ptr_ro<uint32_t>{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::interrupt_request_5)},
+		std::mmio_ptr_ro<uint32_t>{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::interrupt_request_6)},
+		std::mmio_ptr_ro<uint32_t>{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::interrupt_request_7)},
+	};
+
+	// ------------------------------------------------------------------
+	// Error and LVT registers
+	// ------------------------------------------------------------------
+	static constexpr std::mmio_ptr_ro<uint32_t> error_status{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::error_status)};
+	static constexpr std::mmio_ptr<uint32_t>	lvt_cmci{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_cmci)};
+
+	// ------------------------------------------------------------------
+	// Interrupt command registers
+	// ------------------------------------------------------------------
 	static constexpr std::mmio_ptr<interrupt_command_low_register> command_low{
 		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::command_low)};
-
 	static constexpr std::mmio_ptr<interrupt_command_high_register> command_high{
-		get_mmio_ptr<interrupt_command_high_register>(lapic_address, lapic_registers_offset::command_high)};
+		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::command_high)};
 
-	// std::mmio_ptr<uint32_t> lvt_timer;
-	// std::mmio_ptr<uint32_t> lvt_thermal_sensor;
-	// std::mmio_ptr<uint32_t> lvt_performance_monitoring_counters;
-	// std::mmio_ptr<uint32_t> lvt_lint0;
-	// std::mmio_ptr<uint32_t> lvt_lint1;
-	// std::mmio_ptr<uint32_t> lvt_error;
+	// ------------------------------------------------------------------
+	// Timer and LVT entries
+	// ------------------------------------------------------------------
+	static constexpr std::mmio_ptr<uint32_t> lvt_timer{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_timer)};
+	static constexpr std::mmio_ptr<uint32_t> lvt_thermal_sensor{
+		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_thermal_sensor)};
+	static constexpr std::mmio_ptr<uint32_t> lvt_performance_monitoring_counters{
+		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_performance_monitoring_counters)};
+	static constexpr std::mmio_ptr<uint32_t> lvt_lint0{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_lint0)};
+	static constexpr std::mmio_ptr<uint32_t> lvt_lint1{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_lint1)};
+	static constexpr std::mmio_ptr<uint32_t> lvt_error{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_error)};
 
-	// std::mmio_ptr<uint32_t>	   initial_count;
-	// std::mmio_ptr_ro<uint32_t> current_count;
-
-	// std::mmio_ptr<uint32_t> divide_configuration_register;
+	// ------------------------------------------------------------------
+	// Timer counters and configuration
+	// ------------------------------------------------------------------
+	static constexpr std::mmio_ptr<uint32_t> initial_count{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::initial_count)};
+	static constexpr std::mmio_ptr_ro<uint32_t> current_count{
+		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::current_count)};
+	static constexpr std::mmio_ptr<uint32_t> divide_configuration_register{
+		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::divide_configuration_register)};
 
 	__attribute__((always_inline, fastcall)) inline void send_command(
 		interrupt_command_low_register low, interrupt_command_high_register high)
