@@ -15,17 +15,17 @@ void test_special_pointers()
 	// volatile Reg16x2 reg1{.low = 5, .high = 6};
 
 	// Create proxies
-	const std::mmio_ptr<Reg16x2> ptr((volatile Reg16x2 *)0xb00000);
+	// const std::mmio_ptr<Reg16x2> ptr((volatile Reg16x2 *)0xb00000);
 
 	// Local copies
 	// Test writes deref
 	// kprintf("\nTesting deref write (*proxy = local)\n");
-	Reg16x2 val{.low = 7, .high = 8};
-	ptr.write(val);
+	// Reg16x2 val{.low = 7, .high = 8};
+	// ptr.write(val);
 
 	// Test writes deref rvalue
 	// kprintf("\nTesting deref write (*proxy = new)\n");
-	ptr.write(Reg16x2{.low = 5, .high = 9});
+	// ptr.write(Reg16x2{.low = 5, .high = 9});
 
 	// Test reads deref
 	// kprintf("\nTesting local read deref (local = *proxy)\n");
@@ -39,29 +39,29 @@ void __attribute__((fastcall)) test_special_pointers2(uintptr_t addr)
 
 	if (which == 0)
 	{
-		volatile Reg16x2				*ptr_raw = (volatile Reg16x2 *)0xb00000;
-		const std::mut_mmio_ptr<Reg16x2> ptr(ptr_raw);
-
-		Reg16x2 val{.low = 7, .high = 8};
-		ptr.write(val);
+		// volatile Reg16x2				*ptr_raw = (volatile Reg16x2 *)0xb00000;
+		// const std::mut_mmio_ptr<Reg16x2> ptr(ptr_raw);
+		//
+		// Reg16x2 val{.low = 7, .high = 8};
+		// ptr.write(val);
 	}
 
 	if (which == 1)
 	{
-		volatile Reg16x2				*ptr_raw = (volatile Reg16x2 *)addr;
-		const std::mut_mmio_ptr<Reg16x2> ptr(ptr_raw);
-
-		Reg16x2 val{.low = 7, .high = 8};
-		ptr.write(val);
+		// volatile Reg16x2				*ptr_raw = (volatile Reg16x2 *)addr;
+		// const std::mut_mmio_ptr<Reg16x2> ptr(ptr_raw);
+		//
+		// Reg16x2 val{.low = 7, .high = 8};
+		// ptr.write(val);
 	}
 
 	if (which == 10)
 	{
-		volatile Reg16x2			*ptr_raw = (volatile Reg16x2 *)addr;
-		const std::mmio_ptr<Reg16x2> ptr(ptr_raw);
-
-		Reg16x2 val{.low = 7, .high = 8};
-		ptr.write(val);
+		// volatile Reg16x2			*ptr_raw = (volatile Reg16x2 *)addr;
+		// const std::mmio_ptr<Reg16x2> ptr(ptr_raw);
+		//
+		// Reg16x2 val{.low = 7, .high = 8};
+		// ptr.write(val);
 	}
 
 	// // Set-once read/write

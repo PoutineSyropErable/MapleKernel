@@ -26,34 +26,31 @@ template <typename T> struct mmio_ptr
 	using underlying_t =
 		typename conditional<sizeof(T) == 1, uint8_t, typename conditional<sizeof(T) == 2, uint16_t, uint32_t>::type>::type;
 
-	volatile T *const ptr; // mutable pointer. But never modified
+	const uintptr_t addr; // store address as integer
 
   public:
 	using value_type = T;
 
-	// construct from raw pointer
-	constexpr explicit mmio_ptr(volatile T *p) : ptr(p)
-	{
-	}
-
-	// default constructor → pointer is null
-	constexpr mmio_ptr() : ptr(nullptr)
+	// constexpr constructor
+	constexpr explicit mmio_ptr(uintptr_t a) : addr(a)
 	{
 	}
 
 	T read() const
 	{
-		uint32_t raw = *(volatile uint32_t *)ptr; // FULL register read
-		T		 val;
-		__builtin_memcpy(&val, &raw, sizeof(T)); // copy into struct
+		volatile T	*p	 = reinterpret_cast<volatile T *>(addr);
+		underlying_t raw = *(volatile underlying_t *)p;
+		T			 val;
+		__builtin_memcpy(&val, &raw, sizeof(T));
 		return val;
 	}
 
-	void write(const T v) const
+	void write(T v) const
 	{
-		uint32_t raw = 0;
-		__builtin_memcpy(&raw, &v, sizeof(T)); // copy struct → raw
-		*(volatile uint32_t *)ptr = raw;	   // FULL register write
+		volatile T	*p	 = reinterpret_cast<volatile T *>(addr);
+		underlying_t raw = 0;
+		__builtin_memcpy(&raw, &v, sizeof(T));
+		*(volatile underlying_t *)p = raw;
 	}
 };
 

@@ -1,4 +1,5 @@
 #pragma once
+#include <stddef.h>
 #include <stdint.h>
 
 // Freestanding conditional template
@@ -91,3 +92,41 @@ template <> struct is_type_uint<uint32_t>
 {
 	static constexpr bool value = true;
 };
+
+/* ============STD array============== */
+namespace std
+{
+
+template <typename T, size_t N> struct array
+{
+	T elems[N];
+
+	// access
+	constexpr T &operator[](size_t i)
+	{
+		return elems[i];
+	}
+	constexpr const T &operator[](size_t i) const
+	{
+		return elems[i];
+	}
+
+	// iteration support (optional)
+	constexpr T *begin()
+	{
+		return elems;
+	}
+	constexpr T *end()
+	{
+		return elems + N;
+	}
+	constexpr const T *begin() const
+	{
+		return elems;
+	}
+	constexpr const T *end() const
+	{
+		return elems + N;
+	}
+};
+} // namespace std

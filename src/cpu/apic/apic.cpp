@@ -40,7 +40,6 @@ extern "C" uint8_t test_cmd()
 		},
 		{.local_apic_id_of_target = 1});
 
-	return 1;
 	// return res.local_apic_id_of_target;
 }
 
@@ -110,7 +109,6 @@ void apic::set_base_address(uint32_t base_address)
 enum apic::error apic::init_apic()
 {
 	// Done once for global enable.
-	gp_lapic_register.init();
 
 	apic_msr_eax eax;
 	apic_msr_edx edx;

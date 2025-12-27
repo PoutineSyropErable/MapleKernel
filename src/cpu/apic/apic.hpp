@@ -39,8 +39,8 @@ method using fs/gs.
 */
 uint8_t get_core_id_fast();
 
-inline volatile uint32_t *lapic_address	  = reinterpret_cast<volatile uint32_t *>(0xFEE0'0000);
-inline volatile uint32_t *io_apic_address = reinterpret_cast<volatile uint32_t *>(0xFEC0'0000);
+constexpr uintptr_t lapic_address	= (0xFEE0'0000);
+constexpr uintptr_t io_apic_address = (0xFEC0'0000);
 
 void calibrate_lapic_timer();
 
