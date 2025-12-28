@@ -221,7 +221,7 @@ struct startAndEnd
 	uint16_t end;
 };
 
-lock_t kprintf_lock = {.is_locked = 0};
+reentrant_lock_t kprintf_lock = {.state = 0};
 
 /* end not included */
 void terminal_write_offsets(const char *str, uint16_t start, uint16_t end)
@@ -238,11 +238,14 @@ void terminal_write_offsets(const char *str, uint16_t start, uint16_t end)
 
 void kprintf_argc(const uint32_t argc, const char *fmt, ...)
 {
+	// abort_msg("We don't use this one\n");
+	// return;
 
 	// If interrupt while spinlock, deadlock
 	// TODO: Disable interrupt at the start of spinlock.
 	// Renab:warn("%s");
 	uint32_t flags = irq_save();
+	reentrant_lock(&kprintf_lock);
 	// spinlock(&kprintf_lock);
 
 	uint8_t len = argc - 1;
@@ -256,7 +259,7 @@ void kprintf_argc(const uint32_t argc, const char *fmt, ...)
 		terminal_writestring("len check failed\n");
 		terminal_write_uint("len = ", len);
 		terminal_write_uint("len_check = ", len_check);
-		unlock(&kprintf_lock);
+		reentrant_unlock(&kprintf_lock);
 		irq_restore(flags);
 		abort();
 	}
@@ -264,7 +267,7 @@ void kprintf_argc(const uint32_t argc, const char *fmt, ...)
 	if (len == 0)
 	{
 		terminal_writestring(fmt);
-		unlock(&kprintf_lock);
+		reentrant_unlock(&kprintf_lock);
 		irq_restore(flags);
 		return;
 	}
@@ -426,22 +429,28 @@ void kprintf_argc(const uint32_t argc, const char *fmt, ...)
 
 	va_end(args);
 
-	unlock(&kprintf_lock);
+	reentrant_unlock(&kprintf_lock);
 	irq_restore(flags);
 }
 
 void vkprintf(const char *fmt, va_list args)
 {
+#define SMP_PROT
+
+#ifdef SMP_PROT
 	uint32_t flags = irq_save();
-	spinlock(&kprintf_lock);
+	reentrant_lock(&kprintf_lock);
+#endif
 	// TODO: Make sure it does lock at the start.
 	uint8_t len = count_char(fmt, '%');
 
 	if (len == 0)
 	{
 		terminal_writestring(fmt);
-		unlock(&kprintf_lock);
+#ifdef SMP_PROT
+		reentrant_unlock(&kprintf_lock);
 		irq_restore(flags);
+#endif
 		return;
 	}
 
@@ -539,8 +548,10 @@ void vkprintf(const char *fmt, va_list args)
 		terminal_write_offsets(fmt, start_and_ends[i + 1].start, start_and_ends[i + 1].end + 1);
 	}
 
-	unlock(&kprintf_lock);
+#ifdef SMP_PROT
+	reentrant_unlock(&kprintf_lock);
 	irq_restore(flags);
+#endif
 }
 
 void kprintf2(const char *fmt, ...)

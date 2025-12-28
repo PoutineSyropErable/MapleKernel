@@ -9,6 +9,7 @@
 
 // #include "framebuffer.h"
 #include "acpi.hpp"
+#include "apic.h"
 #include "apic.hpp"
 #include "apic_io.hpp"
 #include "assert.h"
@@ -88,8 +89,9 @@ void multicore_setup(void *rsdp_void)
 	multicore_gdt::init_multicore_gdt();												  //
 	multicore_gdt::set_fs_or_segment_selector(boot_core_id, multicore_gdt::fs_or_gs::fs); // sets fs so it has the correct gdt entry.
 	multicore_gdt::set_fs_or_segment_selector(boot_core_id, multicore_gdt::fs_or_gs::gs);
-	multicore_gdt::get_fs_struct()->core_id		= boot_core_id;
-	multicore_gdt::get_gs_struct()->other_stuff = 69;
+	multicore_gdt::set_fast_core_id(boot_core_id);
+
+	assert(apic_get_core_id() == boot_core_id, "Apic core id must be equal to boot core id\n");
 
 	kprintf("\nGot through the init multicore gdt\n\n");
 
@@ -115,9 +117,7 @@ void multicore_setup(void *rsdp_void)
 	apic::calibrate_lapic_timer();
 	kprintf("Calibrate lapic timer\n");
 
-	bool done_initiating_io_apic = false;
-	if (done_initiating_io_apic)
-		disable_pic();
+	disable_pic();
 	kprintf("Disabled the pic\n");
 
 	kprintf("\n\n");
@@ -149,17 +149,19 @@ void multicore_setup(void *rsdp_void)
 		if ((uint8_t)err)
 		{
 			core_is_active[core_id] = false;
+			framebuffer::g_framebuffer.draw_horizontal_line({.y = 20, .x_start = 0, .x_end = 1000, .color = framebuffer::Color(0xFFbb00)});
+			kprintf("core %u timeout with error %u\n", core_id, err);
 		}
 		else
 		{
 			core_is_active[core_id] = true;
 			// apic::send_ipi(core_id, INTERRUPT_ENTERED_MAIN);
 			// apic::wait_till_interrupt(INTERRUPT_ENTERED_MAIN);
-			// kprintf("core %u entered it's main function\n", core_id);
+			kprintf("core %u entered it's main function\n", core_id);
 			// Wait till interrupt is not really usefull, since there's already polling for starting.
 			// But i guess it's a nice way to make sure it entered it's main.
 		}
-		// kprintf("\n\n");
+		kprintf("\n\n");
 	}
 	kprintf("Tried to activate all the cores\n");
 
@@ -184,12 +186,16 @@ int cpp_main(struct cpp_main_args args)
 
 	kprintf("got here\n");
 
+	uint8_t core_id = apic_get_core_id();
+
 	// Setup lapic irq handling
 	terminal_writestring("\n====kernel cpp entering main loop====\n");
 	while (true)
 	{
+
+		kprintf("Master CPU, core_id = %u\n", core_id);
 		// kernel main loop
-		cpp_event_loop();
+		// cpp_event_loop();
 
 		// pit::wait(1.f / 60.f);
 	}

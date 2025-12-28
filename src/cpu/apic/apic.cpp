@@ -157,7 +157,9 @@ uint8_t apic::get_core_id_fast()
 
 extern "C" uint8_t apic_get_core_id()
 {
-	return apic::get_core_id_fast();
+	uint32_t apic_id;
+	__asm__ volatile("mov %%fs:0, %0" : "=r"(apic_id));
+	return (uint8_t)apic_id; // Cast to uint8_t
 }
 
 error send_init(uint8_t core_id)
@@ -183,7 +185,7 @@ error send_init(uint8_t core_id)
 	return error::timeout_sending_ipi;
 
 wait:
-	pit::wait(10.f / 1000.f);
+	// pit::wait(10.f / 1000.f);
 
 	gp_lapic_register.send_command(
 		{
@@ -283,7 +285,7 @@ enum error apic::wake_core(uint8_t core_id, void (*core_bootstrap)(), void (*cor
 	kprintf("Core main = %h\n", core_main);
 
 	// Send Sipi
-	pit::wait(10.f / 1000.f);
+	// pit::wait(10.f / 1000.f);
 	apic_err = send_sipi(core_id, core_bootstrap);
 	if ((uint8_t)apic_err)
 	{
@@ -291,12 +293,12 @@ enum error apic::wake_core(uint8_t core_id, void (*core_bootstrap)(), void (*cor
 	}
 
 	volatile uint32_t finished = false;
-	int				  pit_err  = pit::short_timeout(0.001f, &finished, true);
-	if (pit_err)
-	{
-		kprintf("There was an error waiting for the short timeout\n");
-		return error::bad_time;
-	}
+	// int				  pit_err  = pit::short_timeout(0.001f, &finished, true);
+	// if (pit_err)
+	// {
+	// 	kprintf("There was an error waiting for the short timeout\n");
+	// 	return error::bad_time;
+	// }
 	while (true)
 	{
 
@@ -323,7 +325,7 @@ long_poll:
 	constexpr uint8_t  timeout_count   = long_timeout_ms / short_timeut_ms;
 	for (uint8_t i = 0; i < timeout_count; i++)
 	{
-		pit::short_timeout((float)short_timeut_ms / 1000.f, &finished, false);
+		// pit::short_timeout((float)short_timeut_ms / 1000.f, &finished, false);
 		while (true)
 		{
 			if (core_has_booted[core_id])

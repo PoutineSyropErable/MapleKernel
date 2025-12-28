@@ -26,11 +26,18 @@ isr_stub_%+%1:
 	push ebp
 	mov ebp, esp
 
+
+
 	push %1 
 	push interrupt_printf_fmt  
 	push [argc] 
 	call kprintf_argc
 	; add esp, 12 ; needed if i don't do the prologue and epilogue
+
+
+	; cli 
+	; hlt_loop_%1:
+	; jmp hlt_loop_%1
 
 	mov esp, ebp
 	pop ebp
@@ -135,6 +142,77 @@ interrupt_69_handler:
 	; mov eax, 1
 	iret
 
+
+
+
+
+interrupt_5_fmt db "INT 5: BOUND Range Exceeded", NEWLINE, 0
+err_inf_fmt_5 db "EIP = 0x%x, CS = 0x%x, EFLAGS = 0x%x", NEWLINE, 0
+
+global interrupt_5_handler 
+interrupt_5_handler: 
+    push ebp
+    mov ebp, esp
+
+    ; Save all registers
+    pusha 
+    push ds 
+    push es 
+    push fs 
+    push gs 
+
+    ; Load kernel data segments
+    mov ax, 0x10  ; Kernel data segment
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+
+    ; Print interrupt message
+    push interrupt_5_fmt
+    push 1
+    call kprintf_argc
+    add esp, 8
+
+    ; Get interrupt frame values
+    ; NO ERROR CODE FOR INT 5!
+    mov ebx, [ebp + 4]   ; EIP (return address)
+    mov ecx, 0
+    mov cx, word [ebp + 8]  ; CS
+    mov edx, [ebp + 12]     ; EFLAGS
+
+    ; Print debug info
+    push edx
+    push ecx
+    push ebx
+    push err_inf_fmt_5
+    push 4  ; 3 format specifiers + 1
+    call kprintf_argc
+    add esp, 20
+
+    ; Optional: dump stack to debug corruption
+    ; call dump_stack_trace
+
+    ; For debugging: halt instead of returning
+    ; If this is a serious error, panic
+    ; call kernel_panic
+
+	hll5: 
+	jmp hll5
+
+    ; Restore registers
+    pop gs 
+    pop fs 
+    pop es
+    pop ds 
+    popa
+
+    ; Return from interrupt
+    mov esp, ebp
+    pop ebp
+    iret
+
+; ==========================
 
 
 interrupt_8_fmt db "In Interrupt handler: %d, DOUBLE_FAULT", NEWLINE, 0
@@ -381,4 +459,7 @@ interrupt_57_handler:
 section .bss
 saved_al resb 1      ; 1 byte for AL
 saved_dx resw 1      ; 2 bytes for DX
+
+
+
 

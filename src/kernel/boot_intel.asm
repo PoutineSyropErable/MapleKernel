@@ -69,6 +69,8 @@ section .bss
 stack_bottom:
     resb 16384              ; reserve 16 KiB
 stack_top:
+global stack_top
+global stack_bottom
 
 ; =====================================================
 ; Kernel Entry Point

@@ -27,6 +27,7 @@ CompileFlags:
     - -Iruntime_code_analysis
 
     - -I./cpu/
+    - -I./cpu/multicore
     - -I./cpu/fpu
     - -I./cpu/control_registers
     - -I./cpu/cpuid
@@ -49,6 +50,13 @@ CompileFlags:
 # C files (default standard)
 If:
   PathMatch: ".*\\.c$"
+CompileFlags:
+  Add:
+    - -std=gnu23
+
+
+If:
+  PathMatch: ".*\\.h$"
 CompileFlags:
   Add:
     - -std=gnu23

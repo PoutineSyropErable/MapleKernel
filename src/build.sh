@@ -305,7 +305,7 @@ i686-elf-g++ "${CPPFLAGS[@]}" -c "$MULTICORE/multicore.cpp" -o "$BUILD_DIR/multi
 nasm "${NASM_FLAGS16[@]}" "$MULTICORE/multicore_bootstrap16.asm" -o "$BUILD_DIR/multicore_bootstrap16.o"
 nasm "${NASM_FLAGS32[@]}" "$MULTICORE/multicore_bootstrap32.asm" -o "$BUILD_DIR/multicore_bootstrap32.o"
 
-i686-elf-gcc "${CPPFLAGS[@]}" -c "$MULTICORE/multicore.c" -o "$BUILD_DIR/multicore_c.o" "-I$STDLIB" "-I$APIC" "-I$MULTICORE" "-I$CPU"
+i686-elf-gcc "${CFLAGS[@]}" -c "$MULTICORE/multicore.c" -o "$BUILD_DIR/multicore_c.o" "-I$STDLIB" "-I$APIC" "-I$MULTICORE" "-I$CPU"
 # =============== Compile Drivers ==============
 
 # PS2 Controller, Interrupt Handler And Enable Wrapper
@@ -407,6 +407,7 @@ printf "\n\n====== End of Linking =====\n\n"
 objdump -D -h -M intel "$BUILD_DIR/myos.elf" >"$BUILD_DIR/myos.dump"
 
 objdump -D -h -M intel "$BUILD_DIR/apic.o" >"$BUILD_DIR/apic.dump"
+objdump -D -h -M intel "$BUILD_DIR/multicore_c.o" >"$BUILD_DIR/multicore_c.dump"
 objdump -D -h -M intel "$BUILD_DIR/special_pointers.o" >"$BUILD_DIR/special_pointers.dump"
 
 # Check if the kernel is multiboot-compliant

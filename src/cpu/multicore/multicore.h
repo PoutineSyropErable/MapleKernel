@@ -1,4 +1,5 @@
 #pragma once
+#include "atomic.h"
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -24,11 +25,13 @@ extern "C"
 
 	typedef struct
 	{
-		volatile uint32_t is_locked;
-	} lock_t;
+		uint32_t state;
 
-	void spinlock(lock_t *lock);
-	void unlock(lock_t *lock);
+	} reentrant_lock_t;
+
+	void reentrant_unlock(reentrant_lock_t *lock);
+	bool reentrant_trylock(reentrant_lock_t *lock);
+	void reentrant_lock(reentrant_lock_t *lock);
 
 	static inline uint32_t irq_save(void)
 	{

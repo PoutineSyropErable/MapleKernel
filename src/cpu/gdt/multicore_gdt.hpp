@@ -32,6 +32,13 @@ void set_fs_or_segment_selector(uint8_t core_id, enum fs_or_gs segment_selector)
 void set_fs_or_segment_selector(uint8_t core_id, bool gs_not_fs);
 void init_multicore_gdt();
 
+static inline void set_fast_core_id(uint32_t core_id)
+{
+	// Move 32-bit value from FS:0 (offset 0 in FS segment)
+	// Write core_id to FS:0 (offset 0 in FS segment)
+	__asm__ volatile("movl %0, %%fs:0" : : "r"(core_id) : "memory");
+}
+
 // Get the current core's FS_CONTENT struct
 static inline struct FS_CONTENT *get_fs_struct(void)
 {

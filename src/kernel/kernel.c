@@ -36,6 +36,9 @@
 
 GDT_ROOT *GDT16_ROOT = &GDT16_DESCRIPTOR;
 
+extern uint32_t stack_top;
+extern uint32_t stack_bottom;
+
 float fpu_add(float a, float b)
 {
 	float result;
@@ -56,6 +59,7 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 #endif
 	// init_paging();
 	// init_page_bitmap();
+	kprintf("stack boundary: top = %h, bottom =%h\n", stack_top, stack_bottom);
 
 	uint32_t cpuid_supp_test = cpuid_supported_check();
 	bool	 cpuid_supported = (cpuid_supp_test != 0);

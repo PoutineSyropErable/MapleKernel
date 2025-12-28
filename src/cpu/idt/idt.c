@@ -23,6 +23,7 @@ __attribute__((noreturn)) void exception_handler(void)
 	}
 }
 
+extern function_t interrupt_5_handler;	// not a function pointer. It's value is therefor the first few bytes of code
 extern function_t interrupt_8_handler;	// not a function pointer. It's value is therefor the first few bytes of code
 extern function_t interrupt_11_handler; // not a function pointer. It's value is therefor the first few bytes of code
 extern function_t interrupt_13_handler; // not a function pointer. It's value is therefor the first few bytes of code
@@ -86,6 +87,8 @@ void idt_init()
 
 	// if there are other stuff with runtime args to init, it can go after
 
+	idt_set_descriptor(5, &interrupt_5_handler, GT32_IG32, 0, true);
+	vectors[5] = true;
 	idt_set_descriptor(8, &interrupt_8_handler, GT32_IG32, 0, true);
 	vectors[8] = true;
 

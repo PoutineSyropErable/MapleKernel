@@ -1,4 +1,5 @@
 #include "apic.hpp"
+#include "atomic.h"
 #include "framebuffer.hpp"
 #include "intrinsics.h"
 #include "multicore.h"
@@ -16,17 +17,18 @@ extern "C" void application_core_main()
 	// apic::wait_till_interrupt(INTERRUPT_ENTERED_MAIN);
 	// kprintf("Recieved message from 0");
 
-	apic::error err = apic::send_ipi(0, INTERRUPT_ENTERED_MAIN);
-	if ((uint8_t)err)
-	{
-		framebuffer::g_framebuffer.draw_rectangle(
-			{.top_left_x = 0, .top_left_y = 0, .width = 1024, .height = 600, .color = framebuffer::Color(core_id * 0x11)});
-	}
+	// apic::error err = apic::send_ipi(0, INTERRUPT_ENTERED_MAIN);
+	// if ((uint8_t)err)
+	// {
+	// 	framebuffer::g_framebuffer.draw_rectangle(
+	// 		{.top_left_x = 0, .top_left_y = 0, .width = 1024, .height = 600, .color = framebuffer::Color(core_id * 0x11)});
+	// }
 
-	__sti();
+	// __sti();
 	while (true)
 	{
-		__hlt();
+		kprintf("Slave CPU,  core %u\n", core_id_f);
+		// __hlt();
 		// Read from it's queue.
 		// handle the message from the queue
 	}
