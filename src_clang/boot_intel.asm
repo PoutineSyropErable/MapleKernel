@@ -33,8 +33,8 @@ header_start:
     dd MB2_TAG_ACPI_NEW  ; Request ACPI v2 RSDP
 	; dd 0 ; padding
 
-%define WIDTH 1024 
-%define HEIGHT 768
+%define WIDTH 1920 
+%define HEIGHT 1080
 
 
 	

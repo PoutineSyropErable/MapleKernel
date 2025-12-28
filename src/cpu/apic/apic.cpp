@@ -1,5 +1,6 @@
 #include "apic.hpp"
 #include "apic_internals.hpp"
+#include "apic_io.hpp"
 #include "assert.h"
 #include "cast.h"
 #include "cpuid.hpp"
@@ -127,8 +128,7 @@ enum apic::error apic::init_lapic()
 
 	apic::spurious_interrupt_vector_register spivr					= gp_lapic_register.spurious_interrupt_vector.read();
 	constexpr uint8_t						 number_of_reserved_int = 32;
-	constexpr uint8_t						 number_of_apic_io_irq	= 24;
-	constexpr uint8_t						 vector_when_error		= (number_of_reserved_int + number_of_apic_io_irq);
+	constexpr uint8_t						 vector_when_error		= (number_of_reserved_int + apic_io::number_of_apic_io_irq);
 	spivr.vector = vector_when_error; // Write interrupt handler 56 to handle spurious interrupts
 	// Spurious means fake, it happens when an interrupt is recieved with lower priority then current
 	// aka, an ignored interrupt. Then the spurious is called

@@ -64,6 +64,26 @@ void multicore_setup(void *rsdp_void)
 	kprintf("\n\n\n\n======================\n\n\n\n");
 	acpi::madt::print_parsed_madt(parsed_madt);
 
+	uint32_t apic_base = parsed_madt.io_apics[0]->global_system_interrupt_base;
+	assert(parsed_madt.entry_counts.io_apic == 1, "Only one io apic support\n");
+	uint8_t irq_to_gsi[apic_io::number_of_apic_io_irq];
+	for (uint8_t i = 0; i < apic_io::number_of_apic_io_irq; i++)
+	{
+		irq_to_gsi[i] = apic_base + i;
+	}
+	for (uint8_t i = 0; i < parsed_madt.entry_counts.io_apic_isos; i++)
+	{
+		const struct acpi::madt::entry_io_apic_interrupt_source_override &ios = *parsed_madt.io_apic_isos[i];
+		[[gnu::unused]] uint8_t											  _	  = ios.bus_source; // not used
+		uint8_t															  gsi = ios.global_system_interrupt;
+		uint8_t															  irq = ios.irq_source;
+		irq_to_gsi[irq]														  = gsi;
+		assert(ios.bus_source == 0, "If not ISA (0), then issue?\n");
+
+		kprintf("Irq Source: %u, GSI : %u\n", irq, gsi);
+	}
+	kprintf("\n");
+
 	uint32_t lapic_address_msr = apic::get_base_address();
 
 	// This reads the lapic address from the madt. Which is firmware. Technically, the gdt base address from msr is better.
@@ -77,7 +97,7 @@ void multicore_setup(void *rsdp_void)
 
 	assert(apic::lapic_address == (uintptr_t)lapic_address, "Firmware obtained adddress must be = to hardcoded one\n");
 	assert(apic::lapic_address == (uintptr_t)lapic_address_msr, "Msr obtained address be be == to hardcoded one\n");
-	assert(apic::io_apic_address == (uintptr_t)io_apic_address, "io apic, must be equal to hardcoded one\n");
+	assert(apic_io::io_apic_address == (uintptr_t)io_apic_address, "io apic, must be equal to hardcoded one\n");
 
 	runtime_core_count = parsed_madt.entry_counts.processor_local_apic;
 
@@ -193,7 +213,7 @@ int cpp_main(struct cpp_main_args args)
 	while (true)
 	{
 
-		kprintf("Master CPU, core_id = %u\n", core_id);
+		// kprintf("Master CPU, core_id = %u\n", core_id);
 		// kernel main loop
 		// cpp_event_loop();
 

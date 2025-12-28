@@ -146,7 +146,7 @@ struct MADTParseResult acpi::madt::parse_madt(const MADT *madt)
 		case acpi::madt::EntryType::io_apic_non_maskable_interrupt_source:
 		{
 			const entry_io_apic_nmi_source *entry = reinterpret_cast<const entry_io_apic_nmi_source *>(generic_entry);
-			kprintf("nmi source = %u\n");
+			kprintf("nmi source = %u\n", entry->nmi_source);
 			kprintf("reserved = %u\n", entry->reserved);
 			kprintf("flags = %u\n", entry->flags);
 			kprintf("global system interrupt = %u\n", entry->global_system_interrupt);
@@ -222,6 +222,7 @@ void acpi::madt::print_parsed_madt(const MADTParseResult &result)
 		kprintf("  APIC ID: %u\n", entry->apic_id);
 		kprintf("  Flags: can_enable=%b, online_capable=%b\n", entry->flags.can_enable, entry->flags.online_capable);
 	}
+	kprintf("\n");
 
 	// IO APICs
 	for (uint32_t i = 0; i < result.entry_counts.io_apic; ++i)
@@ -234,6 +235,7 @@ void acpi::madt::print_parsed_madt(const MADTParseResult &result)
 		kprintf("  IO APIC Address: %h\n", entry->io_apic_address);
 		kprintf("  Global System Interrupt Base: %u\n", entry->global_system_interrupt_base);
 	}
+	kprintf("\n");
 
 	// IO APIC Interrupt Source Overrides
 	for (uint32_t i = 0; i < result.entry_counts.io_apic_isos; ++i)
@@ -245,8 +247,13 @@ void acpi::madt::print_parsed_madt(const MADTParseResult &result)
 		kprintf("  Bus Source: %u\n", entry->bus_source);
 		kprintf("  IRQ Source: %u\n", entry->irq_source);
 		kprintf("  Global System Interrupt: %u\n", entry->global_system_interrupt);
-		kprintf("  Flags: %u\n", entry->flags);
+		const struct acpi::madt::io_apic_iso_flags &flags			  = entry->flags;
+		char										polarities[4][20] = {"Conforms", "ActiveHigh", "Reserved", "ActiveLow"};
+		char										trigger[4][20]	  = {"Conforms", "Edge", "Reserved", "Level"};
+		kprintf("Flags: polarity = %s, trigger = %s\n", polarities[(uint8_t)flags.polarity], trigger[(uint8_t)flags.trigger]);
+		kprintf("\n");
 	}
+	kprintf("\n");
 
 	// IO APIC NMIs
 	for (uint32_t i = 0; i < result.entry_counts.io_apic_nmis; ++i)
@@ -259,6 +266,7 @@ void acpi::madt::print_parsed_madt(const MADTParseResult &result)
 		kprintf("  Flags: %u\n", entry->flags);
 		kprintf("  Global System Interrupt: %u\n", entry->global_system_interrupt);
 	}
+	kprintf("\n");
 
 	// Local APIC NMIs
 	for (uint32_t i = 0; i < result.entry_counts.local_apic_nmis; ++i)
@@ -271,6 +279,7 @@ void acpi::madt::print_parsed_madt(const MADTParseResult &result)
 		kprintf("  Flags: %u\n", entry->flags);
 		kprintf("  LINT: %u\n", entry->LINT);
 	}
+	kprintf("\n");
 
 	// Local APIC Address Overrides
 	for (uint32_t i = 0; i < result.entry_counts.local_apic_address_override; ++i)
@@ -281,6 +290,7 @@ void acpi::madt::print_parsed_madt(const MADTParseResult &result)
 		kprintf("Local APIC Address Override %u :\n", i);
 		kprintf("  Local APIC Address 64-bit: %lx\n", entry->local_apic_address_64b);
 	}
+	kprintf("\n");
 
 	// Processor Local x2APICs
 	for (uint32_t i = 0; i < result.entry_counts.processor_local_x2apic; ++i)
@@ -293,6 +303,7 @@ void acpi::madt::print_parsed_madt(const MADTParseResult &result)
 		kprintf("  Flags: can_enable=%b, online_capable=%b\n", entry->flags.can_enable, entry->flags.online_capable);
 		kprintf("  ACPI ID: %u\n", entry->acpi_id);
 	}
+	kprintf("\n");
 
 	kprintf("\n==== End of MADT Parse Result ====\n");
 }

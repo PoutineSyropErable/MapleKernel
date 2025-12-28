@@ -47,8 +47,8 @@ header_start:
 			dw MB2_TAG_FRAMEBUFFER         ; Type: framebuffer
 			dw 0                  ; Flags
 			dd 24                 ; Size of this tag
-			dd WIDTH              ; Width (desired)
-			dd HEIGHT             ; Height (desired)
+			dd WIDTH              ; Width (desired). 0 = any
+			dd HEIGHT             ; Height (desired). 0 = any
 			dd 32                 ; Bits per pixel
 			; dd 0                  ; Framebuffer type: 0 = RGB, 1 = EGA text
 			dd 0                  ; Padding/reserved

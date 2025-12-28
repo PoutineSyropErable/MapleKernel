@@ -27,7 +27,7 @@ extern "C" void application_core_main()
 	// __sti();
 	while (true)
 	{
-		kprintf("Slave CPU,  core %u\n", core_id_f);
+		// kprintf("Slave CPU,  core %u\n", core_id_f);
 		// __hlt();
 		// Read from it's queue.
 		// handle the message from the queue

@@ -1,5 +1,6 @@
 #pragma once
 #include "acpi_shared.hpp"
+#include "static_assert.h"
 #include <stdint.h>
 
 namespace acpi
@@ -79,13 +80,35 @@ struct entry_io_apic
 #define MAX_IO_APIC 8
 
 // =========== Entry 2 fields ==========
+enum class IsoPolarity : uint8_t
+{
+	Conforms   = 0b00, // Follow bus spec
+	ActiveHigh = 0b01,
+	ActiveLow  = 0b11
+};
+
+enum class IsoTrigger : uint8_t
+{
+	Conforms = 0b00, // Follow bus spec
+	Edge	 = 0b01,
+	Level	 = 0b11
+};
+struct io_apic_iso_flags
+{
+	IsoPolarity polarity : 2;
+	IsoTrigger	trigger : 2;
+	uint16_t	reserved : 12;
+};
+
+STATIC_ASSERT(sizeof(struct io_apic_iso_flags) == 2, "");
+
 struct entry_io_apic_interrupt_source_override
 {
-	entry_header header;
-	uint8_t		 bus_source;
-	uint8_t		 irq_source;
-	uint32_t	 global_system_interrupt;
-	uint16_t	 flags;
+	entry_header	  header;
+	uint8_t			  bus_source;
+	uint8_t			  irq_source;
+	uint32_t		  global_system_interrupt;
+	io_apic_iso_flags flags;
 };
 #define MAX_IO_APIC_ISO 32
 // =========== Entry 3 fields ==========
