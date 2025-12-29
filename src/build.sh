@@ -435,8 +435,23 @@ else
 fi
 
 # Copy the kernel binary and GRUB configuration to the ISO directory
+
+mkdir -p "$ISO_DIR/boot/grub"
+mkdir -p "$ISO_DIR/EFI/BOOT"
+
 cp "$BUILD_DIR/myos.elf" "$ISO_DIR/boot/myos.elf"
 cp "$ISO_DIR/grub.cfg" "$ISO_DIR/boot/grub/grub.cfg"
+# Copy the kernel into the ISO tree
+
+# Build standalone GRUB
+grub-mkstandalone \
+	-O x86_64-efi \
+	--modules="part_gpt part_msdos multiboot2 normal configfile" \
+	--fonts="" \
+	--locales="" \
+	--themes="" \
+	-o "$ISO_DIR/EFI/BOOT/BOOTX64.EFI" \
+	"boot/grub/grub.cfg=$ISO_DIR/grub.cfg"
 
 # Create the ISO image
 grub-mkrescue -o "$BUILD_DIR/myos.iso" "$ISO_DIR"
@@ -539,22 +554,18 @@ else
 	# -vga vmware \
 
 	QEMU_PID=$!
+	QEMU_FULL=false
+	if [[ $QEMU_FULL ]]; then
+		if [[ "$MOVE_VNC" == "move" ]]; then
+			move_pid_to_workspace $QEMU_PID 21
+		fi
 
-	# Give QEMU a second to start up
-	sleep 1
-
-	# Launch VNC viewer
-	vncviewer localhost:5900 &
-	VNC_PID=$!
-
-	# sleep 1
-	if [[ "$MOVE_VNC" == "move" ]]; then
-		move_pid_to_workspace $VNC_PID 21
+	else
+		# Give QEMU a second to start up
+		sleep 1
 	fi
 
-	wait $VNC_PID
+	# sleep 1
 
-	# After you close the VNC viewer, kill QEMU
-	kill $QEMU_PID 2>/dev/null
 fi
 # qemu-system-i386 -kernel ./build/myos.elf & # or do this to use the binary directly # -cdrom "$BUILD_DIR/myos.iso" # -kernel "$BUILD_DIR/myos.elf" \

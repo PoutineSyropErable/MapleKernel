@@ -100,7 +100,9 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 		kprintf("result of fpu addition: (%f + %f) = %f\n", a, b, res);
 	}
 
+	kprintf("\n\n\n");
 	kprintf("multiboot2 information addr = %h, magic = %h, is_proper_multiboot_32 = %u\n", mb2_info_addr, magic, is_proper_multiboot_32);
+	kprintf("\n\n\n");
 	bool is_proper_multiboot = is_proper_multiboot_32;
 	if (is_proper_multiboot)
 	{
@@ -121,10 +123,12 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 	uint8_t bpp	 = grub_fb_info.bit_per_pixel;
 	bool	type = grub_fb_info.type;
 
+	kprintf("\n\n\n");
 	kprintf("FB addr: %h %h, pitch=%u, w=%u, h=%u, bpp=%u, type=%u\n", grub_fb_info.base_addr_high, grub_fb_info.base_addr_low,
 		grub_fb_info.pitch, grub_fb_info.width, grub_fb_info.height, bpp, grub_fb_info.type);
 	assert(bpp == 32, "Need 32 bit per pixel, else we are fucked!\n");
 	assert(type == 1, "Need color support\n");
+	kprintf("\n\n\n");
 
 	uint32_t				 width		  = grub_fb_info.width;
 	uint32_t				 height		  = grub_fb_info.height;

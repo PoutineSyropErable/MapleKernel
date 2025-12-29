@@ -47,6 +47,7 @@ grub-mkstandalone \
 	--themes="" \
 	-o iso_root/EFI/BOOT/BOOTX64.EFI \
 	"boot/grub/grub.cfg=./grub_standalone.cfg"
+# ^^Use
 
 # Create ISO using GRUB
 grub-mkrescue -o myos.iso iso_root/
