@@ -1,8 +1,0 @@
-#pragma once
-
-#define PS2_PORT1_IRQ 1
-#define PS2_PORT2_BRIDGE_IRQ 2
-#define PS2_PORT2_IRQ 12
-
-#define PIT_IRQ 0
-#define START_OF_USER_ALLOCATABLE_INTERRUPT 32

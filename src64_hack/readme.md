@@ -1,9 +1,0 @@
-THIS WHOLE THING IS MEGA GARBAGE. 
-IT DOESN'T FUCKING WORK, 
-FUCK THAT GARBAGE SHIT. 
-
-IT MAKES NO SENSE. SOMETHING ISN'T WORKING. I'M GUESSING THIS WON'T WORK
-
-===============
-bios boot makes you enter in 32 bit mode. 
-not 64 bit mode

@@ -1,0 +1,34 @@
+#pragma once
+#include "stdbool.h"
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+	struct fpu_features
+	{
+		bool fpu; // x87 FPU
+		bool mmx;
+		bool sse;
+		bool sse2;
+		bool sse3;
+		bool ssse3;
+		bool sse41;
+		bool sse42;
+		bool avx_256;
+		bool xsave; // needed for AVX 256
+
+		bool avx_512;
+		bool avx2;
+	};
+
+	void print_activated_fpu_features(const struct fpu_features fpu_features);
+
+	struct fpu_features init_fpu(void);
+
+	void test_sse_alignment(void);
+
+#ifdef __cplusplus
+}
+#endif
