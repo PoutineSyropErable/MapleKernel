@@ -13,7 +13,7 @@ git clone https://github.com/PoutineSyropErable/install_cross_gdb ~/cross-gdb-ne
 
 ```bash
 sudo pacman -S qemu-full edk2-ovmf mtools dosfstools --needed
-sudo pacman -S gcc-multilib gcc-libs-multi
+sudo pacman -S gcc-multilib --needed # might not bee needed. 
 
-yay -S gccia16
+yay -S gcc-ia16
 ```
