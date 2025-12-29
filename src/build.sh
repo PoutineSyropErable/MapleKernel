@@ -3,6 +3,11 @@
 set -eou pipefail
 shopt -s nullglob
 
+# If you have qemu full
+QEMU_FULL=false
+MOV_WORKSPACE=21
+# In hyprland, move it there
+
 DEBUG_OR_RELEASE="${1:-release}"
 QEMU_OR_REAL_MACHINE="${2:-qemu}"
 MACHINE_BITNESS="${3:-32}"
@@ -554,15 +559,28 @@ else
 	# -vga vmware \
 
 	QEMU_PID=$!
-	QEMU_FULL=false
-	if [[ $QEMU_FULL ]]; then
+	if [[ "$QEMU_FULL" == "true" ]]; then
 		if [[ "$MOVE_VNC" == "move" ]]; then
-			move_pid_to_workspace $QEMU_PID 21
+			move_pid_to_workspace $QEMU_PID "$MOV_WORKSPACE"
 		fi
 
 	else
 		# Give QEMU a second to start up
 		sleep 1
+
+		vncviewer localhost:5900 &
+		VNC_PID=$!
+
+		# sleep 1
+		if [[ "$MOVE_VNC" == "move" ]]; then
+			move_pid_to_workspace $VNC_PID "$MOV_WORKSPACE"
+		fi
+
+		wait $VNC_PID
+
+		# After you close the VNC viewer, kill QEMU
+		kill $QEMU_PID 2>/dev/null
+
 	fi
 
 	# sleep 1
