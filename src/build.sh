@@ -4,7 +4,7 @@ set -eou pipefail
 shopt -s nullglob
 
 # If you have qemu full
-QEMU_FULL=false
+QEMU_FULL=true
 MOV_WORKSPACE=21
 # In hyprland, move it there
 
