@@ -39,3 +39,8 @@ qemu-system-x86_64 \
 
 or something
 
+
+==== 
+For the kernel mapping, simply allow a linear map for the kernel size. 
+Then, linear for mmio addresses. 
+Then linear for the 64 bit kernel
