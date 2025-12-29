@@ -100,9 +100,7 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 		kprintf("result of fpu addition: (%f + %f) = %f\n", a, b, res);
 	}
 
-	kprintf("\n\n\n");
 	kprintf("multiboot2 information addr = %h, magic = %h, is_proper_multiboot_32 = %u\n", mb2_info_addr, magic, is_proper_multiboot_32);
-	kprintf("\n\n\n");
 	bool is_proper_multiboot = is_proper_multiboot_32;
 	if (is_proper_multiboot)
 	{

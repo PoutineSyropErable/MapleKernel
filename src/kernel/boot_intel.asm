@@ -2,7 +2,7 @@
 ; Multiboot Header Constants
 ; =====================================================
 %define MB2_MAGIC      0xE85250D6
-%define MB2_ARCH       0              ; i386 (32-bit)
+%define MB2_ARCH_I686       0  	; i386 (32-bit)
 %define MB2_TAG_END    0
 %define MB2_TAG_INFO_REQ 1
 %define MB2_TAG_ACPI_OLD 14
@@ -14,16 +14,20 @@
 
 %define MB2_TAG_FRAMEBUFFER 5   ; correct type for framebuffer request
 
+%assign CHOSEN_ARCH MB2_ARCH_I686
+
 
 ; =====================================================
 ; Multiboot Header Section
 ; =====================================================
+section .multiboot 
+align 8
 header_start:
     ; Multiboot2 header
     dd MB2_MAGIC          ; Magic number
-    dd MB2_ARCH           ; Architecture
+    dd CHOSEN_ARCH           ; Architecture
     dd header_end - header_start ; Header length
-    dd -(MB2_MAGIC + MB2_ARCH + (header_end - header_start)) ; Checksum
+    dd -(MB2_MAGIC + CHOSEN_ARCH + (header_end - header_start)) ; Checksum
     
     ; Optional: Request ACPI RSDP tags (if you want GRUB to provide them)
     dw MB2_TAG_INFO_REQ  ; Type: Information request
@@ -79,6 +83,9 @@ section .text
 global _start
 _start:
     ; Set stack pointer (stack grows downward)
+
+
+
 	mov edx, 0xdeadfac0
     mov esp, stack_top
 

@@ -4,7 +4,7 @@ set -eou pipefail
 shopt -s nullglob
 
 # If you have qemu full
-QEMU_FULL=true
+QEMU_FULL=false
 MOV_WORKSPACE=21
 # In hyprland, move it there
 
@@ -459,8 +459,9 @@ grub-mkstandalone \
 	"boot/grub/grub.cfg=$ISO_DIR/grub.cfg"
 
 # Create the ISO image
-grub-mkrescue -o "$BUILD_DIR/myos.iso" "$ISO_DIR"
-echo "ISO created successfully: $BUILD_DIR/myos.iso"
+mkdir -p release
+grub-mkrescue -o "release/myos.iso" "$ISO_DIR"
+echo "ISO created successfully: release/myos.iso"
 
 # Check if Ventoy USB is mounted
 VENTOY_PATH="/run/media/$USER/Ventoy"
@@ -546,15 +547,20 @@ else
 
 	printf -- "\n\n===========Executing with $QEMU ===========\n\n"
 
+	USE_VNC_FLAG=()
+	if [[ "$QEMU_FULL" == "false" ]]; then
+		USE_VNC_FLAG+=("-vnc" ":0")
+	fi
+
 	# TODO: Make -d and -D conditional.
 	$QEMU \
-		-cdrom "$BUILD_DIR/myos.iso" \
+		-cdrom "release/myos.iso" \
 		-no-reboot \
 		"${QEMU_DBG_FLAGS[@]}" \
 		"${DEBUG_LOG_OPTS[@]}" \
 		-smp 4 \
 		"${QEMU_CPU_FLAG[@]}" \
-		\
+		"${USE_VNC_FLAG[@]}" \
 		-serial stdio & # -enable-kvm \
 	# -vga vmware \
 
