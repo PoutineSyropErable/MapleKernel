@@ -1,3 +1,4 @@
+#include "multiboot.h"
 #include "stdio.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -81,7 +82,7 @@ static void print_u64_hex(uint64_t val)
 }
 
 // Quick calculation (usually works for kernels):
-uint32_t get_entry_point_physical_simple(uint32_t module_phys_addr)
+struct entry_point_c get_entry_point_physical_simple(uint32_t module_phys_addr)
 {
 	uint8_t			 *mod  = (uint8_t *)module_phys_addr;
 	elf64_ehdr_64bit *ehdr = (elf64_ehdr_64bit *)mod;
@@ -96,11 +97,13 @@ uint32_t get_entry_point_physical_simple(uint32_t module_phys_addr)
 	print_u64_hex(phoff);
 	kprintf("\n");
 
+	struct entry_point_c ret = {.entry_physical = 0, .entry_virtual = 0, .size = 0};
+
 	// Actually, you need to look at the FIRST program header
 	if (phoff == 0 || ehdr->phnum == 0)
 	{
 		kprintf("No program headers!\n");
-		return 0;
+		return ret;
 	}
 
 	// Program headers start here
@@ -134,11 +137,14 @@ uint32_t get_entry_point_physical_simple(uint32_t module_phys_addr)
 			uint32_t entry_physical = module_phys_addr + (uint32_t)phdr->offset;
 			kprintf("  -> Entry point PHYSICAL approx: 0x%08x\n", entry_physical);
 
-			return entry_physical;
+			ret.entry_physical = entry_physical;
+			ret.entry_virtual  = phdr->vaddr;
+			ret.size		   = phdr->filesz;
+			return ret;
 		}
 	}
 
-	return 0;
+	return ret;
 }
 
 // Main function using structs

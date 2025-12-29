@@ -40,6 +40,14 @@ extern uint32_t stack_top;
 extern uint32_t stack_bottom;
 extern uint32_t __kernel_end;
 
+uint32_t round_up_div(uint32_t top, uint32_t bot)
+{
+	uint32_t ret = top / bot;
+	if (top % bot != 0)
+		ret++;
+	return ret;
+}
+
 struct module_kernel64
 {
 	// The argument to use when calling the 64 bit code trampoline
@@ -181,10 +189,29 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 	kprintf("Mod start =%h, mod End = %h, mod cmdline=|%s|\n", mod.mod_start, mod.mod_end, mod.cmdline);
 
 	// print_all_symbols_32bit(mod.mod_start);
-	uint32_t addr = get_entry_point_physical_simple(mod.mod_start);
+	struct entry_point_c kernel64_bit = get_entry_point_physical_simple(mod.mod_start);
 
-	kprintf("\n\n\naddr = %h\n\n\n", addr);
-	char *ad = (char *)addr;
+	uint32_t entry_physical = kernel64_bit.entry_physical;
+	uint64_t entry_virtual	= kernel64_bit.entry_virtual;
+	uint64_t kernel_size	= kernel64_bit.size;
+	union
+	{
+		struct
+		{
+			uint32_t low;
+			uint32_t high;
+		} pm;
+		uint64_t raw;
+	} uts;
+
+	uts.raw = entry_virtual;
+	kprintf("\n\nThe kernel 64 bit (Long Mode) Entry point:\n");
+	kprintf("Entry physical : %h\n", entry_physical);
+	kprintf("Entry virtual : %h%h\n", uts.pm.high, uts.pm.low);
+	uts.raw = kernel_size;
+	kprintf("Kernel Size : %h%h\n", uts.pm.high, uts.pm.low);
+	kprintf("Kernel Page Count : %h\n\n", round_up_div(kernel_size, 0x1024));
+	char *ad = (char *)kernel64_bit.entry_physical;
 	for (uint8_t i = 0; i < 8; i++)
 	{
 		kprintf("byte = %h\n", (uint8_t)ad[i]);

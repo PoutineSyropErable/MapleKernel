@@ -28,6 +28,13 @@ extern "C"
 		char	 cmdline[100];
 	};
 
+	struct entry_point_c
+	{
+		uint32_t entry_physical;
+		uint64_t entry_virtual;
+		uint64_t size;
+	};
+
 	/*
 	the module index start at 0.
 	*/
@@ -40,7 +47,7 @@ extern "C"
 
 	struct framebuffer_info_t get_framebuffer(uint32_t mid_addr);
 	void					  print_all_symbols_32bit(uint32_t module_phys_addr);
-	uint32_t				  get_entry_point_physical_simple(uint32_t module_phys_addr);
+	struct entry_point_c	  get_entry_point_physical_simple(uint32_t module_phys_addr);
 
 #ifdef __cplusplus
 }
