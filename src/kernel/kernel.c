@@ -38,6 +38,15 @@ GDT_ROOT *GDT16_ROOT = &GDT16_DESCRIPTOR;
 
 extern uint32_t stack_top;
 extern uint32_t stack_bottom;
+extern uint32_t __kernel_end;
+
+struct module_kernel64
+{
+	// The argument to use when calling the 64 bit code trampoline
+	// Use this to setup paging from C.
+	uint32_t start_addr;
+	uint32_t end_addr;
+};
 
 float fpu_add(float a, float b)
 {
@@ -60,6 +69,7 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 	// init_paging();
 	// init_page_bitmap();
 	kprintf("stack boundary: top = %h, bottom =%h\n", stack_top, stack_bottom);
+	uint64_t lol = 0x5;
 
 	uint32_t cpuid_supp_test = cpuid_supported_check();
 	bool	 cpuid_supported = (cpuid_supp_test != 0);
@@ -157,12 +167,44 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 #define GET_RSDP
 #ifdef GET_RSDP
 	// Eventually, learn to get rsdp from bios and uefi function calls
+	kprintf("tryng to get rsdp\n");
 	struct rsdp_tagged_c rsdp_tagged	   = get_rsdp_grub(mb2_info_addr);
 	char				*rsdp_type_names[] = {"NULL", "OLD", "NEW"};
 	char				*name			   = rsdp_type_names[rsdp_tagged.new_or_old];
 	void				*rsdp_v			   = rsdp_tagged.rsdp;
 	kprintf("rsdp = %h, type=%s\n", rsdp_v, name);
 #endif
+
+#define KERNEL64_MOD_INDEX 0
+	struct multiboot_module_c mod = get_module_location(mb2_info_addr, KERNEL64_MOD_INDEX);
+	kprintf("Found a module\n");
+	kprintf("Mod start =%h, mod End = %h, mod cmdline=|%s|\n", mod.mod_start, mod.mod_end, mod.cmdline);
+
+	// print_all_symbols_32bit(mod.mod_start);
+	uint32_t addr = get_entry_point_physical_simple(mod.mod_start);
+
+	kprintf("\n\n\naddr = %h\n\n\n", addr);
+	char *ad = (char *)addr;
+	for (uint8_t i = 0; i < 8; i++)
+	{
+		kprintf("byte = %h\n", (uint8_t)ad[i]);
+	}
+
+	exit(0);
+
+	uint32_t *k64_s = (uint32_t *)mod.mod_start;
+	uint32_t *k64_e = (uint32_t *)mod.mod_end;
+
+	uintptr_t s = (uintptr_t)k64_s;
+	uintptr_t e = (uintptr_t)k64_e;
+
+	float sf   = (float)s / (1024 * 1024);
+	float ef   = (float)e / (1024 * 1024);
+	float size = (ef - sf);
+	kprintf("Start = %f MB, End = %f MB, size = %f KB\n", sf, ef, size * 1024);
+
+	kprintf("Kernel ends at : %h\n", &__kernel_end);
+	kprintf("Kernel ends at : %f MB\n", ((float)(uintptr_t)&__kernel_end) / (1024.f * 1024.f));
 
 	setup_interrupts_and_ps2(); // needed to have a working wait
 	setup_keyboard();			// crash here

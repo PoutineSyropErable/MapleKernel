@@ -33,7 +33,7 @@ EOF
 fi
 
 # use my custom gcc and g++:
-if false; then
+if true; then
 	PATH="$HOME/cross-gcc/install-ia16-elf/bin:$PATH"
 	PATH="$HOME/cross-gcc/install-i686-elf/bin:$PATH"
 	PATH="$HOME/cross-gcc/install-x86_64-elf/bin:$PATH"
@@ -41,9 +41,8 @@ if false; then
 fi
 
 BUILD_DIR="build64"
+ISO_DIR="isodir"
 
-GCC32=i686-elf-gcc
-GPP32=i686-elf-g++
 GCC64=x86_64-elf-gcc
 GPP64=x86_64-elf-g++
 
@@ -51,7 +50,7 @@ CFLAGS=("-std=gnu23" "-ffreestanding" "-Wall" "-Wextra")
 CPPFLAGS=("-std=gnu++23" "-ffreestanding" "-Wall" "-Wextra" "-fno-threadsafe-statics" "-fno-rtti" "-fno-exceptions" "-fno-strict-aliasing")
 # Being generous with the cppflag
 LDFLAGS=("-ffreestanding" "-nostdlib" "-lgcc" "-fno-eliminate-unused-debug-symbols")
-NASM_FLAG64=("-f" "elf64")
+NASM_FLAGS64=("-f" "elf64")
 
 DEBUG_OPT_LVL="-O3"
 RELEASE_OPT_LVL="-O3"
@@ -64,14 +63,11 @@ if [[ "$DEBUG_OR_RELEASE" == "debug" ]]; then
 	CPPFLAGS+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG" "-fno-omit-frame-pointer" "-fno-optimize-sibling-calls")
 	CFLAGS16+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG")
 	LDFLAGS+=("-g")
-	NASM_FLAGS32+=("-g" "-F" "dwarf" "-DDEBUG")
-	NASM_FLAGS16+=("-g" "-F" "dwarf" "-DDEBUG")
-	QEMU_DBG_FLAGS+=("-s" "-S")
+	NASM_FLAGS64+=("-g" "-F" "dwarf" "-DDEBUG")
 else
 	echo "In normal mode, $RELEASE_OPT_LVL optimisation"
 	CFLAGS+=("$RELEASE_OPT_LVL")
 	CPPFLAGS+=("$RELEASE_OPT_LVL")
-	CFLAGS16+=("$RELEASE_OPT_LVL")
 	LDFLAGS+=("$RELEASE_OPT_LVL")
 fi
 
@@ -85,6 +81,11 @@ mkdir -p "$KERNEL64"
 mkdir -p "$BUILD_DIR"
 
 $GCC64 "${CFLAGS[@]}" -c "$KERNEL64/kernel_64.c" -o "$BUILD_DIR/kernel_64.o"
+nasm "${NASM_FLAGS64[@]}" "$KERNEL64/kernel64_boot.asm" -o "$BUILD_DIR/kernel64_boot.o"
 
 BUILD_OBJECTS=("$BUILD_DIR"/*.o)
-$GCC64 -T "$KERNEL64/linker_64.ld" -o "$BUILD_DIR/kernel64.elf" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}" "${LIBRARY_ARGS[@]}"
+printf -- "\n\n====== Linking ========\n\n"
+$GPP64 -T "$KERNEL64/linker_64.ld" -o "$BUILD_DIR/kernel64.elf" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}" "${LIBRARY_ARGS[@]}"
+
+printf -- "\n\n====== Copying ========\n\n"
+cp "$BUILD_DIR/kernel64.elf" "$ISO_DIR/boot/kernel64.elf"

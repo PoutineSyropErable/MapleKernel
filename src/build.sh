@@ -279,6 +279,7 @@ i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$KERNEL/kernel_helper.c" -
 i686-elf-g++ "${CPPFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$MULTIBOOT/multiboot.cpp" -o "$BUILD_DIR/multiboot.o"
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$KERNEL_CPP/kernel_cpp.cpp" -o "$BUILD_DIR/kernel_cpp.o" "${SUPER_INCLUDE[@]}"
 i686-elf-g++ "${CPPFLAGS[@]}" -c "$GDT/multicore_gdt.cpp" -o "$BUILD_DIR/multicore_gdt.o" "${SUPER_INCLUDE[@]}"
+i686-elf-gcc "${CFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$MULTIBOOT/multiboot_module.c" -o "$BUILD_DIR/multiboot_modc.o"
 
 # Firmware
 i686-elf-gcc "${CPPFLAGS[@]}" -c "$ACPI/acpi.c" -o "$BUILD_DIR/acpi_c.o" "-I$STDLIB" "-I$STDIO"
