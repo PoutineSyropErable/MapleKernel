@@ -192,6 +192,8 @@ SECTIONS
     /* End of kernel */
     __kernel_end = .;
 
+	/* use two links for the 64 bit mode*/
+
 }
 
 

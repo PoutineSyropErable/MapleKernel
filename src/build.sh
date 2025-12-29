@@ -4,9 +4,9 @@ set -eou pipefail
 shopt -s nullglob
 
 # If you have qemu full
-QEMU_FULL=false
-MOV_WORKSPACE=21
-# In hyprland, move it there
+QEMU_FULL=true
+# CONTROL + ALT + G to get the mouse back (GTK), default on my machine
+# or CTRL+ALT (SDL)
 
 DEBUG_OR_RELEASE="${1:-release}"
 QEMU_OR_REAL_MACHINE="${2:-qemu}"
@@ -69,6 +69,11 @@ cd "$src" || { # Tries to cd to "src" relative to current dir
 #With this, it should work nice
 export PATH="./tools:$PATH"
 source ./tools/source_this.bash
+
+MOV_WORKSPACE=21 # In hyprland, move it there
+MOV_PID_DIR="$HOME/.local/bin"
+mkdir -p "$MOV_PID_DIR" && { [[ -f "$MOV_PID_DIR/move_pid_to_workspace" ]] || ln -s tools/move_pid_to_workspace.py "$MOV_PID_DIR/move_pid_to_workspace"; }
+# this script might not work on something else, heh, who cares. Make your own or move it yourself
 
 # Define directories
 BUILD_DIR="build"
@@ -420,6 +425,8 @@ objdump -D -h -M intel "$BUILD_DIR/apic.o" >"$BUILD_DIR/apic.dump"
 objdump -D -h -M intel "$BUILD_DIR/multicore_c.o" >"$BUILD_DIR/multicore_c.dump"
 objdump -D -h -M intel "$BUILD_DIR/special_pointers.o" >"$BUILD_DIR/special_pointers.dump"
 
+./build64.sh "$DEBUG_OR_RELEASE" "$QEMU_OR_REAL_MACHINE"
+
 # Check if the kernel is multiboot-compliant
 USE_MULTIBOOT1=false
 if [ "$USE_MULTIBOOT1" == true ]; then
@@ -567,6 +574,7 @@ else
 	QEMU_PID=$!
 	if [[ "$QEMU_FULL" == "true" ]]; then
 		if [[ "$MOVE_VNC" == "move" ]]; then
+			# this is a ~/.local/bin script
 			move_pid_to_workspace $QEMU_PID "$MOV_WORKSPACE"
 		fi
 
