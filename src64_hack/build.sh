@@ -23,12 +23,6 @@ nasm -f "elf$BIT" boot_intel.asm -o boot.o -g -F dwarf
 $GCC -nostdlib -T linker.ld boot.o kernel.o -o kernel.elf -lgcc
 objdump -M intel -D kernel.elf >kernel.dump
 
-# Make sure the ISO boot directory exists
-mkdir -p iso_root/boot
-
-# Copy the kernel into the ISO tree
-cp kernel.elf iso_root/boot/
-
 # Check Multiboot2 header
 if grub-file --is-x86-multiboot2 kernel.elf; then
 	echo "Multiboot2 confirmed"
@@ -37,11 +31,22 @@ else
 	exit 1
 fi
 
-# Add before grub-mkrescue
+# Make sure the ISO boot directory exists
+mkdir -p iso_root/boot/grub
 mkdir -p iso_root/EFI/BOOT
 
-# Copy UEFI GRUB binary (adjust paths for your system)
-# cp /usr/lib/grub/x86_64-efi/monolithic/grubx64.efi iso_root/EFI/BOOT/BOOTX64.EFI
+# Copy the kernel into the ISO tree
+cp kernel.elf iso_root/boot/
+
+# Build standalone GRUB
+grub-mkstandalone \
+	-O x86_64-efi \
+	--modules="part_gpt part_msdos linux normal configfile" \
+	--fonts="" \
+	--locales="" \
+	--themes="" \
+	-o iso_root/EFI/BOOT/BOOTX64.EFI \
+	"boot/grub/grub.cfg=./grub_standalone.cfg"
 
 # Create ISO using GRUB
 grub-mkrescue -o myos.iso iso_root/
@@ -59,16 +64,4 @@ qemu-system-x86_64 \
 
 QEMU_PID=$!
 
-# Wait a second for QEMU to start
-sleep 1
-
-# Launch VNC viewer (optional)
-vncviewer localhost:5900 &
-VNC_PID=$!
-move_pid_to_workspace $VNC_PID 21
-
-# Wait until VNC viewer exits
-wait $VNC_PID
-
-# Kill QEMU after closing VNC
-kill $QEMU_PID 2>/dev/null
+move_pid_to_workspace $QEMU_PID 21
