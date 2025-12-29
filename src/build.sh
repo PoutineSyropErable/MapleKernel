@@ -69,6 +69,11 @@ source ./tools/source_this.bash
 BUILD_DIR="build"
 ISO_DIR="isodir"
 
+GCC32=i686-elf-gcc
+GPP32=i686-elf-g++
+GCC64=x86_64-elf-gcc
+GPP64=x86_64-elf-g++
+
 CFLAGS=("-std=gnu23" "-ffreestanding" "-Wall" "-Wextra")
 CPPFLAGS=("-std=gnu++23" "-ffreestanding" "-Wall" "-Wextra" "-fno-threadsafe-statics" "-fno-rtti" "-fno-exceptions" "-fno-strict-aliasing")
 # Being generous with the cppflag
