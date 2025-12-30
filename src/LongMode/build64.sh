@@ -104,7 +104,7 @@ nasm "${NASM_FLAGS64[@]}" "$KERNEL64/kernel64_boot.asm" -o "$BUILD_DIR/kernel64_
 
 BUILD_OBJECTS=("$BUILD_DIR"/*.o)
 printf -- "\n\n====== Linking ========\n\n"
-$GPP64 -T "$KERNEL64/linker_64.ld" -o "$BUILD_DIR/kernel64.elf" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}" "${LIBRARY_ARGS[@]}"
+$GPP64 -T "linker_64.ld" -o "$BUILD_DIR/kernel64.elf" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}" "${LIBRARY_ARGS[@]}"
 
 printf -- "\n\n====== Copying ========\n\n"
 cp "$BUILD_DIR/kernel64.elf" "$ISO_DIR/boot/kernel64.elf"

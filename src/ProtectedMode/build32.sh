@@ -396,7 +396,7 @@ done
 # ============= Linking ==============
 printf "\n\n====== Start of Linking =====\n\n"
 # could also use g++. But as long as no runtime support, gcc will work
-$GPP32 -T linker.ld -o "$BUILD_DIR/kernel32.elf" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}" "${LIBRARY_ARGS[@]}"
+$GPP32 -T linker32.ld -o "$BUILD_DIR/kernel32.elf" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}" "${LIBRARY_ARGS[@]}"
 
 printf "\n\n====== End of Linking =====\n\n"
 

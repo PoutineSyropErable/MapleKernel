@@ -2291,5 +2291,23 @@
     "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/ProtectedMode/modules",
     "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/ProtectedMode/modules/Main.c",
     "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/ProtectedMode/modules/build/Main.o"
+  },
+  {
+    "arguments": [
+      "/home/francois/cross-gcc/install-x86_64-elf/bin/x86_64-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O3",
+      "-DQEMU",
+      "-c",
+      "-o",
+      "../../build64/kernel_64.o",
+      "./kernel64/kernel_64.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/LongMode",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/LongMode/kernel64/kernel_64.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/build64/kernel_64.o"
   }
 ]
