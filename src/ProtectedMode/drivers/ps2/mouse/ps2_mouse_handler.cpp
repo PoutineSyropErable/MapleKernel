@@ -1,3 +1,4 @@
+#include "apic/apic.hpp"
 #include "assert.h"
 #include "pic.h"
 #include "pic_public.h"
@@ -229,5 +230,6 @@ void mouse_handler(uint8_t scancode, uint8_t port_number)
 		packet_idx++;
 	}
 
-	PIC_sendEOI(mouse_irq);
+	// PIC_sendEOI(mouse_irq);
+	apic::send_eoi();
 }

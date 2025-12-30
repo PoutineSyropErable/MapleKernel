@@ -136,7 +136,11 @@ enum apic::error apic::init_lapic()
 	spivr.eoi_suppress = false;
 	lapic.spurious_interrupt_vector.write(spivr);
 
-	// lapic.lvt_lint0.write({.vector_number = 0, .mask = mask::disable});
+	uint8_t core_id = get_core_id_fast();
+	if (core_id != 0)
+	{
+		lapic.lvt_lint0.write({.vector_number = 0, .mask = mask::disable});
+	}
 	// lapic.lvt_lint1.write({.vector_number = 0, .mask = mask::enable});
 	return apic::error::none;
 }

@@ -143,7 +143,8 @@ void multicore_setup(void *rsdp_void)
 	// idt_finalize();
 	// quick_k_init();
 	// __sti();
-	disable_pic();
+	IRQ_set_mask(0);
+	// disable_pic();
 	kprintf("Enabled the idt\n");
 	/* =============== APIC TIMER CALIBRATION ================== */
 
@@ -256,9 +257,9 @@ int cpp_main(struct cpp_main_args args)
 
 		// kprintf("Master CPU, core_id = %u\n", core_id);
 		// kernel main loop
-		// cpp_event_loop();
+		cpp_event_loop();
 
-		// pit::wait(1.f / 60.f);
+		pit::wait(1.f / 60.f);
 	}
 	return 0;
 }
@@ -276,7 +277,8 @@ int cpp_event_loop(void)
 		framebuffer::g_framebuffer.set_pixel(old_x, old_y, old_color);
 	current_color = framebuffer::g_framebuffer.get_pixel(g_mouse_prop.x, g_mouse_prop.y);
 	// current_color.print();
-	framebuffer::g_framebuffer.set_pixel(g_mouse_prop.x, g_mouse_prop.y, framebuffer::Color(0xffffff));
+	framebuffer::g_framebuffer.set_pixel((uint16_t)g_mouse_prop.x, (uint16_t)g_mouse_prop.y, framebuffer::Color(0xffffff));
+	// framebuffer::g_framebuffer.draw_rectangle({(uint16_t)g_mouse_prop.x, (uint16_t)g_mouse_prop.y, 5, 5, framebuffer::Color(0xffffff)});
 
 	old_x	  = g_mouse_prop.x;
 	old_y	  = g_mouse_prop.y;
