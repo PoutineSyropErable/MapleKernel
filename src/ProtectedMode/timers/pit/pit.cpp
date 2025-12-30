@@ -185,7 +185,8 @@ int pit::wait(float seconds)
 		return 1;
 	}
 	pit_wait_split sp = compute_pit_wait(seconds, max_single_wait, MAX_FREQ_DIVIDER);
-	kprintf("Split result: full cycles: %u, reminder_pit_count : %u\n", sp.full_cycles, sp.reminder_pit_count);
+	// kprintf("Split result: full cycles: %u, reminder_pit_count : %u\n", sp.full_cycles, sp.reminder_pit_count);
+	// This is fine : ^
 
 	// check we are in single core mode?
 

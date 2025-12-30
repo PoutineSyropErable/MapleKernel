@@ -193,7 +193,7 @@ error send_init(uint8_t core_id)
 	return error::timeout_sending_ipi;
 
 wait:
-	// pit::wait(10.f / 1000.f);
+	pit::wait(10.f / 1000.f);
 
 	lapic.send_command(
 		{
@@ -300,7 +300,7 @@ enum error apic::wake_core(uint8_t core_id, void (*core_bootstrap)(), void (*cor
 
 	// Send Sipi
 	kprintf("Before wait\n");
-	// pit::wait(10.f / 1000.f);
+	pit::wait(10.f / 1000.f);
 	kprintf("After wait\n");
 	apic_err = send_sipi(core_id, core_bootstrap);
 	if ((uint8_t)apic_err)

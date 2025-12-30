@@ -65,6 +65,6 @@ extern "C" void pit_interrupt_handler()
 	// kprintf("C pit interrupt handler!\n");
 	pit_interrupt_handled = true;
 	apic::send_eoi();
-	kprintf("PIT Handler Receiving core: %u\n", apic::get_core_id_fast());
+	// kprintf("PIT Handler Receiving core: %u\n", apic::get_core_id_fast());
 	// PIC_sendEOI(PIT_IRQ);
 }
