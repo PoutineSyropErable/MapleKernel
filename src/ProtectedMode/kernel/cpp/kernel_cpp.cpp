@@ -178,10 +178,17 @@ void multicore_setup(void *rsdp_void)
 	__asm__ volatile("mov %%fs, %0" : "=r"(fs_value));
 	kprintf("fs = 0x%hx\n", fs_value);
 
-	kprintf("before\n");
-	uint16_t selector = 0x98; // Must be a valid GDT entry
-	__asm__ volatile("movw %0, %%gs" : : "r"(selector) : "memory");
-	kprintf("after\n");
+	for (uint16_t fs = 0x28; fs < 0x28 + (MAX_CORE_COUNT - 1) * 0x10; fs += 0x10)
+	{
+		kprintf("before Trying with fs : %h\n", fs);
+		__asm__ volatile("movw %0, %%fs" : : "r"(fs) : "memory");
+		uint16_t gs = fs + 0x08;
+		kprintf("before Trying with gs : %h\n", gs);
+		__asm__ volatile("movw %0, %%gs" : : "r"(gs) : "memory");
+		kprintf("after\n\n");
+	}
+
+	kprintf("Survived till the end\n");
 
 	for (uint8_t i = 0; i < runtime_core_count; i++)
 	{
