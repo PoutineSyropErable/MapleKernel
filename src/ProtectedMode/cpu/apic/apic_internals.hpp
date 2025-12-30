@@ -223,6 +223,57 @@ struct __attribute__((packed)) spurious_interrupt_vector_register
 };
 STATIC_ASSERT(sizeof(spurious_interrupt_vector_register) == 4, "SVR must be 32-bit");
 
+/* ========================== Local Vector Tables ============================= */
+
+namespace lvt_delivery_mode
+{
+enum type : uint8_t
+{
+	reserved = 0b000,
+	nmi		 = 0b100,
+};
+}
+
+namespace pin_polarity
+{
+enum type : bool
+{
+	active_high = 0b0,
+	active_low	= 0b1,
+};
+}
+
+namespace remote_interrupt_request
+{
+enum type : bool
+{
+	// TODO: Make sure of this
+	option0 = 0b0,
+	option1 = 0b1,
+};
+}
+
+namespace mask
+{
+enum type : bool
+{
+	enable	= 0b0,
+	disable = 0b1,
+};
+}
+struct local_vector_table_register
+{
+	uint8_t								vector_number;
+	lvt_delivery_mode::type				delivery_mode : 3 = lvt_delivery_mode::reserved; // reserved for timer
+	bool								res2 : 1;
+	enum pin_polarity::type				polarity : 1	 = pin_polarity::active_high;		  // reserved for timer
+	enum remote_interrupt_request::type remote_irr : 1	 = remote_interrupt_request::option0; // reserved for timer
+	enum trigger_mode::type				trigger_mode : 1 = trigger_mode::edge;				  // reserved for timer
+	enum mask::type						mask_if_set : 1	 = mask::enable;
+	uint16_t							res3 : 15;
+};
+
+STATIC_ASSERT(sizeof(local_vector_table_register) == 4, "LVT must be 32-bit");
 /* ============================= Constexpr helpers =============================*/
 
 template <typename ToType> constexpr volatile ToType *get_mmio_address(volatile void *base, lapic_registers_offset offset)
@@ -339,14 +390,23 @@ class LapicRegisters
 	// ------------------------------------------------------------------
 	// Timer and LVT entries
 	// ------------------------------------------------------------------
-	static constexpr std::mmio_ptr<uint32_t> lvt_timer{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_timer)};
+	static constexpr std::mmio_ptr<local_vector_table_register> lvt_timer{
+		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_timer)};
+
 	static constexpr std::mmio_ptr<uint32_t> lvt_thermal_sensor{
 		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_thermal_sensor)};
+
 	static constexpr std::mmio_ptr<uint32_t> lvt_performance_monitoring_counters{
 		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_performance_monitoring_counters)};
-	static constexpr std::mmio_ptr<uint32_t> lvt_lint0{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_lint0)};
-	static constexpr std::mmio_ptr<uint32_t> lvt_lint1{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_lint1)};
-	static constexpr std::mmio_ptr<uint32_t> lvt_error{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_error)};
+
+	static constexpr std::mmio_ptr<local_vector_table_register> lvt_lint0{
+		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_lint0)};
+
+	static constexpr std::mmio_ptr<local_vector_table_register> lvt_lint1{
+		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_lint1)};
+
+	static constexpr std::mmio_ptr<local_vector_table_register> lvt_error{
+		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_error)};
 
 	// ------------------------------------------------------------------
 	// Timer counters and configuration

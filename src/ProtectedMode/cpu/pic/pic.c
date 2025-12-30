@@ -104,10 +104,12 @@ void IRQ_clear_mask(uint8_t IRQline)
 	__outb(port, value);
 }
 
-void PIC_disable(void)
+void disable_pic(void)
 {
+	IRQ_set_mask(0);
 	__outb(PIC1_DATA, 0xff);
 	__outb(PIC2_DATA, 0xff);
+	io_wait();
 }
 
 /*

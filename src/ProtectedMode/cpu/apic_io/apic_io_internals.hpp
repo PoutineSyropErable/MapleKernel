@@ -21,12 +21,6 @@ enum class RegisterOffsets : uint32_t
 constexpr uintptr_t IOREGSEL = io_apic_address + 0x00;
 constexpr uintptr_t IOWIN	 = io_apic_address + 0x10;
 
-struct u64
-{
-	uint32_t low;
-	uint32_t high;
-};
-
 struct id
 {
 	uint32_t reserved : 24 = 0;
@@ -127,25 +121,22 @@ union destination
 };
 
 STATIC_ASSERT(sizeof(destination) == 1, "Must be 1 byte");
-struct redirection_entry_low
+struct __attribute__((aligned(4))) redirection_entry_low
 {
-
 	uint8_t								vector : 8;
 	enum delivery_mode::type			delivery_mode : 3			 = delivery_mode::fixed;
 	enum destination_mode::type			destination_mode : 1		 = destination_mode::physical;
-	enum delivery_status::type			delivery_status : 1			 = delivery_status::arrived_but_waiting;
+	enum delivery_status::type			delivery_status : 1			 = delivery_status::relaxed_or_already_processed;
 	enum pin_polarity::type				pin_polarity : 1			 = pin_polarity::active_high;
 	enum remote_interrupt_request::type remote_interrupt_request : 1 = remote_interrupt_request::option0;
 	enum trigger_mode::type				trigger_mode : 1			 = trigger_mode::edge;
-	enum mask::type						mask : 1					 = mask::disable;
-	uint8_t								reserved2 : 7				 = 0;
-	uint8_t								reserved3					 = 0;
+	enum mask::type						mask : 1					 = mask::enable;
+	uint16_t							reserved : 15				 = 0;
 };
 
 struct redirection_entry_high
 {
-	uint16_t		  r1 = 0;
-	uint8_t			  r2 = 0;
+	uint32_t		  reserved : 24 = 0; // Bits 0-23
 	union destination destination;
 };
 
@@ -160,7 +151,12 @@ STATIC_ASSERT(sizeof(arbitartion) == 4, "Arbitration Must be 32 bit");
 STATIC_ASSERT(sizeof(redirection_entry_low) == 4, "Red Low Must be 32 bit");
 STATIC_ASSERT(sizeof(redirection_entry_high) == 4, "Red Low Must be 32 bit");
 
-union io_window
+STATIC_ASSERT(alignof(version) == 4, "Must be 32 bit aligned");
+STATIC_ASSERT(alignof(arbitartion) == 4, "Must be 32 bit aligned");
+STATIC_ASSERT(alignof(redirection_entry_low) == 4, "Must be 32 bit aligned");
+STATIC_ASSERT(alignof(redirection_entry_high) == 4, "Must be 32 bit aligned");
+
+union io_window // io windows are used to read and write anyway. So all's good
 {
 	uint32_t					  raw = 0;
 	struct id					  id;
@@ -171,6 +167,7 @@ union io_window
 };
 
 STATIC_ASSERT(sizeof(io_window) == 4, "Must be 32 bit");
+STATIC_ASSERT(alignof(io_window) == 4, "Must be 32-bit aligned");
 
 class ApicIO
 
@@ -178,12 +175,6 @@ class ApicIO
   private:
 	static constexpr std::mmio_ptr_wo<RegisterOffsets> register_select{IOREGSEL};
 	static constexpr std::mmio_ptr<union io_window>	   io_window{IOWIN};
-
-	void	 write_single32(uint32_t index, uint32_t value);
-	uint32_t read_single32(uint32_t index);
-
-	void write_double32(uint32_t index, uint32_t value_low, uint32_t value_high);
-	u64	 read_double32(uint32_t index);
 
   public:
 	uint8_t				   get_apic_id_of_owner();

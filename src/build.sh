@@ -3,7 +3,7 @@
 set -eou pipefail
 
 # If you have qemu full
-QEMU_FULL=true
+QEMU_FULL=false
 # CONTROL + ALT + G to get the mouse back (GTK), default on my machine
 # or CTRL+ALT (SDL)
 
@@ -135,12 +135,18 @@ else
 		sleep 1 # Give it time to die
 	fi
 
+	QEMU_CPU_FLAG=()
 	CPU_MODEL=""
 	if [[ "$MACHINE_BITNESS" == "64" ]]; then
 		# CPU_MODEL="host"
 		CPU_MODEL="qemu64"
 	else
+		CPU_MODEL="host"
 		CPU_MODEL="qemu32"
+	fi
+
+	if [[ "$CPU_MODEL" == "host" ]]; then
+		QEMU_CPU_FLAG+=("--enable-kvm")
 	fi
 
 	# False for now, as I'm making an MMIO apic based driver
@@ -153,7 +159,7 @@ else
 
 	CPU_MODEL="${CPU_MODEL},+avx" # note: no spaces
 
-	QEMU_CPU_FLAG=("-cpu" "$CPU_MODEL")
+	QEMU_CPU_FLAG+=("-cpu" "$CPU_MODEL")
 
 	# Array of QEMU debug options
 	ENABLE_QEMU_DEBUG=true
@@ -181,6 +187,12 @@ else
 		"${QEMU_DBG_FLAGS[@]}" \
 		"${DEBUG_LOG_OPTS[@]}" \
 		-smp 4 \
+		-machine q35 \
+		-device intel-iommu \
+		-device virtio-mouse \
+		-device virtio-keyboard \
+		-global PIIX4_PM.disable_s3=1 \
+		-global PIIX4_PM.disable_s4=1 \
 		"${QEMU_CPU_FLAG[@]}" \
 		"${USE_VNC_FLAG[@]}" \
 		-serial stdio & # -enable-kvm \

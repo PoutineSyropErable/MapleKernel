@@ -92,13 +92,13 @@ void ApicIO::write_redirection(uint8_t irq, redirection_entry_low red_low, redir
 	HighAndLow hl = get_offsets(irq);
 
 	// I'm not sure of the proper write order
-	register_select.write(hl.low);
-	union io_window rl{.red_low = red_low};
-	io_window.write(rl);
-
 	register_select.write(hl.high);
 	union io_window rh{.red_high = red_high};
 	io_window.write(rh);
+
+	register_select.write(hl.low);
+	union io_window rl{.red_low = red_low};
+	io_window.write(rl);
 }
 void ApicIO::read_redirection_ws(uint8_t irq, redirection_entry_low &red_low, redirection_entry_high &red_high)
 {

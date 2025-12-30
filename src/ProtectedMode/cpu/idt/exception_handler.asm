@@ -36,8 +36,8 @@ isr_stub_%+%1:
 
 
 	; cli 
-	; hlt_loop_%1:
-	; jmp hlt_loop_%1
+	hlt_loop_%1:
+	jmp hlt_loop_%1
 
 	mov esp, ebp
 	pop ebp

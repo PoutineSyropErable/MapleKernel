@@ -65,39 +65,6 @@ void multicore_setup(void *rsdp_void)
 	kprintf("\n\n\n\n======================\n\n\n\n");
 	acpi::madt::print_parsed_madt(parsed_madt);
 
-	/* =============== IO APIC INIT ================== */
-	uint32_t apic_base = parsed_madt.io_apics[0]->global_system_interrupt_base;
-	kprintf("This apic io uses GSI : %u %u(Assuming 24 gsi)\n", apic_base, apic_base + 23);
-	assert(parsed_madt.entry_counts.io_apic == 1, "Only one io apic support\n");
-	uint8_t irq_to_gsi[apic_io::number_of_apic_io_irq];
-	for (uint8_t i = 0; i < apic_io::number_of_apic_io_irq; i++)
-	{
-		irq_to_gsi[i] = i;
-	}
-	for (uint8_t i = 0; i < parsed_madt.entry_counts.io_apic_isos; i++)
-	{
-		const struct acpi::madt::entry_io_apic_interrupt_source_override &ios = *parsed_madt.io_apic_isos[i];
-		[[gnu::unused]] uint8_t											  _	  = ios.bus_source; // not used
-		uint8_t															  gsi = ios.global_system_interrupt;
-		uint8_t															  irq = ios.irq_source;
-		irq_to_gsi[irq]														  = gsi;
-		assert(ios.bus_source == 0, "If not ISA (0), then issue?\n");
-
-		kprintf("Irq Source: %u -> GSI : %u\n", irq, gsi);
-	}
-	kprintf("\n");
-
-	// initiate the apic_io of this core.
-	apic_io::init_io_apic(irq_to_gsi);
-	kprintf("Initiated io apic\n");
-	disable_pic();
-	kprintf("Disabled the pic\n");
-
-	// Apic timers calibration using pit
-	apic::calibrate_lapic_timer();
-	kprintf("Calibrate lapic timer\n");
-	/* =============== IO APIC INIT END ================== */
-
 	uint32_t lapic_address_msr = apic::get_base_address();
 
 	// This reads the lapic address from the madt. Which is firmware. Technically, the gdt base address from msr is better.
@@ -131,6 +98,53 @@ void multicore_setup(void *rsdp_void)
 
 	// exit(0);
 
+	/* =============== IO APIC INIT ================== */
+	uint8_t io_apic_count = parsed_madt.entry_counts.io_apic;
+	kprintf("The number of io apic: %u\n", io_apic_count);
+
+	uint32_t io_apic_base = parsed_madt.io_apics[0]->global_system_interrupt_base;
+	uint32_t io_apic_len  = apic_io::get_max_redirection_entry_count();
+	kprintf("This apic io uses GSI : [%u %u]\n", io_apic_base, io_apic_base + io_apic_len);
+	assert(parsed_madt.entry_counts.io_apic == 1, "Only one io apic support\n");
+	uint8_t irq_to_gsi[apic_io::number_of_apic_io_irq];
+	for (uint8_t i = 0; i < apic_io::number_of_apic_io_irq; i++)
+	{
+		irq_to_gsi[i] = i;
+	}
+	for (uint8_t i = 0; i < parsed_madt.entry_counts.io_apic_isos; i++)
+	{
+		const struct acpi::madt::entry_io_apic_interrupt_source_override &ios = *parsed_madt.io_apic_isos[i];
+		[[gnu::unused]] uint8_t											  _	  = ios.bus_source; // not used
+		uint8_t															  gsi = ios.global_system_interrupt;
+		uint8_t															  irq = ios.irq_source;
+		irq_to_gsi[irq]														  = gsi;
+		assert(ios.bus_source == 0, "If not ISA (0), then issue?\n");
+
+		kprintf("Irq Source: %u -> GSI : %u\n", irq, gsi);
+	}
+	kprintf("\n");
+
+	// initiate the apic_io of this core.
+	__cli();
+	apic_io::init_io_apic(irq_to_gsi);
+	kprintf("Initiated io apic\n");
+	disable_pic();
+	kprintf("Disabled the pic\n");
+	__sti();
+	/* =============== APIC TIMER CALIBRATION ================== */
+
+	for (uint8_t i = 0; i < 100; i++)
+	{
+
+		pit::wait(1);
+		kprintf("waited %u seconds\n", i);
+	}
+
+	// Apic timers calibration using pit
+	apic::calibrate_lapic_timer();
+	kprintf("Calibrate lapic timer\n");
+
+	/* =============== WAKING THE CORES ================== */
 	kprintf("\n\n");
 	bool *core_is_active = (bool *)alloca(sizeof(bool) * runtime_core_count);
 	// bool core_is_active[MAX_CORE_COUNT] = {0};
@@ -167,7 +181,7 @@ void multicore_setup(void *rsdp_void)
 		{
 			core_is_active[core_id] = true;
 			// apic::send_ipi(core_id, INTERRUPT_ENTERED_MAIN);
-			// apic::wait_till_interrupt(INTERRUPT_ENTERED_MAIN);
+			apic::wait_till_interrupt(INTERRUPT_ENTERED_MAIN);
 			kprintf("core %u entered it's main function\n", core_id);
 			// Wait till interrupt is not really usefull, since there's already polling for starting.
 			// But i guess it's a nice way to make sure it entered it's main.

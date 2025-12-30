@@ -135,6 +135,8 @@ enum apic::error apic::init_lapic()
 	spivr.apic_enable  = true;
 	spivr.eoi_suppress = false;
 	gp_lapic_register.spurious_interrupt_vector.write(spivr);
+
+	// gp_lapic_register.lvt_lint0.write();
 	return apic::error::none;
 }
 
