@@ -59,9 +59,7 @@ core_bootstrap32:
 	mov fs, bx ; set fs
 	add ecx, 1 ; gdt idx of gs
 	shl ecx, 3 ; gs value
-	; mov dx, 0x98
-	; mov gs, dx
-	; mov gs, cx ; // =================== CRASH HERE IF GS to big
+	mov gs, cx ; // =================== CRASH HERE IF GS to big
 	; TODO: CRASH. Triple Fault. GS. 
 	; gs. gs crash. gs fault. gs triple fault. gs tripple fault
 
