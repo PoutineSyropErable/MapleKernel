@@ -9,8 +9,16 @@ void   init_io_apic()
 {
 	uint8_t cur_owner = apic_io.get_apic_id_of_owner();
 	kprintf("The current ownser is %u\n", cur_owner);
+#define BSP_APIC_ID 0
+	if (cur_owner != BSP_APIC_ID)
+	{
+		apic_io.set_apic_id_of_owner(0);
+	}
 
-	exit(0);
+	version v					  = apic_io.get_version_and_max_red();
+	uint8_t version				  = v.version;
+	uint8_t max_redirection_entry = v.max_redirection_entry;
+	kprintf("Version = %u, Max Redirection Entry = %u\n", version, max_redirection_entry);
 }
 
 uint8_t ApicIO::get_apic_id_of_owner()
@@ -22,14 +30,16 @@ uint8_t ApicIO::get_apic_id_of_owner()
 
 void ApicIO::set_apic_id_of_owner(uint8_t apic_id_of_owner)
 {
+	// I checked code and it's good
 #ifdef DEBUG
 	assert(apic_id_of_owner < 0b1111, "Can't set a apic id too big. Max 15\n");
 #endif
 	register_select.write(RegisterOffsets::id);
 
 	id				owner_id{.apic_id = apic_id_of_owner};
-	union io_window owner_id_u;
+	union io_window owner_id_u{.id = owner_id};
 	io_window.write(owner_id_u);
+	// Mmio write to a union could be bad
 }
 
 version ApicIO::get_version_and_max_red()
@@ -72,22 +82,18 @@ void ApicIO::write_redirection(uint8_t irq, redirection_entry_low red_low, redir
 	union io_window rh{.red_high = red_high};
 	io_window.write(rh);
 }
-full_redirection_entry ApicIO::read_redirection(uint8_t irq)
+void ApicIO::read_redirection(uint8_t irq, redirection_entry_low &red_low, redirection_entry_high &red_high)
 {
 
 	HighAndLow hl = get_offsets(irq);
 
-	full_redirection_entry ret;
-
 	register_select.write(hl.low);
 	union io_window low_u = io_window.read();
-	ret.red_low			  = low_u.red_low;
+	red_low				  = low_u.red_low;
 
 	register_select.write(hl.high);
 	union io_window high_u = io_window.read();
-	ret.red_high		   = high_u.red_high;
-
-	return ret;
+	red_high			   = high_u.red_high;
 }
 
 } // namespace apic_io

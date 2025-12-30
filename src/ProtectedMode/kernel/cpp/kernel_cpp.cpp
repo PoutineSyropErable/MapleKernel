@@ -133,6 +133,8 @@ void multicore_setup(void *rsdp_void)
 	apic_io::init_io_apic();
 	kprintf("Initiated io apic\n");
 
+	exit(0);
+
 	// Apic timers calibration using pit
 	apic::calibrate_lapic_timer();
 	kprintf("Calibrate lapic timer\n");
