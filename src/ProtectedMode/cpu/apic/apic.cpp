@@ -142,6 +142,7 @@ enum apic::error apic::init_lapic()
 		lapic.lvt_lint0.write({.vector_number = 0, .mask = mask::disable});
 	}
 	// lapic.lvt_lint1.write({.vector_number = 0, .mask = mask::enable});
+	// lint1 is for nmi, and i don't have any of them for now so, All is good
 	return apic::error::none;
 }
 
