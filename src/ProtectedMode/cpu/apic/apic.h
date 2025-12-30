@@ -11,6 +11,7 @@ extern "C"
 	// Stuff here
 
 	uint8_t apic_get_core_id();
+	void	apic_send_eoi();
 
 #ifdef __cplusplus
 }

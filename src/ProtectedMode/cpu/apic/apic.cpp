@@ -159,6 +159,11 @@ void apic::send_eoi()
 	lapic.send_eoi();
 }
 
+extern "C" void apic_send_eoi()
+{
+	lapic.send_eoi();
+}
+
 uint8_t apic::get_core_id_fast()
 {
 	// requires it to have been set once by using the slower method

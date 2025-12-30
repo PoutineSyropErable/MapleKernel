@@ -1,3 +1,4 @@
+#include "apic.h"
 #include "assert.h"
 #include "keycodes.h"
 #include "more_types.h"
@@ -21,6 +22,12 @@ void parse_pause_pressed();
 void keyboard_handler_scs1(uint8_t scancode, uint8_t port_number);
 void keyboard_handler_scs2(uint8_t scancode, uint8_t port_number);
 void keyboard_handler_scs3(uint8_t scancode, uint8_t port_number);
+
+static inline void send_eoi([[gnu::unused]] uint8_t irq)
+{
+	apic_send_eoi();
+	// PIC_sendEOI(irq);
+}
 
 kcb_led_state_t led_keys;
 /* ========================================================Setup the handling of special keys
@@ -153,7 +160,7 @@ void keyboard_handler_scs1(uint8_t scancode, uint8_t port_number)
 	if (extended_signal && !four_long_sequence[port_number] && !six_long_sequence[port_number])
 	{
 		previous_extended_signal[port_number] = extended_signal;
-		PIC_sendEOI(keyboard_irq);
+		send_eoi(keyboard_irq);
 		return;
 	}
 
@@ -172,7 +179,7 @@ void keyboard_handler_scs1(uint8_t scancode, uint8_t port_number)
 			current_sequence_length[port_number]  = 2;
 			previous_extended_signal[port_number] = false;
 			// kprintf("Start of 4 long sequence\n");
-			PIC_sendEOI(keyboard_irq);
+			send_eoi(keyboard_irq);
 			return;
 		}
 	}
@@ -191,11 +198,11 @@ void keyboard_handler_scs1(uint8_t scancode, uint8_t port_number)
 				current_sequence_length[port_number] = 0;
 				four_long_sequence[port_number]		 = false;
 				parse_print_screen(true);
-				PIC_sendEOI(keyboard_irq);
+				send_eoi(keyboard_irq);
 				return;
 			}
 			current_sequence_length[port_number]++;
-			PIC_sendEOI(keyboard_irq);
+			send_eoi(keyboard_irq);
 			return;
 		}
 		else if (scancode == print_screen_released_sequence[i])
@@ -205,18 +212,18 @@ void keyboard_handler_scs1(uint8_t scancode, uint8_t port_number)
 				current_sequence_length[port_number] = 0;
 				four_long_sequence[port_number]		 = false;
 				parse_print_screen(false);
-				PIC_sendEOI(keyboard_irq);
+				send_eoi(keyboard_irq);
 				return;
 			}
 			current_sequence_length[port_number]++;
-			PIC_sendEOI(keyboard_irq);
+			send_eoi(keyboard_irq);
 			return;
 		}
 		else
 		{
 			current_sequence_length[port_number] = 0;
 			four_long_sequence[port_number]		 = 0;
-			PIC_sendEOI(keyboard_irq);
+			send_eoi(keyboard_irq);
 			return;
 		}
 	}
@@ -229,7 +236,7 @@ void keyboard_handler_scs1(uint8_t scancode, uint8_t port_number)
 		six_long_sequence[port_number] = true;
 		current_sequence_length[port_number]++;
 		previous_extended_signal[port_number] = false;
-		PIC_sendEOI(keyboard_irq);
+		send_eoi(keyboard_irq);
 		return;
 	}
 
@@ -243,12 +250,12 @@ void keyboard_handler_scs1(uint8_t scancode, uint8_t port_number)
 			{
 				current_sequence_length[port_number] = 0;
 				parse_pause_pressed();
-				PIC_sendEOI(keyboard_irq);
+				send_eoi(keyboard_irq);
 				return;
 			}
 
 			current_sequence_length[port_number]++;
-			PIC_sendEOI(keyboard_irq);
+			send_eoi(keyboard_irq);
 			return;
 		}
 	}
@@ -265,7 +272,7 @@ void keyboard_handler_scs1(uint8_t scancode, uint8_t port_number)
 		}
 		parse_extended_scan_code(scancode, press_not_release);
 		previous_extended_signal[port_number] = extended_signal;
-		PIC_sendEOI(keyboard_irq);
+		send_eoi(keyboard_irq);
 		return;
 	}
 	else
@@ -277,7 +284,7 @@ void keyboard_handler_scs1(uint8_t scancode, uint8_t port_number)
 		}
 		parse_scan_code(scancode, press_not_release);
 		previous_extended_signal[port_number] = extended_signal;
-		PIC_sendEOI(keyboard_irq);
+		send_eoi(keyboard_irq);
 		return;
 	}
 	// ==================== End of length 2 sequence dealing ===================

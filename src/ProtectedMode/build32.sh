@@ -242,8 +242,9 @@ PS2_INCLUDE_DIRS=(
 	"$PS2_KEYBOARD"
 	"$PS2_KEYBOARD_CPP"
 	"$PS2_MOUSE"
-	"$PIC"
 	"$CPU"
+	"$PIC"
+	"$APIC"
 )
 
 # Build SUPER_INCLUDE as an array of -I arguments
