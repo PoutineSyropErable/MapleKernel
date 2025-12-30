@@ -215,9 +215,10 @@ void multicore_setup(void *rsdp_void)
 			while (!multicore::entered_main[core_id])
 			{
 			}
+			multicore::acknowledged_entered_main[core_id] = true;
 
 			// apic::wait_till_interrupt(INTERRUPT_ENTERED_MAIN);
-			kprintf("core %u entered it's main function\n", core_id);
+			kprintf("BSP Acknowledges Core %u entered it's main function\n", core_id);
 			// Wait till interrupt is not really usefull, since there's already polling for starting.
 			// But i guess it's a nice way to make sure it entered it's main.
 		}
@@ -231,7 +232,7 @@ void multicore_setup(void *rsdp_void)
 		kprintf("i: %u, core_id: %u, active: %b\n", i, core_id, core_is_active[core_id]);
 		assert(core_is_active[core_id], "i: %u, Core %u must be active. All or nothing for now\n", i, core_id);
 	}
-	kprintf("Activated all cores\n");
+	kprintf("\nActivated all cores\n");
 
 	// Disabling the pic will be done rather late
 }

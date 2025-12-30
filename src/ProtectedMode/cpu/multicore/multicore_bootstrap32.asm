@@ -10,9 +10,9 @@ extern __new_gdt_start
 extern __new_gdt_end
 
 
-%define MAX_CPU_COUNT 12
+%include "core_count_read_only.inc"
 %define STACK_SIZE 16384 ; 16kb
-%assign MULTISTACK_SIZE STACK_SIZE * MAX_CPU_COUNT
+%assign MULTISTACK_SIZE STACK_SIZE * MAX_CORE_COUNT
 
 section .bss.multicore_bootstrap32
     align 16

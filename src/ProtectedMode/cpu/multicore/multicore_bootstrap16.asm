@@ -9,8 +9,7 @@ extern __new_gdt_start
 extern __new_gdt_end
 
 
-%define MAX_CPU_COUNT 12 ; This must be > (Actual cpu count, so off by 1 error)
-%define NEW_GDT_LIMIT (4 + 2*MAX_CPU_COUNT) - 1
+%include "core_count_read_only.inc"
 
 section .bss.multicore_bootstrap16
 gdt_descriptor:
@@ -28,11 +27,10 @@ core_bootstrap:
 	mov [gdt_descriptor+2], bx
 
 
-	mov ax, MAX_CPU_COUNT 
-	sub ax, 1
+	mov ax, MAX_CORE_COUNT 
 	imul ax, 2
-	add ax, 3
-	imul ax, 8 ; (4 + 2*MAX_CPU_COUNT) - 1
+	add ax, 4
+	imul ax, 8 ; (4 + 2*MAX_CORE_COUNT)
 	; mov ax, NEW_GDT_LIMIT 
 	mov [gdt_descriptor], ax  ; limit
 	lgdt [gdt_descriptor]

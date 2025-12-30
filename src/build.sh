@@ -189,6 +189,9 @@ else
 		-smp 12 \
 		"${QEMU_CPU_FLAG[@]}" \
 		"${USE_VNC_FLAG[@]}" \
+		-device i8042,bus=isa.0 \
+		-device isa-keyboard \
+		-device isa-mouse \
 		-serial stdio &
 	# -enable-kvm \
 	# -vga vmware \

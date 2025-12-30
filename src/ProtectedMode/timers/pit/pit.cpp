@@ -233,7 +233,8 @@ int pit::short_timeout(float seconds, volatile uint32_t *finished, bool new_time
 		pit_write_index += 1;
 	}
 
-	IRQ_clear_mask(PIT_IRQ);
+	// IRQ_clear_mask(PIT_IRQ);
+	// ^ This is for pit
 	uint32_t pit_freq_divider = sp.reminder_pit_count;
 	send_wait_count_command(pit_freq_divider);
 

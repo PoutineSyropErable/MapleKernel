@@ -16,7 +16,7 @@ using namespace multicore_gdt;
 
 extern "C"
 {
-	__attribute__((section(".bss.multicore_gdt16"))) GDT_ENTRY new_gdt[4 + 2 * (MAX_CORE_COUNT - 1)];
+	__attribute__((section(".bss.multicore_gdt16"))) GDT_ENTRY new_gdt[NEW_GDT_ENTRY_COUNT];
 }
 
 struct FS_GS all_fs_and_gs[MAX_CORE_COUNT];

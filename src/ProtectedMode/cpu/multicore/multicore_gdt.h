@@ -7,7 +7,7 @@
 extern "C"
 {
 #endif
-	__attribute__((aligned(8), section(".bss.multicore_gdt16"))) extern GDT_ENTRY new_gdt[4 + 2 * (MAX_CORE_COUNT - 1)];
+	__attribute__((aligned(8), section(".bss.multicore_gdt16"))) extern GDT_ENTRY new_gdt[NEW_GDT_ENTRY_COUNT];
 
 #ifdef __cplusplus
 }

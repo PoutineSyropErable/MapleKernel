@@ -306,8 +306,9 @@ printf -- "\n\n\n======================== APIC ==============\n\n\n"
 $GPP32 "${CPPFLAGS[@]}" -c "$APIC/apic.cpp" -o "$BUILD_DIR/apic.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$CPUID" "-I$MULTICORE" "-I$CPU" "-I$PIT" "-I$GDT" "-I$APIC_IO"
 $GPP32 "${CPPFLAGS[@]}" -c "$APIC_IO/apic_io.cpp" -o "$BUILD_DIR/apic_io.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$CPUID" "-I$MULTICORE" "-I$CPU" "-I$GDT"
 $GPP32 "${CPPFLAGS[@]}" -c "$MULTICORE/multicore.cpp" -o "$BUILD_DIR/multicore.o" "-I$STDLIB" "-I$STDIO" "-I$APIC" "-I$CPUID" "-I$MULTICORE" "-I$CPU" "-I$GDT" "-I$FRAMEBUFER"
-nasm "${NASM_FLAGS16[@]}" "$MULTICORE/multicore_bootstrap16.asm" -o "$BUILD_DIR/multicore_bootstrap16.o"
-nasm "${NASM_FLAGS32[@]}" "$MULTICORE/multicore_bootstrap32.asm" -o "$BUILD_DIR/multicore_bootstrap32.o"
+sed 's/^#/%/' "$MULTICORE/core_count.h" >"$MULTICORE/core_count_read_only.inc"
+nasm "${NASM_FLAGS16[@]}" "$MULTICORE/multicore_bootstrap16.asm" -o "$BUILD_DIR/multicore_bootstrap16.o" "-I$MULTICORE"
+nasm "${NASM_FLAGS32[@]}" "$MULTICORE/multicore_bootstrap32.asm" -o "$BUILD_DIR/multicore_bootstrap32.o" "-I$MULTICORE"
 
 $GCC32 "${CFLAGS[@]}" -c "$MULTICORE/multicore.c" -o "$BUILD_DIR/multicore_c.o" "-I$STDLIB" "-I$APIC" "-I$MULTICORE" "-I$CPU"
 # =============== Compile Drivers ==============

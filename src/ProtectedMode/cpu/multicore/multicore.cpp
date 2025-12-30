@@ -22,14 +22,11 @@ extern "C" void application_core_main()
 	__asm__ volatile("mov %%fs, %0" : "=r"(fs_value));
 	kprintf("Core %u has  fs = 0x%hx\n", core_id_f, fs_value);
 
-	// apic::wait_till_interrupt(INTERRUPT_ENTERED_MAIN);
-	// kprintf("Recieved message from 0");
-
 	multicore::entered_main[core_id_f] = true;
 
-	// while (!multicore::acknowledged_entered_main[core_id_f])
-	// {
-	// }
+	while (!multicore::acknowledged_entered_main[core_id_f])
+	{
+	}
 
 	apic::error err = apic::error::none;
 	// err = apic::send_ipi(0, INTERRUPT_ENTERED_MAIN);
@@ -43,8 +40,9 @@ extern "C" void application_core_main()
 			.color											   = framebuffer::Color(core_id * 0x11)});
 	}
 
-	kprintf("Core %u Sent the INTERRUPT_ENTERED_MAIN to core 0\n", core_id_f);
 	// __sti();
+	// This core must load the idt too. And do sti, so it can recieve
+	kprintf("Core %u Entering main loop\n", core_id_f);
 	while (true)
 	{
 		// kprintf("Slave CPU,  core %u\n", core_id_f);
@@ -52,9 +50,4 @@ extern "C" void application_core_main()
 		// Read from it's queue.
 		// handle the message from the queue
 	}
-}
-
-namespace multicore
-{
-
 }
