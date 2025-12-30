@@ -334,8 +334,8 @@ $GCC32 "${CFLAGS[@]}" -c "$OTHER/virtual_memory.c" -o "$BUILD_DIR/virtual_memory
 # Timers
 $GPP32 "${CPPFLAGS[@]}" -c "$PIT/pit.cpp" -o "$BUILD_DIR/pit.o" "-I$STDLIB" "-I$STDIO" "-I$PIC" "-I$CPU"
 $GCC32 "${CFLAGS[@]}" -c "$PIT/idt_pit.c" -o "$BUILD_DIR/idt_pit.o" "-I$STDLIB" "-I$STDIO" "-I$PIC" "-I$CPU" "-I$IDT" "-I$GDT"
-$GPP32 "${CPPFLAGS[@]}" -c "$PIT/pit_interrupt_handler.cpp" -o "$BUILD_DIR/pit_interrupt_handler.o" "-I$STDLIB" "-I$STDIO" "-I$PIC" "-I$CPU"
-nasm "${NASM_FLAGS32[@]}" "$PIT/pit_interrupt_handler.asm" -o "$BUILD_DIR/pit_interrupt_handler_asm.o" "-I$STDLIB" "-I$STDIO" "-I$PIC" "-I$CPU"
+$GPP32 "${CPPFLAGS[@]}" -c "$PIT/pit_interrupt_handler.cpp" -o "$BUILD_DIR/pit_interrupt_handler.o" "-I$STDLIB" "-I$STDIO" "-I$PIC" "-I$CPU" "-I$APIC"
+nasm "${NASM_FLAGS32[@]}" "$PIT/pit_interrupt_handler.asm" -o "$BUILD_DIR/pit_interrupt_handler_asm.o"
 
 $GPP32 "${CPPFLAGS[@]}" "${SUPER_INCLUDE[@]}" -c "$FRAMEBUFER/framebuffer.cpp" -o "$BUILD_DIR/framebuffer.o"
 

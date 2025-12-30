@@ -39,6 +39,13 @@ void print_test()
 uint8_t			runtime_core_count;
 extern "C" void multicore_setup(void *rsdp_void);
 
+extern "C" void idt_init();
+extern "C" void idt_init_pit();
+extern "C" void idt_init_ps2_quick();
+extern "C" void idt_finalize();
+
+extern "C" void quick_k_init();
+
 void multicore_setup(void *rsdp_void)
 {
 
@@ -131,6 +138,11 @@ void multicore_setup(void *rsdp_void)
 	disable_pic();
 	kprintf("Disabled the pic\n");
 	__sti();
+	idt_init();
+	idt_init_pit();
+	idt_init_ps2_quick();
+	idt_finalize();
+	quick_k_init();
 	/* =============== APIC TIMER CALIBRATION ================== */
 
 	for (uint8_t i = 0; i < 100; i++)

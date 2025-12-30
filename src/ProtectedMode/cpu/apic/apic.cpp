@@ -22,7 +22,7 @@ volatile bool	 master_tells_core_to_start[MAX_CORE_COUNT]; // [i = reciever][ j 
 void (*volatile core_mains[8])();
 
 // Private (To this file) and global
-static LapicRegisters gp_lapic_register;
+static LapicRegisters lapic;
 
 // __attribute__((fastcall)) void apic::LapicRegisters::send_command(interrupt_command_low_register low, interrupt_command_high_register
 // high)
@@ -34,7 +34,7 @@ static LapicRegisters gp_lapic_register;
 
 extern "C" uint8_t test_cmd()
 {
-	gp_lapic_register.send_command(
+	lapic.send_command(
 		{
 			.vector_number	  = 0,
 			.delivery_mode	  = delivery_mode::init,
@@ -126,7 +126,7 @@ enum apic::error apic::init_apic()
 enum apic::error apic::init_lapic()
 {
 
-	apic::spurious_interrupt_vector_register spivr					= gp_lapic_register.spurious_interrupt_vector.read();
+	apic::spurious_interrupt_vector_register spivr					= lapic.spurious_interrupt_vector.read();
 	constexpr uint8_t						 number_of_reserved_int = 32;
 	constexpr uint8_t						 vector_when_error		= (number_of_reserved_int + apic_io::number_of_apic_io_irq);
 	spivr.vector = vector_when_error; // Write interrupt handler 56 to handle spurious interrupts
@@ -134,9 +134,10 @@ enum apic::error apic::init_lapic()
 	// aka, an ignored interrupt. Then the spurious is called
 	spivr.apic_enable  = true;
 	spivr.eoi_suppress = false;
-	gp_lapic_register.spurious_interrupt_vector.write(spivr);
+	lapic.spurious_interrupt_vector.write(spivr);
 
-	// gp_lapic_register.lvt_lint0.write();
+	// lapic.lvt_lint0.write({.vector_number = 0, .mask = mask::disable});
+	// lapic.lvt_lint1.write({.vector_number = 0, .mask = mask::enable});
 	return apic::error::none;
 }
 
@@ -146,7 +147,12 @@ void apic::calibrate_lapic_timer()
 
 uint8_t apic::get_core_id()
 {
-	return gp_lapic_register.lapic_id.read().apic_id;
+	return lapic.lapic_id.read().apic_id;
+}
+
+void apic::send_eoi()
+{
+	lapic.send_eoi();
 }
 
 uint8_t apic::get_core_id_fast()
@@ -167,7 +173,7 @@ extern "C" uint8_t apic_get_core_id()
 error send_init(uint8_t core_id)
 {
 	assert(core_id <= 0b1111, "Won't fit\n");
-	gp_lapic_register.send_command(
+	lapic.send_command(
 		{
 			.vector_number	  = 0,
 			.delivery_mode	  = delivery_mode::init,
@@ -178,7 +184,7 @@ error send_init(uint8_t core_id)
 
 	for (uint32_t i = 0; i < TIMEOUT_IPI_PENDING; i++)
 	{
-		bool recieved_pending = gp_lapic_register.command_low.read().delivery_status_pending_ro;
+		bool recieved_pending = lapic.command_low.read().delivery_status_pending_ro;
 		if (!recieved_pending)
 		{
 			goto wait;
@@ -189,7 +195,7 @@ error send_init(uint8_t core_id)
 wait:
 	// pit::wait(10.f / 1000.f);
 
-	gp_lapic_register.send_command(
+	lapic.send_command(
 		{
 			.vector_number	  = 0,
 			.delivery_mode	  = delivery_mode::init,
@@ -202,7 +208,7 @@ wait:
 
 	for (uint32_t i = 0; i < TIMEOUT_IPI_PENDING; i++)
 	{
-		bool recieved_pending = gp_lapic_register.command_low.read().delivery_status_pending_ro;
+		bool recieved_pending = lapic.command_low.read().delivery_status_pending_ro;
 		if (!recieved_pending)
 		{
 			return error::none;
@@ -221,7 +227,7 @@ error send_sipi(uint8_t core_id, void (*core_bootstrap)())
 	assert(cb < 0xFF * 0x1000, "Start address must be a 16bit address");
 	assert((cb & 0xFFF) == 0, "SIPI start address must be 4 KB aligned");
 
-	gp_lapic_register.send_command(
+	lapic.send_command(
 		{
 			.vector_number	  = static_cast<uint8_t>(cb / 0x1000),
 			.delivery_mode	  = delivery_mode::start_up,
@@ -232,7 +238,7 @@ error send_sipi(uint8_t core_id, void (*core_bootstrap)())
 
 	for (uint32_t i = 0; i < TIMEOUT_IPI_PENDING; i++)
 	{
-		bool recieved_pending = gp_lapic_register.command_low.read().delivery_status_pending_ro;
+		bool recieved_pending = lapic.command_low.read().delivery_status_pending_ro;
 		if (!recieved_pending)
 		{
 			return error::none;
@@ -254,7 +260,7 @@ enum error apic::send_ipi(uint8_t core_id, uint8_t int_vector)
 	// without this print, it fucks
 	// TODO: Fix the weird deadlocks
 
-	gp_lapic_register.send_command(
+	lapic.send_command(
 		{
 			.vector_number = int_vector,
 			// The rest default
@@ -263,7 +269,7 @@ enum error apic::send_ipi(uint8_t core_id, uint8_t int_vector)
 
 	for (uint32_t i = 0; i < TIMEOUT_IPI_PENDING; i++)
 	{
-		bool recieved_pending = gp_lapic_register.command_low.read().delivery_status_pending_ro;
+		bool recieved_pending = lapic.command_low.read().delivery_status_pending_ro;
 		if (!recieved_pending)
 		{
 			return error::none;

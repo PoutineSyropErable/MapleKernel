@@ -234,7 +234,7 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 	kprintf("Kernel ends at : %f MB\n", ((float)(uintptr_t)&__kernel_end) / (1024.f * 1024.f));
 
 	// setup_interrupts_and_ps2(); // needed to have a working wait
-	// setup_keyboard();			// crash here
+	// setup_keyboard();
 
 	// wait_test();
 

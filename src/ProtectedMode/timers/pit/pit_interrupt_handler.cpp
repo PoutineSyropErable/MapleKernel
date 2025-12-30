@@ -1,4 +1,5 @@
 // pit_interrupt_handler.c
+#include "apic.hpp"
 #include "irq.h"
 #include "pic_public.h"
 #include "pit.h"
@@ -63,5 +64,6 @@ extern "C" void pit_interrupt_handler()
 
 	// kprintf("C pit interrupt handler!\n");
 	pit_interrupt_handled = true;
-	PIC_sendEOI(PIT_IRQ);
+	apic::send_eoi();
+	// PIC_sendEOI(PIT_IRQ);
 }

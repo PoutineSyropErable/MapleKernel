@@ -47,5 +47,6 @@ void calibrate_lapic_timer();
 enum apic::error wake_core(uint8_t core_id, void (*core_bootstrap)(), void (*core_main)());
 void			 wait_till_interrupt(uint8_t interrupt_number);
 enum apic::error send_ipi(uint8_t core_id, uint8_t int_vector);
+void			 send_eoi();
 
 } // namespace apic

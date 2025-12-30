@@ -265,12 +265,12 @@ struct local_vector_table_register
 {
 	uint8_t								vector_number;
 	lvt_delivery_mode::type				delivery_mode : 3 = lvt_delivery_mode::reserved; // reserved for timer
-	bool								res2 : 1;
-	enum pin_polarity::type				polarity : 1	 = pin_polarity::active_high;		  // reserved for timer
-	enum remote_interrupt_request::type remote_irr : 1	 = remote_interrupt_request::option0; // reserved for timer
-	enum trigger_mode::type				trigger_mode : 1 = trigger_mode::edge;				  // reserved for timer
-	enum mask::type						mask_if_set : 1	 = mask::enable;
-	uint16_t							res3 : 15;
+	bool								res2 : 1		  = 0;
+	enum pin_polarity::type				polarity : 1	  = pin_polarity::active_high;		   // reserved for timer
+	enum remote_interrupt_request::type remote_irr : 1	  = remote_interrupt_request::option0; // reserved for timer
+	enum trigger_mode::type				trigger_mode : 1  = trigger_mode::edge;				   // reserved for timer
+	enum mask::type						mask : 1		  = mask::enable;
+	uint16_t							res3 : 15		  = 0;
 };
 
 STATIC_ASSERT(sizeof(local_vector_table_register) == 4, "LVT must be 32-bit");
