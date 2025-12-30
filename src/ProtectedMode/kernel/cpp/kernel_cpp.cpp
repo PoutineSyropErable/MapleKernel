@@ -42,6 +42,7 @@ extern "C" void multicore_setup(void *rsdp_void);
 void multicore_setup(void *rsdp_void)
 {
 
+	/* ======================= PARSE FIRMWARE ACPI TABLE ====================== */
 	struct apic::apic_support apic_support = apic::has_apic();
 	kprintf("Support:\n  Apic: %b\n  x2Apic: %b\n\n\n", apic_support.apic, apic_support.x2apic);
 
@@ -64,12 +65,14 @@ void multicore_setup(void *rsdp_void)
 	kprintf("\n\n\n\n======================\n\n\n\n");
 	acpi::madt::print_parsed_madt(parsed_madt);
 
+	/* =============== IO APIC INIT ================== */
 	uint32_t apic_base = parsed_madt.io_apics[0]->global_system_interrupt_base;
+	kprintf("This apic io uses GSI : %u %u(Assuming 24 gsi)\n", apic_base, apic_base + 23);
 	assert(parsed_madt.entry_counts.io_apic == 1, "Only one io apic support\n");
 	uint8_t irq_to_gsi[apic_io::number_of_apic_io_irq];
 	for (uint8_t i = 0; i < apic_io::number_of_apic_io_irq; i++)
 	{
-		irq_to_gsi[i] = apic_base + i;
+		irq_to_gsi[i] = i;
 	}
 	for (uint8_t i = 0; i < parsed_madt.entry_counts.io_apic_isos; i++)
 	{
@@ -80,9 +83,20 @@ void multicore_setup(void *rsdp_void)
 		irq_to_gsi[irq]														  = gsi;
 		assert(ios.bus_source == 0, "If not ISA (0), then issue?\n");
 
-		kprintf("Irq Source: %u, GSI : %u\n", irq, gsi);
+		kprintf("Irq Source: %u -> GSI : %u\n", irq, gsi);
 	}
 	kprintf("\n");
+
+	// initiate the apic_io of this core.
+	apic_io::init_io_apic(irq_to_gsi);
+	kprintf("Initiated io apic\n");
+	disable_pic();
+	kprintf("Disabled the pic\n");
+
+	// Apic timers calibration using pit
+	apic::calibrate_lapic_timer();
+	kprintf("Calibrate lapic timer\n");
+	/* =============== IO APIC INIT END ================== */
 
 	uint32_t lapic_address_msr = apic::get_base_address();
 
@@ -115,32 +129,7 @@ void multicore_setup(void *rsdp_void)
 
 	kprintf("\nGot through the init multicore gdt\n\n");
 
-	if (false)
-	{
-		// Other cores will do this using get_core id;
-		// Hmm, normally, each core has it's own gdt.
-		// Rather then having a shared gdt with lots of different entries
-		// :TODO: Make it so there's multiple gdt, and each cores has it's own
-		uint8_t local_core_id = apic::get_core_id();
-
-		multicore_gdt::set_fs_or_segment_selector(local_core_id, multicore_gdt::fs_or_gs::fs); // sets fs so it has the correct gdt entry.
-		multicore_gdt::set_fs_or_segment_selector(local_core_id, multicore_gdt::fs_or_gs::gs);
-		multicore_gdt::get_fs_struct()->core_id		= local_core_id;
-		multicore_gdt::get_gs_struct()->other_stuff = 69;
-	}
-
-	// initiate the apic_io of this core.
-	apic_io::init_io_apic();
-	kprintf("Initiated io apic\n");
-
-	exit(0);
-
-	// Apic timers calibration using pit
-	apic::calibrate_lapic_timer();
-	kprintf("Calibrate lapic timer\n");
-
-	disable_pic();
-	kprintf("Disabled the pic\n");
+	// exit(0);
 
 	kprintf("\n\n");
 	bool *core_is_active = (bool *)alloca(sizeof(bool) * runtime_core_count);

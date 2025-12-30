@@ -1,11 +1,12 @@
 #include "apic_io.hpp"
 #include "apic_io_internals.hpp"
+// #include "pic_ps2.h"
 
 namespace apic_io
 {
 
 ApicIO apic_io;
-void   init_io_apic()
+void   init_io_apic(uint8_t *irq_to_gsi)
 {
 	uint8_t cur_owner = apic_io.get_apic_id_of_owner();
 	kprintf("The current ownser is %u\n", cur_owner);
@@ -19,6 +20,23 @@ void   init_io_apic()
 	uint8_t version				  = v.version;
 	uint8_t max_redirection_entry = v.max_redirection_entry;
 	kprintf("Version = %u, Max Redirection Entry = %u\n", version, max_redirection_entry);
+
+	redirection_entry_high pit_high{.destination = {.phyiscal_apic_id = 0}};
+	redirection_entry_low  pit_low{.vector = 32, .mask = mask::enable};
+	apic_io.write_redirection(irq_to_gsi[0], pit_low, pit_high);
+
+	redirection_entry_high keyboard_high{.destination = {.phyiscal_apic_id = 0}};
+	redirection_entry_low  keyboard_low{.vector = 33, .mask = mask::enable};
+	apic_io.write_redirection(irq_to_gsi[1], keyboard_low, keyboard_high);
+
+	redirection_entry_high mouse_high{.destination = {.phyiscal_apic_id = 0}};
+	redirection_entry_low  mouse_low{.vector = 44, .mask = mask::enable};
+	apic_io.write_redirection(irq_to_gsi[12], mouse_low, mouse_high);
+}
+
+uint8_t get_max_redirection_entry_count()
+{
+	return apic_io.get_version_and_max_red().max_redirection_entry;
 }
 
 uint8_t ApicIO::get_apic_id_of_owner()
@@ -82,7 +100,7 @@ void ApicIO::write_redirection(uint8_t irq, redirection_entry_low red_low, redir
 	union io_window rh{.red_high = red_high};
 	io_window.write(rh);
 }
-void ApicIO::read_redirection(uint8_t irq, redirection_entry_low &red_low, redirection_entry_high &red_high)
+void ApicIO::read_redirection_ws(uint8_t irq, redirection_entry_low &red_low, redirection_entry_high &red_high)
 {
 
 	HighAndLow hl = get_offsets(irq);
@@ -94,6 +112,22 @@ void ApicIO::read_redirection(uint8_t irq, redirection_entry_low &red_low, redir
 	register_select.write(hl.high);
 	union io_window high_u = io_window.read();
 	red_high			   = high_u.red_high;
+}
+
+full_redirection_entry ApicIO::read_redirection(uint8_t irq)
+{
+
+	HighAndLow			   hl = get_offsets(irq);
+	full_redirection_entry ret;
+
+	register_select.write(hl.low);
+	union io_window low_u = io_window.read();
+	ret.red_low			  = low_u.red_low;
+
+	register_select.write(hl.high);
+	union io_window high_u = io_window.read();
+	ret.red_high		   = high_u.red_high;
+	return ret;
 }
 
 } // namespace apic_io

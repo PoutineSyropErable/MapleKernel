@@ -133,13 +133,13 @@ struct redirection_entry_low
 	uint8_t								vector : 8;
 	enum delivery_mode::type			delivery_mode : 3			 = delivery_mode::fixed;
 	enum destination_mode::type			destination_mode : 1		 = destination_mode::physical;
-	enum delivery_status::type			delivery_status : 1			 = delivery_status::relaxed_or_already_processed;
+	enum delivery_status::type			delivery_status : 1			 = delivery_status::arrived_but_waiting;
 	enum pin_polarity::type				pin_polarity : 1			 = pin_polarity::active_high;
 	enum remote_interrupt_request::type remote_interrupt_request : 1 = remote_interrupt_request::option0;
 	enum trigger_mode::type				trigger_mode : 1			 = trigger_mode::edge;
 	enum mask::type						mask : 1					 = mask::disable;
-	uint8_t								reserved2 : 7;
-	uint8_t								reserved3;
+	uint8_t								reserved2 : 7				 = 0;
+	uint8_t								reserved3					 = 0;
 };
 
 struct redirection_entry_high
@@ -186,12 +186,15 @@ class ApicIO
 	u64	 read_double32(uint32_t index);
 
   public:
-	uint8_t get_apic_id_of_owner();
-	void	set_apic_id_of_owner(uint8_t apic_id_owner);
-	version get_version_and_max_red();
-	uint8_t get_arbitration();
-	void	write_redirection(uint8_t irq, redirection_entry_low red_low, redirection_entry_high red_high);
-	void	read_redirection(uint8_t irq, redirection_entry_low &red_low, redirection_entry_high &red_high);
+	uint8_t				   get_apic_id_of_owner();
+	void				   set_apic_id_of_owner(uint8_t apic_id_owner);
+	version				   get_version_and_max_red();
+	uint8_t				   get_arbitration();
+	void				   write_redirection(uint8_t irq, redirection_entry_low red_low, redirection_entry_high red_high);
+	full_redirection_entry read_redirection(uint8_t irq);
+
+	// Write style
+	void read_redirection_ws(uint8_t irq, redirection_entry_low &red_low, redirection_entry_high &red_high);
 };
 
 } // namespace apic_io
