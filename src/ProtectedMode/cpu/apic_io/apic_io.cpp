@@ -1,9 +1,93 @@
 #include "apic_io.hpp"
+#include "apic_io_internals.hpp"
 
 namespace apic_io
 {
-void init_io_apic()
+
+ApicIO apic_io;
+void   init_io_apic()
 {
+	uint8_t cur_owner = apic_io.get_apic_id_of_owner();
+	kprintf("The current ownser is %u\n", cur_owner);
+
+	exit(0);
+}
+
+uint8_t ApicIO::get_apic_id_of_owner()
+{
+	// register_select.write(RegisterOffsets::id);
+	// union io_window win = io_window.read();
+	// return win.id.apic_id;
+}
+
+void ApicIO::set_apic_id_of_owner(uint8_t apic_id_of_owner)
+{
+#ifdef DEBUG
+	assert(apic_id_of_owner < 0b1111, "Can't set a apic id too big. Max 15\n");
+#endif
+	// register_select.write(RegisterOffsets::id);
+	//
+	// id				owner_id{.apic_id = apic_id_of_owner};
+	// union io_window owner_id_u;
+	// io_window.write(owner_id_u);
+}
+
+version ApicIO::get_version_and_max_red()
+{
+	// register_select.write(RegisterOffsets::version);
+	// union io_window win = io_window.read();
+	// return win.version;
+}
+
+uint8_t ApicIO::get_arbitration()
+{
+	// register_select.write(RegisterOffsets::arbitration);
+	// union io_window win = io_window.read();
+	// return win.arbitartion.arbitration_id;
+}
+
+struct HighAndLow
+{
+	RegisterOffsets low;
+	RegisterOffsets high;
+};
+static inline HighAndLow get_offsets(uint8_t red_idx)
+{
+	uint32_t   offset_raw_low  = (uint32_t)RegisterOffsets::relocation_table_base + red_idx * 2;
+	uint32_t   offset_raw_high = offset_raw_low + 1;
+	HighAndLow ret{.low = (RegisterOffsets)offset_raw_low, .high = (RegisterOffsets)offset_raw_high};
+	return ret;
+}
+
+void ApicIO::write_redirection(uint8_t irq, redirection_entry_low red_low, redirection_entry_high red_high)
+{
+	HighAndLow hl = get_offsets(irq);
+
+	// I'm not sure of the proper write order
+	// register_select.write(hl.low);
+	// union io_window rl{.red_low = red_low};
+	// io_window.write(rl);
+	//
+	// register_select.write(hl.high);
+	// union io_window rh{.red_high = red_high};
+	// io_window.write(rh);
+}
+full_redirection_entry ApicIO::read_redirection(uint8_t irq)
+{
+
+	HighAndLow hl = get_offsets(irq);
+
+	full_redirection_entry ret;
+
+	// register_select.write(hl.low);
+	// union io_window low_u = io_window.read();
+	// ret.red_low			  = low_u.red_low;
+	//
+	// register_select.write(hl.high);
+	// union io_window high_u = io_window.read();
+	// ret.red_high		   = high_u.red_high;
+
+	return ret;
 }
 
 } // namespace apic_io

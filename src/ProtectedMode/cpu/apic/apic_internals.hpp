@@ -261,7 +261,6 @@ constexpr enum lapic_registers_offset add_offset(lapic_registers_offset lapic_of
 class LapicRegisters
 {
   public:
-  public:
 	// ------------------------------------------------------------------
 	// Read-only / Read-write basic registers
 	// ------------------------------------------------------------------
