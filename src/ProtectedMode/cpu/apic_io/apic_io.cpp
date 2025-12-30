@@ -15,9 +15,9 @@ void   init_io_apic()
 
 uint8_t ApicIO::get_apic_id_of_owner()
 {
-	// register_select.write(RegisterOffsets::id);
-	// union io_window win = io_window.read();
-	// return win.id.apic_id;
+	register_select.write(RegisterOffsets::id);
+	union io_window win = io_window.read();
+	return win.id.apic_id;
 }
 
 void ApicIO::set_apic_id_of_owner(uint8_t apic_id_of_owner)
@@ -25,25 +25,25 @@ void ApicIO::set_apic_id_of_owner(uint8_t apic_id_of_owner)
 #ifdef DEBUG
 	assert(apic_id_of_owner < 0b1111, "Can't set a apic id too big. Max 15\n");
 #endif
-	// register_select.write(RegisterOffsets::id);
-	//
-	// id				owner_id{.apic_id = apic_id_of_owner};
-	// union io_window owner_id_u;
-	// io_window.write(owner_id_u);
+	register_select.write(RegisterOffsets::id);
+
+	id				owner_id{.apic_id = apic_id_of_owner};
+	union io_window owner_id_u;
+	io_window.write(owner_id_u);
 }
 
 version ApicIO::get_version_and_max_red()
 {
-	// register_select.write(RegisterOffsets::version);
-	// union io_window win = io_window.read();
-	// return win.version;
+	register_select.write(RegisterOffsets::version);
+	union io_window win = io_window.read();
+	return win.version;
 }
 
 uint8_t ApicIO::get_arbitration()
 {
-	// register_select.write(RegisterOffsets::arbitration);
-	// union io_window win = io_window.read();
-	// return win.arbitartion.arbitration_id;
+	register_select.write(RegisterOffsets::arbitration);
+	union io_window win = io_window.read();
+	return win.arbitartion.arbitration_id;
 }
 
 struct HighAndLow
@@ -64,13 +64,13 @@ void ApicIO::write_redirection(uint8_t irq, redirection_entry_low red_low, redir
 	HighAndLow hl = get_offsets(irq);
 
 	// I'm not sure of the proper write order
-	// register_select.write(hl.low);
-	// union io_window rl{.red_low = red_low};
-	// io_window.write(rl);
-	//
-	// register_select.write(hl.high);
-	// union io_window rh{.red_high = red_high};
-	// io_window.write(rh);
+	register_select.write(hl.low);
+	union io_window rl{.red_low = red_low};
+	io_window.write(rl);
+
+	register_select.write(hl.high);
+	union io_window rh{.red_high = red_high};
+	io_window.write(rh);
 }
 full_redirection_entry ApicIO::read_redirection(uint8_t irq)
 {
@@ -79,13 +79,13 @@ full_redirection_entry ApicIO::read_redirection(uint8_t irq)
 
 	full_redirection_entry ret;
 
-	// register_select.write(hl.low);
-	// union io_window low_u = io_window.read();
-	// ret.red_low			  = low_u.red_low;
-	//
-	// register_select.write(hl.high);
-	// union io_window high_u = io_window.read();
-	// ret.red_high		   = high_u.red_high;
+	register_select.write(hl.low);
+	union io_window low_u = io_window.read();
+	ret.red_low			  = low_u.red_low;
+
+	register_select.write(hl.high);
+	union io_window high_u = io_window.read();
+	ret.red_high		   = high_u.red_high;
 
 	return ret;
 }
