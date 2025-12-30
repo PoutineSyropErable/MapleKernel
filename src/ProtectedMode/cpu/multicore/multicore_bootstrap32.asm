@@ -10,7 +10,7 @@ extern __new_gdt_start
 extern __new_gdt_end
 
 
-%define MAX_CPU_COUNT 8
+%define MAX_CPU_COUNT 12
 %define STACK_SIZE 16384 ; 16kb
 %assign MULTISTACK_SIZE STACK_SIZE * MAX_CPU_COUNT
 
@@ -59,7 +59,11 @@ core_bootstrap32:
 	mov fs, bx ; set fs
 	add ecx, 1 ; gdt idx of gs
 	shl ecx, 3 ; gs value
-	mov gs, cx 
+	; mov dx, 0x98
+	; mov gs, dx
+	; mov gs, cx ; // =================== CRASH HERE IF GS to big
+	; TODO: CRASH. Triple Fault. GS. 
+	; gs. gs crash. gs fault. gs triple fault. gs tripple fault
 
 
 

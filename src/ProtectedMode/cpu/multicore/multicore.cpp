@@ -6,24 +6,44 @@
 #include "multicore.hpp"
 #include "stdio.h"
 
+volatile bool multicore::entered_main[MAX_CORE_COUNT]			   = {0};
+volatile bool multicore::acknowledged_entered_main[MAX_CORE_COUNT] = {0};
+
 extern "C" void application_core_main()
 {
 
+	kprintf("First entry\n");
 	apic::init_lapic();
 	uint8_t core_id	  = apic::get_core_id();
 	uint8_t core_id_f = apic::get_core_id_fast();
 	kprintf("Core %u(%u) Reporting for duty!\n\n", core_id_f, core_id);
 
+	uint16_t fs_value;
+	__asm__ volatile("mov %%fs, %0" : "=r"(fs_value));
+	kprintf("Core %u has  fs = 0x%hx\n", core_id_f, fs_value);
+
 	// apic::wait_till_interrupt(INTERRUPT_ENTERED_MAIN);
 	// kprintf("Recieved message from 0");
 
-	apic::error err = apic::send_ipi(0, INTERRUPT_ENTERED_MAIN);
+	multicore::entered_main[core_id_f] = true;
+
+	// while (!multicore::acknowledged_entered_main[core_id_f])
+	// {
+	// }
+
+	apic::error err = apic::error::none;
+	// err = apic::send_ipi(0, INTERRUPT_ENTERED_MAIN);
 	if ((uint8_t)err)
 	{
-		framebuffer::g_framebuffer.draw_rectangle(
-			{.top_left_x = 0, .top_left_y = 0, .width = 1024, .height = 600, .color = framebuffer::Color(core_id * 0x11)});
+		kprintf("Core %u had an issue sending an ipi\n", core_id_f);
+		framebuffer::g_framebuffer.draw_rectangle({.top_left_x = 0,
+			.top_left_y										   = static_cast<uint16_t>(core_id_f * (1080u / runtime_core_count)),
+			.width											   = 1024,
+			.height											   = static_cast<uint16_t>(1080 / runtime_core_count),
+			.color											   = framebuffer::Color(core_id * 0x11)});
 	}
 
+	kprintf("Core %u Sent the INTERRUPT_ENTERED_MAIN to core 0\n", core_id_f);
 	// __sti();
 	while (true)
 	{

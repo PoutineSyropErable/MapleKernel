@@ -20,6 +20,7 @@
 
 #include "gdt.h"
 #include "multicore.h"
+#include "multicore.hpp"
 #include "multicore_gdt.hpp"
 #include "pic_public.h"
 #include "stdlib.h"
@@ -135,21 +136,22 @@ void multicore_setup(void *rsdp_void)
 	__cli();
 	apic_io::init_io_apic(irq_to_gsi);
 	kprintf("Initiated io apic\n");
-	disable_pic();
 	kprintf("Disabled the pic\n");
-	__sti();
 	idt_init();
 	idt_init_pit();
 	idt_init_ps2_quick();
 	idt_finalize();
 	quick_k_init();
+	__sti();
+	// disable_pic();
+	kprintf("Enabled the idt\n");
 	/* =============== APIC TIMER CALIBRATION ================== */
 
 	for (uint8_t i = 0; i < 100; i++)
 	{
 
-		pit::wait(1);
-		kprintf("waited %u seconds\n", i);
+		// pit::wait(1);
+		// kprintf("waited %u seconds\n", i);
 	}
 
 	// Apic timers calibration using pit
@@ -171,6 +173,16 @@ void multicore_setup(void *rsdp_void)
 	// err				= apic::wake_core(2, core_bootstrap, application_core_main);
 	// err				= apic::wake_core(3, core_bootstrap, application_core_main);
 	// return;
+
+	uint16_t fs_value;
+	__asm__ volatile("mov %%fs, %0" : "=r"(fs_value));
+	kprintf("fs = 0x%hx\n", fs_value);
+
+	kprintf("before\n");
+	uint16_t selector = 0x98; // Must be a valid GDT entry
+	__asm__ volatile("movw %0, %%gs" : : "r"(selector) : "memory");
+	kprintf("after\n");
+
 	for (uint8_t i = 0; i < runtime_core_count; i++)
 	{
 		uint8_t core_id = parsed_madt.processor_local_apics[i]->apic_id;
@@ -193,7 +205,11 @@ void multicore_setup(void *rsdp_void)
 		{
 			core_is_active[core_id] = true;
 			// apic::send_ipi(core_id, INTERRUPT_ENTERED_MAIN);
-			apic::wait_till_interrupt(INTERRUPT_ENTERED_MAIN);
+			while (!multicore::entered_main[core_id])
+			{
+			}
+
+			// apic::wait_till_interrupt(INTERRUPT_ENTERED_MAIN);
 			kprintf("core %u entered it's main function\n", core_id);
 			// Wait till interrupt is not really usefull, since there's already polling for starting.
 			// But i guess it's a nice way to make sure it entered it's main.

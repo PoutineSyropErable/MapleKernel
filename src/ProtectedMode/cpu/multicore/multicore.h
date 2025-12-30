@@ -7,13 +7,13 @@ extern "C"
 {
 #endif
 
-#define MAX_CORE_COUNT 8
+#define MAX_CORE_COUNT 12
 #define NEW_GDT_ENTRY_COUNT (4 + 2 * MAX_CORE_COUNT)
 
 	extern volatile bool core_has_booted[MAX_CORE_COUNT];			 // [i = reciever][ j = sender]
 	extern volatile bool master_tells_core_to_start[MAX_CORE_COUNT]; // [i = reciever][ j = sender]
 																	 // extern volatile void (*core_mains[8])();
-	extern void (*volatile core_mains[8])();
+	extern void (*volatile core_mains[MAX_CORE_COUNT])();
 	extern volatile uint8_t last_interrupt_received[MAX_CORE_COUNT][MAX_CORE_COUNT]; // [i = reciever][ j = sender]
 	extern uint8_t			runtime_core_count;
 
@@ -29,9 +29,9 @@ extern "C"
 
 	} reentrant_lock_t;
 
+	void reentrant_lock(reentrant_lock_t *lock);
 	void reentrant_unlock(reentrant_lock_t *lock);
 	bool reentrant_trylock(reentrant_lock_t *lock);
-	void reentrant_lock(reentrant_lock_t *lock);
 
 	static inline uint32_t irq_save(void)
 	{

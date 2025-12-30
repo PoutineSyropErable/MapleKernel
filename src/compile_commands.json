@@ -1756,6 +1756,7 @@
       "-Istdio",
       "-I./cpu/pic",
       "-I./cpu/",
+      "-I./cpu/apic",
       "-o",
       "../../build32/pit_interrupt_handler.o",
       "./timers/pit/pit_interrupt_handler.cpp"

@@ -31,8 +31,8 @@ function_t_ptr mouse_interrupt_handlers[3] = {
 
 void idt_init_ps2_quick()
 {
-	idt_set_descriptor(32, keyboard_interrupt_handler_port1, GT32_IG32, 0, true);
-	vectors[32] = true;
+	idt_set_descriptor(33, keyboard_interrupt_handler_port1, GT32_IG32, 0, true);
+	vectors[33] = true;
 
 	idt_set_descriptor(44, mouse_interrupt_handler_port2, GT32_IG32, 0, true);
 	vectors[44] = true;

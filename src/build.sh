@@ -186,16 +186,11 @@ else
 		-no-reboot \
 		"${QEMU_DBG_FLAGS[@]}" \
 		"${DEBUG_LOG_OPTS[@]}" \
-		-smp 4 \
-		-machine q35 \
-		-device intel-iommu \
-		-device virtio-mouse \
-		-device virtio-keyboard \
-		-global PIIX4_PM.disable_s3=1 \
-		-global PIIX4_PM.disable_s4=1 \
+		-smp 12 \
 		"${QEMU_CPU_FLAG[@]}" \
 		"${USE_VNC_FLAG[@]}" \
-		-serial stdio & # -enable-kvm \
+		-serial stdio &
+	# -enable-kvm \
 	# -vga vmware \
 
 	QEMU_PID=$!

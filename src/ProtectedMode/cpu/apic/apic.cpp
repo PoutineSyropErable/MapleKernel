@@ -12,14 +12,14 @@
 #include "pit.hpp"
 #include "pit_internals.h"
 
-#define TIMEOUT_IPI_PENDING 10'000
+#define TIMEOUT_IPI_PENDING 1000'000
 
 using namespace apic;
 
 volatile uint8_t last_interrupt_received[MAX_CORE_COUNT][MAX_CORE_COUNT];
 volatile bool	 core_has_booted[MAX_CORE_COUNT];			 // [i = reciever][ j = sender]
 volatile bool	 master_tells_core_to_start[MAX_CORE_COUNT]; // [i = reciever][ j = sender]
-void (*volatile core_mains[8])();
+void (*volatile core_mains[MAX_CORE_COUNT])();
 
 // Private (To this file) and global
 static LapicRegisters lapic;
@@ -247,15 +247,18 @@ error send_sipi(uint8_t core_id, void (*core_bootstrap)())
 	return error::timeout_sending_ipi;
 }
 
-enum error apic::send_ipi(uint8_t core_id, uint8_t int_vector)
+reentrant_lock_t last_interrupt_received_lock{.state = 0};
+enum error		 apic::send_ipi(uint8_t core_id, uint8_t int_vector)
 {
 
 #ifdef DEBUG
 	assert(core_id <= 0b1111, "Won't fit\n");
 #endif
 
-	uint8_t this_core_id						   = get_core_id_fast();
+	uint8_t this_core_id = get_core_id_fast();
+	reentrant_lock(&last_interrupt_received_lock);
 	last_interrupt_received[core_id][this_core_id] = int_vector;
+	reentrant_unlock(&last_interrupt_received_lock);
 	// kprintf("Core %u sending interrupt %u to core %u\n\n", this_core_id, int_vector, core_id);
 	// without this print, it fucks
 	// TODO: Fix the weird deadlocks
@@ -272,16 +275,19 @@ enum error apic::send_ipi(uint8_t core_id, uint8_t int_vector)
 		bool recieved_pending = lapic.command_low.read().delivery_status_pending_ro;
 		if (!recieved_pending)
 		{
+			kprintf("Quit at i = %u\n", i);
 			return error::none;
 		}
 	}
 
+	kprintf("Timed out waiting for sending ipi\n");
 	return error::timeout_sending_ipi;
 }
 
 enum error apic::wake_core(uint8_t core_id, void (*core_bootstrap)(), void (*core_main)())
 {
 
+	kprintf("Trying to wake %u\n", core_id);
 	error apic_err = send_init(core_id);
 	if ((uint8_t)apic_err)
 	{
@@ -289,11 +295,13 @@ enum error apic::wake_core(uint8_t core_id, void (*core_bootstrap)(), void (*cor
 	}
 
 	// Sets up the main loop that core will use.
-	core_mains[core_id] = core_main;
 	kprintf("Core main = %h\n", core_main);
+	core_mains[core_id] = core_main;
 
 	// Send Sipi
+	kprintf("Before wait\n");
 	// pit::wait(10.f / 1000.f);
+	kprintf("After wait\n");
 	apic_err = send_sipi(core_id, core_bootstrap);
 	if ((uint8_t)apic_err)
 	{
@@ -301,12 +309,13 @@ enum error apic::wake_core(uint8_t core_id, void (*core_bootstrap)(), void (*cor
 	}
 
 	volatile uint32_t finished = false;
-	// int				  pit_err  = pit::short_timeout(0.001f, &finished, true);
-	// if (pit_err)
-	// {
-	// 	kprintf("There was an error waiting for the short timeout\n");
-	// 	return error::bad_time;
-	// }
+	int				  pit_err  = 0;
+	pit_err					   = pit::short_timeout(0.001f, &finished, true);
+	if (pit_err)
+	{
+		kprintf("There was an error waiting for the short timeout\n");
+		return error::bad_time;
+	}
 	while (true)
 	{
 
@@ -333,7 +342,12 @@ long_poll:
 	constexpr uint8_t  timeout_count   = long_timeout_ms / short_timeut_ms;
 	for (uint8_t i = 0; i < timeout_count; i++)
 	{
-		// pit::short_timeout((float)short_timeut_ms / 1000.f, &finished, false);
+		pit_err = pit::short_timeout((float)short_timeut_ms / 1000.f, &finished, false);
+		if (pit_err)
+		{
+			kprintf("There was an error waiting for the short timeout (In Long Poll), i = %u\n", i);
+			return error::bad_time;
+		}
 		while (true)
 		{
 			if (core_has_booted[core_id])
@@ -362,20 +376,23 @@ void apic::wait_till_interrupt(uint8_t interrupt_vector)
 	{
 		__hlt();
 		// Check if any of the sender sent it.
+		reentrant_lock(&last_interrupt_received_lock);
 		for (uint8_t sender_id = 0; sender_id < runtime_core_count; sender_id++)
 		{
 			uint8_t lir = last_interrupt_received[core_id][sender_id];
 			// kprintf("Lir = %u\n", lir);
 			if (lir == interrupt_vector)
 			{
-				kprintf("recieved\n");
+				kprintf("received\n\n");
 				last_interrupt_received[core_id][sender_id] = NO_INTERRUPT;
 				irq_restore(flags);
+				// reentrant_unlock(&last_interrupt_received_lock);
 				return;
 				// TODO: Warning, some multicore shenanigans and race condition possible here
 				// Should be safe when used to init core and wait till interrupt
 			}
 		}
+		reentrant_unlock(&last_interrupt_received_lock);
 	}
 }
 

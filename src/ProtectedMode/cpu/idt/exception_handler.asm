@@ -439,6 +439,10 @@ interrupt_56_handler:
 	iret
 
 
+
+interrupt_57_fmt db "Core %u Recieved interrupt entered main", NEWLINE, 0
+interrupt_57_fmt1 db "(In interrupt handler) Recieved interrupt entered main", NEWLINE, 0
+
 global interrupt_57_handler
 interrupt_57_handler:
 	push ebp
@@ -449,6 +453,15 @@ interrupt_57_handler:
 	; push [argc] 
 	; call kprintf_argc
 	; add esp, 12 ; needed if i don't do the prologue and epilogue
+	
+	mov eax, fs:[0]
+
+	; push eax
+	push interrupt_57_fmt1
+	push 1 
+	call kprintf_argc
+
+	mov dword [0xFEE00B0], 0
 
 	mov esp, ebp
 	pop ebp
