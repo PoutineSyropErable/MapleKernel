@@ -133,17 +133,17 @@ void multicore_setup(void *rsdp_void)
 	kprintf("\n");
 
 	// initiate the apic_io of this core.
-	__cli();
+	// __cli();
 	apic_io::init_io_apic(irq_to_gsi);
 	kprintf("Initiated io apic\n");
 	kprintf("Disabled the pic\n");
-	idt_init();
-	idt_init_pit();
-	idt_init_ps2_quick();
-	idt_finalize();
-	quick_k_init();
-	__sti();
-	// disable_pic();
+	// idt_init();
+	// idt_init_pit();
+	// idt_init_ps2_quick();
+	// idt_finalize();
+	// quick_k_init();
+	// __sti();
+	disable_pic();
 	kprintf("Enabled the idt\n");
 	/* =============== APIC TIMER CALIBRATION ================== */
 
