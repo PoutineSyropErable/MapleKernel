@@ -30,6 +30,7 @@ static inline void set_operation_mode(mode_command_register operation_mode)
 
 static inline void set_pit_count_q(uint16_t count)
 {
+	__cli();
 	send_byte_to_pit(IOPort::channel_0_data_port, count & 0xFF);		  // Low byte
 	send_byte_to_pit(IOPort::channel_0_data_port, (count & 0xFF00) >> 8); // High Byte
 	return;

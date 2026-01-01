@@ -83,9 +83,9 @@ uint32_t sync_apic_with_pit()
 	pit_ih::set_quick_path_mode(true);
 
 	uint32_t start_count = 0xFFFF'FFFF;
-	start_timer(apic_sync_interrupt, start_count, divide_configuration::divide_by_1, timer_mode::single_shot, mask::disable);
-	pit::wait_pit_count_precise(0); // 65536
-	// pit::wait_pit_count(65536); // 65536
+	// start_timer(apic_sync_interrupt, start_count, divide_configuration::divide_by_1, timer_mode::single_shot, mask::disable);
+	// pit::wait_pit_count_precise(0); // 65536
+	pit::wait_pit_count(65536); // 65536
 	// Slower on qemu if i get the start count right after start_timer. Equal on my machine
 
 	current_count_register cc	= lapic.current_count.read();

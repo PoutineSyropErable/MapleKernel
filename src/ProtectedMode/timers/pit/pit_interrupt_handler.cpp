@@ -1,5 +1,6 @@
 // pit_interrupt_handler.c
 #include "apic.hpp"
+#include "assert.h"
 #include "atomic.h"
 #include "irq.h"
 #include "pic_public.h"
@@ -14,6 +15,7 @@ uint32_t		quick_pit_lock = 0;
 extern "C" bool quick_pit	   = false;
 void			pit_ih::set_quick_path_mode(bool quick_or_not)
 {
+	// abort_msg("This breaks pit! I have no clue why!\n");
 	simple_spin_lock(&quick_pit_lock);
 	quick_pit = quick_or_not;
 	simple_spin_unlock(&quick_pit_lock);
