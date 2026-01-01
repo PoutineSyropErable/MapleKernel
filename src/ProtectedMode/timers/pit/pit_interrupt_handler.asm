@@ -22,32 +22,7 @@ PIT_IRQ equ 0
 extern pit_interrupt_handler
 global pit_interrupt_handler_asm
 pit_interrupt_handler_asm:
-	push eax
-	mov eax, [quick_pit]
-	test eax, eax ; if quick pit, then not zero
-	jz .long_pit
-
-	mov eax, 1
-	mov [pit_interrupt_handled], eax
-	mov [ EOI_MMIO_ADDR ], 0
-
-.loop
-	add eax, 1
-	cmp eax, 100000
-	jb .loop
 	
-	
-
-	pop eax
-	iret
-
-
-
-.long_pit:
-	pop eax
-
-
-
 	pusha               ; save registers
     push ds
     push es
@@ -55,6 +30,31 @@ pit_interrupt_handler_asm:
     push gs
 
 
+	mov eax, [quick_pit]
+	test eax, eax ; if quick pit, then not zero
+	jz .long_pit
+
+	mov eax, 1
+	mov [pit_interrupt_handled], eax
+	mov dword [ EOI_MMIO_ADDR ], 0
+
+.loop
+	add eax, 1
+	cmp eax, 100000
+	jb .loop
+	
+	
+	pop gs
+    pop fs
+    pop es
+    pop ds
+    popa
+
+	iret
+
+
+
+.long_pit:
 	call pit_interrupt_handler
 
 

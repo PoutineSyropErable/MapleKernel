@@ -44,6 +44,7 @@ extern "C" void set_mode(PIT_IH_MODE mode)
 void game_loop()
 {
 	// just import the header with
+	kprintf("Game loop\n");
 	// void game_loop();
 	// in it.
 
@@ -78,6 +79,7 @@ extern "C" void pit_interrupt_handler()
 	// kprintf("The Write value: %h\n", pit_msg_value[pit_write_index]);
 	if (write_address != nullptr)
 	{
+		// kprintf("Writting to the address\n");
 		*pit_msg_address[pit_write_index] = pit_msg_value[pit_write_index];
 		pit_is_new_timeout				  = false;
 	}

@@ -240,7 +240,7 @@ int cpp_main(struct cpp_main_args args)
 		// kernel main loop
 		cpp_event_loop();
 
-		pit::wait(1.f / 60.f);
+		// pit::wait(1.f / 60.f);
 	}
 	return 0;
 }
