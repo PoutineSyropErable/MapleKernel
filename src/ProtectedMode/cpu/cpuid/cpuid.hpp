@@ -21,6 +21,7 @@ enum class CpuidFunction : uint32_t
 	PerformanceMonitoring = 0xA, // Architectural performance monitoring
 	ExtendedTopology	  = 0xB, // Extended processor topology (subleaf in ECX)
 	XSAVE_Features		  = 0xD, // XSAVE feature flags (subleaf in ECX)
+	TSC_INFO			  = 15,
 
 	// Extended functions (0x80000000+)
 	Extended_MaxFunction = 0x80000000, // Returns max extended function supported

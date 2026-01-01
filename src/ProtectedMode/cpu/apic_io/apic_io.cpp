@@ -9,7 +9,7 @@ ApicIO apic_io;
 void   init_io_apic(uint8_t *irq_to_gsi)
 {
 	uint8_t cur_owner = apic_io.get_apic_id_of_owner();
-	kprintf("The current ownser is %u\n", cur_owner);
+	kprintf("The current owner is %u\n", cur_owner);
 #define BSP_APIC_ID 0
 	if (cur_owner != BSP_APIC_ID)
 	{

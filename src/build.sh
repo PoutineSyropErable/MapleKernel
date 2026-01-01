@@ -138,8 +138,8 @@ else
 	QEMU_CPU_FLAG=()
 	CPU_MODEL=""
 	if [[ "$MACHINE_BITNESS" == "64" ]]; then
-		# CPU_MODEL="host"
-		CPU_MODEL="qemu64"
+		CPU_MODEL="host"
+		# CPU_MODEL="qemu64"
 	else
 		CPU_MODEL="host"
 		CPU_MODEL="qemu32"

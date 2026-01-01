@@ -15,8 +15,6 @@ extern "C"
 	extern volatile uint8_t last_interrupt_received[MAX_CORE_COUNT][MAX_CORE_COUNT]; // [i = reciever][ j = sender]
 	extern uint8_t			runtime_core_count;
 
-#define SPURIOUS_INTERRUPT_VECTOR 56 // 32 + 24 = reserved interrupt + 24 irqs.
-
 #define NO_INTERRUPT 255
 
 	extern void core_bootstrap();

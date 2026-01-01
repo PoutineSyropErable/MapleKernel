@@ -12,6 +12,7 @@
 #include "apic.h"
 #include "apic.hpp"
 #include "apic_io.hpp"
+#include "apic_timer_interrupt_handler.hpp"
 #include "apic_timers.hpp"
 #include "assert.h"
 #include "framebuffer.hpp"
@@ -158,8 +159,8 @@ void multicore_setup(void *rsdp_void)
 	}
 
 	// Apic timers calibration using pit
-	apic::calibrate_lapic_timer();
-	kprintf("Calibrate lapic timer\n");
+	uint32_t apic_freq = apic_timer::sync_apic_with_pit();
+	kprintf("Calibrated lapic timer. Frequency: %u\n", apic_freq);
 
 	/* =============== WAKING THE CORES ================== */
 	kprintf("\n\n");
@@ -254,7 +255,7 @@ int cpp_main(struct cpp_main_args args)
 
 	// apic::start_timer(8, 10000, apic::divide_configuration::divide_by_128, apic::timer_mode::repeat);
 	apic_timer::start_timer(
-		apic_timer::apic_wait_interrupt, 10000, apic::divide_configuration::divide_by_128, apic::timer_mode::single_shot);
+		apic_timer::handlers::apic_wait_interrupt, 10000, apic::divide_configuration::divide_by_128, apic::timer_mode::single_shot);
 	// this is an internal function.
 	// Shouldn't really be used for regular stuff
 

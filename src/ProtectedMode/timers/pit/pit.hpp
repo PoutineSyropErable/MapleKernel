@@ -14,6 +14,11 @@ int	 wait(float seconds);
 
 // new_timeout = false must only be used when there is just one core that uses this.
 // Anyway, pit timeout are dangerous.
-int short_timeout(float seconds, volatile uint32_t *finished, bool new_timeout);
+int short_timeout_async(float seconds, volatile uint32_t *finished, bool new_timeout);
+
+void short_timeout(uint32_t count);
+
+void set_quick_path_mode(bool quick_or_not);
+bool get_quick_path_mode();
 
 } // namespace pit

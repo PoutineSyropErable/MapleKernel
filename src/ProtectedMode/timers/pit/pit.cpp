@@ -130,6 +130,8 @@ void pit::start_loop_wait(uint32_t freq_divider_count)
 // pit.cpp
 extern "C"
 {
+	// I'mma keep the extern C. It's a nice way to say they are used by C or assembly.
+	// And, it can be used to escape namespace mangling
 	volatile bool	   pit_interrupt_handled;
 	volatile bool	   pit_is_new_timeout;
 	volatile uint8_t   pit_write_index = 0;
@@ -166,6 +168,14 @@ inline void wait_till_pit_interrupt()
 	} while (!pit_interrupt_handled);
 }
 
+inline void wait_till_pit_interrupt_busy()
+{
+	pit_interrupt_handled = false;
+	while (!pit_interrupt_handled)
+	{
+	}
+}
+
 /*
 This command also changes the mode.
 Which is a redundant operation if we are looping single shot interrupt.
@@ -176,6 +186,17 @@ inline void wait_lte_one_cycle(uint32_t pit_freq_divider)
 {
 	send_wait_count_command(pit_freq_divider);
 	wait_till_pit_interrupt();
+}
+
+extern "C" bool quick_pit = false;
+void			pit::set_quick_path_mode(bool quick_or_not)
+{
+	quick_pit = quick_or_not;
+}
+
+bool pit::get_quick_path_mode()
+{
+	return quick_pit;
 }
 
 int pit::wait(float seconds)
@@ -207,7 +228,7 @@ int pit::wait(float seconds)
 	return 0;
 }
 
-int pit::short_timeout(float seconds, volatile uint32_t *finished, bool new_timeout)
+int pit::short_timeout_async(float seconds, volatile uint32_t *finished, bool new_timeout)
 {
 	if (seconds <= 0)
 	{
@@ -239,6 +260,11 @@ int pit::short_timeout(float seconds, volatile uint32_t *finished, bool new_time
 	send_wait_count_command(pit_freq_divider);
 
 	return 0;
+}
+
+void pit::short_timeout(uint32_t count)
+{
+	abort_msg("Not implemented, Just use something else\n");
 }
 // ===================== End of Cpp Stuff
 

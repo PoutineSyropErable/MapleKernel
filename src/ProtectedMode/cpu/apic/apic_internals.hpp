@@ -334,6 +334,7 @@ enum type : uint8_t
 };
 }
 
+// Using this means I've got an idea of the type for this register, but I haven't actually went and wrote stuff for it
 struct __attribute__((aligned(4))) lvt_register_min
 {
 	uint8_t			vector_number;
@@ -583,15 +584,15 @@ class LapicRegisters
 	// ------------------------------------------------------------------
 	static constexpr std::mmio_ptr<lvt_timer_register> lvt_timer{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_timer)};
 
-	static constexpr std::mmio_ptr<uint32_t> lvt_thermal_sensor{
+	static constexpr std::mmio_ptr<lvt_register_min> lvt_thermal_sensor{
 		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_thermal_sensor)};
 
-	static constexpr std::mmio_ptr<uint32_t> lvt_performance_monitoring_counters{
+	static constexpr std::mmio_ptr<lvt_register_min> lvt_performance_monitoring_counters{
 		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_performance_monitoring_counters)};
 
-	static constexpr std::mmio_ptr<lvt_register_min> lvt_lint0{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_lint0)};
+	static constexpr std::mmio_ptr<lvt_lint_register> lvt_lint0{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_lint0)};
 
-	static constexpr std::mmio_ptr<lvt_register_min> lvt_lint1{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_lint1)};
+	static constexpr std::mmio_ptr<lvt_lint_register> lvt_lint1{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_lint1)};
 
 	static constexpr std::mmio_ptr<lvt_register_min> lvt_error{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_error)};
 

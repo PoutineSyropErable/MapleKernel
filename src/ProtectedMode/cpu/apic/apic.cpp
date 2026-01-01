@@ -128,10 +128,8 @@ enum apic::error apic::init_apic()
 enum apic::error apic::init_lapic()
 {
 
-	apic::spurious_interrupt_vector_register spivr					= lapic.spurious_interrupt_vector.read();
-	constexpr uint8_t						 number_of_reserved_int = 32;
-	constexpr uint8_t						 vector_when_error		= (number_of_reserved_int + apic_io::number_of_apic_io_irq);
-	spivr.vector = vector_when_error; // Write interrupt handler 56 to handle spurious interrupts
+	apic::spurious_interrupt_vector_register spivr = lapic.spurious_interrupt_vector.read();
+	spivr.vector = apic::spurious_interrupt_vector; // Write interrupt handler 56 to handle spurious interrupts
 	// Spurious means fake, it happens when an interrupt is recieved with lower priority then current
 	// aka, an ignored interrupt. Then the spurious is called
 	spivr.apic_enable  = true;
@@ -325,7 +323,7 @@ enum error apic::wake_core(uint8_t core_id, void (*core_bootstrap)(), void (*cor
 
 	volatile uint32_t finished = false;
 	int				  pit_err  = 0;
-	pit_err					   = pit::short_timeout(0.001f, &finished, true);
+	pit_err					   = pit::short_timeout_async(0.001f, &finished, true);
 	if (pit_err)
 	{
 		kprintf("There was an error waiting for the short timeout\n");
@@ -357,7 +355,7 @@ long_poll:
 	constexpr uint8_t  timeout_count   = long_timeout_ms / short_timeut_ms;
 	for (uint8_t i = 0; i < timeout_count; i++)
 	{
-		pit_err = pit::short_timeout((float)short_timeut_ms / 1000.f, &finished, false);
+		pit_err = pit::short_timeout_async((float)short_timeut_ms / 1000.f, &finished, false);
 		if (pit_err)
 		{
 			kprintf("There was an error waiting for the short timeout (In Long Poll), i = %u\n", i);

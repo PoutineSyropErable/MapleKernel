@@ -16,37 +16,37 @@ CompileFlags:
     - -fno-common
 
     # Include directories (match your build script)
-    - -Ikernel
-    - -Ireal16_wrappers
-    - -Irealmode_functions
-    - -Igdt
-    - -Iidt
-    - -Istdio
-    - -Istdlib
-    - -Iother
-    - -Iruntime_code_analysis
+    - -IProtectedMode/kernel
+    - -IProtectedMode/real16_wrappers
+    - -IProtectedMode/realmode_functions
+    - -IProtectedMode/gdt
+    - -IProtectedMode/idt
+    - -IProtectedMode/stdio
+    - -IProtectedMode/stdlib
+    - -IProtectedMode/other
+    - -IProtectedMode/runtime_code_analysis
 
-    - -I./cpu/
-    - -I./cpu/multicore
-    - -I./cpu/fpu
-    - -I./cpu/control_registers
-    - -I./cpu/cpuid
-    - -I./cpu/gdt 
-    - -I./cpu/idt
-    - -I./cpu/pic
-    - -I./cpu/apic
+    - -IProtectedMode/cpu/
+    - -IProtectedMode/cpu/multicore
+    - -IProtectedMode/cpu/fpu
+    - -IProtectedMode/cpu/control_registers
+    - -IProtectedMode/cpu/cpuid
+    - -IProtectedMode/cpu/gdt 
+    - -IProtectedMode/cpu/idt
+    - -IProtectedMode/cpu/pic
+    - -IProtectedMode/cpu/apic
 
 
-    - -Idrivers/ps2/
-    - -Idrivers/ps2/controller
-    - -Idrivers/ps2/mouse
-    - -Idrivers/ps2/keyboard
-    - -Idrivers/ps2/keyboard/cpp
-    - -Idrivers/usb/controller
+    - -IProtectedMode/drivers/ps2/
+    - -IProtectedMode/drivers/ps2/controller
+    - -IProtectedMode/drivers/ps2/mouse
+    - -IProtectedMode/drivers/ps2/keyboard
+    - -IProtectedMode/drivers/ps2/keyboard/cpp
+    - -IProtectedMode/drivers/usb/controller
 
-    - -Iz_otherLang/cpp/
-    - -Iz_otherLang/zig/
-    - -Iz_otherLang/rust/
+    - -IProtectedMode/z_otherLang/cpp/
+    - -IProtectedMode/z_otherLang/zig/
+    - -IProtectedMode/z_otherLang/rust/
 # C files (default standard)
 If:
   PathMatch: ".*\\.c$"

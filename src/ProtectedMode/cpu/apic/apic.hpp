@@ -43,7 +43,9 @@ uint8_t get_core_id_fast();
 
 constexpr uintptr_t lapic_address = (0xFEE0'0000);
 
-constexpr uint8_t interrupt_entered_main = 57;
+constexpr uint8_t number_of_reserved_interrupt = 32;
+constexpr uint8_t spurious_interrupt_vector	   = 56; // 32 + 24 = reserved interrupt + 24 irqs per apic.
+constexpr uint8_t interrupt_entered_main	   = 57;
 
 void calibrate_lapic_timer();
 

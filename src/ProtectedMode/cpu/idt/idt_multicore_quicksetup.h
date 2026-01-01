@@ -1,12 +1,11 @@
+
 #pragma once
-// Bad name and kinda not used
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-	void idt_init();
 	void idt_finalize();
 
 #ifdef __cplusplus

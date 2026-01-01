@@ -1,6 +1,8 @@
 #include "assert.h"
 #include "gdt.h"
+#include "idt.h"
 #include "idt_master.h"
+#include "idt_ps2.h"
 #include "intrinsics.h"
 #include "more_types.h"
 // #include "multicore.h"
@@ -31,6 +33,9 @@ extern function_t interrupt_69_handler; // not a function pointer. It's value is
 
 extern function_t interrupt_56_handler;
 extern function_t interrupt_57_handler;
+extern function_t apic_wait_interrupt_handler_asm; // 58. (See)
+// extern function_t interrupt_59_handler;
+// extern function_t interrupt_60_handler;
 
 // typedef struct PACKED {
 //     uint32_t eip;
@@ -100,6 +105,9 @@ void idt_init()
 
 	idt_set_descriptor(56, &interrupt_56_handler, GT32_IG32, 0, true);
 	vectors[56] = true;
+
+	idt_set_descriptor(57, &interrupt_57_handler, GT32_IG32, 0, true);
+	vectors[57] = true;
 
 	idt_set_descriptor(57, &interrupt_57_handler, GT32_IG32, 0, true);
 	vectors[57] = true;
