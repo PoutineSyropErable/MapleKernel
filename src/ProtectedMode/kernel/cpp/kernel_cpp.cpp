@@ -254,10 +254,12 @@ int cpp_main(struct cpp_main_args args)
 	uint8_t core_id = apic_get_core_id();
 
 	// apic::start_timer(8, 10000, apic::divide_configuration::divide_by_128, apic::timer_mode::repeat);
-	apic_timer::start_timer(
-		apic_timer::handlers::apic_wait_interrupt, 10000, apic::divide_configuration::divide_by_128, apic::timer_mode::single_shot);
+	// apic_timer::start_timer(
+	// 	apic_timer::handlers::apic_wait_interrupt, 10000, apic::divide_configuration::divide_by_128, apic::timer_mode::single_shot);
 	// this is an internal function.
 	// Shouldn't really be used for regular stuff
+
+	apic_timer::start_timer(0, 1, apic::divide_configuration::divide_by_1, apic::timer_mode::single_shot, apic::mask::enable);
 
 	// Setup lapic irq handling
 	terminal_writestring("\n====kernel cpp entering main loop====\n");

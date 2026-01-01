@@ -111,6 +111,7 @@ uint32_t sync_apic_with_pit()
 
 	kprintf("APIC frequency: %u Hz\n", apic_frequency);
 #endif
+
 	if (tsc_freq > 10)
 	{
 		kprintf("TSC frequency: %u Hz\n", tsc_freq);
