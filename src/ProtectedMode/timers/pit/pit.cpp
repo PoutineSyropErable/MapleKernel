@@ -176,14 +176,6 @@ inline void wait_till_pit_interrupt()
 	} while (!pit_interrupt_handled);
 }
 
-inline void wait_till_pit_interrupt_busy()
-{
-	pit_interrupt_handled = false;
-	while (!pit_interrupt_handled)
-	{
-	}
-}
-
 /*
 This command also changes the mode.
 Which is a redundant operation if we are looping single shot interrupt.
@@ -198,7 +190,8 @@ inline void wait_lte_one_cycle(uint32_t pit_freq_divider)
 
 void pit::wait_pit_count(uint32_t count)
 {
-	wait_lte_one_cycle(count);
+	send_wait_count_command(count);
+	wait_till_pit_interrupt();
 }
 
 int pit::wait(float seconds)

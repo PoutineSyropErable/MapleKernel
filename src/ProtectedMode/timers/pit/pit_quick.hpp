@@ -61,6 +61,7 @@ inline void wait_till_pit_interrupt_busy()
 	pit_interrupt_handled = false;
 	while (!pit_interrupt_handled)
 	{
+		__sti();
 	}
 }
 

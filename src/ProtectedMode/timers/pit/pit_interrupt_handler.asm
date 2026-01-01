@@ -23,7 +23,6 @@ extern pit_interrupt_handler
 global pit_interrupt_handler_asm
 pit_interrupt_handler_asm:
 	push eax
-	pushf
 	mov eax, [quick_pit]
 	test eax, eax ; if quick pit, then not zero
 	jz .long_pit
@@ -32,20 +31,24 @@ pit_interrupt_handler_asm:
 	mov [pit_interrupt_handled], eax
 	mov [ EOI_MMIO_ADDR ], 0
 
-	popf
+.loop
+	add eax, 1
+	cmp eax, 100000
+	jb .loop
+	
+	
+
 	pop eax
 	iret
 
 
 
 .long_pit:
-	popf
 	pop eax
 
 
 
 	pusha               ; save registers
-	pushf
     push ds
     push es
     push fs
@@ -59,7 +62,6 @@ pit_interrupt_handler_asm:
     pop fs
     pop es
     pop ds
-	popf
     popa
 
 
