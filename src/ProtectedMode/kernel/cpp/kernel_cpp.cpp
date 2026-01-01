@@ -157,6 +157,7 @@ void multicore_setup(void *rsdp_void)
 	// memset(core_is_active, 0, runtime_core_count * sizeof(bool));
 	// core_is_active[0] = true;
 	bool core_is_active[MAX_CORE_COUNT] = {0};
+	core_is_active[0]					= true;
 
 	kprintf("runtime count : %u\n", runtime_core_count);
 
