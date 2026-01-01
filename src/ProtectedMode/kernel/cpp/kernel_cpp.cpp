@@ -18,8 +18,8 @@
 #include "framebuffer.hpp"
 #include "madt.hpp"
 #include "pit.hpp"
-#include "pit_interrupt_handler.hpp"
-#include "pit_quick.hpp"
+// #include "pit_interrupt_handler.hpp"
+// #include "pit_quick.hpp"
 #include "ps2_mouse_handler.h"
 
 #include "gdt.h"
@@ -148,7 +148,7 @@ void multicore_setup(void *rsdp_void)
 	uint32_t apic_freq = apic_timer::sync_apic_with_pit();
 	kprintf("Calibrated lapic timer. Frequency: %u\n", apic_freq);
 
-	pit::wait_pit_count_precise(0); // 65536
+	// pit::wait_pit_count_precise(0); // 65536
 	kprintf("After wait\n");
 
 	/* =============== WAKING THE CORES ================== */

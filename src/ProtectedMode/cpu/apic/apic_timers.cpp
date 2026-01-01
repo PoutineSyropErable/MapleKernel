@@ -11,7 +11,6 @@
 #include "math.hpp"
 #include "multicore.h"
 #include "pit.hpp"
-#include "pit_interrupt_handler.hpp"
 #include "pit_quick.hpp"
 
 using namespace apic;
@@ -80,7 +79,7 @@ uint32_t sync_apic_with_pit()
 		kprintf("tsc freq = %u\n\n", tsc_freq);
 	}
 
-	// pit_ih::set_quick_path_mode(1);
+	// pit_ih::set_quick_path_mode(true);
 
 	uint32_t start_count = 0xFFFF'FFFF;
 	start_timer(apic_sync_interrupt, start_count, divide_configuration::divide_by_1, timer_mode::single_shot, mask::disable);

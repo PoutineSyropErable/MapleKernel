@@ -56,7 +56,7 @@ core_bootstrap32:
 	add ebx, 4  ; gdt idx of fs
 	mov ecx, ebx ; copy for gs
 	shl ebx, 3  ; fs
-	mov fs, bx ; set fs
+	mov fs, bx ; set fs. Some crashes happen here
 	add ecx, 1 ; gdt idx of gs
 	shl ecx, 3 ; gs value
 	mov gs, cx ; // =================== CRASH HERE IF GS to big
