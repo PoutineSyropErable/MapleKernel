@@ -162,12 +162,17 @@ uint8_t apic::get_core_id()
 
 void apic::send_eoi()
 {
+	// forced to use this
 	lapic.send_eoi();
 }
 
 extern "C" void apic_send_eoi()
 {
+	// Sadly, can't inline this call
 	lapic.send_eoi();
+
+	// mov dword [ EOI_MMIO_ADDR ], 0
+	// mov    DWORD PTR ds:0xfee000b0,0x0
 }
 
 uint8_t apic::get_core_id_fast()

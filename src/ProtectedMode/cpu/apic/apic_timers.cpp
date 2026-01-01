@@ -80,6 +80,7 @@ uint32_t sync_apic_with_pit()
 		kprintf("tsc freq = %u\n\n", tsc_freq);
 	}
 
+	bool pit_quick = pit_ih::get_quick_path_mode();
 	pit_ih::set_quick_path_mode(true);
 
 	uint32_t start_count = 0xFFFF'FFFF;
@@ -91,7 +92,7 @@ uint32_t sync_apic_with_pit()
 
 	current_count_register cc	= lapic.current_count.read();
 	uint32_t			   diff = start_count - cc.value;
-	pit_ih::set_quick_path_mode(false);
+	pit_ih::set_quick_path_mode(pit_quick);
 
 	apic_frequency = PIT_FREQ_HZ * (diff / 65536);
 	uint32_t ratio = diff / 65536;

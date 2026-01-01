@@ -22,39 +22,28 @@ PIT_IRQ equ 0
 extern pit_interrupt_handler
 global pit_interrupt_handler_asm
 pit_interrupt_handler_asm:
-	
-	pusha               ; save registers
-    push ds
-    push es
-    push fs
-    push gs
-
-
+	push eax
 	mov eax, [quick_pit]
 	test eax, eax ; if quick pit, then not zero
 	jz .long_pit
 
-	mov eax, 1
+	; quick pit should be 1
 	mov [pit_interrupt_handled], eax
 	mov dword [ EOI_MMIO_ADDR ], 0
+	; DWORD writes! Fucking hell. It took so long to find
 
-.loop
-	add eax, 1
-	cmp eax, 100000
-	jb .loop
-	
-	
-	pop gs
-    pop fs
-    pop es
-    pop ds
-    popa
-
+	pop eax
 	iret
 
 
 
 .long_pit:
+	pop eax
+	pusha               ; save registers
+    push ds
+    push es
+    push fs
+    push gs
 	call pit_interrupt_handler
 
 
