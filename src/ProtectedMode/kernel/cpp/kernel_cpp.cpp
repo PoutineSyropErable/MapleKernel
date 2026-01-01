@@ -138,7 +138,6 @@ void multicore_setup(void *rsdp_void)
 	kprintf("\n");
 
 	// initiate the apic_io of this core.
-	// __cli();
 	apic_io::init_io_apic(irq_to_gsi);
 	IRQ_set_mask(0);
 	// We don't touch the pic
