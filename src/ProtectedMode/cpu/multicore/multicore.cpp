@@ -24,10 +24,6 @@ extern "C" void application_core_main()
 
 	multicore::entered_main[core_id_f] = true;
 
-	while (!multicore::acknowledged_entered_main[core_id_f])
-	{
-	}
-
 	apic::error err = apic::error::none;
 	// err = apic::send_ipi(0, INTERRUPT_ENTERED_MAIN);
 	if ((uint8_t)err)

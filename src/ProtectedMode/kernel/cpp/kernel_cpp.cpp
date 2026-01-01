@@ -18,6 +18,8 @@
 #include "framebuffer.hpp"
 #include "madt.hpp"
 #include "pit.hpp"
+#include "pit_interrupt_handler.hpp"
+#include "pit_quick.hpp"
 #include "ps2_mouse_handler.h"
 
 #include "gdt.h"
@@ -138,45 +140,26 @@ void multicore_setup(void *rsdp_void)
 	// initiate the apic_io of this core.
 	// __cli();
 	apic_io::init_io_apic(irq_to_gsi);
-	kprintf("Initiated io apic\n");
-	kprintf("Disabled the pic\n");
-	// idt_init();
-	// idt_init_pit();
-	// idt_init_ps2_quick();
-	// idt_finalize();
-	// quick_k_init();
-	// __sti();
 	IRQ_set_mask(0);
-	// disable_pic();
-	kprintf("Enabled the idt\n");
+	// We don't touch the pic
+	kprintf("Initiated io apic\n");
 	/* =============== APIC TIMER CALIBRATION ================== */
 
-	for (uint8_t i = 0; i < 100; i++)
-	{
-
-		// pit::wait(1);
-		// kprintf("waited %u seconds\n", i);
-	}
-
 	// Apic timers calibration using pit
-	// uint32_t apic_freq = apic_timer::sync_apic_with_pit();
-	// kprintf("Calibrated lapic timer. Frequency: %u\n", apic_freq);
+	uint32_t apic_freq = apic_timer::sync_apic_with_pit();
+	kprintf("Calibrated lapic timer. Frequency: %u\n", apic_freq);
+
+	pit::wait_pit_count_precise(0); // 65536
+	kprintf("After wait\n");
 
 	/* =============== WAKING THE CORES ================== */
 	kprintf("\n\n");
-	bool *core_is_active = (bool *)alloca(sizeof(bool) * runtime_core_count);
-	// bool core_is_active[MAX_CORE_COUNT] = {0};
-	core_is_active[0] = true;
-	core_is_active[1] = false;
-	core_is_active[2] = false;
-	core_is_active[3] = false;
+	// bool *core_is_active = (bool *)alloca(sizeof(bool) * runtime_core_count);
+	// memset(core_is_active, 0, runtime_core_count * sizeof(bool));
+	// core_is_active[0] = true;
+	bool core_is_active[MAX_CORE_COUNT] = {0};
 
 	kprintf("runtime count : %u\n", runtime_core_count);
-
-	// apic::error err = apic::wake_core(1, core_bootstrap, application_core_main);
-	// err				= apic::wake_core(2, core_bootstrap, application_core_main);
-	// err				= apic::wake_core(3, core_bootstrap, application_core_main);
-	// return;
 
 	uint16_t fs_value;
 	__asm__ volatile("mov %%fs, %0" : "=r"(fs_value));
@@ -207,7 +190,6 @@ void multicore_setup(void *rsdp_void)
 			while (!multicore::entered_main[core_id])
 			{
 			}
-			multicore::acknowledged_entered_main[core_id] = true;
 
 			// apic::wait_till_interrupt(INTERRUPT_ENTERED_MAIN);
 			kprintf("BSP Acknowledges Core %u entered it's main function\n", core_id);
@@ -224,7 +206,7 @@ void multicore_setup(void *rsdp_void)
 		kprintf("i: %u, core_id: %u, active: %b\n", i, core_id, core_is_active[core_id]);
 		assert(core_is_active[core_id], "i: %u, Core %u must be active. All or nothing for now\n", i, core_id);
 	}
-	kprintf("\nActivated all cores\n");
+	// kprintf("\nActivated all cores\n");
 
 	// Disabling the pic will be done rather late
 }
@@ -232,7 +214,7 @@ void multicore_setup(void *rsdp_void)
 int cpp_main(struct cpp_main_args args)
 {
 
-	test_special_pointers();
+	// test_special_pointers();
 	multicore_setup(args.rsdp_v);
 
 	kprintf("\n\n================= Start of CPP Main =================\n\n");
@@ -247,7 +229,7 @@ int cpp_main(struct cpp_main_args args)
 	// this is an internal function.
 	// Shouldn't really be used for regular stuff
 
-	apic_timer::start_timer(0, 1, apic::divide_configuration::divide_by_1, apic::timer_mode::single_shot, apic::mask::enable);
+	// apic_timer::start_timer(0, 1, apic::divide_configuration::divide_by_1, apic::timer_mode::single_shot, apic::mask::enable);
 
 	// Setup lapic irq handling
 	terminal_writestring("\n====kernel cpp entering main loop====\n");

@@ -18,4 +18,6 @@ int short_timeout_async(float seconds, volatile uint32_t *finished, bool new_tim
 
 void short_timeout(uint32_t count);
 
+void wait_pit_count(uint32_t count);
+
 } // namespace pit

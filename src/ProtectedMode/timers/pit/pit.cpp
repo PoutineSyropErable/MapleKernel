@@ -158,14 +158,18 @@ constexpr pit_wait_split compute_pit_wait(float seconds, float max_single_wait, 
 
 inline void wait_till_pit_interrupt()
 {
+	__cli();
 	pit_interrupt_handled = false;
 	do
 	{
+		__sti();
 		__hlt();
+		__cli();
 		// The pit interrupt handler will set the global variable pit_interrupt_handled to true.
 		// any other interrupt will just cause another loop, where halt will be called.
 		// halting the cpu untill the next interrupt.
 	} while (!pit_interrupt_handled);
+	__sti();
 }
 
 inline void wait_till_pit_interrupt_busy()
@@ -188,6 +192,11 @@ inline void wait_lte_one_cycle(uint32_t pit_freq_divider)
 	wait_till_pit_interrupt();
 }
 
+void pit::wait_pit_count(uint32_t count)
+{
+	wait_lte_one_cycle(count);
+}
+
 int pit::wait(float seconds)
 {
 	if (seconds <= 0)
@@ -208,6 +217,7 @@ int pit::wait(float seconds)
 	for (uint32_t cycle_idx = 0; cycle_idx < sp.full_cycles; cycle_idx++)
 	{
 		wait_till_pit_interrupt();
+		// terminal_writestring("after int\n");
 	}
 
 	// The mode change of this command will stop the frequency.

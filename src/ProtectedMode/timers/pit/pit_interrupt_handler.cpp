@@ -1,5 +1,6 @@
 // pit_interrupt_handler.c
 #include "apic.hpp"
+#include "atomic.h"
 #include "irq.h"
 #include "pic_public.h"
 #include "pit.h"
@@ -9,15 +10,21 @@
 
 pit_ih::mode g_pit_mode = pit_ih::mode::wait;
 
-extern "C" bool quick_pit = false;
+uint32_t		quick_pit_lock = 0;
+extern "C" bool quick_pit	   = false;
 void			pit_ih::set_quick_path_mode(bool quick_or_not)
 {
+	simple_spin_lock(&quick_pit_lock);
 	quick_pit = quick_or_not;
+	simple_spin_unlock(&quick_pit_lock);
 }
 
 bool pit_ih::get_quick_path_mode()
 {
-	return quick_pit;
+	simple_spin_lock(&quick_pit_lock);
+	bool a = quick_pit;
+	simple_spin_unlock(&quick_pit_lock);
+	return a;
 }
 
 void pit_ih::set_mode(enum mode mode)

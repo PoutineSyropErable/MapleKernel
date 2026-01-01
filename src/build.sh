@@ -142,7 +142,7 @@ else
 		# CPU_MODEL="qemu64"
 	else
 		CPU_MODEL="host"
-		# CPU_MODEL="qemu32"
+		CPU_MODEL="qemu32"
 	fi
 
 	if [[ "$CPU_MODEL" == "host" ]]; then

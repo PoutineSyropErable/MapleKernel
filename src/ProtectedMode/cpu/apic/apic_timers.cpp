@@ -72,23 +72,22 @@ uint32_t get_tsc_frequency()
 
 uint32_t sync_apic_with_pit()
 {
+
 	uint32_t tsc_freq = get_tsc_frequency();
 	if (tsc_freq > 10)
 	{
 
 		kprintf("tsc freq = %u\n\n", tsc_freq);
 	}
-	bool quick_path = pit_ih::get_quick_path_mode();
-	pit_ih::set_quick_path_mode(true);
 
 	uint32_t start_count = 0xFFFF'FFFF;
 	start_timer(apic_sync_interrupt, start_count, divide_configuration::divide_by_1, timer_mode::single_shot, mask::disable);
-	// Slower on qemu if i get the start count here. Same on my machine.
 	pit::wait_pit_count_precise(0); // 65536
+	// pit::wait_pit_count(65536); // 65536
+	// Slower on qemu if i get the start count right after start_timer. Equal on my machine
 
 	current_count_register cc	= lapic.current_count.read();
 	uint32_t			   diff = start_count - cc.value;
-	pit_ih::set_quick_path_mode(quick_path);
 
 	apic_frequency = PIT_FREQ_HZ * (diff / 65536);
 	uint32_t ratio = diff / 65536;
@@ -104,7 +103,7 @@ uint32_t sync_apic_with_pit()
 		kprintf("ghz_diff : %u\n", ghz_diff);
 		uint32_t pos_ratio = qemu_apic_freq / ghz_diff;
 		kprintf("Pos ratio : %u\n", pos_ratio);
-		if (pos_ratio > 1000)
+		if (pos_ratio > 100)
 		{
 			apic_frequency = qemu_apic_freq;
 		}

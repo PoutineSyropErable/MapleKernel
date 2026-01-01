@@ -104,6 +104,9 @@ fi
 
 if [[ "$QEMU_OR_REAL_MACHINE" == "qemu" ]]; then
 	CFLAGS+=("-DQEMU")
+	CPPFLAGS+=("-DQEMU")
+	NASM_FLAGS32+=("-DQEMU")
+	NASM_FLAGS16+=("-DQEMU")
 fi
 
 # QEMU-Compatible FPU flags for 32-bit
