@@ -62,7 +62,6 @@ void set_pit_count(uint16_t count)
 	__cli();
 	send_byte_to_pit(IOPort::channel_0_data_port, count & 0xFF);		  // Low byte
 	send_byte_to_pit(IOPort::channel_0_data_port, (count & 0xFF00) >> 8); // High Byte
-	__sti();
 	return;
 }
 
