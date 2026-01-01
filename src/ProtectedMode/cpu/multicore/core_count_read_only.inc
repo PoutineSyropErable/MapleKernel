@@ -7,7 +7,7 @@
 %define GDT_TLS_BASE 0x28
 %define GDT_TLS_STRIDE 0x10
 
-%define MAX_CORE_COUNT 12
+%define MAX_CORE_COUNT 15
 %define NEW_GDT_ENTRY_COUNT 4 + MAX_CORE_COUNT * 2
 
 %endif

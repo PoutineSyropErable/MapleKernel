@@ -42,7 +42,7 @@ static inline void send_wait_count_command_q(uint16_t count)
 {
 
 #ifdef DEBUG
-	assert(freq_divider_count <= MAX_FREQ_DIVIDER + 1, "Too high a count, undefined behavior!\n");
+	assert(count <= MAX_FREQ_DIVIDER + 1, "Too high a count, undefined behavior!\n");
 #endif
 
 	mode_command_register wait_command = {//

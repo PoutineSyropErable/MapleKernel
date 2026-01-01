@@ -109,7 +109,7 @@ void idt_init()
 	idt_set_descriptor(57, &interrupt_57_handler, GT32_IG32, 0, true);
 	vectors[57] = true;
 
-	idt_set_descriptor(57, &interrupt_57_handler, GT32_IG32, 0, true);
+	idt_set_descriptor(58, &apic_wait_interrupt_handler_asm, GT32_IG32, 0, true);
 	vectors[57] = true;
 }
 

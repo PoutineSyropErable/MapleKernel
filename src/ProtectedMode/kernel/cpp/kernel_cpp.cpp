@@ -147,10 +147,6 @@ void multicore_setup(void *rsdp_void)
 	// Apic timers calibration using pit
 	uint32_t apic_freq = apic_timer::sync_apic_with_pit();
 	kprintf("Calibrated lapic timer. Frequency: %u\n", apic_freq);
-
-	// pit::wait_pit_count_precise(0); // 65536
-	kprintf("After wait\n");
-
 	/* =============== WAKING THE CORES ================== */
 	kprintf("\n\n");
 	// bool *core_is_active = (bool *)alloca(sizeof(bool) * runtime_core_count);
@@ -224,8 +220,8 @@ int cpp_main(struct cpp_main_args args)
 	uint8_t core_id = apic_get_core_id();
 
 	// apic::start_timer(8, 10000, apic::divide_configuration::divide_by_128, apic::timer_mode::repeat);
-	// apic_timer::start_timer(
-	// 	apic_timer::handlers::apic_wait_interrupt, 10000, apic::divide_configuration::divide_by_128, apic::timer_mode::single_shot);
+	apic_timer::start_timer(apic_timer::handlers::apic_wait_interrupt, 10000, apic::divide_configuration::divide_by_128,
+		apic::timer_mode::single_shot, apic::mask::enable);
 	// this is an internal function.
 	// Shouldn't really be used for regular stuff
 
@@ -240,7 +236,7 @@ int cpp_main(struct cpp_main_args args)
 		// kernel main loop
 		cpp_event_loop();
 
-		// pit::wait(1.f / 60.f);
+		pit::wait(1.f / 144.f);
 	}
 	return 0;
 }

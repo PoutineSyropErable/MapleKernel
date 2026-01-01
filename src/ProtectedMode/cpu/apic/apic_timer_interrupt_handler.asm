@@ -20,7 +20,7 @@ apic_IRQ equ 0
 
 ; =================================================== apic HANDLER =======================================
 extern apic_interrupt_handler
-global apic_interrupt_handler_asm
+global apic_wait_interrupt_handler_asm
 apic_wait_interrupt_handler_asm:
 
 	push eax

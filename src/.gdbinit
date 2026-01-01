@@ -25,7 +25,7 @@ end
 
 
 cd-src
-file build/myos.elf
+file ../build32/kernel32.elf
 # rk32
 # tbreak _start
 # tbreak kernel_main
