@@ -305,6 +305,7 @@ $GCC32 "${CFLAGS[@]}" -c "$PIC/pic.c" -o "$BUILD_DIR/pic.o" "-I$IDT" "-I$GDT" "-
 # CPU/APIC
 printf -- "\n\n\n======================== APIC ==============\n\n\n"
 $GPP32 "${CPPFLAGS[@]}" -c "$APIC/apic.cpp" -o "$BUILD_DIR/apic.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$CPUID" "-I$MULTICORE" "-I$CPU" "-I$PIT" "-I$GDT" "-I$APIC_IO"
+$GPP32 "${CPPFLAGS[@]}" -c "$APIC/apic_timers.cpp" -o "$BUILD_DIR/apic_timers.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$CPUID" "-I$MULTICORE" "-I$CPU" "-I$PIT" "-I$GDT" "-I$APIC_IO"
 $GPP32 "${CPPFLAGS[@]}" -c "$APIC_IO/apic_io.cpp" -o "$BUILD_DIR/apic_io.o" "-I$STDLIB" "-I$STDIO" "-I$ACPI" "-I$CPUID" "-I$MULTICORE" "-I$CPU" "-I$GDT"
 $GPP32 "${CPPFLAGS[@]}" -c "$MULTICORE/multicore.cpp" -o "$BUILD_DIR/multicore.o" "-I$STDLIB" "-I$STDIO" "-I$APIC" "-I$CPUID" "-I$MULTICORE" "-I$CPU" "-I$GDT" "-I$FRAMEBUFER"
 sed 's/^#/%/' "$MULTICORE/core_count.h" >"$MULTICORE/core_count_read_only.inc"

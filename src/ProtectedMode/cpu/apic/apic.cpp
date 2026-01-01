@@ -46,6 +46,7 @@ extern "C" uint8_t test_cmd()
 	return 1;
 }
 
+bool					  apic::support_tsc_deadline = false;
 struct apic::apic_support apic::has_apic()
 {
 
@@ -57,7 +58,8 @@ struct apic::apic_support apic::has_apic()
 
 	struct cpuid_basic_edx edx = BITCAST(struct cpuid_basic_edx, cpuid_1.regs.edx);
 	struct cpuid_basic_ecx ecx = BITCAST(struct cpuid_basic_ecx, cpuid_1.regs.ecx);
-	return apic::apic_support{edx.apic, ecx.x2apic};
+	apic::support_tsc_deadline = ecx.tsc_deadline;
+	return apic::apic_support{edx.apic, ecx.x2apic, ecx.tsc_deadline};
 	// Technically, I'm only implementing it for the apic (x1).
 	// The mmio version, not the msr version.
 }
@@ -143,6 +145,11 @@ enum apic::error apic::init_lapic()
 	}
 	// lapic.lvt_lint1.write({.vector_number = 0, .mask = mask::enable});
 	// lint1 is for nmi, and i don't have any of them for now so, All is good
+
+	lapic.task_priority.write({
+		.task_priority_subclass = task_priority_subclass::default_, .task_priority = task_priority::all, .res = 0,
+		// Just write 0 there
+	});
 	return apic::error::none;
 }
 
@@ -384,73 +391,27 @@ void apic::wait_till_interrupt(uint8_t interrupt_vector)
 	{
 		__hlt();
 		// Check if any of the sender sent it.
-		reentrant_lock(&last_interrupt_received_lock);
+		// If it's sent while its trying to take the lock
 		for (uint8_t sender_id = 0; sender_id < runtime_core_count; sender_id++)
 		{
 			uint8_t lir = last_interrupt_received[core_id][sender_id];
 			// kprintf("Lir = %u\n", lir);
 			if (lir == interrupt_vector)
 			{
-				kprintf("received\n\n");
+				reentrant_lock(&last_interrupt_received_lock);
 				last_interrupt_received[core_id][sender_id] = NO_INTERRUPT;
+				reentrant_unlock(&last_interrupt_received_lock);
 				irq_restore(flags);
-				// reentrant_unlock(&last_interrupt_received_lock);
 				return;
 				// TODO: Warning, some multicore shenanigans and race condition possible here
 				// Should be safe when used to init core and wait till interrupt
+
+				// Check time, set time race condition.
+				// This is a nightmare, to work on more later
+
+				// Also, what if it sends an interrupt halts after the interrupt is recieved.
+				// Then it infinites loop and never wake up
 			}
 		}
-		reentrant_unlock(&last_interrupt_received_lock);
 	}
-}
-
-/* =========================== C OSDEV ===================== */
-#define IA32_APIC_BASE_MSR 0x1B
-#define IA32_APIC_BASE_MSR_BSP 0x100 // Processor is a BSP
-#define IA32_APIC_BASE_MSR_ENABLE 0x800
-
-/** returns a 'true' value if the CPU supports APIC
- *  and if the local APIC hasn't been disabled in MSRs
- *  note that this requires CPUID to be supported.
- */
-
-/* Set the physical address for local APIC registers */
-void cpu_set_apic_base(uintptr_t apic)
-{
-	uint32_t edx = 0;
-	uint32_t eax = (apic & 0xfffff0000) | IA32_APIC_BASE_MSR_ENABLE;
-
-#ifdef __PHYSICAL_MEMORY_EXTENSION__
-	edx = (apic >> 32) & 0x0f;
-#endif
-
-	write_msr(IA32_APIC_BASE_MSR, eax, edx);
-}
-
-/**
- * Get the physical address of the APIC registers page
- * make sure you map it to virtual memory ;)
- */
-uintptr_t cpu_get_apic_base()
-{
-	uint32_t eax, edx;
-	read_msr(IA32_APIC_BASE_MSR, &eax, &edx);
-
-#ifdef __PHYSICAL_MEMORY_EXTENSION__
-	return (eax & 0xfffff000) | ((edx & 0x0f) << 32);
-#else
-	return (eax & 0xfffff000);
-#endif
-}
-
-void enable_apic()
-{
-	/* Section 11.4.1 of 3rd volume of Intel SDM recommends mapping the base address page as strong uncacheable for correct APIC operation.
-	 */
-
-	/* Hardware enable the Local APIC if it wasn't enabled */
-	cpu_set_apic_base(cpu_get_apic_base());
-
-	/* Set the Spurious Interrupt Vector Register bit 8 to start receiving interrupts */
-	// write_reg(0xF0, ReadRegister(0xF0) | 0x100);
 }

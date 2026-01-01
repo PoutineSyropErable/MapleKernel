@@ -9,6 +9,7 @@ struct apic_support
 {
 	bool apic : 1;
 	bool x2apic : 1;
+	bool tsc_deadline : 1;
 };
 
 struct apic_support has_apic();
@@ -41,6 +42,8 @@ method using fs/gs.
 uint8_t get_core_id_fast();
 
 constexpr uintptr_t lapic_address = (0xFEE0'0000);
+
+constexpr uint8_t interrupt_entered_main = 57;
 
 void calibrate_lapic_timer();
 

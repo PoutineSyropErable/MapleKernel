@@ -12,6 +12,7 @@
 #include "apic.h"
 #include "apic.hpp"
 #include "apic_io.hpp"
+#include "apic_timers.hpp"
 #include "assert.h"
 #include "framebuffer.hpp"
 #include "madt.hpp"
@@ -56,6 +57,7 @@ void multicore_setup(void *rsdp_void)
 
 	bool has_apic = apic_support.apic || apic_support.x2apic;
 	assert(has_apic, "Must have apic\n");
+	kprintf("Do we support tsc deadline? %b\n", apic_support.tsc_deadline);
 
 	struct acpi::RSDP *rsdp = (struct acpi::RSDP *)rsdp_void;
 	kprintf("rsdp address: %h\n", rsdp);
@@ -249,6 +251,12 @@ int cpp_main(struct cpp_main_args args)
 	kprintf("got here\n");
 
 	uint8_t core_id = apic_get_core_id();
+
+	// apic::start_timer(8, 10000, apic::divide_configuration::divide_by_128, apic::timer_mode::repeat);
+	apic_timer::start_timer(
+		apic_timer::apic_wait_interrupt, 10000, apic::divide_configuration::divide_by_128, apic::timer_mode::single_shot);
+	// this is an internal function.
+	// Shouldn't really be used for regular stuff
 
 	// Setup lapic irq handling
 	terminal_writestring("\n====kernel cpp entering main loop====\n");

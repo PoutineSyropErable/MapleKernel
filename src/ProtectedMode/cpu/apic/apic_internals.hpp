@@ -23,6 +23,7 @@ struct apic_msr_eax
 	uint32_t base_low_page_idx : 20;	 // 12–31, base_low = base_low_page_idx << 12
 };
 STATIC_ASSERT(sizeof(apic_msr_eax) == 4, "Must be 32 bit");
+STATIC_ASSERT(alignof(apic_msr_eax) == 4, "Must be 32 bit");
 
 struct apic_msr_edx
 {
@@ -30,6 +31,7 @@ struct apic_msr_edx
 	uint32_t reserved : 28; // 36–63
 };
 STATIC_ASSERT(sizeof(apic_msr_edx) == 4, "Must be 32 bit");
+STATIC_ASSERT(alignof(apic_msr_edx) == 4, "Must be 32 bit");
 
 void read_apic_msr(apic_msr_eax *eax, apic_msr_edx *edx);
 void write_apic_msr(apic_msr_eax eax, apic_msr_edx edx);
@@ -97,7 +99,7 @@ enum class lapic_registers_offset : uint16_t
 
 /* ============================= Special structs for important registers =============================*/
 
-struct __attribute__((packed)) lapic_version_register
+struct __attribute__((packed, aligned(4))) lapic_version_register
 {
 	uint8_t version;
 	uint8_t reserved;
@@ -105,11 +107,56 @@ struct __attribute__((packed)) lapic_version_register
 	uint8_t reserved2;
 };
 
-struct __attribute__((packed)) lapic_id_register
+struct __attribute__((packed, aligned(4))) lapic_id_register
 {
 	uint32_t reserved : 24 = 0;
 	uint8_t	 apic_id;
 };
+
+struct lapic_priority_register
+{
+	uint32_t reserved0 : 4;	 // bits 0–3 (must be 0)
+	uint32_t priority : 4;	 // bits 4–7 (TPRI)
+	uint32_t reserved1 : 24; // bits 8–31 (must be 0)
+};
+
+STATIC_ASSERT(sizeof(lapic_version_register) == 4, "lapic_version_register  must be 32 bit");
+STATIC_ASSERT(alignof(lapic_version_register) == 4, "lapic_version_register  must be 32 bit");
+
+STATIC_ASSERT(sizeof(lapic_priority_register) == 4, "lapic priority register  must be 32 bit");
+STATIC_ASSERT(alignof(lapic_priority_register) == 4, "lapic priority register  must be 32 bit");
+
+namespace task_priority
+{
+
+enum type : uint8_t
+{
+	all	 = 0b0000,
+	none = 0b1111,
+};
+
+}
+
+namespace task_priority_subclass
+{
+enum type : uint8_t
+{
+	default_ = 0b0000,
+	// :TODO:
+
+};
+
+} // namespace task_priority_subclass
+
+struct task_priority_register
+{
+	enum task_priority_subclass::type task_priority_subclass : 4 = task_priority_subclass::default_;
+	enum task_priority::type		  task_priority : 4			 = task_priority::all;
+	uint32_t						  res : 24					 = 0;
+};
+
+STATIC_ASSERT(sizeof(task_priority_register) == 4, "Task priority must be 32 bit");
+STATIC_ASSERT(alignof(task_priority_register) == 4, "Task priority must be 32 bit");
 
 /* =============== Command registers ==================== */
 
@@ -175,7 +222,7 @@ enum type : uint8_t
 };
 }
 
-struct __attribute__((packed)) interrupt_command_low_register
+struct __attribute__((packed, aligned(4))) interrupt_command_low_register
 {
 	uint8_t						vector_number;
 	enum delivery_mode::type	delivery_mode : 3	 = delivery_mode::fixed;
@@ -193,8 +240,9 @@ struct __attribute__((packed)) interrupt_command_low_register
 	// We create this struct when we write, and when we write, delivery status and remote read status should be 0
 };
 STATIC_ASSERT(sizeof(interrupt_command_low_register) == 4, "ICR low must be 32 bit");
+STATIC_ASSERT(alignof(interrupt_command_low_register) == 4, "ICR low must be 32 bit");
 
-struct __attribute__((packed)) interrupt_command_high_register
+struct __attribute__((packed, aligned(4))) interrupt_command_high_register
 {
 	// TODO: Unfucked the default constructor here.
 	// Make them not suck mega dick.
@@ -211,9 +259,10 @@ struct __attribute__((packed)) interrupt_command_high_register
 };
 
 STATIC_ASSERT(sizeof(interrupt_command_high_register) == 4, "ICR high must be 32 bit");
+STATIC_ASSERT(alignof(interrupt_command_high_register) == 4, "ICR high must be 32 bit");
 
 /* =============== Command registers ==================== */
-struct __attribute__((packed)) spurious_interrupt_vector_register
+struct __attribute__((packed, aligned(4))) spurious_interrupt_vector_register
 {
 	uint8_t	 vector;		   // bits 0-7
 	bool	 apic_enable : 1;  // bit 8
@@ -222,6 +271,7 @@ struct __attribute__((packed)) spurious_interrupt_vector_register
 	uint32_t reserved2 : 19;   // bits 13-31
 };
 STATIC_ASSERT(sizeof(spurious_interrupt_vector_register) == 4, "SVR must be 32-bit");
+STATIC_ASSERT(alignof(spurious_interrupt_vector_register) == 4, "SVR must be 32-bit");
 
 /* ========================== Local Vector Tables ============================= */
 
@@ -229,11 +279,22 @@ namespace lvt_delivery_mode
 {
 enum type : uint8_t
 {
-	reserved = 0b000,
-	nmi		 = 0b100,
+	fixed							= 0b000,
+	smi								= 0b010,
+	nmi								= 0b100,
+	external_interrupt_is_delivered = 0b111,
 };
 }
 
+namespace delivery_status
+{
+enum type : bool
+{
+	successful_delivery = 0,
+	pending				= 1,
+	// When successful_delivery, The associated bit in the irr is set
+};
+}
 namespace pin_polarity
 {
 enum type : bool
@@ -261,19 +322,148 @@ enum type : bool
 	disable = 0b1,
 };
 }
-struct local_vector_table_register
+
+namespace timer_mode
 {
-	uint8_t								vector_number;
-	lvt_delivery_mode::type				delivery_mode : 3 = lvt_delivery_mode::reserved; // reserved for timer
-	bool								res2 : 1		  = 0;
-	enum pin_polarity::type				polarity : 1	  = pin_polarity::active_high;		   // reserved for timer
-	enum remote_interrupt_request::type remote_irr : 1	  = remote_interrupt_request::option0; // reserved for timer
-	enum trigger_mode::type				trigger_mode : 1  = trigger_mode::edge;				   // reserved for timer
-	enum mask::type						mask : 1		  = mask::enable;
-	uint16_t							res3 : 15		  = 0;
+enum type : uint8_t
+{
+	single_shot	 = 0b00,
+	repeat		 = 0b01,
+	tsc_deadline = 0b10, // This mode needs support
+						 // reserved	= 0b11,
+};
+}
+
+struct __attribute__((aligned(4))) lvt_register_min
+{
+	uint8_t			vector_number;
+	uint8_t			res : 7	  = 0;
+	enum mask::type mask : 1  = mask::enable; // ||| enable = unmasked. So regular interrupts can pass
+	uint16_t		res2 : 15 = 0;
 };
 
-STATIC_ASSERT(sizeof(local_vector_table_register) == 4, "LVT must be 32-bit");
+struct __attribute__((aligned(4))) lvt_register_full
+{
+	uint8_t					   vector_number;								   // 0-7
+	lvt_delivery_mode::type	   message_type : 3	   = lvt_delivery_mode::fixed; // message type == delivery mode (synoynms. diff docs) 8-10
+	bool					   res1 : 1			   = 0;						   // 11. (Bit 11 is unused everywhere)
+	enum delivery_status::type delivery_status : 1 = delivery_status::successful_delivery;	  // 12
+	enum pin_polarity::type	   pin_polarity : 1	   = pin_polarity::active_high;				  // 13
+	enum remote_interrupt_request::type remote_irr : 1	 = remote_interrupt_request::option0; // 14
+	enum trigger_mode::type				trigger_mode : 1 = trigger_mode::edge;				  // 15
+	enum mask::type						mask : 1		 = mask::enable;					  // 16
+	enum timer_mode::type				timer_mode : 2	 = timer_mode::single_shot;			  // 17 - 18 (17 only if no tsc deadline)
+	uint16_t							res3 : 13		 = 0;
+};
+
+struct __attribute__((aligned(4))) lvt_lint_register
+{
+	uint8_t					   vector_number;								   // 0-7
+	lvt_delivery_mode::type	   message_type : 3	   = lvt_delivery_mode::fixed; // 8-10 message type == delivery mode (synoynms. diff docs)
+	bool					   res1 : 1			   = 0;						   // 11.
+	enum delivery_status::type delivery_status : 1 = delivery_status::successful_delivery;	  // 12
+	enum pin_polarity::type	   pin_polarity : 1	   = pin_polarity::active_high;				  // 13
+	enum remote_interrupt_request::type remote_irr : 1	 = remote_interrupt_request::option0; // 14
+	enum trigger_mode::type				trigger_mode : 1 = trigger_mode::edge;				  // 15
+	enum mask::type						mask : 1		 = mask::enable;					  // 16
+	uint16_t							res3 : 15		 = 0;								  // 17-31
+};
+
+extern bool support_tsc_deadline;
+struct __attribute__((aligned(4))) lvt_timer_register
+{
+	uint8_t					   vector_number;											   // 0-7
+	bool					   res1 : 4			   = 0;									   // 8-11
+	enum delivery_status::type delivery_status : 1 = delivery_status::successful_delivery; // 12
+	uint8_t					   res2 : 3			   = 0;
+	enum mask::type			   mask : 1			   = mask::enable;			  // 16
+	enum timer_mode::type	   timer_mode : 2	   = timer_mode::single_shot; // 17-18
+	uint16_t				   res3 : 13		   = 0;						  // 19-31
+};
+
+STATIC_ASSERT(sizeof(lvt_register_min) == 4, "LVT must be 32-bit");
+STATIC_ASSERT(sizeof(lvt_register_full) == 4, "LVT must be 32-bit");
+STATIC_ASSERT(sizeof(lvt_timer_register) == 4, "LVT must be 32-bit");
+
+STATIC_ASSERT(alignof(lvt_register_min) == 4, "LVT must be 32-bit");
+STATIC_ASSERT(alignof(lvt_register_full) == 4, "LVT must be 32-bit");
+STATIC_ASSERT(alignof(lvt_timer_register) == 4, "LVT Timer must be 32-bit aligned");
+
+struct current_count_register
+{
+	uint32_t value;
+};
+
+struct initial_count_register
+{
+	uint32_t value;
+};
+
+STATIC_ASSERT(sizeof(current_count_register) == 4, "Current Count register must be 32-bit in size");
+STATIC_ASSERT(alignof(current_count_register) == 4, "Current Count register must be 32-bit in size");
+
+STATIC_ASSERT(sizeof(initial_count_register) == 4, "Initial Count register must be 32-bit in size");
+STATIC_ASSERT(alignof(initial_count_register) == 4, "Initial Count register must be 32-bit in size");
+
+namespace
+{
+// Information taken from the amd manual
+// But i'll implement it with a fixed 0 in the other bit
+enum class divide_configuration_amd : uint8_t
+{
+	// The value in here are the first two bits and the 4th
+	// Bit combining the create the 3 bits
+	// divide by = 2^[(n + 1) % 8]
+	divide_by_2	  = 0b000,
+	divide_by_4	  = 0b001,
+	divide_by_8	  = 0b010,
+	divide_by_16  = 0b011,
+	divide_by_32  = 0b100,
+	divide_by_64  = 0b101,
+	divide_by_128 = 0b110,
+	divide_by_1	  = 0b111,
+	// Added purely to make the pattern matching easier
+	// For human to understand
+};
+
+struct divide_configuration_register_amd
+{
+	// This ones exist only to show that bit 3 is reserved.
+	uint32_t first_two : 1;
+	uint32_t reserved : 1 = 0;
+	uint32_t third_at_bit_4 : 1;
+	uint32_t rest_reserved : 29 = 0;
+};
+STATIC_ASSERT(sizeof(divide_configuration_register_amd) == 4, "div must be 32 size");
+STATIC_ASSERT(alignof(divide_configuration_register_amd) == 4, "div must be 32 size");
+} // namespace
+
+namespace divide_configuration
+{
+enum type : uint8_t
+{
+	// The 3rd bit must be 0
+	// The 4th bit of this actually represent the third bit
+	divide_by_2	  = 0b0000,
+	divide_by_4	  = 0b0001,
+	divide_by_8	  = 0b0010,
+	divide_by_16  = 0b0011,
+	divide_by_32  = 0b1000,
+	divide_by_64  = 0b1001,
+	divide_by_128 = 0b1010,
+	divide_by_1	  = 0b1011,
+};
+
+}
+
+struct divide_configuration_register
+{
+	enum divide_configuration::type divide_configuration : 4;
+	uint32_t						reserved : 28 = 0;
+};
+
+STATIC_ASSERT(sizeof(divide_configuration_register) == 4, "div must be 32 size");
+STATIC_ASSERT(alignof(divide_configuration_register) == 4, "div must be 32 size");
 /* ============================= Constexpr helpers =============================*/
 
 template <typename ToType> constexpr volatile ToType *get_mmio_address(volatile void *base, lapic_registers_offset offset)
@@ -318,7 +508,8 @@ class LapicRegisters
 	static constexpr std::mmio_ptr_ro<lapic_id_register> lapic_id{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lapic_id)};
 	static constexpr std::mmio_ptr<lapic_version_register> lapic_version{
 		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lapic_version)};
-	static constexpr std::mmio_ptr<uint32_t> task_priority{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::task_priority)};
+	static constexpr std::mmio_ptr<struct task_priority_register> task_priority{
+		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::task_priority)};
 	static constexpr std::mmio_ptr_ro<uint32_t> arbitration_priority{
 		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::arbitration_priority)};
 	static constexpr std::mmio_ptr_ro<uint32_t> process_priority{
@@ -390,8 +581,7 @@ class LapicRegisters
 	// ------------------------------------------------------------------
 	// Timer and LVT entries
 	// ------------------------------------------------------------------
-	static constexpr std::mmio_ptr<local_vector_table_register> lvt_timer{
-		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_timer)};
+	static constexpr std::mmio_ptr<lvt_timer_register> lvt_timer{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_timer)};
 
 	static constexpr std::mmio_ptr<uint32_t> lvt_thermal_sensor{
 		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_thermal_sensor)};
@@ -399,22 +589,22 @@ class LapicRegisters
 	static constexpr std::mmio_ptr<uint32_t> lvt_performance_monitoring_counters{
 		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_performance_monitoring_counters)};
 
-	static constexpr std::mmio_ptr<local_vector_table_register> lvt_lint0{
-		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_lint0)};
+	static constexpr std::mmio_ptr<lvt_register_min> lvt_lint0{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_lint0)};
 
-	static constexpr std::mmio_ptr<local_vector_table_register> lvt_lint1{
-		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_lint1)};
+	static constexpr std::mmio_ptr<lvt_register_min> lvt_lint1{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_lint1)};
 
-	static constexpr std::mmio_ptr<local_vector_table_register> lvt_error{
-		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_error)};
+	static constexpr std::mmio_ptr<lvt_register_min> lvt_error{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::lvt_error)};
 
 	// ------------------------------------------------------------------
 	// Timer counters and configuration
 	// ------------------------------------------------------------------
-	static constexpr std::mmio_ptr<uint32_t> initial_count{lapic_address + static_cast<uintptr_t>(lapic_registers_offset::initial_count)};
-	static constexpr std::mmio_ptr_ro<uint32_t> current_count{
+	static constexpr std::mmio_ptr<current_count_register> initial_count{
+		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::initial_count)};
+
+	static constexpr std::mmio_ptr_ro<current_count_register> current_count{
 		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::current_count)};
-	static constexpr std::mmio_ptr<uint32_t> divide_configuration_register{
+
+	static constexpr std::mmio_ptr<struct divide_configuration_register> divide_configuration{
 		lapic_address + static_cast<uintptr_t>(lapic_registers_offset::divide_configuration_register)};
 
 	__attribute__((always_inline, fastcall)) inline void send_command(
