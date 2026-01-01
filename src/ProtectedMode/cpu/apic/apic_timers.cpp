@@ -90,6 +90,7 @@ uint32_t sync_apic_with_pit()
 
 	current_count_register cc	= lapic.current_count.read();
 	uint32_t			   diff = start_count - cc.value;
+	pit_ih::set_quick_path_mode(false);
 
 	apic_frequency = PIT_FREQ_HZ * (diff / 65536);
 	uint32_t ratio = diff / 65536;
