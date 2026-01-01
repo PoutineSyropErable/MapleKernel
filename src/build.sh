@@ -142,7 +142,7 @@ else
 		# CPU_MODEL="qemu64"
 	else
 		CPU_MODEL="host"
-		# CPU_MODEL="qemu32"
+		CPU_MODEL="qemu32"
 	fi
 
 	if [[ "$CPU_MODEL" == "host" ]]; then
@@ -186,7 +186,7 @@ else
 		-no-reboot \
 		"${QEMU_DBG_FLAGS[@]}" \
 		"${DEBUG_LOG_OPTS[@]}" \
-		-smp 8 \
+		-smp 12 \
 		"${QEMU_CPU_FLAG[@]}" \
 		"${USE_VNC_FLAG[@]}" \
 		-serial stdio &

@@ -1,6 +1,7 @@
 #include "apic.hpp"
 #include "atomic.h"
 #include "framebuffer.hpp"
+#include "idt/idt_master.h"
 #include "intrinsics.h"
 #include "multicore.h"
 #include "multicore.hpp"
@@ -36,13 +37,15 @@ extern "C" void application_core_main()
 			.color											   = framebuffer::Color(core_id * 0x11)});
 	}
 
-	// __sti();
+	idt_finalize();
 	// This core must load the idt too. And do sti, so it can recieve
 	kprintf("Core %u Entering main loop\n", core_id_f);
 	while (true)
 	{
 		// kprintf("Slave CPU,  core %u\n", core_id_f);
-		// __hlt();
+		__hlt();
+		kprintf("Core %u Recieved an interrupt\n", core_id_f);
+
 		// Read from it's queue.
 		// handle the message from the queue
 	}

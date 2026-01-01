@@ -34,8 +34,14 @@ extern function_t interrupt_69_handler; // not a function pointer. It's value is
 extern function_t interrupt_56_handler;
 extern function_t interrupt_57_handler;
 extern function_t apic_wait_interrupt_handler_asm; // 58. (See)
+extern function_t apic_timer_fn1_interrupt_handler;
+extern function_t apic_timer_fn2_interrupt_handler;
 // extern function_t interrupt_59_handler;
 // extern function_t interrupt_60_handler;
+
+extern function_t apic_multiprocess_thread_create; // need to create these
+extern function_t apic_multiprocess_thread_join;   // Are they even needed
+extern function_t apic_multiprocess_thread_other;  // Could it it all in other
 
 // typedef struct PACKED {
 //     uint32_t eip;
@@ -111,6 +117,17 @@ void idt_init()
 
 	idt_set_descriptor(58, &apic_wait_interrupt_handler_asm, GT32_IG32, 0, true);
 	vectors[57] = true;
+
+	// idt_set_descriptor(59, &apic_timer_fn1_interrupt_handler, GT32_IG32, 0, true);
+	// idt_set_descriptor(60, &apic_timer_fn2_interrupt_handler, GT32_IG32, 0, true);
+
+	// Need to implement these, But idk if necessary.
+	// I mean, I could put the logic inside the interrupt handler.
+#ifdef implemented
+	idt_set_descriptor(61, &apic_multiprocess_thread_create, GT32_IG32, 0, true);
+	idt_set_descriptor(62, &apic_multiprocess_thread_join, GT32_IG32, 0, true);
+	idt_set_descriptor(63, &apic_multiprocess_thread_other, GT32_IG32, 0, true);
+#endif
 }
 
 void idt_finalize()

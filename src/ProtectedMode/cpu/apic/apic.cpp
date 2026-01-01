@@ -8,6 +8,7 @@
 #include "intrinsics.h"
 #include "multicore_gdt.hpp"
 // This file needs -fno-strict-aliasing
+#include "atomic.h"
 #include "multicore.h"
 #include "pit.hpp"
 #include "pit_internals.h"
@@ -267,8 +268,8 @@ error send_sipi(uint8_t core_id, void (*core_bootstrap)())
 	return error::timeout_sending_ipi;
 }
 
-reentrant_lock_t last_interrupt_received_lock{.state = 0};
-enum error		 apic::send_ipi(uint8_t core_id, uint8_t int_vector)
+uint32_t   last_interrupt_received_spin_lock = 0;
+enum error apic::send_ipi(uint8_t core_id, uint8_t int_vector)
 {
 
 #ifdef DEBUG
@@ -276,9 +277,9 @@ enum error		 apic::send_ipi(uint8_t core_id, uint8_t int_vector)
 #endif
 
 	uint8_t this_core_id = get_core_id_fast();
-	reentrant_lock(&last_interrupt_received_lock);
+	simple_spin_lock(&last_interrupt_received_spin_lock);
 	last_interrupt_received[core_id][this_core_id] = int_vector;
-	reentrant_unlock(&last_interrupt_received_lock);
+	simple_spin_unlock(&last_interrupt_received_spin_lock);
 	// kprintf("Core %u sending interrupt %u to core %u\n\n", this_core_id, int_vector, core_id);
 	// without this print, it fucks
 	// TODO: Fix the weird deadlocks
@@ -295,7 +296,7 @@ enum error		 apic::send_ipi(uint8_t core_id, uint8_t int_vector)
 		bool recieved_pending = lapic.command_low.read().delivery_status_pending_ro;
 		if (!recieved_pending)
 		{
-			kprintf("Quit at i = %u\n", i);
+			// kprintf("Quit at i = %u\n", i);
 			return error::none;
 		}
 	}
@@ -397,13 +398,13 @@ void apic::wait_till_interrupt(uint8_t interrupt_vector)
 		// If it's sent while its trying to take the lock
 		for (uint8_t sender_id = 0; sender_id < runtime_core_count; sender_id++)
 		{
+			simple_spin_lock(&last_interrupt_received_spin_lock);
 			uint8_t lir = last_interrupt_received[core_id][sender_id];
 			// kprintf("Lir = %u\n", lir);
 			if (lir == interrupt_vector)
 			{
-				reentrant_lock(&last_interrupt_received_lock);
 				last_interrupt_received[core_id][sender_id] = NO_INTERRUPT;
-				reentrant_unlock(&last_interrupt_received_lock);
+				simple_spin_unlock(&last_interrupt_received_spin_lock);
 				irq_restore(flags);
 				return;
 				// TODO: Warning, some multicore shenanigans and race condition possible here

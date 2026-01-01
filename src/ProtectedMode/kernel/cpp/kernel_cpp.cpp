@@ -229,6 +229,11 @@ int cpp_main(struct cpp_main_args args)
 
 	// Setup lapic irq handling
 	terminal_writestring("\n====kernel cpp entering main loop====\n");
+
+	uint32_t prime1 = 4001;
+	uint32_t prime2 = 12301;
+	uint32_t prime3 = 19997;
+
 	while (true)
 	{
 
@@ -237,6 +242,11 @@ int cpp_main(struct cpp_main_args args)
 		cpp_event_loop();
 
 		pit::wait(1.f / 144.f);
+		prime1 *= prime2;
+		prime1 += prime2;
+		prime1 %= prime3;
+		uint8_t target_core_id = prime1 % MAX_CORE_COUNT;
+		apic::send_ipi(target_core_id, 58);
 	}
 	return 0;
 }
