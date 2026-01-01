@@ -55,6 +55,7 @@ uint16_t read_pit_count(void)
 
 /*
 This function disable interrupts, after calling it, interrupts must be re-enabled some way.
+In particular, reenable it once you're safe and you've already start entering your wait loop
 */
 void set_pit_count(uint16_t count)
 {
@@ -62,6 +63,13 @@ void set_pit_count(uint16_t count)
 	__cli();
 	send_byte_to_pit(IOPort::channel_0_data_port, count & 0xFF);		  // Low byte
 	send_byte_to_pit(IOPort::channel_0_data_port, (count & 0xFF00) >> 8); // High Byte
+	// Placing an sti here breaks it. Dont do it!
+	// It will race condition.
+	// Even if you think it won't.
+	// (So little code will execute, surely the count won't be finished yet)
+	// It fucking will.
+	// My guess is the remainder with low count will fuck it
+	// Or just, pure evil cpu microinstruction reordering will break it
 	return;
 }
 
