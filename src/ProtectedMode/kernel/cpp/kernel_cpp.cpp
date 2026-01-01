@@ -159,8 +159,8 @@ void multicore_setup(void *rsdp_void)
 	}
 
 	// Apic timers calibration using pit
-	uint32_t apic_freq = apic_timer::sync_apic_with_pit();
-	kprintf("Calibrated lapic timer. Frequency: %u\n", apic_freq);
+	// uint32_t apic_freq = apic_timer::sync_apic_with_pit();
+	// kprintf("Calibrated lapic timer. Frequency: %u\n", apic_freq);
 
 	/* =============== WAKING THE CORES ================== */
 	kprintf("\n\n");
@@ -181,18 +181,6 @@ void multicore_setup(void *rsdp_void)
 	uint16_t fs_value;
 	__asm__ volatile("mov %%fs, %0" : "=r"(fs_value));
 	kprintf("fs = 0x%hx\n", fs_value);
-
-	for (uint16_t fs = 0x28; fs < 0x28 + (MAX_CORE_COUNT - 1) * 0x10; fs += 0x10)
-	{
-		kprintf("before Trying with fs : %h\n", fs);
-		__asm__ volatile("movw %0, %%fs" : : "r"(fs) : "memory");
-		uint16_t gs = fs + 0x08;
-		kprintf("before Trying with gs : %h\n", gs);
-		__asm__ volatile("movw %0, %%gs" : : "r"(gs) : "memory");
-		kprintf("after\n\n");
-	}
-
-	kprintf("Survived till the end\n");
 
 	for (uint8_t i = 0; i < runtime_core_count; i++)
 	{

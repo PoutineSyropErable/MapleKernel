@@ -31,5 +31,8 @@ enum class mode
 
 void set_mode(enum mode mode);
 
+bool get_quick_path_mode();
+void set_quick_path_mode(bool quick_or_not);
+
 } // namespace pit_ih
 #endif

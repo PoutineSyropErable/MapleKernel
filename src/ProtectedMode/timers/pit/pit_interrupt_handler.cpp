@@ -9,6 +9,17 @@
 
 pit_ih::mode g_pit_mode = pit_ih::mode::wait;
 
+extern "C" bool quick_pit = false;
+void			pit_ih::set_quick_path_mode(bool quick_or_not)
+{
+	quick_pit = quick_or_not;
+}
+
+bool pit_ih::get_quick_path_mode()
+{
+	return quick_pit;
+}
+
 void pit_ih::set_mode(enum mode mode)
 {
 	g_pit_mode = mode;

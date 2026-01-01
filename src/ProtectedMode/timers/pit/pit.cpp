@@ -188,17 +188,6 @@ inline void wait_lte_one_cycle(uint32_t pit_freq_divider)
 	wait_till_pit_interrupt();
 }
 
-extern "C" bool quick_pit = false;
-void			pit::set_quick_path_mode(bool quick_or_not)
-{
-	quick_pit = quick_or_not;
-}
-
-bool pit::get_quick_path_mode()
-{
-	return quick_pit;
-}
-
 int pit::wait(float seconds)
 {
 	if (seconds <= 0)

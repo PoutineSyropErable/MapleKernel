@@ -22,6 +22,8 @@ PIT_IRQ equ 0
 extern pit_interrupt_handler
 global pit_interrupt_handler_asm
 pit_interrupt_handler_asm:
+
+
 	push eax
 	mov eax, [quick_pit]
 	test eax, eax ; if quick pit, then not zero

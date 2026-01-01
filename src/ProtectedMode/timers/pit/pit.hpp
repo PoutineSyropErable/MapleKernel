@@ -18,7 +18,4 @@ int short_timeout_async(float seconds, volatile uint32_t *finished, bool new_tim
 
 void short_timeout(uint32_t count);
 
-void set_quick_path_mode(bool quick_or_not);
-bool get_quick_path_mode();
-
 } // namespace pit
