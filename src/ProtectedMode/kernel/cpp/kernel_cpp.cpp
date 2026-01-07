@@ -33,6 +33,8 @@
 
 #include "special_pointers.hpp"
 
+extern "C" [[noreturn]] void to_compatibility_mode();
+
 void print_test()
 {
 	// -O1 Cpp is wack
@@ -212,7 +214,7 @@ int cpp_main(struct cpp_main_args args)
 {
 
 	// test_special_pointers();
-	multicore_setup(args.rsdp_v);
+	// multicore_setup(args.rsdp_v);
 
 	kprintf("\n\n================= Start of CPP Main =================\n\n");
 
@@ -229,21 +231,52 @@ int cpp_main(struct cpp_main_args args)
 	// apic_timer::start_timer(0, 1, apic::divide_configuration::divide_by_1, apic::timer_mode::single_shot, apic::mask::enable);
 
 	// Setup lapic irq handling
-	terminal_writestring("\n====kernel cpp entering main loop====\n");
 
+	terminal_writestring("\n====kernel cpp Checking if support long mode, then jumping to it====\n");
 	bool support_long_mode = longmode_prep::does_cpu_support_longmode();
 	if (support_long_mode)
 	{
-		longmode_prep::measure_kernel();
+		longmode_prep::measure_kernel32();
+		longmode_prep::get_max_cpu_address();
+
 		longmode_prep::set_gdt64();
 		longmode_prep::set_idt64();
-		longmode_prep::get_max_cpu_address();
 
 		entry_point_c k64 = args.kernel64_address_information;
 		kprintf("Entry phys: %h, entry virtual: %h%h, size: %h\n", k64.entry_physical, k64.entry_virtual, k64.size);
 		longmode_prep::set_64bit_page_table();
 		longmode_prep::simple_page_kernel64(k64.entry_physical, k64.entry_virtual, k64.size);
+		longmode_prep::test_paging();
+
+		// Jump to long mode
+
+		// struct gdt64_simple
+		// {
+		// 	uint32_t				  null_entry = 0; // 0x0
+		// 	segment_descriptor_64	  code_segment64; // 0x08
+		// 	segment_descriptor_64	  data_segment64; // 0x10
+		// 	segment_descriptor_32	  code_segment32; // 0x18
+		// 	segment_descriptor_32	  data_segment32; // 0x20
+		// 	system_segment_descriptor tss_segment;	  // (0x28, 0x30) -> [0x28, 0x38[
+		// };
+
+		// call
+
+		// efer.lme =1 ,
+		// cr4.pae = 1,
+		// cr0.pg = 1
+
+		// lgdt [gdtr_64]
+		// lidt [idtr_64]
+		// mov cr3, cr3_of_setup
+
+		// long jump 0x18:compatibility_entry
+
+		// (Inside compatibility_entry)
+		// long jump 0x08:kernel64_entry
+		to_compatibility_mode();
 	}
+	terminal_writestring("\n====kernel cpp entering main loop====\n");
 
 	uint32_t prime1 = 4001;
 	uint32_t prime2 = 12301;

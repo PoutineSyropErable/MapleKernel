@@ -14,7 +14,7 @@ struct __attribute__((packed)) cr3_t
 	bool	page_level_cache_disable : 1 = 0;
 	uint8_t reserved2 : 7				 = 0;
 	// base low : (The low 12 bits must be 0: 4KB/Page aligned)
-	uint32_t phys_addr_pml4_base_mid;  // Put addr >> 12 here
+	uint32_t phys_addr_pml4_base_mid;  // Put addr >> 12 here (only the first 20 bit here are useful in 30 bit mode)
 	uint16_t phys_addr_pml4_base_high; // Put addr >> 44 here
 
 	// Note that the max phys address bit count tells you here how much you can write
@@ -150,6 +150,7 @@ union addr64_uts
 		uint32_t low;
 		uint32_t high;
 	} raw;
+	uint64_t u64;
 };
 
 static inline addr64 transform_address(void *addr)
@@ -157,6 +158,14 @@ static inline addr64 transform_address(void *addr)
 
 	uint32_t		 addr_u32 = (uint32_t)addr;
 	union addr64_uts a{.raw = {.low = addr_u32, .high = 0}};
+
+	return a.data;
+}
+
+static inline addr64 transform_address(uint64_t addr)
+{
+
+	union addr64_uts a{.u64 = addr};
 
 	return a.data;
 }

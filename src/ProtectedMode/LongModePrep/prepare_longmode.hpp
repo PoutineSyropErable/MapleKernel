@@ -6,7 +6,7 @@
 namespace longmode_prep
 {
 bool does_cpu_support_longmode();
-void measure_kernel();
+void measure_kernel32();
 
 struct max_addr
 {
@@ -22,5 +22,6 @@ int64_t			simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, 
 
 void set_gdt64();
 void set_idt64();
+bool test_paging();
 
 } // namespace longmode_prep

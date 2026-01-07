@@ -10,13 +10,6 @@ namespace gdt64_32
 
 #define PACKED __attribute__((packed))
 
-struct gdtr
-{
-	uint32_t base_address_low;
-	uint32_t base_address_high = 0;
-	uint16_t table_limit;
-};
-
 typedef struct __attribute__((packed)) segment_selector
 {
 	uint8_t	 rpl : 2;	 // Requested Privilege Level (0-3)
@@ -207,9 +200,16 @@ struct PACKED system_segment_descriptor
 	// MUST be zero
 };
 
+struct __attribute__((packed)) gdtr
+{
+	uint16_t table_limit;
+	uint32_t base_address_low;
+	uint32_t base_address_high = 0;
+};
+
 struct gdt64_simple
 {
-	uint32_t				  null_entry = 0; // 0x0
+	uint64_t				  null_entry = 0; // 0x0
 	segment_descriptor_64	  code_segment64; // 0x08
 	segment_descriptor_64	  data_segment64; // 0x10
 	segment_descriptor_32	  code_segment32; // 0x18

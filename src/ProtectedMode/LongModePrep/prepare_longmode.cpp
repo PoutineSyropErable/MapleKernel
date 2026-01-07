@@ -68,7 +68,7 @@ struct max_addr get_max_cpu_address()
 	return ret;
 }
 
-void measure_kernel()
+void measure_kernel32()
 {
 	kprintf("Kernel start = %h, kernel end = %h\n", kernel_start, kernel_end);
 
@@ -91,8 +91,9 @@ void set_64bit_page_table()
 	addr64 pd_addr_1 = transform_address(&first_page_directory);
 
 	main_pml4.entries[0].present	  = 1;
-	main_pml4.entries[0].address_mid  = pdpt_addr.address_mid;
+	main_pml4.entries[0].address_mid  = pdpt_addr.address_mid; // This is just taking the address >> 12
 	main_pml4.entries[0].address_high = pdpt_addr.address_high;
+	kprintf("Address mid = %h\n", main_pml4.entries[0].address_mid);
 
 	first_pdpt.entries[0].present	   = 1;
 	first_pdpt.entries[0].address_mid  = pd_addr_1.address_mid;
@@ -103,10 +104,23 @@ void set_64bit_page_table()
 	first_page_directory.entries[0].address_mid	 = 0;
 	first_page_directory.entries[0].address_high = 0;
 
-	first_page_directory.entries[1].present		 = 1;
-	first_page_directory.entries[1].page_size	 = 1;
-	first_page_directory.entries[1].address_mid	 = (0x1000u * 512u) >> 12;
+	first_page_directory.entries[1].present		= 1;
+	first_page_directory.entries[1].page_size	= 1;
+	first_page_directory.entries[1].address_mid = (0x1000u * 512u) >> 12; // 12, not 21.
+	// The location doesnt matter for whatever page size of level
 	first_page_directory.entries[1].address_high = 0;
+
+	union
+	{
+		uint64_t			 raw;
+		page_directory_entry pe;
+	} a{.pe = first_page_directory.entries[0]};
+	kprintf("page dir entries 0: %h %h\n", a.raw);
+	kprintf("page dir entries 0 low: %h\n", *(uint32_t *)&first_page_directory.entries[0]);
+	kprintf("page dir entries 0 high: %h\n", *((uint32_t *)&first_page_directory.entries[0] + 1));
+
+	kprintf("page dir entries 1 low: %h\n", *(uint32_t *)&first_page_directory.entries[1]);
+	kprintf("page dir entries 1 high: %h\n", *((uint32_t *)&first_page_directory.entries[1] + 1));
 
 	paging64_32::cr3_t cr3{.phys_addr_pml4_base_mid = pml4_addr.address_mid, .phys_addr_pml4_base_high = 0};
 	union cr3_uts
@@ -124,6 +138,8 @@ void set_64bit_page_table()
 	{
 		// Use this one later on
 		cr3_of_setup = cr3_uts_v.raw;
+		kprintf("cr3 = low: %h, high: %h\n", cr3_of_setup);
+		kprintf("cr3: base mid = %h\n", cr3.phys_addr_pml4_base_mid);
 	}
 }
 
@@ -153,7 +169,7 @@ void set_gdt64()
 	gdt64.code_segment64.type		 = 0b1010;
 	gdt64.code_segment64.long_mode64 = 1;
 
-	gdt64.data_segment64.type		 = 0b1010;
+	gdt64.data_segment64.type		 = 0b0010;
 	gdt64.data_segment64.long_mode64 = 1;
 
 	memset(&gdt64.tss_segment, 0, sizeof(gdt64.tss_segment));
@@ -161,6 +177,11 @@ void set_gdt64()
 	gdtr_64.base_address_low  = (uint32_t)&gdt64;
 	gdtr_64.base_address_high = 0;
 	gdtr_64.table_limit		  = sizeof(gdt64) - 1;
+
+	kprintf("\n");
+	kprintf("&gdtr64 = %h\n", &gdtr_64);
+	kprintf("gdtr64 = limit = %h, addr = %h\n", gdtr_64.table_limit, gdtr_64.base_address_low);
+	kprintf("\n");
 }
 
 void set_idt64()
@@ -173,7 +194,11 @@ void set_idt64()
 	idtr_64.idt_base_address = (uint64_t)&idt64;
 
 	// Optional debug print
-	kprintf("IDT64 base: %h, limit: %u\n", idtr_64.idt_base_address, idtr_64.limit);
+
+	kprintf("\n");
+	kprintf("&idtr64 = %h\n", &idtr_64);
+	kprintf("idtr64 = limit = %h, addr = %h\n", idtr_64.limit, idtr_64.idt_base_address);
+	kprintf("\n");
 }
 
 struct virtual_address_split
@@ -186,6 +211,25 @@ struct virtual_address_split
 	uint64_t reserved : 16;	 // bits 48-63: must be zero in canonical addresses
 };
 
+// For 2MB pages (Page Size=1 in Page Directory):
+struct virtual_address_split_2mb
+{
+	uint64_t offset : 21;	 // bits 0-20: offset inside 2MB page
+	uint64_t pd_index : 9;	 // bits 21-29: page directory index
+	uint64_t pdpt_index : 9; // bits 30-38: PDPT index
+	uint64_t pml4_index : 9; // bits 39-47: PML4 index
+	uint64_t reserved : 16;	 // bits 48-63
+};
+
+// For 1GB pages (Page Size=1 in PDPT):
+struct virtual_address_split_1gb
+{
+	uint64_t offset : 30;	 // bits 0-29: offset inside 1GB page
+	uint64_t pdpt_index : 9; // bits 30-38: PDPT index
+	uint64_t pml4_index : 9; // bits 39-47: PML4 index
+	uint64_t reserved : 16;	 // bits 48-63
+};
+
 virtual_address_split to_split(uint64_t virtual_address)
 {
 	union
@@ -195,6 +239,163 @@ virtual_address_split to_split(uint64_t virtual_address)
 	} uts;
 	uts.raw = virtual_address;
 	return uts.data;
+}
+
+virtual_address_split_2mb to_split_2mb(uint64_t virtual_address)
+{
+	virtual_address_split_2mb result;
+
+	result.offset	  = virtual_address & 0x1FFFFF;		  // bits 0-20
+	result.pd_index	  = (virtual_address >> 21) & 0x1FF;  // bits 21-29
+	result.pdpt_index = (virtual_address >> 30) & 0x1FF;  // bits 30-38
+	result.pml4_index = (virtual_address >> 39) & 0x1FF;  // bits 39-47
+	result.reserved	  = (virtual_address >> 48) & 0xFFFF; // bits 48-63
+
+	return result;
+}
+
+virtual_address_split_1gb to_split_1gb(uint64_t virtual_address)
+{
+	virtual_address_split_1gb result;
+
+	result.offset	  = virtual_address & 0x3FFFFFFF;	  // bits 0-29
+	result.pdpt_index = (virtual_address >> 30) & 0x1FF;  // bits 30-38
+	result.pml4_index = (virtual_address >> 39) & 0x1FF;  // bits 39-47
+	result.reserved	  = (virtual_address >> 48) & 0xFFFF; // bits 48-63
+
+	return result;
+}
+
+struct verified_address
+{
+	uint32_t address;
+	int		 err;
+};
+
+struct verified_address software_transform(uint64_t virtual_address)
+{
+	struct verified_address ret;
+	virtual_address_split	split_addr = to_split(virtual_address);
+
+	union cr3_uts
+	{
+		paging64_32::cr3_t data;
+		uint64_t		   raw;
+	} cr3_uts_v{.raw = cr3_of_setup};
+	paging64_32::cr3_t cr3		= cr3_uts_v.data;
+	uint32_t		   base_mid = cr3.phys_addr_pml4_base_mid;
+
+	uint32_t	 usable_base = base_mid & ((1 << 21) - 1);
+	uint32_t	 real_addr	 = usable_base << 12;
+	struct pml4 *pml4		 = (struct pml4 *)(uintptr_t)real_addr;
+
+	if (pml4 != &main_pml4)
+	{
+		ret.err = 1;
+		return ret;
+	}
+
+	kprintf("The pml4 index: %u\n", split_addr.pml4_index);
+	pml4_entry pml4_e = pml4->entries[split_addr.pml4_index];
+	if (!pml4_e.present)
+	{
+		ret.err = 2;
+		return ret;
+	}
+	struct pdpt *pdpt = (struct pdpt *)(pml4_e.address_mid << 12);
+
+	kprintf("&pml4  = %h\n", pml4);
+	kprintf("&pml4_e  = %h\n", &pml4_e);
+	kprintf("pml4_e.address_mid  = %h\n", pml4_e.address_mid);
+	kprintf("pdpt: %h\n", pdpt);
+	kprintf("main pdpt: %h\n", &first_pdpt);
+	if (pdpt != &first_pdpt)
+	{
+		ret.err = 3;
+		return ret;
+	}
+	pdpt_entry pdpt_e = pdpt->entries[split_addr.pdpt_index];
+	if (!pdpt_e.present)
+	{
+		ret.err = 4;
+		return ret;
+	}
+
+	if (pdpt_e.page_size)
+	{
+		virtual_address_split_1gb va = to_split_1gb(virtual_address);
+		ret.err						 = 0;
+		ret.address					 = (pdpt_e.address_mid << 12) + va.offset;
+		kprintf("1gb page size\n");
+		return ret;
+	}
+
+	struct page_directory	   *pd	 = (struct page_directory *)(pdpt_e.address_mid << 12);
+	struct page_directory_entry pd_e = pd->entries[split_addr.pd_index];
+	if (!pd_e.present)
+	{
+		ret.err = 5;
+		return ret;
+	}
+
+	if (pd_e.page_size)
+	{
+		virtual_address_split_2mb va = to_split_2mb(virtual_address);
+		ret.err						 = 0;
+		ret.address					 = (pd_e.address_mid << 12) + va.offset;
+		kprintf("2mb page size\n");
+		return ret;
+	}
+
+	struct page_table	   *pt	 = (struct page_table *)(pd_e.address_mid << 12);
+	struct page_table_entry pt_e = pt->entries[split_addr.pt_index];
+	if (!pt_e.present)
+	{
+		ret.err = 6;
+		return ret;
+	}
+	uintptr_t page_frame_base = pt_e.address_mid << 12;
+
+	ret.address = page_frame_base;
+	// ret.address = page_frame_base + split_addr.offset;
+	ret.err = 0;
+	return ret;
+}
+
+extern "C" void to_compatibility_mode();
+extern "C" void compatibility_entry();
+bool			test_paging()
+{
+	// struct verified_address cm = software_transform((uint64_t)&to_compatibility_mode);
+	// if (cm.err)
+	// {
+	// 	kprintf("there was an error calculating the address\n");
+	// 	return false;
+	// }
+	// kprintf("To compatibility mode address | virtual : %h, physical : %h\n", to_compatibility_mode, cm.address);
+	//
+	// struct verified_address tcm = software_transform((uint64_t)&compatibility_entry);
+	// if (tcm.err)
+	// {
+	// 	kprintf("there was an error calculating the address\n");
+	// 	return false;
+	// }
+	// kprintf("Compatibility entry address | virtual : %h, physical : %h\n", compatibility_entry, tcm.address);
+
+	kprintf("\n");
+	// Do the test on paper
+	uint32_t				eip	  = 0x20756b;
+	struct verified_address eip_t = software_transform(eip);
+	if (eip_t.err)
+	{
+		kprintf("Error getting eip address\n");
+		return false;
+	}
+	kprintf("eip | virtual : %h, physical : %h\n", eip, eip_t.address);
+	kprintf("\n");
+
+	// end of function
+	return true;
 }
 
 constexpr uint64_t round_up_div(uint64_t a, uint64_t b)
@@ -289,11 +490,11 @@ int64_t simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, ui
 		k64_page_tables[pd_add].entries[last_pd_index].address_mid	= pt_addr.address_mid;
 		k64_page_tables[pd_add].entries[last_pd_index].address_high = pt_addr.address_high;
 
-		kprintf("Virtual address: %h\n", used_virtual_address);
-		kprintf("pml4 index: %u\n", vas[i].pml4_index);
-		kprintf("pdpt index: %u\n", vas[i].pdpt_index);
-		kprintf("pd index: %u\n", vas[i].pd_index);
-		kprintf("pt index: %u\n\n", vas[i].pt_index);
+		// kprintf("Virtual address: %h\n", used_virtual_address);
+		// kprintf("pml4 index: %u\n", vas[i].pml4_index);
+		// kprintf("pdpt index: %u\n", vas[i].pdpt_index);
+		// kprintf("pd index: %u\n", vas[i].pd_index);
+		// kprintf("pt index: %u\n\n", vas[i].pt_index);
 	}
 	return page_count;
 }

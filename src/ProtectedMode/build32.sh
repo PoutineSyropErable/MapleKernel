@@ -342,7 +342,6 @@ $GPP32 "${CPPFLAGS[@]}" -c "$PS2_MOUSE/ps2_mouse_handler.cpp" -o "$BUILD_DIR/ps2
 
 # Temporary stuff. Will properly program them one day.
 $GCC32 "${CFLAGS[@]}" -c "$DRIVERS_USB_CONTROLLER/usb_controller.c" -o "$BUILD_DIR/usb_controller.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "-I$DRIVERS_USB_CONTROLLER"
-# $GCC32 "${CFLAGS[@]}" -c "$OTHER/virtual_memory.c" -o "$BUILD_DIR/virtual_memory.o"
 
 # Timers
 $GPP32 "${CPPFLAGS[@]}" -c "$PIT/pit.cpp" -o "$BUILD_DIR/pit.o" "-I$STDLIB" "-I$STDIO" "-I$PIC" "-I$CPU"
@@ -362,6 +361,8 @@ nasm "${NASM_FLAGS32[@]}" "$REAL16_WRAPPERS/call_realmode_function_wrapper32.asm
 ia16-elf-gcc "${CFLAGS16[@]}" -c "$REAL_FUNC/realmode_functions.c" -o "$BUILD_DIR/realmode_functions.o"
 
 $GPP32 "${CPPFLAGS[@]}" -c "$LONG_MODE_PREP/prepare_longmode.cpp" -o "$BUILD_DIR/prepare_longmode.o" "-I$STDLIB" "-I$STDIO" "-I$CPU" "-I$APIC" "-I$CPUID"
+nasm "${NASM_FLAGS32[@]}" "$LONG_MODE_PREP/long_mode_jump.asm" -o "$BUILD_DIR/long_mode_jump.o"
+nasm "${NASM_FLAGS32[@]}" "$LONG_MODE_PREP/compatibility_mode_jump.asm" -o "$BUILD_DIR/compatibility_mode_jump.o"
 
 # Compile Other language projects (Library written entirely in ~(C or ASM))
 

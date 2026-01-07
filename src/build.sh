@@ -186,10 +186,10 @@ else
 		-no-reboot \
 		"${QEMU_DBG_FLAGS[@]}" \
 		"${DEBUG_LOG_OPTS[@]}" \
-		-smp 12 \
+		\
 		"${QEMU_CPU_FLAG[@]}" \
 		"${USE_VNC_FLAG[@]}" \
-		-serial stdio &
+		-serial stdio & # -smp 1 \
 	# -vga vmware \
 
 	QEMU_PID=$!
