@@ -1,5 +1,6 @@
 // kernel_cpp.h
 #pragma once
+#include "multiboot.h"
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -12,7 +13,8 @@ extern "C"
 
 	struct cpp_main_args
 	{
-		void *rsdp_v;
+		void				*rsdp_v;
+		struct entry_point_c kernel64_address_information;
 	};
 	int cpp_main(struct cpp_main_args args);
 

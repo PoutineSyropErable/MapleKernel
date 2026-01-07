@@ -33,7 +33,7 @@ mkdir -p "$MOV_PID_DIR" && { [[ -e "$MOV_PID_DIR/move_pid_to_workspace" ]] || ln
 
 DEBUG_OR_RELEASE="${1:-release}"
 QEMU_OR_REAL_MACHINE="${2:-qemu}"
-MACHINE_BITNESS="${3:-32}"
+MACHINE_BITNESS="${3:-64}"
 MOVE_VNC="${4:-move}"
 
 BUILD32_DIR="../build32"
@@ -139,7 +139,7 @@ else
 	CPU_MODEL=""
 	if [[ "$MACHINE_BITNESS" == "64" ]]; then
 		CPU_MODEL="host"
-		# CPU_MODEL="qemu64"
+		CPU_MODEL="qemu64"
 	else
 		CPU_MODEL="host"
 		CPU_MODEL="qemu32"

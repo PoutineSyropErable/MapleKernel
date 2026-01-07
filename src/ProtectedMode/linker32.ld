@@ -15,6 +15,7 @@ SECTIONS
     /* Main text section */
     .multiboot_start BLOCK(4K) : ALIGN(4K)
     {
+		__kernel_start = .;
         *(.multiboot)         /* multiboot header */
     }
 
@@ -189,8 +190,11 @@ SECTIONS
     }
 
 
+    .end BLOCK(4K) : ALIGN(4K) {
+		__kernel_end = .;
+	}
+
     /* End of kernel */
-    __kernel_end = .;
 
 	/* use two links for the 64 bit mode*/
 

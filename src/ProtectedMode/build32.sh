@@ -194,6 +194,8 @@ PIT="./timers/pit"
 
 MODULES="./modules/"
 
+LONG_MODE_PREP="./LongModePrep"
+
 INCLUDE_DIRS=(
 	"$KERNEL"
 	"$REAL16_WRAPPERS"
@@ -237,6 +239,8 @@ INCLUDE_DIRS=(
 	"$RUST"
 	"$ZIG"
 	"$MODULES"
+
+	"$LONG_MODE_PREP"
 )
 
 PS2_INCLUDE_DIRS=(
@@ -338,7 +342,7 @@ $GPP32 "${CPPFLAGS[@]}" -c "$PS2_MOUSE/ps2_mouse_handler.cpp" -o "$BUILD_DIR/ps2
 
 # Temporary stuff. Will properly program them one day.
 $GCC32 "${CFLAGS[@]}" -c "$DRIVERS_USB_CONTROLLER/usb_controller.c" -o "$BUILD_DIR/usb_controller.o" "-I$IDT" "-I$GDT" "-I$STDLIB" "-I$STDIO" "-I$DRIVERS_USB_CONTROLLER"
-$GCC32 "${CFLAGS[@]}" -c "$OTHER/virtual_memory.c" -o "$BUILD_DIR/virtual_memory.o"
+# $GCC32 "${CFLAGS[@]}" -c "$OTHER/virtual_memory.c" -o "$BUILD_DIR/virtual_memory.o"
 
 # Timers
 $GPP32 "${CPPFLAGS[@]}" -c "$PIT/pit.cpp" -o "$BUILD_DIR/pit.o" "-I$STDLIB" "-I$STDIO" "-I$PIC" "-I$CPU"
@@ -356,6 +360,8 @@ $GCC32 "${CFLAGS[@]}" -c "$REAL16_WRAPPERS/call_real16_wrapper.c" -o "$BUILD_DIR
 nasm "${NASM_FLAGS16[@]}" "$REAL16_WRAPPERS/call_realmode_function_wrapper16.asm" -o "$BUILD_DIR/call_realmode_function_wrapper16.o" "-I$REAL16_WRAPPERS"
 nasm "${NASM_FLAGS32[@]}" "$REAL16_WRAPPERS/call_realmode_function_wrapper32.asm" -o "$BUILD_DIR/call_realmode_function_wrapper32.o" "-I$REAL16_WRAPPERS"
 ia16-elf-gcc "${CFLAGS16[@]}" -c "$REAL_FUNC/realmode_functions.c" -o "$BUILD_DIR/realmode_functions.o"
+
+$GPP32 "${CPPFLAGS[@]}" -c "$LONG_MODE_PREP/prepare_longmode.cpp" -o "$BUILD_DIR/prepare_longmode.o" "-I$STDLIB" "-I$STDIO" "-I$CPU" "-I$APIC" "-I$CPUID"
 
 # Compile Other language projects (Library written entirely in ~(C or ASM))
 

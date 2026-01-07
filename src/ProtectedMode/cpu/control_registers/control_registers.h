@@ -24,11 +24,6 @@ struct cr0_t
 // Control Register 3 (CR3) - Page Directory Base Register
 struct cr3_t
 {
-	uint32_t page_directory_base : 20; // Page Directory Physical Address
-	uint32_t reserved : 3;			   // Reserved
-	uint32_t pwt : 1;				   // Page-level Write-Through
-	uint32_t pcd : 1;				   // Page-level Cache Disable
-	uint32_t reserved2 : 7;			   // Reserved
 };
 
 // Control Register 4 (CR4) - Extended Features

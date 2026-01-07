@@ -27,6 +27,7 @@
 #include "multicore.hpp"
 #include "multicore_gdt.hpp"
 #include "pic_public.h"
+#include "prepare_longmode.hpp"
 #include "stdlib.h"
 #include "string.h"
 
@@ -229,6 +230,20 @@ int cpp_main(struct cpp_main_args args)
 
 	// Setup lapic irq handling
 	terminal_writestring("\n====kernel cpp entering main loop====\n");
+
+	bool support_long_mode = longmode_prep::does_cpu_support_longmode();
+	if (support_long_mode)
+	{
+		longmode_prep::measure_kernel();
+		longmode_prep::set_gdt64();
+		longmode_prep::set_idt64();
+		longmode_prep::get_max_cpu_address();
+
+		entry_point_c k64 = args.kernel64_address_information;
+		kprintf("Entry phys: %h, entry virtual: %h%h, size: %h\n", k64.entry_physical, k64.entry_virtual, k64.size);
+		longmode_prep::set_64bit_page_table();
+		longmode_prep::simple_page_kernel64(k64.entry_physical, k64.entry_virtual, k64.size);
+	}
 
 	uint32_t prime1 = 4001;
 	uint32_t prime2 = 12301;

@@ -3,7 +3,7 @@ extern __stack_top
 ; =====================================================
 ; Kernel Entry Point
 ; =====================================================
-section .text
+section .text.entry
 global kernel64_start
 kernel64_start:
     ; Set stack pointer (stack grows downward)

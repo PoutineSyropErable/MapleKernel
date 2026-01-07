@@ -77,3 +77,13 @@ struct cpuid_basic_edx
 	uint32_t reserved3 : 1; // reserved
 };
 STATIC_ASSERT(sizeof(cpuid_basic_edx) == sizeof(uint32_t), "EDX must be 32-bit");
+
+// EAX returned by CPUID with EAX=0x80000008
+struct cpuid_phys_addr_eax
+{
+	uint8_t phys_bits;		 // Bits 0-7: Maximum physical address width
+	uint8_t virt_bits;		 // Bits 8-15: Maximum linear (virtual) address width
+	uint8_t guest_phys_bits; // Bits 16-23: Maximum physical address width for guest (if reported)
+	uint8_t reserved;		 // Bits 24-31: Reserved
+};
+STATIC_ASSERT(sizeof(struct cpuid_phys_addr_eax) == sizeof(uint32_t), "Physical address struct must be 32-bit");

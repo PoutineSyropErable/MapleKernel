@@ -15,8 +15,8 @@ extern "C"
 	void vkprintf(const char *fmt, va_list args);
 	void kprintf2(const char *fmt, ...);
 
-// #define USE_OLD_KPRINTF_ARGC
-#define CHECK_ARGC
+	// #define USE_OLD_KPRINTF_ARGC
+	// #define CHECK_ARGC
 
 #ifdef USE_OLD_KPRINTF_ARGC
 #	if defined(USE_OLD_KPRINTF_ARGC) && defined(CHECK_ARGC)

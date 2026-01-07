@@ -99,7 +99,10 @@ fi
 
 KERNEL64="./kernel64"
 
+rm -f "$BUILD_DIR/*.o"
+
 $GCC64 "${CFLAGS[@]}" -c "$KERNEL64/kernel_64.c" -o "$BUILD_DIR/kernel_64.o"
+$GCC64 "${CFLAGS[@]}" -c "$KERNEL64/dummy_kernel.c" -o "$BUILD_DIR/dummy_kernel.o"
 nasm "${NASM_FLAGS64[@]}" "$KERNEL64/kernel64_boot.asm" -o "$BUILD_DIR/kernel64_boot.o"
 
 BUILD_OBJECTS=("$BUILD_DIR"/*.o)

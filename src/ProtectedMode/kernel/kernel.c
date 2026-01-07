@@ -249,7 +249,7 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 	// kprintf("sig : %s;5\n", s);
 	// kprintf("Number, %u:7", 0x24f);
 
-	struct cpp_main_args cpp_args = {.rsdp_v = rsdp_v};
+	struct cpp_main_args cpp_args = {.rsdp_v = rsdp_v, .kernel64_address_information = kernel64_bit};
 	int					 cpp_err  = cpp_main(cpp_args);
 	if (cpp_err)
 	{
