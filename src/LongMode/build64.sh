@@ -75,7 +75,9 @@ LDFLAGS=("-ffreestanding" "-nostdlib" "-lgcc" "-fno-eliminate-unused-debug-symbo
 NASM_FLAGS64=("-f" "elf64")
 
 DEBUG_OPT_LVL="-O3"
-RELEASE_OPT_LVL="-O3"
+RELEASE_OPT_LVL="-O0"
+#					  I RUWP
+# a = 10 = 8 + 2 = 0000 1010
 # -O1 in Cpp breaks printf option number and i have no idea why
 QEMU_DBG_FLAGS=()
 
@@ -109,6 +111,8 @@ nasm "${NASM_FLAGS64[@]}" "$KERNEL64/kernel64_boot.asm" -o "$BUILD_DIR/kernel64_
 BUILD_OBJECTS=("$BUILD_DIR"/*.o)
 printf -- "\n\n====== Linking ========\n\n"
 $GPP64 -T "linker_64.ld" -o "$BUILD_DIR/kernel64.elf" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}" "${LIBRARY_ARGS[@]}"
+
+objdump -D -h -M intel "$BUILD_DIR/kernel64.elf" >"$BUILD_DIR/kernel64.dump"
 
 printf -- "\n\n====== Copying ========\n\n"
 cp "$BUILD_DIR/kernel64.elf" "$ISO_DIR/boot/kernel64.elf"

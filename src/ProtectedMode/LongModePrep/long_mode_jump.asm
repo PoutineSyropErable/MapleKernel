@@ -30,6 +30,9 @@ EFER_MSR equ 0xC0000080
 EFER_LM_ENABLE equ 1 << 8
 
 
+EFER_NXE_ENABLE equ (1 << 11)
+
+
 global to_compatibility_mode
 to_compatibility_mode: 
 
@@ -59,8 +62,11 @@ to_compatibility_mode:
 
     mov ecx, EFER_MSR
     rdmsr
-    or eax, EFER_LM_ENABLE
+    or eax, EFER_LM_ENABLE     ; Enable long mode
+	or eax, EFER_NXE_ENABLE    ; Set NXE bit
     wrmsr
+
+
 
 	mov eax, cr0
 	or eax, PG_MASK 

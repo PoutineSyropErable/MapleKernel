@@ -1,6 +1,6 @@
 #include "assert.h"
 #include "cpuid_results.hpp"
-#include "kernel64_size.h"
+#include "kernel64_size.hpp"
 #include "math.hpp"
 
 #include "cpuid.hpp"
@@ -390,6 +390,89 @@ struct verified_address software_transform(uint64_t virtual_address)
 	return ret;
 }
 
+struct page_table_entry *get_page_table_address(uint64_t virtual_address)
+{
+	virtual_address_split split_addr = to_split(virtual_address);
+
+	union cr3_uts
+	{
+		paging64_32::cr3_t data;
+		uint64_t		   raw;
+	} cr3_uts_v{.raw = cr3_of_setup};
+	paging64_32::cr3_t cr3		= cr3_uts_v.data;
+	uint32_t		   base_mid = cr3.phys_addr_pml4_base_mid;
+
+	uint32_t	 usable_base = base_mid & ((1 << 21) - 1);
+	uint32_t	 real_addr	 = usable_base << 12;
+	struct pml4 *pml4		 = (struct pml4 *)(uintptr_t)real_addr;
+
+	if (pml4 != &main_pml4)
+	{
+		kprintf("plm4 not correct\n");
+		return nullptr;
+	}
+
+	// kprintf("The pml4 index: %u\n", split_addr.pml4_index);
+	pml4_entry pml4_e = pml4->entries[split_addr.pml4_index];
+	if (!pml4_e.present)
+	{
+		kprintf("plm4_e not present\n");
+		return nullptr;
+	}
+	struct pdpt *pdpt = (struct pdpt *)(pml4_e.address_mid << 12);
+
+	// kprintf("&pml4  = %h\n", pml4);
+	// kprintf("&pml4_e  = %h\n", &pml4_e);
+	// kprintf("pml4_e.address_mid  = %h\n", pml4_e.address_mid);
+	// kprintf("pdpt: %h\n", pdpt);
+	// kprintf("main pdpt: %h\n", &first_pdpt);
+	// if (pdpt != &first_pdpt)
+	// {
+	// 	ret.err = 3;
+	// 	kprintf("Not first pdpt\n");
+	// 	return ret;
+	// }
+	pdpt_entry pdpt_e = pdpt->entries[split_addr.pdpt_index];
+	if (!pdpt_e.present)
+	{
+		kprintf("pdpt_e not present\n");
+		return nullptr;
+	}
+
+	if (pdpt_e.page_size)
+	{
+		virtual_address_split_1gb va = to_split_1gb(virtual_address);
+		kprintf("1gb page size\n");
+		return nullptr;
+	}
+
+	struct page_directory	   *pd	 = (struct page_directory *)(pdpt_e.address_mid << 12);
+	struct page_directory_entry pd_e = pd->entries[split_addr.pd_index];
+	if (!pd_e.present)
+	{
+		kprintf("pd_e not present\n");
+		return nullptr;
+	}
+
+	if (pd_e.page_size)
+	{
+		virtual_address_split_2mb va = to_split_2mb(virtual_address);
+		kprintf("2mb page size\n");
+		// return &pd_e;
+		return nullptr;
+	}
+
+	struct page_table	   *pt	 = (struct page_table *)(pd_e.address_mid << 12);
+	struct page_table_entry pt_e = pt->entries[split_addr.pt_index];
+	if (!pt_e.present)
+	{
+		kprintf("pt_e not present\n");
+		return nullptr;
+	}
+
+	return &pt->entries[split_addr.pt_index];
+}
+
 extern "C" void to_compatibility_mode();
 extern "C" void compatibility_entry();
 bool			test_paging()
@@ -448,6 +531,36 @@ bool			test_paging()
 
 	kprintf("The final address: low: %h, high: %h\n", k_start + k64.size);
 
+	kernel64_size::region_t text_region_type = kernel64_size::get_region_type(kernel64_size::KERNEL64_MAIN_ADDR);
+	kprintf("The name of the region of kernel64_main: %s\n", kernel64_size::region_to_string(text_region_type));
+
+	struct verified_address k_addr_phys = software_transform(kernel64_size::KERNEL64_MAIN_ADDR);
+	if (k_addr_phys.err)
+	{
+		kprintf("Error getting the physical address of : %h\n", kernel64_size::KERNEL64_MAIN_ADDR);
+		exit(0);
+		return false;
+	}
+
+	uint64_t stack_addr = kernel64_size::STACK_TOP - 8;
+	// uint64_t stack_addr = 0xffffffff8000c000;
+	kprintf("The stack address : low %h, high %h\n", stack_addr);
+	kernel64_size::region_t stack_region_type = kernel64_size::get_region_type(stack_addr);
+	kprintf("The name of the region of stack top: %s\n", kernel64_size::region_to_string(stack_region_type));
+	k_addr_phys = software_transform(stack_addr);
+	if (k_addr_phys.err)
+	{
+		kprintf("Error getting the physical address of : %h\n", stack_addr);
+		exit(0);
+		return false;
+	}
+
+	page_table_entry *pt_e = get_page_table_address(stack_addr);
+	kprintf("pt_e = low: %h:8, high : %h:8\n", pt_e);
+	kprintf("pt_e = low: %b:32, high : %b:32\n", pt_e);
+	kprintf("pt_e = {present = %u, execute_disable = %u, read_write_not_ro = %u}\n", pt_e->present, pt_e->execute_disable,
+		pt_e->read_write_not_ro);
+
 	// uint64_t				c_entry = 0xffffffff80405ff8;
 	// struct verified_address c_phys	= software_transform(c_entry);
 	// if (c_phys.err)
@@ -464,7 +577,7 @@ bool			test_paging()
 	return true;
 }
 
-constexpr uint32_t	  max_page_count = KERNEL64_PAGE_COUNT;
+constexpr uint32_t	  max_page_count = kernel64_size::PAGE_COUNT;
 virtual_address_split vas[max_page_count];
 page_table			  k64_page_tables[round_up_div(max_page_count, 512)];
 page_directory		  k64_page_directories[round_up_div(max_page_count, 512 * 512)];
@@ -487,25 +600,8 @@ constexpr tables_and_entries lround_up_div(uint16_t a, uint16_t b)
 
 void simplest_page_kernel(uint32_t physical_address, uint64_t virtual_address, uint64_t size)
 {
-	uint64_t page_count = size >> 12;
-	if (size % 0x1000)
-	{
-		page_count++;
-	}
 
-	if (page_count > max_page_count)
-	{
-		kprintf("Return here, and increase the max page count, or change the abbort behavior\n");
-		kprintf("Do it so that the 64 bit code properly does the virtual memory setup of itself\n");
-		kprintf("Just use the int return value for error\n");
-		kprintf("Maybe use an attribute so that the code related to adding stuff to new page table is within the start\n");
-		// There could be difficulties since I'm doing all text, all data, all...
-		// I would need to change it so the first few code that can do paging is at the start
-		// The good solution will be to use multistep linking for the 64 bit code
-		abort_msg("The page count is bigger then the max page count\n");
-	}
-
-	kprintf("Page count = %u\n", page_count);
+	uint32_t page_count = max_page_count;
 
 	tables_and_entries page_tables		   = lround_up_div(page_count, 512);
 	tables_and_entries page_directories	   = lround_up_div(page_tables.full_tables, 512);
@@ -587,24 +683,83 @@ void simplest_page_kernel(uint32_t physical_address, uint64_t virtual_address, u
 				}
 				for (uint16_t pt_entry_index = 0; pt_entry_index < pt_entry_index_max; pt_entry_index++)
 				{
-					va						= to_split(used_virtual_address);
-					pa						= transform_address((void *)used_physical_address);
-					page_table_entry *pt_e	= &pt->entries[va.pt_index];
-					pt_e->present			= 1;
-					pt_e->global			= 1;
-					pt_e->address_mid		= pa.address_mid;
-					pt_e->address_high		= pa.address_high;
-					pt_e->read_write_not_ro = 1;
+
+					va					   = to_split(used_virtual_address);
+					pa					   = transform_address((void *)used_physical_address);
+					page_table_entry *pt_e = &pt->entries[va.pt_index];
+					pt_e->address_mid	   = pa.address_mid;
+					pt_e->address_high	   = pa.address_high;
+					pt_e->global		   = 1;
+
+					kernel64_size::region_t region_type = kernel64_size::get_region_type(used_virtual_address);
+					switch (region_type)
+					{
+					case (kernel64_size::region_t::TEXT):
+					{
+						pt_e->present			= 1;
+						pt_e->read_write_not_ro = 0;
+						pt_e->execute_disable	= 0;
+						break;
+					}
+					case (kernel64_size::region_t::RODATA):
+					{
+						pt_e->present			= 1;
+						pt_e->read_write_not_ro = 0;
+						pt_e->execute_disable	= 1;
+						break;
+					}
+
+					case (kernel64_size::region_t::DATA):
+					{
+						pt_e->present			= 1;
+						pt_e->read_write_not_ro = 1;
+						pt_e->execute_disable	= 1;
+						break;
+					}
+
+					case (kernel64_size::region_t::BSS):
+					{
+						pt_e->present			= 1;
+						pt_e->read_write_not_ro = 1;
+						pt_e->execute_disable	= 1;
+						break;
+					}
+
+					case (kernel64_size::region_t::STACK):
+					{
+						pt_e->present			= 1;
+						pt_e->read_write_not_ro = 1;
+						pt_e->execute_disable	= 1;
+						break;
+					}
+
+					case (kernel64_size::region_t::HEAP):
+					{
+						pt_e->present			= 1;
+						pt_e->read_write_not_ro = 1;
+						pt_e->execute_disable	= 1;
+						break;
+					}
+
+					case (kernel64_size::region_t::GUARD):
+					{
+						pt_e->present			= 0;
+						pt_e->read_write_not_ro = 0;
+						pt_e->execute_disable	= 1;
+						break;
+					}
+
+					case (kernel64_size::region_t::INVALID):
+					{
+						pt_e->present			= 0;
+						pt_e->read_write_not_ro = 0;
+						pt_e->execute_disable	= 1;
+						break;
+					}
+					}
 
 					used_virtual_address += 0x1000;
 					used_physical_address += 0x1000;
-
-					if (used_virtual_address > virtual_address + size)
-					// Change to round up if the size isn't 0x1000 aligned
-					{
-						kprintf("\n\nBreaking, but this shouldn't happen\n\n\n");
-						break;
-					}
 				}
 			}
 		}
@@ -613,35 +768,8 @@ void simplest_page_kernel(uint32_t physical_address, uint64_t virtual_address, u
 
 int64_t simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, uint64_t size)
 {
-	uint64_t normal_size = 2 * 0x416000u;
-	// From the start module size obtained by checking the value of the linking symbol
-	if (size > normal_size)
-	{
-		kprintf("Size is too small, must increase it\n");
-		abort();
-	}
-	size = normal_size;
 
-	uint64_t page_count = size >> 12;
-	if (size % 0x1000)
-	{
-		page_count++;
-	}
-
-	if (page_count > max_page_count)
-	{
-		kprintf("Return here, and increase the max page count, or change the abbort behavior\n");
-		kprintf("Do it so that the 64 bit code properly does the virtual memory setup of itself\n");
-		kprintf("Just use the int return value for error\n");
-		kprintf("Maybe use an attribute so that the code related to adding stuff to new page table is within the start\n");
-		// There could be difficulties since I'm doing all text, all data, all...
-		// I would need to change it so the first few code that can do paging is at the start
-		// The good solution will be to use multistep linking for the 64 bit code
-		kprintf("The page count: %u, Max page count: %u\n", page_count, max_page_count);
-		abort_msg("The page count is bigger then the max page count\n");
-		return -1;
-	}
-
+	uint32_t page_count = max_page_count;
 	kprintf("Page count = %u\n", page_count);
 
 	virtual_address_split va			   = to_split(virtual_address);
@@ -704,11 +832,82 @@ int64_t simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, ui
 			last_pd_entry_index = vas[i].pd_index;
 		}
 
-		addr64 pa_addr														  = transform_address((void *)used_physical_address);
-		k64_page_tables[pt_table_index].entries[vas[i].pt_index].present	  = 1;
-		k64_page_tables[pt_table_index].entries[vas[i].pt_index].global		  = 1;
-		k64_page_tables[pt_table_index].entries[vas[i].pt_index].address_mid  = pa_addr.address_mid;
-		k64_page_tables[pt_table_index].entries[vas[i].pt_index].address_high = pa_addr.address_high;
+		struct page_table_entry *pt_e	 = &k64_page_tables[pt_table_index].entries[vas[i].pt_index];
+		addr64					 pa_addr = transform_address((void *)used_physical_address);
+		pt_e->address_mid				 = pa_addr.address_mid;
+		pt_e->address_high				 = pa_addr.address_high;
+		pt_e->global					 = 1;
+
+		kernel64_size::region_t region_type = kernel64_size::get_region_type(used_virtual_address);
+		switch (region_type)
+		{
+		case (kernel64_size::region_t::TEXT):
+		{
+			// kprintf("Address in text: low %h %h high\n", used_virtual_address);
+			pt_e->present			= 1;
+			pt_e->read_write_not_ro = 0;
+			pt_e->execute_disable	= 0;
+			break;
+		}
+		case (kernel64_size::region_t::RODATA):
+		{
+			pt_e->present			= 1;
+			pt_e->read_write_not_ro = 0;
+			pt_e->execute_disable	= 1;
+			break;
+		}
+
+		case (kernel64_size::region_t::DATA):
+		{
+			pt_e->present			= 1;
+			pt_e->read_write_not_ro = 1;
+			pt_e->execute_disable	= 1;
+			break;
+		}
+
+		case (kernel64_size::region_t::BSS):
+		{
+			pt_e->present			= 1;
+			pt_e->read_write_not_ro = 1;
+			pt_e->execute_disable	= 1;
+			break;
+		}
+
+		case (kernel64_size::region_t::STACK):
+		{
+			kprintf("Address in STACK: low %h %h high\n", used_virtual_address);
+			pt_e->present			= 1;
+			pt_e->read_write_not_ro = 1;
+			pt_e->execute_disable	= 1;
+			// need execute disable?
+			break;
+		}
+
+		case (kernel64_size::region_t::HEAP):
+		{
+			pt_e->present			= 1;
+			pt_e->read_write_not_ro = 1;
+			pt_e->execute_disable	= 1;
+			break;
+		}
+
+		case (kernel64_size::region_t::GUARD):
+		{
+			pt_e->present			= 0;
+			pt_e->read_write_not_ro = 0;
+			pt_e->execute_disable	= 1;
+			break;
+		}
+
+		case (kernel64_size::region_t::INVALID):
+		{
+			kprintf("An invalid region detected: low %h, high %h\n", used_virtual_address);
+			pt_e->present			= 0;
+			pt_e->read_write_not_ro = 0;
+			pt_e->execute_disable	= 1;
+			break;
+		}
+		}
 
 		// kprintf("Virtual address: %h\n", used_virtual_address);
 		// kprintf("pml4 index: %u\n", vas[i].pml4_index);

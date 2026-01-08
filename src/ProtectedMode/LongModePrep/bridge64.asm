@@ -25,7 +25,7 @@ long_mode_entry:
 	mov rcx, qword [rax]
 	mov rdx, qword [rbx]
 	; mov rdx, [0xdeadbeefdeadface]
-	jmp rax
+	jmp rax ; This jump to the kernel
 
 
 	mov rdx, [0xdeadbeefdeadface]

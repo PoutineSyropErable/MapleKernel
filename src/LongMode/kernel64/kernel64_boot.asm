@@ -10,11 +10,10 @@ kernel64_start:
     ; Set stack pointer (stack grows downward)
 	; db 0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x95, 0x97  ; 8 NOPs in a row
     mov rsp, __stack_top
-	mov rax, __module_size
+	; sub rsp, 16 ; 
 
-    extern kernel64_main
-    ; EBX = pointer to Multiboot2 info structure
-	; EAX = MAGIC value
+	push rbp
+extern kernel64_main
     call kernel64_main
 
     ; Infinite halt loop if kernel_main returns

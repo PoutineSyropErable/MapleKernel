@@ -6,7 +6,7 @@ BUILD32_DIR="../build32"
 BUILD64_DIR="../build64"
 
 LONG_MODE_PREP="./ProtectedMode/LongModePrep/"
-OUTPUT_HEADER_FILE="$LONG_MODE_PREP/kernel64_size.h"
+OUTPUT_HEADER_FILE="$LONG_MODE_PREP/kernel64_size.hpp"
 
 KERNEL64_ELF="$BUILD64_DIR/kernel64.elf"
 
@@ -36,6 +36,7 @@ function get_symbol() {
 __kernel_virtual_base=$(get_symbol "__kernel_virtual_base")
 __module_end=$(get_symbol "__module_end")
 __module_size=$(get_symbol "__module_size")
+kernel64_main=$(get_symbol "kernel64_main")
 
 __text_start=$(get_symbol "__text_start")
 __text_end=$(get_symbol "__text_end")
@@ -74,7 +75,8 @@ __stack_guard_end=$(get_symbol "__stack_guard_end")
 __heap_guard_start=$(get_symbol "__heap_guard_start")
 __heap_guard_end=$(get_symbol "__heap_guard_end")
 
-printf -- "\n\nModule size = %s" "$__module_size"
+printf -- "\n\n\nModule size = %s\n" "$__module_size"
+printf -- "Kernel 64 main (address) = %s" "$kernel64_main"
 
 cat >"$OUTPUT_HEADER_FILE" <<EOF
 /* =========================================================================
@@ -86,152 +88,154 @@ cat >"$OUTPUT_HEADER_FILE" <<EOF
  */
 
 #pragma once
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include "static_assert.h"
 
-#define KERNEL64_MODULE_SIZE ${__module_size}
-#define KERNEL64_PAGE_COUNT ((KERNEL64_MODULE_SIZE + 0xFFF) / 0x1000)
+namespace kernel64_size {
 
-/* Base addresses */
-#define KERNEL64_VIRTUAL_BASE ${__kernel_virtual_base}
+    /* Module size & page count */
+    constexpr uint64_t MODULE_SIZE = ${__module_size};
+    constexpr uint64_t PAGE_COUNT = (MODULE_SIZE + 0xFFF) / 0x1000;
+	STATIC_ASSERT(PAGE_COUNT < 0xFFFF'FFFF, "Page count must fit in a uint32_t number\n");
 
-/* Module boundaries */
-#define KERNEL64_MODULE_END ${__module_end}
+    /* Base addresses */
+    constexpr uint64_t VIRTUAL_BASE = ${__kernel_virtual_base};
+    constexpr uint64_t KERNEL64_MAIN_ADDR = ${kernel64_main};
 
-/* Text section */
-#define KERNEL64_TEXT_START ${__text_start}
-#define KERNEL64_TEXT_END ${__text_end}
-#define KERNEL64_TEXT_SIZE (KERNEL64_TEXT_END - KERNEL64_TEXT_START)
+    /* Module end */
+    constexpr uint64_t MODULE_END = ${__module_end};
 
-/* Text guard page */
-#define KERNEL64_TEXT_GUARD_START ${__text_guard_start}
-#define KERNEL64_TEXT_GUARD_END ${__text_guard_end}
-#define KERNEL64_TEXT_GUARD_SIZE (KERNEL64_TEXT_GUARD_END - KERNEL64_TEXT_GUARD_START)
+    /* Text section */
+    constexpr uint64_t TEXT_START = ${__text_start};
+    constexpr uint64_t TEXT_END   = ${__text_end};
+    constexpr uint64_t TEXT_SIZE  = TEXT_END - TEXT_START;
 
-/* Read-only data section */
-#define KERNEL64_RODATA_START ${__rodata_start}
-#define KERNEL64_RODATA_END ${__rodata_end}
-#define KERNEL64_RODATA_SIZE (KERNEL64_RODATA_END - KERNEL64_RODATA_START)
+    /* Text guard page */
+    constexpr uint64_t TEXT_GUARD_START = ${__text_guard_start};
+    constexpr uint64_t TEXT_GUARD_END   = ${__text_guard_end};
+    constexpr uint64_t TEXT_GUARD_SIZE  = TEXT_GUARD_END - TEXT_GUARD_START;
 
-/* Rodata guard page */
-#define KERNEL64_RODATA_GUARD_START ${__rodata_guard_start}
-#define KERNEL64_RODATA_GUARD_END ${__rodata_guard_end}
-#define KERNEL64_RODATA_GUARD_SIZE (KERNEL64_RODATA_GUARD_END - KERNEL64_RODATA_GUARD_START)
+    /* Read-only data section */
+    constexpr uint64_t RODATA_START = ${__rodata_start};
+    constexpr uint64_t RODATA_END   = ${__rodata_end};
+    constexpr uint64_t RODATA_SIZE  = RODATA_END - RODATA_START;
 
-/* Data section */
-#define KERNEL64_DATA_START ${__data_start}
-#define KERNEL64_DATA_END ${__data_end}
-#define KERNEL64_DATA_SIZE (KERNEL64_DATA_END - KERNEL64_DATA_START)
+    /* Rodata guard page */
+    constexpr uint64_t RODATA_GUARD_START = ${__rodata_guard_start};
+    constexpr uint64_t RODATA_GUARD_END   = ${__rodata_guard_end};
+    constexpr uint64_t RODATA_GUARD_SIZE  = RODATA_GUARD_END - RODATA_GUARD_START;
 
-/* Data guard page */
-#define KERNEL64_DATA_GUARD_START ${__data_guard_start}
-#define KERNEL64_DATA_GUARD_END ${__data_guard_end}
-#define KERNEL64_DATA_GUARD_SIZE (KERNEL64_DATA_GUARD_END - KERNEL64_DATA_GUARD_START)
+    /* Data section */
+    constexpr uint64_t DATA_START = ${__data_start};
+    constexpr uint64_t DATA_END   = ${__data_end};
+    constexpr uint64_t DATA_SIZE  = DATA_END - DATA_START;
 
-/* BSS section */
-#define KERNEL64_BSS_START ${__bss_start}
-#define KERNEL64_BSS_END ${__bss_end}
-#define KERNEL64_BSS_SIZE (KERNEL64_BSS_END - KERNEL64_BSS_START)
+    /* Data guard page */
+    constexpr uint64_t DATA_GUARD_START = ${__data_guard_start};
+    constexpr uint64_t DATA_GUARD_END   = ${__data_guard_end};
+    constexpr uint64_t DATA_GUARD_SIZE  = DATA_GUARD_END - DATA_GUARD_START;
 
-/* BSS guard page */
-#define KERNEL64_BSS_GUARD_START ${__bss_guard_start}
-#define KERNEL64_BSS_GUARD_END ${__bss_guard_end}
-#define KERNEL64_BSS_GUARD_SIZE (KERNEL64_BSS_GUARD_END - KERNEL64_BSS_GUARD_START)
+    /* BSS section */
+    constexpr uint64_t BSS_START = ${__bss_start};
+    constexpr uint64_t BSS_END   = ${__bss_end};
+    constexpr uint64_t BSS_SIZE  = BSS_END - BSS_START;
 
-/* Stack section */
-#define KERNEL64_STACK_BOTTOM ${__stack_bottom}
-#define KERNEL64_STACK_TOP ${__stack_top}
-#define KERNEL64_STACK_SIZE (KERNEL64_STACK_TOP - KERNEL64_STACK_BOTTOM)
+    /* BSS guard page */
+    constexpr uint64_t BSS_GUARD_START = ${__bss_guard_start};
+    constexpr uint64_t BSS_GUARD_END   = ${__bss_guard_end};
+    constexpr uint64_t BSS_GUARD_SIZE  = BSS_GUARD_END - BSS_GUARD_START;
 
-/* Stack guard page */
-#define KERNEL64_STACK_GUARD_START ${__stack_guard_start}
-#define KERNEL64_STACK_GUARD_END ${__stack_guard_end}
-#define KERNEL64_STACK_GUARD_SIZE (KERNEL64_STACK_GUARD_END - KERNEL64_STACK_GUARD_START)
+    /* Stack section */
+    constexpr uint64_t STACK_BOTTOM = ${__stack_bottom};
+    constexpr uint64_t STACK_TOP    = ${__stack_top};
+    constexpr uint64_t STACK_SIZE   = STACK_TOP - STACK_BOTTOM;
 
-/* Heap section */
-#define KERNEL64_HEAP_START ${__heap_start}
-#define KERNEL64_HEAP_END ${__heap_end}
-#define KERNEL64_HEAP_SIZE (KERNEL64_HEAP_END - KERNEL64_HEAP_START)
+    /* Stack guard page */
+    constexpr uint64_t STACK_GUARD_START = ${__stack_guard_start};
+    constexpr uint64_t STACK_GUARD_END   = ${__stack_guard_end};
+    constexpr uint64_t STACK_GUARD_SIZE  = STACK_GUARD_END - STACK_GUARD_START;
 
-/* Heap guard page */
-#define KERNEL64_HEAP_GUARD_START ${__heap_guard_start}
-#define KERNEL64_HEAP_GUARD_END ${__heap_guard_end}
-#define KERNEL64_HEAP_GUARD_SIZE (KERNEL64_HEAP_GUARD_END - KERNEL64_HEAP_GUARD_START)
+    /* Heap section */
+    constexpr uint64_t HEAP_START = ${__heap_start};
+    constexpr uint64_t HEAP_END   = ${__heap_end};
+    constexpr uint64_t HEAP_SIZE  = HEAP_END - HEAP_START;
 
-/* Section order verification macros */
-#define ASSERT_SECTION_ORDER(prev_end, next_start) \
-    ((prev_end) == (next_start) ? 0 : 1)
+    /* Heap guard page */
+    constexpr uint64_t HEAP_GUARD_START = ${__heap_guard_start};
+    constexpr uint64_t HEAP_GUARD_END   = ${__heap_guard_end};
+    constexpr uint64_t HEAP_GUARD_SIZE  = HEAP_GUARD_END - HEAP_GUARD_START;
 
-/* Check if address is within guard page (for debugging) */
-#define IS_IN_GUARD_PAGE(addr) \
-    (((addr) >= KERNEL64_TEXT_GUARD_START && (addr) < KERNEL64_TEXT_GUARD_END) || \
-     ((addr) >= KERNEL64_RODATA_GUARD_START && (addr) < KERNEL64_RODATA_GUARD_END) || \
-     ((addr) >= KERNEL64_DATA_GUARD_START && (addr) < KERNEL64_DATA_GUARD_END) || \
-     ((addr) >= KERNEL64_BSS_GUARD_START && (addr) < KERNEL64_BSS_GUARD_END) || \
-     ((addr) >= KERNEL64_STACK_GUARD_START && (addr) < KERNEL64_STACK_GUARD_END) || \
-     ((addr) >= KERNEL64_HEAP_GUARD_START && (addr) < KERNEL64_HEAP_GUARD_END))
+    /* Total guard pages */
+    constexpr uint64_t TOTAL_GUARD_SIZE =
+        TEXT_GUARD_SIZE + RODATA_GUARD_SIZE + DATA_GUARD_SIZE +
+        BSS_GUARD_SIZE + STACK_GUARD_SIZE + HEAP_GUARD_SIZE;
 
-/* Total guard pages size */
-#define KERNEL64_TOTAL_GUARD_SIZE \
-    (KERNEL64_TEXT_GUARD_SIZE + \
-     KERNEL64_RODATA_GUARD_SIZE + \
-     KERNEL64_DATA_GUARD_SIZE + \
-     KERNEL64_BSS_GUARD_SIZE + \
-     KERNEL64_STACK_GUARD_SIZE + \
-     KERNEL64_HEAP_GUARD_SIZE)
+    /* Total usable memory */
+    constexpr uint64_t TOTAL_USABLE_SIZE =
+        TEXT_SIZE + RODATA_SIZE + DATA_SIZE + BSS_SIZE + STACK_SIZE + HEAP_SIZE;
 
-/* Total usable memory (excluding guard pages) */
-#define KERNEL64_TOTAL_USABLE_SIZE \
-    (KERNEL64_TEXT_SIZE + \
-     KERNEL64_RODATA_SIZE + \
-     KERNEL64_DATA_SIZE + \
-     KERNEL64_BSS_SIZE + \
-     KERNEL64_STACK_SIZE + \
-     KERNEL64_HEAP_SIZE)
+    /* Address range helpers */
+    constexpr bool is_in_text(uint64_t addr)  { return addr >= TEXT_START && addr < TEXT_END; }
+    constexpr bool is_in_rodata(uint64_t addr){ return addr >= RODATA_START && addr < RODATA_END; }
+    constexpr bool is_in_data(uint64_t addr)  { return addr >= DATA_START && addr < DATA_END; }
+    constexpr bool is_in_bss(uint64_t addr)   { return addr >= BSS_START && addr < BSS_END; }
+    constexpr bool is_in_stack(uint64_t addr) { return addr >= STACK_BOTTOM && addr < STACK_TOP; }
+    constexpr bool is_in_heap(uint64_t addr)  { return addr >= HEAP_START && addr < HEAP_END; }
+    constexpr bool is_in_guard(uint64_t addr) {
+        return (addr >= TEXT_GUARD_START && addr < TEXT_GUARD_END) ||
+               (addr >= RODATA_GUARD_START && addr < RODATA_GUARD_END) ||
+               (addr >= DATA_GUARD_START && addr < DATA_GUARD_END) ||
+               (addr >= BSS_GUARD_START && addr < BSS_GUARD_END) ||
+               (addr >= STACK_GUARD_START && addr < STACK_GUARD_END) ||
+               (addr >= HEAP_GUARD_START && addr < HEAP_GUARD_END);
+    }
 
-/* Convenience macros for section checking */
-#define IS_IN_TEXT_SECTION(addr) \
-    ((addr) >= KERNEL64_TEXT_START && (addr) < KERNEL64_TEXT_END)
+    /* Section order verification */
+    constexpr bool assert_section_order(uint64_t prev_end, uint64_t next_start) {
+        return prev_end == next_start;
+    }
 
-#define IS_IN_RODATA_SECTION(addr) \
-    ((addr) >= KERNEL64_RODATA_START && (addr) < KERNEL64_RODATA_END)
+    /* Memory region types */
+    enum class region_t : uint8_t {
+        TEXT,
+        RODATA,
+        DATA,
+        BSS,
+        STACK,
+        HEAP,
+        GUARD,
+        INVALID
+    };
 
-#define IS_IN_DATA_SECTION(addr) \
-    ((addr) >= KERNEL64_DATA_START && (addr) < KERNEL64_DATA_END)
+    /* Helper function to determine region from address */
+    constexpr region_t get_region_type(uint64_t addr) {
+        return is_in_text(addr)   ? region_t::TEXT   :
+               is_in_rodata(addr) ? region_t::RODATA :
+               is_in_data(addr)   ? region_t::DATA   :
+               is_in_bss(addr)    ? region_t::BSS    :
+               is_in_stack(addr)  ? region_t::STACK  :
+               is_in_heap(addr)   ? region_t::HEAP   :
+               is_in_guard(addr)  ? region_t::GUARD  :
+                                    region_t::INVALID;
+    }
 
-#define IS_IN_BSS_SECTION(addr) \
-    ((addr) >= KERNEL64_BSS_START && (addr) < KERNEL64_BSS_END)
 
-#define IS_IN_STACK_SECTION(addr) \
-    ((addr) >= KERNEL64_STACK_BOTTOM && (addr) < KERNEL64_STACK_TOP)
+	constexpr const char* region_to_string(region_t r) {
+		switch (r) {
+			case region_t::TEXT:   return "TEXT";
+			case region_t::RODATA: return "RODATA";
+			case region_t::DATA:   return "DATA";
+			case region_t::BSS:    return "BSS";
+			case region_t::STACK:  return "STACK";
+			case region_t::HEAP:   return "HEAP";
+			case region_t::GUARD:  return "GUARD";
+			case region_t::INVALID:return "INVALID";
+		}
+		return "UNKNOWN"; // fallback (unreachable if all enum values covered)
+	}
 
-#define IS_IN_HEAP_SECTION(addr) \
-    ((addr) >= KERNEL64_HEAP_START && (addr) < KERNEL64_HEAP_END)
-
-/* Memory region types for page table setup */
-typedef enum {
-    KERNEL64_REGION_TEXT,
-    KERNEL64_REGION_RODATA,
-    KERNEL64_REGION_DATA,
-    KERNEL64_REGION_BSS,
-    KERNEL64_REGION_STACK,
-    KERNEL64_REGION_HEAP,
-    KERNEL64_REGION_GUARD,
-    KERNEL64_REGION_INVALID
-} kernel64_region_t;
-
-/* Helper function to determine region type from address */
-static inline kernel64_region_t kernel64_get_region_type(uintptr_t addr) {
-    if (IS_IN_TEXT_SECTION(addr)) return KERNEL64_REGION_TEXT;
-    if (IS_IN_RODATA_SECTION(addr)) return KERNEL64_REGION_RODATA;
-    if (IS_IN_DATA_SECTION(addr)) return KERNEL64_REGION_DATA;
-    if (IS_IN_BSS_SECTION(addr)) return KERNEL64_REGION_BSS;
-    if (IS_IN_STACK_SECTION(addr)) return KERNEL64_REGION_STACK;
-    if (IS_IN_HEAP_SECTION(addr)) return KERNEL64_REGION_HEAP;
-    if (IS_IN_GUARD_PAGE(addr)) return KERNEL64_REGION_GUARD;
-    return KERNEL64_REGION_INVALID;
-}
+} // namespace kernel64_size
 
 EOF
 

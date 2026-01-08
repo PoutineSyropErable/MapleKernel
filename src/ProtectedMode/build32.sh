@@ -422,7 +422,7 @@ $GPP32 -T linker32.ld -o "$BUILD_DIR/kernel32.elf" "${LDFLAGS[@]}" "${BUILD_OBJE
 
 printf "\n\n====== End of Linking =====\n\n"
 
-objdump -D -h -M intel "$BUILD_DIR/kernel32.elf" >"$BUILD_DIR/myos.dump"
+objdump -D -h -M intel "$BUILD_DIR/kernel32.elf" >"$BUILD_DIR/kernel32.dump"
 
 objdump -D -h -M intel "$BUILD_DIR/apic.o" >"$BUILD_DIR/apic.dump"
 objdump -D -h -M intel "$BUILD_DIR/multicore_c.o" >"$BUILD_DIR/multicore_c.dump"
