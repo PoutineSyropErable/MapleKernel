@@ -362,7 +362,7 @@ nasm "${NASM_FLAGS16[@]}" "$REAL16_WRAPPERS/call_realmode_function_wrapper16.asm
 nasm "${NASM_FLAGS32[@]}" "$REAL16_WRAPPERS/call_realmode_function_wrapper32.asm" -o "$BUILD_DIR/call_realmode_function_wrapper32.o" "-I$REAL16_WRAPPERS"
 ia16-elf-gcc "${CFLAGS16[@]}" -c "$REAL_FUNC/realmode_functions.c" -o "$BUILD_DIR/realmode_functions.o"
 
-$GPP32 "${CPPFLAGS[@]}" -c "$LONG_MODE_PREP/prepare_longmode.cpp" -o "$BUILD_DIR/prepare_longmode.o" "-I$STDLIB" "-I$STDIO" "-I$CPU" "-I$APIC" "-I$CPUID"
+$GPP32 "${CPPFLAGS[@]}" -c "$LONG_MODE_PREP/prepare_longmode.cpp" -o "$BUILD_DIR/prepare_longmode.o" "-I$STDLIB" "-I$STDIO" "-I$CPU" "-I$APIC" "-I$CPUID" "-I$MULTIBOOT" "-I$FRAMEBUFER"
 
 OBJ64="$BUILD_DIR/ObjectFile64"
 mkdir -p "$OBJ64"

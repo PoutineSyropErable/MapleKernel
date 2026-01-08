@@ -5,6 +5,7 @@
 #include "cpuid.hpp"
 #include "gdt64.hpp"
 #include "idt64.hpp"
+#include "multiboot.h"
 #include "paging64.hpp"
 #include "prepare_longmode.hpp"
 #include "std.hpp"
@@ -307,6 +308,7 @@ struct verified_address software_transform(uint64_t virtual_address)
 	if (pml4 != &main_pml4)
 	{
 		ret.err = 1;
+		kprintf("plm4 not correct\n");
 		return ret;
 	}
 
@@ -315,6 +317,7 @@ struct verified_address software_transform(uint64_t virtual_address)
 	if (!pml4_e.present)
 	{
 		ret.err = 2;
+		kprintf("plm4_e not present\n");
 		return ret;
 	}
 	struct pdpt *pdpt = (struct pdpt *)(pml4_e.address_mid << 12);
@@ -324,15 +327,17 @@ struct verified_address software_transform(uint64_t virtual_address)
 	kprintf("pml4_e.address_mid  = %h\n", pml4_e.address_mid);
 	kprintf("pdpt: %h\n", pdpt);
 	kprintf("main pdpt: %h\n", &first_pdpt);
-	if (pdpt != &first_pdpt)
-	{
-		ret.err = 3;
-		return ret;
-	}
+	// if (pdpt != &first_pdpt)
+	// {
+	// 	ret.err = 3;
+	// 	kprintf("Not first pdpt\n");
+	// 	return ret;
+	// }
 	pdpt_entry pdpt_e = pdpt->entries[split_addr.pdpt_index];
 	if (!pdpt_e.present)
 	{
 		ret.err = 4;
+		kprintf("pdpt_e not present\n");
 		return ret;
 	}
 
@@ -350,6 +355,7 @@ struct verified_address software_transform(uint64_t virtual_address)
 	if (!pd_e.present)
 	{
 		ret.err = 5;
+		kprintf("pd_e not present\n");
 		return ret;
 	}
 
@@ -367,6 +373,7 @@ struct verified_address software_transform(uint64_t virtual_address)
 	if (!pt_e.present)
 	{
 		ret.err = 6;
+		kprintf("pt_e not present\n");
 		return ret;
 	}
 	uintptr_t page_frame_base = pt_e.address_mid << 12;
@@ -407,6 +414,17 @@ bool			test_paging()
 		return false;
 	}
 	kprintf("eip | virtual : %h, physical : %h\n", eip, eip_t.address);
+	kprintf("\n");
+
+	struct verified_address k64_phys = software_transform(k64.entry_virtual);
+	if (k64_phys.err)
+	{
+		kprintf("Error getting k64 address\n");
+		exit(0);
+		return false;
+	}
+	kprintf("k64 entry | virtual : low %h, high %h, physical : low %h\n", k64.entry_virtual, k64_phys.address);
+	kprintf("The true physical address: low %h\n", k64.entry_physical);
 	kprintf("\n");
 
 	// end of function
@@ -466,7 +484,7 @@ int64_t simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, ui
 		uint64_t used_virtual_address  = virtual_address + i * 0x1000;
 		uint32_t used_physical_address = phys_address + i * 0x1000;
 		vas[i]						   = to_split(used_virtual_address);
-		if (vas[i].pml4_index != last_pml4_index)
+		if (vas[i].pml4_index != last_pml4_index || i == 0)
 		{
 			last_pml4_index = vas[i].pml4_index;
 			pdpt_add		= vas[i].pml4_index - first_pml4_index;
@@ -476,7 +494,7 @@ int64_t simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, ui
 			main_pml4.entries[last_pml4_index].address_mid	= pdpt_addr.address_mid;
 			main_pml4.entries[last_pml4_index].address_high = pdpt_addr.address_high;
 		}
-		if (vas[i].pdpt_index != last_pdpt_index)
+		if (vas[i].pdpt_index != last_pdpt_index || i == 0)
 		{
 			last_pdpt_index = vas[i].pdpt_index;
 			pd_add			= vas[i].pdpt_index - first_pdpt_index;
@@ -486,7 +504,7 @@ int64_t simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, ui
 			k64_pdpts[pdpt_add].entries[last_pdpt_index].address_mid  = pd_addr.address_mid;
 			k64_pdpts[pdpt_add].entries[last_pdpt_index].address_high = pd_addr.address_high;
 		}
-		if (vas[i].pd_index != last_pd_index)
+		if (vas[i].pd_index != last_pd_index || i == 0)
 		{
 			last_pd_index = vas[i].pd_index;
 			pt_add		  = vas[i].pd_index - first_pd_index;

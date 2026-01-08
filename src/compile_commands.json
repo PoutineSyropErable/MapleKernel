@@ -1739,35 +1739,6 @@
   },
   {
     "arguments": [
-      "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-gcc",
-      "-std=gnu23",
-      "-ffreestanding",
-      "-Wall",
-      "-Wextra",
-      "-O3",
-      "-DQEMU",
-      "-m32",
-      "-march=pentium4",
-      "-mfpmath=sse",
-      "-msse",
-      "-msse2",
-      "-msse3",
-      "-mtune=generic",
-      "-mno-avx",
-      "-mno-avx2",
-      "-mno-avx512f",
-      "-mstackrealign",
-      "-c",
-      "-o",
-      "../../build32/virtual_memory.o",
-      "other/virtual_memory.c"
-    ],
-    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/ProtectedMode",
-    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/ProtectedMode/other/virtual_memory.c",
-    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/build32/virtual_memory.o"
-  },
-  {
-    "arguments": [
       "/home/francois/cross-gcc/install-i686-elf/bin/i686-elf-g++",
       "-std=gnu++23",
       "-ffreestanding",
@@ -2058,6 +2029,8 @@
       "-I./cpu/",
       "-I./cpu/apic",
       "-I./cpu/cpuid",
+      "-I./firmware/multiboot",
+      "-I./framebuffer",
       "-o",
       "../../build32/prepare_longmode.o",
       "./LongModePrep/prepare_longmode.cpp"
@@ -2159,7 +2132,7 @@
       "-fdeprecated-macro",
       "-ferror-limit",
       "19",
-      "-fmessage-length=212",
+      "-fmessage-length=158",
       "-mstackrealign",
       "-fno-builtin",
       "-fno-rtti",
@@ -2272,7 +2245,7 @@
       "-fdeprecated-macro",
       "-ferror-limit",
       "19",
-      "-fmessage-length=212",
+      "-fmessage-length=158",
       "-mstackrealign",
       "-fno-builtin",
       "-fno-rtti",
@@ -2461,5 +2434,23 @@
     "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/LongMode",
     "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/LongMode/kernel64/kernel_64.c",
     "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/build64/kernel_64.o"
+  },
+  {
+    "arguments": [
+      "/home/francois/cross-gcc/install-x86_64-elf/bin/x86_64-elf-gcc",
+      "-std=gnu23",
+      "-ffreestanding",
+      "-Wall",
+      "-Wextra",
+      "-O3",
+      "-DQEMU",
+      "-c",
+      "-o",
+      "../../build64/dummy_kernel.o",
+      "./kernel64/dummy_kernel.c"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/LongMode",
+    "file": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/LongMode/kernel64/dummy_kernel.c",
+    "output": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/build64/dummy_kernel.o"
   }
 ]

@@ -19,8 +19,12 @@ long_mode_entry:
 	movzx rcx, ecx
 
 	mov rax, [rcx + VIRTUAL_ADDRESS_OFFSET] ; get the virtual address of the kernel
-	; mov rax, [rcx + PHYSICAL_ADDRESS_OFFSET] ; get the virtual address of the kernel
+	mov ebx, [rcx + PHYSICAL_ADDRESS_OFFSET] ; get the virtual address of the kernel
+	movzx rbx, ebx
 	; rax = 0xffffffff80000000 (gotten through runtime)
+	mov rcx, qword [rax]
+	mov rdx, qword [rbx]
+	mov rdx, [0xdeadbeefdeadface]
 	jmp rax
 
 
