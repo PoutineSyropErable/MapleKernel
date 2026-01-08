@@ -1,5 +1,6 @@
 #include "assert.h"
 #include "cpuid_results.hpp"
+#include "kernel64_size.h"
 #include "math.hpp"
 
 #include "cpuid.hpp"
@@ -463,7 +464,7 @@ bool			test_paging()
 	return true;
 }
 
-constexpr uint32_t	  max_page_count = 0x1000 * 16;
+constexpr uint32_t	  max_page_count = KERNEL64_PAGE_COUNT;
 virtual_address_split vas[max_page_count];
 page_table			  k64_page_tables[round_up_div(max_page_count, 512)];
 page_directory		  k64_page_directories[round_up_div(max_page_count, 512 * 512)];
