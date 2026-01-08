@@ -22,6 +22,7 @@ SECTIONS
         *(.text.*)
         . = ALIGN(0x1000);
     }
+
     
     /* Read-only data */
     .rodata ALIGN(0x1000) : AT(ADDR(.rodata) - KERNEL_VIRTUAL_BASE)
@@ -30,6 +31,8 @@ SECTIONS
         *(.rodata.*)
         . = ALIGN(0x1000);
     }
+
+
     
     /* Kernel data - read/write, initialized */
     .data ALIGN(0x1000) : AT(ADDR(.data) - KERNEL_VIRTUAL_BASE)
@@ -38,6 +41,7 @@ SECTIONS
         *(.data.*)
         . = ALIGN(0x1000);
     }
+
     
     /* BSS - uninitialized data, will be zeroed */
     .bss ALIGN(0x1000) : AT(ADDR(.bss) - KERNEL_VIRTUAL_BASE)
@@ -49,6 +53,7 @@ SECTIONS
         __bss_end = .;
         . = ALIGN(0x1000);
     }
+
     
     /* Stack for this module */
     .stack ALIGN(0x1000) : AT(ADDR(.stack) - KERNEL_VIRTUAL_BASE)
@@ -58,6 +63,8 @@ SECTIONS
         __stack_top = .;
         . = ALIGN(0x1000);
     }
+
+
     
     /* Heap for this module */
     .heap ALIGN(0x1000) : AT(ADDR(.heap) - KERNEL_VIRTUAL_BASE)
@@ -67,6 +74,8 @@ SECTIONS
         __heap_end = .;
         . = ALIGN(0x1000);
     }
+
+
     
     /* End of the module */
     . = ALIGN(0x1000);
