@@ -40,8 +40,9 @@ BUILD32_DIR="../build32"
 BUILD64_DIR="../build64"
 ISO_DIR="../isodir"
 
-./ProtectedMode/build32.sh "$DEBUG_OR_RELEASE" "$QEMU_OR_REAL_MACHINE"
 ./LongMode/build64.sh "$DEBUG_OR_RELEASE" "$QEMU_OR_REAL_MACHINE"
+./write_kernel64_size_to_header.sh
+./ProtectedMode/build32.sh "$DEBUG_OR_RELEASE" "$QEMU_OR_REAL_MACHINE"
 # Check if the kernel is multiboot-compliant
 USE_MULTIBOOT1=false
 if [ "$USE_MULTIBOOT1" == true ]; then
