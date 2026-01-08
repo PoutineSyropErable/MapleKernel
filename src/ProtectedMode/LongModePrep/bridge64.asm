@@ -24,7 +24,7 @@ long_mode_entry:
 	; rax = 0xffffffff80000000 (gotten through runtime)
 	mov rcx, qword [rax]
 	mov rdx, qword [rbx]
-	mov rdx, [0xdeadbeefdeadface]
+	; mov rdx, [0xdeadbeefdeadface]
 	jmp rax
 
 

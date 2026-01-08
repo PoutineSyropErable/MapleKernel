@@ -248,6 +248,7 @@ int cpp_main(struct cpp_main_args args)
 		kprintf("&k64 = %h, %u\n", &k64, &k64);
 		longmode_prep::set_64bit_page_table();
 		longmode_prep::simple_page_kernel64(k64.entry_physical, k64.entry_virtual, k64.size);
+		// longmode_prep::simplest_page_kernel(k64.entry_physical, k64.entry_virtual, k64.size);
 		longmode_prep::test_paging();
 
 		// Jump to long mode

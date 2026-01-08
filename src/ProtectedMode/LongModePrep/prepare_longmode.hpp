@@ -19,6 +19,7 @@ struct max_addr
 struct max_addr get_max_cpu_address();
 void			set_64bit_page_table();
 int64_t			simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, uint64_t size);
+void			simplest_page_kernel(uint32_t phys_address, uint64_t virtual_address, uint64_t size);
 
 void set_gdt64();
 void set_idt64();

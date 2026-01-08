@@ -32,6 +32,11 @@ extern "C" idtr			idtr_64{};
 extern "C" gdt64_simple gdt64{};
 extern "C" idt64_simple idt64{};
 
+constexpr uint64_t round_up_div(uint64_t a, uint64_t b)
+{
+	return (a + b - 1) / b;
+}
+
 namespace longmode_prep
 {
 
@@ -312,7 +317,7 @@ struct verified_address software_transform(uint64_t virtual_address)
 		return ret;
 	}
 
-	kprintf("The pml4 index: %u\n", split_addr.pml4_index);
+	// kprintf("The pml4 index: %u\n", split_addr.pml4_index);
 	pml4_entry pml4_e = pml4->entries[split_addr.pml4_index];
 	if (!pml4_e.present)
 	{
@@ -322,11 +327,11 @@ struct verified_address software_transform(uint64_t virtual_address)
 	}
 	struct pdpt *pdpt = (struct pdpt *)(pml4_e.address_mid << 12);
 
-	kprintf("&pml4  = %h\n", pml4);
-	kprintf("&pml4_e  = %h\n", &pml4_e);
-	kprintf("pml4_e.address_mid  = %h\n", pml4_e.address_mid);
-	kprintf("pdpt: %h\n", pdpt);
-	kprintf("main pdpt: %h\n", &first_pdpt);
+	// kprintf("&pml4  = %h\n", pml4);
+	// kprintf("&pml4_e  = %h\n", &pml4_e);
+	// kprintf("pml4_e.address_mid  = %h\n", pml4_e.address_mid);
+	// kprintf("pdpt: %h\n", pdpt);
+	// kprintf("main pdpt: %h\n", &first_pdpt);
 	// if (pdpt != &first_pdpt)
 	// {
 	// 	ret.err = 3;
@@ -427,22 +432,59 @@ bool			test_paging()
 	kprintf("The true physical address: low %h\n", k64.entry_physical);
 	kprintf("\n");
 
+	uint64_t k_start = k64.entry_virtual;
+
+	for (uint64_t k_addr = k_start; k_addr < k_start + k64.size; k_addr += 0x1000)
+	{
+		struct verified_address k_addr_phys = software_transform(k_addr);
+		if (k_addr_phys.err)
+		{
+			kprintf("Error getting the physical address of : %h\n", k_addr);
+			exit(0);
+			return false;
+		}
+	}
+
+	kprintf("The final address: low: %h, high: %h\n", k_start + k64.size);
+
+	// uint64_t				c_entry = 0xffffffff80405ff8;
+	// struct verified_address c_phys	= software_transform(c_entry);
+	// if (c_phys.err)
+	// {
+	// 	kprintf("Error getting centry address\n");
+	// 	exit(0);
+	// 	return false;
+	// }
+	// kprintf("C entry | virtual : low %h, high %h, physical : low %h\n", c_entry, c_phys.address);
+	// kprintf("The true physical address: low %h\n", k64.entry_physical + (uint32_t)(c_entry - k64.entry_virtual));
+	// kprintf("\n");
+
 	// end of function
 	return true;
 }
 
-constexpr uint64_t round_up_div(uint64_t a, uint64_t b)
-{
-	return (a + b - 1) / b;
-}
-
-constexpr uint16_t	  max_page_count = 1024;
+constexpr uint32_t	  max_page_count = 0x1000 * 16;
 virtual_address_split vas[max_page_count];
 page_table			  k64_page_tables[round_up_div(max_page_count, 512)];
 page_directory		  k64_page_directories[round_up_div(max_page_count, 512 * 512)];
 pdpt				  k64_pdpts[round_up_div(max_page_count, 512 * 512 * 512)];
 
-int64_t simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, uint64_t size)
+struct tables_and_entries
+{
+	uint16_t full_tables; // rounded up number of page
+	uint16_t entries;
+};
+
+constexpr tables_and_entries lround_up_div(uint16_t a, uint16_t b)
+{
+	uint16_t pages	 = (a + b - 1) / b;
+	uint16_t entries = a % b;
+	if (entries == 0 && pages > 0)
+		entries = b; // last table fully used
+	return {.full_tables = pages, .entries = entries};
+}
+
+void simplest_page_kernel(uint32_t physical_address, uint64_t virtual_address, uint64_t size)
 {
 	uint64_t page_count = size >> 12;
 	if (size % 0x1000)
@@ -460,6 +502,142 @@ int64_t simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, ui
 		// I would need to change it so the first few code that can do paging is at the start
 		// The good solution will be to use multistep linking for the 64 bit code
 		abort_msg("The page count is bigger then the max page count\n");
+	}
+
+	kprintf("Page count = %u\n", page_count);
+
+	tables_and_entries page_tables		   = lround_up_div(page_count, 512);
+	tables_and_entries page_directories	   = lround_up_div(page_tables.full_tables, 512);
+	tables_and_entries page_directory_ptrs = lround_up_div(page_directories.full_tables, 512);
+	tables_and_entries pml4s			   = lround_up_div(page_directory_ptrs.full_tables, 512);
+
+	// print results
+	kprintf("Page Tables: Pages = %u, Entries in last = %u\n", page_tables.full_tables, page_tables.entries);
+	kprintf("Page Directories: Pages = %u, Entries in last = %u\n", page_directories.full_tables, page_directories.entries);
+	kprintf("PDPTs: Pages = %u, Entries in last = %u\n", page_directory_ptrs.full_tables, page_directory_ptrs.entries);
+	kprintf("PML4s: Pages = %u, Entries in last = %u\n", pml4s.full_tables, pml4s.entries);
+	assert(pml4s.full_tables == 1, "Only 1 pml4 anyway\n");
+
+	uint64_t used_virtual_address  = virtual_address;
+	uint32_t used_physical_address = physical_address;
+
+	uint16_t pml4_entry_index_max = pml4s.entries;
+	// ================= Starting the loop for the index (which table to pick)
+	for (uint16_t pdpt_index = 0; pdpt_index < page_directory_ptrs.full_tables; pdpt_index++)
+	{
+		bool	 last_pdpt			  = (pdpt_index == page_directory_ptrs.full_tables - 1);
+		uint16_t pdpt_entry_index_max = last_pdpt ? page_directory_ptrs.entries : 512;
+
+		for (uint16_t pd_index = 0; pd_index < page_directories.full_tables; pd_index++)
+		{
+			bool	 last_pd			= (pd_index == page_directories.full_tables - 1);
+			uint16_t pd_entry_index_max = last_pd ? page_directories.entries : 512;
+
+			for (uint16_t pt_index = 0; pt_index < page_tables.full_tables; pt_index++)
+			{
+				bool	 last_pt			= (pt_index == page_tables.full_tables - 1);
+				uint16_t pt_entry_index_max = last_pt ? page_tables.entries : 512;
+
+				// ================= Starting the loop for the index of the entries inside a table
+				virtual_address_split va = to_split(used_virtual_address);
+				addr64				  pa = transform_address((void *)used_physical_address);
+
+				pdpt		   *pdpt = &k64_pdpts[pdpt_index];
+				page_directory *pd	 = &k64_page_directories[pd_index];
+				page_table	   *pt	 = &k64_page_tables[pt_index];
+
+				for (uint16_t pml4_entry_index = 0; pml4_entry_index < pml4_entry_index_max; pml4_entry_index++)
+				{
+					pml4_entry *pml4_e = &main_pml4.entries[va.pml4_index];
+					if (!pml4_e->present)
+					{
+						pml4_e->present		 = 1;
+						addr64 pdpt_addr	 = transform_address(pdpt);
+						pml4_e->address_mid	 = pdpt_addr.address_mid;
+						pml4_e->address_high = pdpt_addr.address_high;
+					}
+					// End of loop
+				}
+				for (uint16_t pdpt_entry_index = 0; pdpt_entry_index < pdpt_entry_index_max; pdpt_entry_index++)
+				{
+					va				   = to_split(used_virtual_address);
+					pa				   = transform_address((void *)used_physical_address);
+					pdpt_entry *pdpt_e = &pdpt->entries[va.pdpt_index];
+					if (!pdpt_e->present)
+					{
+						pdpt_e->present		 = 1;
+						addr64 pd_addr		 = transform_address(pd);
+						pdpt_e->address_mid	 = pd_addr.address_mid;
+						pdpt_e->address_high = pd_addr.address_high;
+					}
+				}
+				for (uint16_t pd_entry_index = 0; pd_entry_index < pd_entry_index_max; pd_entry_index++)
+				{
+					va						   = to_split(used_virtual_address);
+					pa						   = transform_address((void *)used_physical_address);
+					page_directory_entry *pd_e = &pd->entries[va.pd_index];
+					if (!pd_e->present)
+					{
+						pd_e->present	   = 1;
+						addr64 pt_addr	   = transform_address(pt);
+						pd_e->address_mid  = pt_addr.address_mid;
+						pd_e->address_high = pt_addr.address_high;
+					}
+				}
+				for (uint16_t pt_entry_index = 0; pt_entry_index < pt_entry_index_max; pt_entry_index++)
+				{
+					va						= to_split(used_virtual_address);
+					pa						= transform_address((void *)used_physical_address);
+					page_table_entry *pt_e	= &pt->entries[va.pt_index];
+					pt_e->present			= 1;
+					pt_e->global			= 1;
+					pt_e->address_mid		= pa.address_mid;
+					pt_e->address_high		= pa.address_high;
+					pt_e->read_write_not_ro = 1;
+
+					used_virtual_address += 0x1000;
+					used_physical_address += 0x1000;
+
+					if (used_virtual_address > virtual_address + size)
+					// Change to round up if the size isn't 0x1000 aligned
+					{
+						kprintf("\n\nBreaking, but this shouldn't happen\n\n\n");
+						break;
+					}
+				}
+			}
+		}
+	}
+}
+
+int64_t simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, uint64_t size)
+{
+	uint64_t normal_size = 2 * 0x416000u;
+	// From the start module size obtained by checking the value of the linking symbol
+	if (size > normal_size)
+	{
+		kprintf("Size is too small, must increase it\n");
+		abort();
+	}
+	size = normal_size;
+
+	uint64_t page_count = size >> 12;
+	if (size % 0x1000)
+	{
+		page_count++;
+	}
+
+	if (page_count > max_page_count)
+	{
+		kprintf("Return here, and increase the max page count, or change the abbort behavior\n");
+		kprintf("Do it so that the 64 bit code properly does the virtual memory setup of itself\n");
+		kprintf("Just use the int return value for error\n");
+		kprintf("Maybe use an attribute so that the code related to adding stuff to new page table is within the start\n");
+		// There could be difficulties since I'm doing all text, all data, all...
+		// I would need to change it so the first few code that can do paging is at the start
+		// The good solution will be to use multistep linking for the 64 bit code
+		kprintf("The page count: %u, Max page count: %u\n", page_count, max_page_count);
+		abort_msg("The page count is bigger then the max page count\n");
 		return -1;
 	}
 
@@ -471,57 +649,65 @@ int64_t simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, ui
 	uint16_t			  first_pd_index   = va.pd_index;
 	uint16_t			  first_pt_index   = va.pt_index;
 
-	uint16_t last_pml4_index = va.pml4_index;
-	uint16_t last_pdpt_index = va.pdpt_index;
-	uint16_t last_pd_index	 = va.pd_index;
+	uint16_t last_pml4_entry_index = va.pml4_index;
+	uint16_t last_pdpt_entry_index = va.pdpt_index;
+	uint16_t last_pd_entry_index   = va.pd_index;
 
-	uint16_t pdpt_add = 0;
-	uint16_t pd_add	  = 0;
-	uint16_t pt_add	  = 0;
+	uint16_t pdpt_table_index = 0;
+	uint16_t pd_table_index	  = 0;
+	uint16_t pt_table_index	  = 0;
 
 	for (uint64_t i = 0; i < page_count; i++)
 	{
 		uint64_t used_virtual_address  = virtual_address + i * 0x1000;
 		uint32_t used_physical_address = phys_address + i * 0x1000;
 		vas[i]						   = to_split(used_virtual_address);
-		if (vas[i].pml4_index != last_pml4_index || i == 0)
+		if (vas[i].pml4_index != last_pml4_entry_index || i == 0)
 		{
-			last_pml4_index = vas[i].pml4_index;
-			pdpt_add		= vas[i].pml4_index - first_pml4_index;
+			if (i != 0)
+				pdpt_table_index++;
 
-			addr64 pdpt_addr								= transform_address(&k64_pdpts[pdpt_add]);
-			main_pml4.entries[last_pml4_index].present		= 1;
-			main_pml4.entries[last_pml4_index].address_mid	= pdpt_addr.address_mid;
-			main_pml4.entries[last_pml4_index].address_high = pdpt_addr.address_high;
-		}
-		if (vas[i].pdpt_index != last_pdpt_index || i == 0)
-		{
-			last_pdpt_index = vas[i].pdpt_index;
-			pd_add			= vas[i].pdpt_index - first_pdpt_index;
+			addr64 pdpt_addr								  = transform_address(&k64_pdpts[pdpt_table_index]);
+			main_pml4.entries[vas[i].pml4_index].present	  = 1;
+			main_pml4.entries[vas[i].pml4_index].address_mid  = pdpt_addr.address_mid;
+			main_pml4.entries[vas[i].pml4_index].address_high = pdpt_addr.address_high;
 
-			addr64 pd_addr											  = transform_address(&k64_page_directories[pd_add]);
-			k64_pdpts[pdpt_add].entries[last_pdpt_index].present	  = 1;
-			k64_pdpts[pdpt_add].entries[last_pdpt_index].address_mid  = pd_addr.address_mid;
-			k64_pdpts[pdpt_add].entries[last_pdpt_index].address_high = pd_addr.address_high;
+			last_pml4_entry_index = vas[i].pml4_index;
 		}
-		if (vas[i].pd_index != last_pd_index || i == 0)
+		if (vas[i].pdpt_index != last_pdpt_entry_index || i == 0)
 		{
-			last_pd_index = vas[i].pd_index;
-			pt_add		  = vas[i].pd_index - first_pd_index;
+			if (i != 0)
+				pd_table_index++;
+
+			addr64 pd_addr														= transform_address(&k64_page_directories[pd_table_index]);
+			k64_pdpts[pdpt_table_index].entries[vas[i].pdpt_index].present		= 1;
+			k64_pdpts[pdpt_table_index].entries[vas[i].pdpt_index].address_mid	= pd_addr.address_mid;
+			k64_pdpts[pdpt_table_index].entries[vas[i].pdpt_index].address_high = pd_addr.address_high;
+
+			last_pdpt_entry_index = vas[i].pdpt_index;
+		}
+
+		if (vas[i].pd_index != last_pd_entry_index || i == 0)
+		{
+			if (i != 0)
+				pt_table_index++;
+			// These value indeed need to go up, and not round back to 0
 
 			// Take the address of the needed page table. (Each page table has 512 entry, which points to 512 page frame)
 			// The page directory entry points to page table base
-			addr64 pt_addr													 = transform_address(&k64_page_tables[pt_add]);
-			k64_page_directories[pd_add].entries[last_pd_index].present		 = 1;
-			k64_page_directories[pd_add].entries[last_pd_index].address_mid	 = pt_addr.address_mid;
-			k64_page_directories[pd_add].entries[last_pd_index].address_high = pt_addr.address_high;
+			addr64 pt_addr															  = transform_address(&k64_page_tables[pt_table_index]);
+			k64_page_directories[pd_table_index].entries[vas[i].pd_index].present	  = 1;
+			k64_page_directories[pd_table_index].entries[vas[i].pd_index].address_mid = pt_addr.address_mid;
+			k64_page_directories[pd_table_index].entries[vas[i].pd_index].address_high = pt_addr.address_high;
+
+			last_pd_entry_index = vas[i].pd_index;
 		}
 
-		addr64 pt_addr												= transform_address((void *)used_physical_address);
-		k64_page_tables[pd_add].entries[last_pd_index].present		= 1;
-		k64_page_tables[pd_add].entries[last_pd_index].global		= 1;
-		k64_page_tables[pd_add].entries[last_pd_index].address_mid	= pt_addr.address_mid;
-		k64_page_tables[pd_add].entries[last_pd_index].address_high = pt_addr.address_high;
+		addr64 pa_addr														  = transform_address((void *)used_physical_address);
+		k64_page_tables[pt_table_index].entries[vas[i].pt_index].present	  = 1;
+		k64_page_tables[pt_table_index].entries[vas[i].pt_index].global		  = 1;
+		k64_page_tables[pt_table_index].entries[vas[i].pt_index].address_mid  = pa_addr.address_mid;
+		k64_page_tables[pt_table_index].entries[vas[i].pt_index].address_high = pa_addr.address_high;
 
 		// kprintf("Virtual address: %h\n", used_virtual_address);
 		// kprintf("pml4 index: %u\n", vas[i].pml4_index);
