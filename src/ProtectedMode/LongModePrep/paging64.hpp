@@ -14,8 +14,8 @@ struct __attribute__((packed)) cr3_t
 	bool	page_level_cache_disable : 1 = 0;
 	uint8_t reserved2 : 7				 = 0;
 	// base low : (The low 12 bits must be 0: 4KB/Page aligned)
-	uint32_t phys_addr_pml4_base_mid;  // Put addr >> 12 here (only the first 20 bit here are useful in 30 bit mode)
-	uint16_t phys_addr_pml4_base_high; // Put addr >> 44 here
+	uint32_t phys_addr_pml4_base_mid : 32;	// Put addr >> 12 here (only the first 20 bit here are useful in 30 bit mode)
+	uint16_t phys_addr_pml4_base_high : 16; // Put addr >> 44 here
 
 	// Note that the max phys address bit count tells you here how much you can write
 	// So the full high might not be usable
@@ -27,8 +27,8 @@ struct __attribute__((packed)) cr3_pcide_t
 {
 	// I'm not gonna use this one, written for clarity
 	uint16_t pcid : 12;
-	uint32_t phys_addr_pml4_base_low;
-	uint16_t phys_addr_pml4_base_high;
+	uint32_t phys_addr_pml4_base_low : 32;
+	uint16_t phys_addr_pml4_base_high : 16;
 };
 STATIC_ASSERT(sizeof(cr3_pcide_t) == 8, "Must be 64 bit\n");
 

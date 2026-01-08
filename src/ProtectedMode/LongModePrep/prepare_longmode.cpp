@@ -7,6 +7,7 @@
 #include "idt64.hpp"
 #include "paging64.hpp"
 #include "prepare_longmode.hpp"
+#include "std.hpp"
 #include <string.h>
 
 extern "C" uint8_t __kernel_start;
@@ -138,8 +139,22 @@ void set_64bit_page_table()
 	{
 		// Use this one later on
 		cr3_of_setup = cr3_uts_v.raw;
-		kprintf("cr3 = low: %h, high: %h\n", cr3_of_setup);
+		kprintf("\n\nThe Paging information [entry 0 unless specified otherwise] \n\n");
+		kprintf("cr3 = low: %h:8, high: %h:8\n", cr3_of_setup);
 		kprintf("cr3: base mid = %h\n", cr3.phys_addr_pml4_base_mid);
+		kprintf("\n");
+		kprintf("&main_pml4 = %h\n", &main_pml4.entries[0]);
+		kprintf("main_pml4: low= %h:8, high= %h:8\n", to_uint64(main_pml4.entries[0]));
+		kprintf("\n");
+		kprintf("&first_pdpt = %h\n", &first_pdpt.entries[0]);
+		kprintf("first_pdpt: low = %h:8, high = %h:8\n", to_uint64(first_pdpt.entries[0]));
+		kprintf("\n");
+		kprintf("&first_page_directory = %h\n", &first_page_directory);
+		kprintf("first_page_directory: low = %h:8, high = %h:8\n", to_uint64(first_page_directory.entries[0]));
+		kprintf("\n");
+		kprintf("&first_page_directory (entry 1) = %h\n", &first_page_directory);
+		kprintf("first_page_directory (entry 1): low = %h:8, high = %h:8\n", to_uint64(first_page_directory.entries[1]));
+		kprintf("\n\n");
 	}
 }
 

@@ -7,7 +7,7 @@ QEMU_FULL=false
 # CONTROL + ALT + G to get the mouse back (GTK), default on my machine
 # or CTRL+ALT (SDL)
 
-MOV_WORKSPACE=21 # In hyprland, move it there
+MOV_WORKSPACE=12 # In hyprland, move it there
 MOV_PID_DIR="$HOME/.local/bin"
 
 function find_git_root() {

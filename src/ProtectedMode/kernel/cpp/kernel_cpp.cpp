@@ -245,7 +245,7 @@ int cpp_main(struct cpp_main_args args)
 		entry_point_c k64 = args.kernel64_address_information;
 		kprintf("Entry phys: %h, entry virtual: %h%h, size: %h\n", k64.entry_physical, k64.entry_virtual, k64.size);
 		longmode_prep::set_64bit_page_table();
-		longmode_prep::simple_page_kernel64(k64.entry_physical, k64.entry_virtual, k64.size);
+		// longmode_prep::simple_page_kernel64(k64.entry_physical, k64.entry_virtual, k64.size);
 		longmode_prep::test_paging();
 
 		// Jump to long mode

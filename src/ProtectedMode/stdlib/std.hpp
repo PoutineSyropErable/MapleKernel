@@ -56,6 +56,37 @@ template <typename T> constexpr uint32_t to_uint32(T val)
 	return u.raw;
 }
 
+template <typename T> constexpr T from_uint64(uint64_t raw)
+{
+	union
+	{
+		uint64_t raw;
+		T		 val;
+	} u;
+	u.raw = raw;
+	return u.val;
+}
+
+template <typename T> constexpr uint64_t to_uint64(T val)
+{
+	union
+	{
+		uint64_t raw = 0;
+		T		 val;
+	} u{.val = val};
+	return u.raw;
+}
+
+template <typename T, typename U> constexpr T fromUtoT(U val)
+{
+	union
+	{
+		U in;
+		T out;
+	} u{.in = val};
+	return u.out;
+}
+
 // ================ Is same ==========
 
 // Default case: T and U are different
