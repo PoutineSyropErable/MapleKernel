@@ -28,12 +28,14 @@ extern "C"
 		char	 cmdline[100];
 	};
 
-	struct entry_point_c
+	struct __attribute__((packed)) entry_point_c
 	{
-		uint32_t entry_physical;
 		uint64_t entry_virtual;
 		uint64_t size;
+		uint32_t entry_physical;
 	};
+
+	extern struct entry_point_c k64;
 
 	/*
 	the module index start at 0.

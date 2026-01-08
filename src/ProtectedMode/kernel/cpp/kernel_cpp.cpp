@@ -33,7 +33,8 @@
 
 #include "special_pointers.hpp"
 
-extern "C" [[noreturn]] void to_compatibility_mode();
+extern "C" [[noreturn]] void	to_compatibility_mode();
+extern "C" struct entry_point_c k64 = {.entry_virtual = 0, .size = 0, .entry_physical = 0};
 
 void print_test()
 {
@@ -242,10 +243,11 @@ int cpp_main(struct cpp_main_args args)
 		longmode_prep::set_gdt64();
 		longmode_prep::set_idt64();
 
-		entry_point_c k64 = args.kernel64_address_information;
-		kprintf("Entry phys: %h, entry virtual: %h%h, size: %h\n", k64.entry_physical, k64.entry_virtual, k64.size);
+		k64 = args.kernel64_address_information;
+		kprintf("\nEntry phys: %h, entry virtual: %h%h, size: %h\n\n", k64.entry_physical, k64.entry_virtual, k64.size);
+		kprintf("&k64 = %h, %u\n", &k64, &k64);
 		longmode_prep::set_64bit_page_table();
-		// longmode_prep::simple_page_kernel64(k64.entry_physical, k64.entry_virtual, k64.size);
+		longmode_prep::simple_page_kernel64(k64.entry_physical, k64.entry_virtual, k64.size);
 		longmode_prep::test_paging();
 
 		// Jump to long mode

@@ -77,6 +77,8 @@ CPPFLAGS=("-std=gnu++23" "-ffreestanding" "-Wall" "-Wextra" "-fno-threadsafe-sta
 # Being generous with the cppflag
 CFLAGS16=("-std=gnu99" "-ffreestanding" "-Wall" "-Wextra")
 LDFLAGS=("-ffreestanding" "-nostdlib" "-lgcc" "-fno-eliminate-unused-debug-symbols")
+NASM_FLAGS64=("-f" "elf64")
+NASM_FLAGS64_BIN=("-f" "bin")
 NASM_FLAGS32=("-f" "elf32")
 NASM_FLAGS16=("-f" "elf")
 
@@ -361,8 +363,12 @@ nasm "${NASM_FLAGS32[@]}" "$REAL16_WRAPPERS/call_realmode_function_wrapper32.asm
 ia16-elf-gcc "${CFLAGS16[@]}" -c "$REAL_FUNC/realmode_functions.c" -o "$BUILD_DIR/realmode_functions.o"
 
 $GPP32 "${CPPFLAGS[@]}" -c "$LONG_MODE_PREP/prepare_longmode.cpp" -o "$BUILD_DIR/prepare_longmode.o" "-I$STDLIB" "-I$STDIO" "-I$CPU" "-I$APIC" "-I$CPUID"
-nasm "${NASM_FLAGS32[@]}" "$LONG_MODE_PREP/long_mode_jump.asm" -o "$BUILD_DIR/long_mode_jump.o"
-nasm "${NASM_FLAGS32[@]}" "$LONG_MODE_PREP/compatibility_mode_jump.asm" -o "$BUILD_DIR/compatibility_mode_jump.o"
+
+OBJ64="$BUILD_DIR/ObjectFile64"
+mkdir -p "$OBJ64"
+nasm "${NASM_FLAGS64_BIN[@]}" "$LONG_MODE_PREP/bridge64.asm" -o "$OBJ64/bridge64.bin"
+nasm "${NASM_FLAGS32[@]}" "$LONG_MODE_PREP/long_mode_jump.asm" -o "$BUILD_DIR/long_mode_jump.o" "-I$BUILD_DIR" "-I$OBJ64"
+# nasm "${NASM_FLAGS32[@]}" "$LONG_MODE_PREP/compatibility_mode_jump.asm" -o "$BUILD_DIR/compatibility_mode_jump.o"
 
 # Compile Other language projects (Library written entirely in ~(C or ASM))
 

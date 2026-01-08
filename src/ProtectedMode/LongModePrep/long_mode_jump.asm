@@ -1,9 +1,12 @@
+;long_mode_jump.asm
 BITS 32
 
 
 extern gdtr_64 
 extern idtr_64
 extern cr3_of_setup
+
+extern k64
 
 
 section .bss
@@ -44,6 +47,7 @@ to_compatibility_mode:
 	; far jump to 64
 
 	cli
+	push dword k64
 
 
 	mov eax, dword [cr3_of_setup]
@@ -61,12 +65,11 @@ to_compatibility_mode:
 	mov eax, cr0
 	or eax, PG_MASK 
 	mov cr0, eax
-	mov eax, 1 ; crash here. EIP read page not present fault... 
 
 	lidt [idtr_64]
 	lgdt [gdtr_64]
 
-	jmp far 0x8:compatibility_entry
+	jmp far 0x08:bridge64
 	; I should jump to some 64 bit code immediatly. 
 	; Not the compatibility entry
 	; jmp far 0x18:compatibility_entry
@@ -75,8 +78,13 @@ to_compatibility_mode:
 
 	
 	
+section .text 
+bridge64:
+incbin "bridge64.bin"
 
 
+; ======================= END =============
+section .text
 %define FRAMEBUFFER 0xFD000000
 fill_color_eax:
 	mov ebx, 0
