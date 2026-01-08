@@ -68,7 +68,7 @@ mkdir -p "$BUILD_DIR"
 GCC64=x86_64-elf-gcc
 GPP64=x86_64-elf-g++
 
-CFLAGS=("-std=gnu23" "-ffreestanding" "-Wall" "-Wextra")
+CFLAGS=("-std=gnu23" "-ffreestanding" "-Wall" "-Wextra" "-mcmodel=kernel")
 CPPFLAGS=("-std=gnu++23" "-ffreestanding" "-Wall" "-Wextra" "-fno-threadsafe-statics" "-fno-rtti" "-fno-exceptions" "-fno-strict-aliasing")
 # Being generous with the cppflag
 LDFLAGS=("-ffreestanding" "-nostdlib" "-lgcc" "-fno-eliminate-unused-debug-symbols")
@@ -102,6 +102,7 @@ KERNEL64="./kernel64"
 rm -f "$BUILD_DIR/*.o"
 
 $GCC64 "${CFLAGS[@]}" -c "$KERNEL64/kernel_64.c" -o "$BUILD_DIR/kernel_64.o"
+$GCC64 "${CFLAGS[@]}" -c "$KERNEL64/com1.c" -o "$BUILD_DIR/com1.o"
 $GCC64 "${CFLAGS[@]}" -c "$KERNEL64/dummy_kernel.c" -o "$BUILD_DIR/dummy_kernel.o"
 nasm "${NASM_FLAGS64[@]}" "$KERNEL64/kernel64_boot.asm" -o "$BUILD_DIR/kernel64_boot.o"
 

@@ -1,0 +1,13 @@
+// com1.h
+#ifndef COM1_H
+#define COM1_H
+
+#include <stddef.h>
+#include <stdint.h>
+
+void com1_init(void);
+void com1_putc(char c);
+void com1_write(const char *str);
+void com1_write_len(const char *str, size_t len);
+
+#endif
