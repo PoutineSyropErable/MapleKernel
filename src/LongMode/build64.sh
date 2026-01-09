@@ -75,7 +75,7 @@ LDFLAGS=("-ffreestanding" "-nostdlib" "-lgcc" "-fno-eliminate-unused-debug-symbo
 NASM_FLAGS64=("-f" "elf64")
 
 DEBUG_OPT_LVL="-O3"
-RELEASE_OPT_LVL="-O0"
+RELEASE_OPT_LVL="-O3"
 #					  I RUWP
 # a = 10 = 8 + 2 = 0000 1010
 # -O1 in Cpp breaks printf option number and i have no idea why

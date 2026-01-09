@@ -7,6 +7,7 @@ BUILD64_DIR="../build64"
 
 LONG_MODE_PREP="./ProtectedMode/LongModePrep/"
 OUTPUT_HEADER_FILE="$LONG_MODE_PREP/kernel64_size.hpp"
+OUTPUT_INCLUDE_FILE="$LONG_MODE_PREP/kernel64_size.inc"
 
 KERNEL64_ELF="$BUILD64_DIR/kernel64.elf"
 
@@ -36,6 +37,7 @@ function get_symbol() {
 __kernel_virtual_base=$(get_symbol "__kernel_virtual_base")
 __module_end=$(get_symbol "__module_end")
 __module_size=$(get_symbol "__module_size")
+kernel64_start=$(get_symbol "kernel64_start")
 kernel64_main=$(get_symbol "kernel64_main")
 
 __text_start=$(get_symbol "__text_start")
@@ -78,12 +80,23 @@ __heap_guard_end=$(get_symbol "__heap_guard_end")
 printf -- "\n\n\nModule size = %s\n" "$__module_size"
 printf -- "Kernel 64 main (address) = %s" "$kernel64_main"
 
+cat >"$OUTPUT_INCLUDE_FILE" <<EOF
+; =========================================================================
+;  AUTO-GENERATED FILE — DO NOT EDIT
+;
+;  Source ELF : $(basename "$KERNEL64_ELF")
+; =========================================================================
+;
+    VIRTUAL_BASE equ ${__kernel_virtual_base};
+    KERNEL64_ENTRY  equ ${kernel64_start};
+    KERNEL64_MAIN_ADDR equ ${kernel64_main};
+EOF
+
 cat >"$OUTPUT_HEADER_FILE" <<EOF
 /* =========================================================================
  *  AUTO-GENERATED FILE — DO NOT EDIT
  *
  *  Source ELF : $(basename "$KERNEL64_ELF")
- *  Symbol     : __module_size
  * =========================================================================
  */
 

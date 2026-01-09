@@ -4,6 +4,7 @@
 VIRTUAL_ADDRESS_OFFSET equ 0
 SIZE_OFFSET equ 8
 PHYSICAL_ADDRESS_OFFSET equ 16
+%include "kernel64_size.inc"
 
 long_mode_entry:
 	mov ax, 0x10
@@ -14,6 +15,11 @@ long_mode_entry:
 	mov ss, ax 
 
 	mov rbx, 0xdeadbeefdeadface
+	mov rax, KERNEL64_ENTRY
+	jmp rax
+
+
+	; Old method, which only works if the kernel entry is at the absolute start of .txt
 	mov rax, 0xffffffff80000000
 	mov ecx, dword [rsp] ; get the address of k64 from the stack
 	movzx rcx, ecx
@@ -25,7 +31,7 @@ long_mode_entry:
 	mov rcx, qword [rax]
 	mov rdx, qword [rbx]
 	; mov rdx, [0xdeadbeefdeadface]
-	jmp rax ; This jump to the kernel
+	jmp rax ; This jump to the kernel. Using the grub runtime method. But it's fragile
 
 
 	mov rdx, [0xdeadbeefdeadface]

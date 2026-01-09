@@ -215,7 +215,7 @@ int cpp_main(struct cpp_main_args args)
 {
 
 	// test_special_pointers();
-	// multicore_setup(args.rsdp_v);
+	multicore_setup(args.rsdp_v);
 
 	kprintf("\n\n================= Start of CPP Main =================\n\n");
 

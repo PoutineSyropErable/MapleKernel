@@ -366,7 +366,7 @@ $GPP32 "${CPPFLAGS[@]}" -c "$LONG_MODE_PREP/prepare_longmode.cpp" -o "$BUILD_DIR
 
 OBJ64="$BUILD_DIR/ObjectFile64"
 mkdir -p "$OBJ64"
-nasm "${NASM_FLAGS64_BIN[@]}" "$LONG_MODE_PREP/bridge64.asm" -o "$OBJ64/bridge64.bin"
+nasm "${NASM_FLAGS64_BIN[@]}" "$LONG_MODE_PREP/bridge64.asm" -o "$OBJ64/bridge64.bin" "-I$LONG_MODE_PREP"
 nasm "${NASM_FLAGS32[@]}" "$LONG_MODE_PREP/long_mode_jump.asm" -o "$BUILD_DIR/long_mode_jump.o" "-I$BUILD_DIR" "-I$OBJ64"
 # nasm "${NASM_FLAGS32[@]}" "$LONG_MODE_PREP/compatibility_mode_jump.asm" -o "$BUILD_DIR/compatibility_mode_jump.o"
 

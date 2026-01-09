@@ -2,7 +2,6 @@
  *  AUTO-GENERATED FILE — DO NOT EDIT
  *
  *  Source ELF : kernel64.elf
- *  Symbol     : __module_size
  * =========================================================================
  */
 
@@ -21,14 +20,14 @@ STATIC_ASSERT(PAGE_COUNT < 0xFFFF'FFFF, "Page count must fit in a uint32_t numbe
 
 /* Base addresses */
 constexpr uint64_t VIRTUAL_BASE		  = 0xffffffff80000000;
-constexpr uint64_t KERNEL64_MAIN_ADDR = 0xffffffff80001001;
+constexpr uint64_t KERNEL64_MAIN_ADDR = 0xffffffff80001010;
 
 /* Module end */
 constexpr uint64_t MODULE_END = 0xffffffff8001f000;
 
 /* Text section */
 constexpr uint64_t TEXT_START = 0xffffffff80000000;
-constexpr uint64_t TEXT_END	  = 0xffffffff80001078;
+constexpr uint64_t TEXT_END	  = 0xffffffff8000105a;
 constexpr uint64_t TEXT_SIZE  = TEXT_END - TEXT_START;
 
 /* Text guard page */
@@ -38,7 +37,7 @@ constexpr uint64_t TEXT_GUARD_SIZE	= TEXT_GUARD_END - TEXT_GUARD_START;
 
 /* Read-only data section */
 constexpr uint64_t RODATA_START = 0xffffffff80003000;
-constexpr uint64_t RODATA_END	= 0xffffffff80003007;
+constexpr uint64_t RODATA_END	= 0xffffffff80003040;
 constexpr uint64_t RODATA_SIZE	= RODATA_END - RODATA_START;
 
 /* Rodata guard page */
