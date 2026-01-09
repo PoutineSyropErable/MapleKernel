@@ -74,7 +74,12 @@ CPPFLAGS=("-std=gnu++23" "-ffreestanding" "-Wall" "-Wextra" "-fno-threadsafe-sta
 LDFLAGS=("-ffreestanding" "-nostdlib" "-lgcc" "-fno-eliminate-unused-debug-symbols")
 NASM_FLAGS64=("-f" "elf64")
 
-DEBUG_OPT_LVL="-O3"
+NO_FPU_FLAGS=("-mno-sse" "-mno-sse2" "-mno-sse3" "-mno-sse4" "-mno-avx")
+# Correct way to concatenate arrays in bash
+CFLAGS+=("${NO_FPU_FLAGS[@]}")
+CPPFLAGS+=("${NO_FPU_FLAGS[@]}")
+
+DEBUG_OPT_LVL="-O0"
 RELEASE_OPT_LVL="-O3"
 #					  I RUWP
 # a = 10 = 8 + 2 = 0000 1010
@@ -116,3 +121,31 @@ objdump -D -h -M intel "$BUILD_DIR/kernel64.elf" >"$BUILD_DIR/kernel64.dump"
 
 printf -- "\n\n====== Copying ========\n\n"
 cp "$BUILD_DIR/kernel64.elf" "$ISO_DIR/boot/kernel64.elf"
+
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#

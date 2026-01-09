@@ -55,3 +55,21 @@ void com1_write_len(const char *str, size_t len)
 		com1_putc(str[i]);
 	}
 }
+
+#define COM1 0x3F8
+void serial_write_char(char c)
+{
+
+	// Wait until the transmit buffer is empty
+	while (!(inb(COM1 + 5) & 0x20))
+		;
+	outb(COM1, c);
+}
+
+void serial_write_string(const char *str)
+{
+	while (*str)
+	{
+		serial_write_char(*str++);
+	}
+}

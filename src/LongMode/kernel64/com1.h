@@ -10,4 +10,6 @@ void com1_putc(char c);
 void com1_write(const char *str);
 void com1_write_len(const char *str, size_t len);
 
+void serial_write_string(const char *str);
+
 #endif

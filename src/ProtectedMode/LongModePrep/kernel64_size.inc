@@ -6,4 +6,4 @@
 ;
     VIRTUAL_BASE equ 0xffffffff80000000;
     KERNEL64_ENTRY  equ 0xffffffff80000000;
-    KERNEL64_MAIN_ADDR equ 0xffffffff80001010;
+    KERNEL64_MAIN_ADDR equ 0xffffffff80001120;

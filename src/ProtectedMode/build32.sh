@@ -95,7 +95,6 @@ if [[ "$DEBUG_OR_RELEASE" == "debug" ]]; then
 	LDFLAGS+=("-g")
 	NASM_FLAGS32+=("-g" "-F" "dwarf" "-DDEBUG")
 	NASM_FLAGS16+=("-g" "-F" "dwarf" "-DDEBUG")
-	QEMU_DBG_FLAGS+=("-s" "-S")
 else
 	echo "In normal mode, $RELEASE_OPT_LVL optimisation"
 	CFLAGS+=("$RELEASE_OPT_LVL")
@@ -418,7 +417,7 @@ done
 # ============= Linking ==============
 printf "\n\n====== Start of Linking =====\n\n"
 # could also use g++. But as long as no runtime support, gcc will work
-$GPP32 -T linker32.ld -o "$BUILD_DIR/kernel32.elf" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}" "${LIBRARY_ARGS[@]}"
+$GPP32 -T "linker_32.ld" -o "$BUILD_DIR/kernel32.elf" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}" "${LIBRARY_ARGS[@]}"
 
 printf "\n\n====== End of Linking =====\n\n"
 
@@ -432,3 +431,19 @@ cp "$BUILD_DIR/kernel32.elf" "$ISO_DIR/boot/kernel32.elf"
 printf "\n\n====== End of Build32.sh =====\n\n"
 
 # qemu-system-i386 -kernel ./build/kernel32.elf & # or do this to use the binary directly # -cdrom "$BUILD_DIR/myos.iso" # -kernel "$BUILD_DIR/kernel32.elf" \
+
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#

@@ -1,4 +1,5 @@
 #pragma once
+#include "paging64.hpp"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -20,6 +21,11 @@ struct max_addr get_max_cpu_address();
 void			set_64bit_page_table();
 int64_t			simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, uint64_t size);
 void			simplest_page_kernel(uint32_t phys_address, uint64_t virtual_address, uint64_t size);
+
+extern struct paging64_32::allocated_paging_structures frame_buffer_paging_struct;
+
+int64_t vmap_addresses(uint32_t phys_address, uint64_t virtual_address, uint64_t size,
+	struct paging64_32::allocated_paging_structures paging_structures, enum paging64_32::vmap_address_type type);
 
 void set_gdt64();
 void set_idt64();

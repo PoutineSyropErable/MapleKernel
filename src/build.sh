@@ -36,6 +36,12 @@ QEMU_OR_REAL_MACHINE="${2:-qemu}"
 MACHINE_BITNESS="${3:-64}"
 MOVE_VNC="${4:-move}"
 
+QEMU_DBG_FLAGS=()
+if [[ "$DEBUG_OR_RELEASE" == "debug" ]]; then
+	echo "Debug mode enabled"
+	QEMU_DBG_FLAGS+=("-s" "-S")
+fi
+
 BUILD32_DIR="../build32"
 BUILD64_DIR="../build64"
 ISO_DIR="../isodir"

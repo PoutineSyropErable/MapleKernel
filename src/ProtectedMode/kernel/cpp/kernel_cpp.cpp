@@ -2,6 +2,7 @@
 #include "intrinsics.h"
 #include "kernel_cpp.h"
 #include "kernel_cpp.hpp"
+#include "paging64.hpp"
 #include "stdio.h"
 #include <stdbool.h>
 #include <stddef.h>
@@ -30,6 +31,8 @@
 #include "prepare_longmode.hpp"
 #include "stdlib.h"
 #include "string.h"
+
+#include "framebuffer_shared.h"
 
 #include "special_pointers.hpp"
 
@@ -250,6 +253,13 @@ int cpp_main(struct cpp_main_args args)
 		// longmode_prep::simple_page_kernel64(k64.entry_physical, k64.entry_virtual, k64.size);
 		longmode_prep::simplest_page_kernel(k64.entry_physical, k64.entry_virtual, k64.size);
 		longmode_prep::test_paging();
+		void	*framebuffer_base_address = (void *)framebuffer::g_framebuffer.get_base_address();
+		uint32_t framebuffer_size		  = framebuffer::g_framebuffer.get_size();
+		assert(framebuffer_size == 1920 * 1080 * 4, "Frame buffer must be proper size");
+
+		longmode_prep::vmap_addresses((uint32_t)framebuffer_base_address, FB_MMIO_BASE, framebuffer_size,
+			longmode_prep::frame_buffer_paging_struct, paging64_32::vmap_address_type::mmio);
+#
 
 		// Jump to long mode
 

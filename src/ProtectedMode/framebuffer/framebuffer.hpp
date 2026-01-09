@@ -136,6 +136,15 @@ class FrameBuffer
 
 	void initialize(volatile Color *base, uint16_t w, uint16_t h, uint16_t pitch);
 
+	volatile Color *get_base_address()
+	{
+		return base_address;
+	}
+	uint32_t get_size()
+	{
+		return effective_pitch * height * sizeof(uint32_t);
+	}
+
 	inline int set_pixel(uint16_t x, uint16_t y, Color color) noexcept
 	{
 

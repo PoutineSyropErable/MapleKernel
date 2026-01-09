@@ -170,4 +170,23 @@ static inline addr64 transform_address(uint64_t addr)
 	return a.data;
 }
 
+struct allocated_paging_structures
+{
+	struct pdpt			  *pdpts;
+	struct page_directory *pd;
+	struct page_table	  *pt;
+	uint32_t			   ppdt_count;
+	uint32_t			   pd_count;
+	uint32_t			   pt_count;
+};
+
+enum class vmap_address_type
+{
+	rodata,
+	data,
+	code,
+	mmio,
+	unmaped,
+};
+
 } // namespace paging64_32

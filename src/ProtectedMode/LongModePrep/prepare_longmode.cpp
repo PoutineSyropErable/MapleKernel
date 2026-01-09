@@ -561,6 +561,45 @@ bool			test_paging()
 	kprintf("pt_e = {present = %u, execute_disable = %u, read_write_not_ro = %u}\n", pt_e->present, pt_e->execute_disable,
 		pt_e->read_write_not_ro);
 
+	kprintf("\n\n=====Rodata stuff======\n\n");
+
+	uint64_t rodata_addr_1 = 0xffffffff80003001;
+	kprintf("The rodata address 1: low %h, high %h\n", rodata_addr_1);
+	kernel64_size::region_t rodata_1_region_type = kernel64_size::get_region_type(rodata_addr_1);
+	kprintf("The name of the region of rodata address 1: %s\n", kernel64_size::region_to_string(rodata_1_region_type));
+	k_addr_phys = software_transform(rodata_addr_1);
+	if (k_addr_phys.err)
+	{
+		kprintf("Error getting the physical address of : %h\n", rodata_addr_1);
+		exit(0);
+		return false;
+	}
+
+	pt_e = get_page_table_address(rodata_addr_1);
+	kprintf("pt_e = low: %h:8, high : %h:8\n", pt_e);
+	kprintf("pt_e = low: %b:32, high : %b:32\n", pt_e);
+	kprintf("pt_e = {present = %u, execute_disable = %u, read_write_not_ro = %u}\n", pt_e->present, pt_e->execute_disable,
+		pt_e->read_write_not_ro);
+
+	kprintf("\n");
+	uint64_t rodata_addr_2 = 0xffffffff80003015;
+	kprintf("The rodata address 2: low %h, high %h\n", rodata_addr_2);
+	kernel64_size::region_t rodata_2_region_type = kernel64_size::get_region_type(rodata_addr_2);
+	kprintf("The name of the region of rodata address 2: %s\n", kernel64_size::region_to_string(rodata_2_region_type));
+	k_addr_phys = software_transform(rodata_addr_2);
+	if (k_addr_phys.err)
+	{
+		kprintf("Error getting the physical address of : %h\n", rodata_addr_2);
+		exit(0);
+		return false;
+	}
+
+	pt_e = get_page_table_address(rodata_addr_2);
+	kprintf("pt_e = low: %h:8, high : %h:8\n", pt_e);
+	kprintf("pt_e = low: %b:32, high : %b:32\n", pt_e);
+	kprintf("pt_e = {present = %u, execute_disable = %u, read_write_not_ro = %u}\n", pt_e->present, pt_e->execute_disable,
+		pt_e->read_write_not_ro);
+
 	// uint64_t				c_entry = 0xffffffff80405ff8;
 	// struct verified_address c_phys	= software_transform(c_entry);
 	// if (c_phys.err)
@@ -905,6 +944,150 @@ int64_t simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, ui
 			pt_e->present			= 0;
 			pt_e->read_write_not_ro = 0;
 			pt_e->execute_disable	= 1;
+			break;
+		}
+		}
+
+		// kprintf("Virtual address: %h\n", used_virtual_address);
+		// kprintf("pml4 index: %u\n", vas[i].pml4_index);
+		// kprintf("pdpt index: %u\n", vas[i].pdpt_index);
+		// kprintf("pd index: %u\n", vas[i].pd_index);
+		// kprintf("pt index: %u\n\n", vas[i].pt_index);
+	}
+	return page_count;
+}
+
+constexpr uint32_t framebuffer_size		  = 1920 * 1080 * sizeof(uint32_t);
+constexpr uint32_t framebuffer_page_count = (framebuffer_size + 0x1000 - 1) / 0x1000;
+
+constexpr tables_and_entries fb_page_tables_c		  = lround_up_div(framebuffer_page_count, 512);
+constexpr tables_and_entries fb_page_directories_c	  = lround_up_div(fb_page_tables_c.full_tables, 512);
+constexpr tables_and_entries fb_page_directory_ptrs_c = lround_up_div(fb_page_directories_c.full_tables, 512);
+constexpr tables_and_entries fb_pml4s_c				  = lround_up_div(fb_page_directory_ptrs_c.full_tables, 512);
+
+virtual_address_split fb_vas[framebuffer_page_count];
+page_table			  fb_page_tables[fb_page_tables_c.full_tables];
+page_directory		  fb_page_directories[fb_page_directories_c.full_tables];
+pdpt				  fb_pdpts[fb_page_directory_ptrs_c.full_tables];
+
+struct paging64_32::allocated_paging_structures frame_buffer_paging_struct = { //
+	.pdpts		= fb_pdpts,
+	.pd			= fb_page_directories,
+	.pt			= fb_page_tables,
+	.ppdt_count = fb_page_directory_ptrs_c.full_tables,
+	.pd_count	= fb_page_directories_c.full_tables,
+	.pt_count	= fb_page_tables_c.full_tables};
+
+int64_t vmap_addresses(uint32_t phys_address, uint64_t virtual_address, uint64_t size,
+	struct paging64_32::allocated_paging_structures paging_structures, enum paging64_32::vmap_address_type address_type)
+{
+
+	uint32_t page_count = round_up_div(size, 0x1000);
+	kprintf("Page count = %u\n", page_count);
+	assert(page_count <= paging_structures.pt_count, "Must have alloacted enough pages");
+
+	virtual_address_split va = to_split(virtual_address);
+
+	uint16_t last_pml4_entry_index = va.pml4_index;
+	uint16_t last_pdpt_entry_index = va.pdpt_index;
+	uint16_t last_pd_entry_index   = va.pd_index;
+
+	uint16_t pdpt_table_index = 0;
+	uint16_t pd_table_index	  = 0;
+	uint16_t pt_table_index	  = 0;
+	// now
+
+	for (uint64_t i = 0; i < page_count; i++)
+	{
+		uint64_t					 used_virtual_address  = virtual_address + i * 0x1000;
+		uint32_t					 used_physical_address = phys_address + i * 0x1000;
+		struct virtual_address_split virtual_address_split = to_split(used_virtual_address);
+		if (virtual_address_split.pml4_index != last_pml4_entry_index || i == 0)
+		{
+			if (i != 0)
+				pdpt_table_index++;
+
+			addr64 pdpt_addr = transform_address(&fb_pdpts[pdpt_table_index]);
+			// now
+			main_pml4.entries[virtual_address_split.pml4_index].present		 = 1;
+			main_pml4.entries[virtual_address_split.pml4_index].address_mid	 = pdpt_addr.address_mid;
+			main_pml4.entries[virtual_address_split.pml4_index].address_high = pdpt_addr.address_high;
+
+			last_pml4_entry_index = virtual_address_split.pml4_index;
+		}
+		if (virtual_address_split.pdpt_index != last_pdpt_entry_index || i == 0)
+		{
+			if (i != 0)
+				pd_table_index++;
+
+			addr64 pd_addr = transform_address(&fb_page_directories[pd_table_index]);
+			fb_pdpts[pdpt_table_index].entries[virtual_address_split.pdpt_index].present	  = 1;
+			fb_pdpts[pdpt_table_index].entries[virtual_address_split.pdpt_index].address_mid  = pd_addr.address_mid;
+			fb_pdpts[pdpt_table_index].entries[virtual_address_split.pdpt_index].address_high = pd_addr.address_high;
+			// now
+
+			last_pdpt_entry_index = virtual_address_split.pdpt_index;
+		}
+
+		if (virtual_address_split.pd_index != last_pd_entry_index || i == 0)
+		{
+			if (i != 0)
+				pt_table_index++;
+			// These value indeed need to go up, and not round back to 0
+
+			// Take the address of the needed page table. (Each page table has 512 entry, which points to 512 page frame)
+			// The page directory entry points to page table base
+			addr64 pt_addr = transform_address(&fb_page_tables[pt_table_index]);
+			fb_page_directories[pd_table_index].entries[virtual_address_split.pd_index].present		 = 1;
+			fb_page_directories[pd_table_index].entries[virtual_address_split.pd_index].address_mid	 = pt_addr.address_mid;
+			fb_page_directories[pd_table_index].entries[virtual_address_split.pd_index].address_high = pt_addr.address_high;
+
+			last_pd_entry_index = virtual_address_split.pd_index;
+		}
+
+		struct page_table_entry *pt_e	 = &fb_page_tables[pt_table_index].entries[virtual_address_split.pt_index];
+		addr64					 pa_addr = transform_address((void *)used_physical_address);
+		pt_e->global					 = 1;
+		pt_e->address_mid				 = pa_addr.address_mid;
+		pt_e->address_high				 = pa_addr.address_high;
+
+		switch (address_type)
+		{
+		case (paging64_32::vmap_address_type::code):
+		{
+			pt_e->present			= 1;
+			pt_e->read_write_not_ro = 0;
+			pt_e->execute_disable	= 0;
+			break;
+		}
+		case (paging64_32::vmap_address_type::rodata):
+		{
+			pt_e->present			= 1;
+			pt_e->read_write_not_ro = 0;
+			pt_e->execute_disable	= 1;
+			break;
+		}
+		case (paging64_32::vmap_address_type::data):
+		{
+			pt_e->present			= 1;
+			pt_e->read_write_not_ro = 1;
+			pt_e->execute_disable	= 1;
+			break;
+		}
+		case (paging64_32::vmap_address_type::mmio):
+		{
+			pt_e->present			 = 1;
+			pt_e->read_write_not_ro	 = 1;
+			pt_e->execute_disable	 = 1;
+			pt_e->page_cache_disable = 1;
+			pt_e->page_write_through = 1;
+			// This needs page attribute table support
+			pt_e->page_attribute_table = 1;
+			break;
+		}
+		case (paging64_32::vmap_address_type::unmaped):
+		{
+			pt_e->present = 0;
 			break;
 		}
 		}
