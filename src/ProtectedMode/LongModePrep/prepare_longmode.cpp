@@ -811,11 +811,7 @@ int64_t simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, ui
 	uint32_t page_count = max_page_count;
 	kprintf("Page count = %u\n", page_count);
 
-	virtual_address_split va			   = to_split(virtual_address);
-	uint16_t			  first_pml4_index = va.pml4_index;
-	uint16_t			  first_pdpt_index = va.pdpt_index;
-	uint16_t			  first_pd_index   = va.pd_index;
-	uint16_t			  first_pt_index   = va.pt_index;
+	virtual_address_split va = to_split(virtual_address);
 
 	uint16_t last_pml4_entry_index = va.pml4_index;
 	uint16_t last_pdpt_entry_index = va.pdpt_index;
@@ -890,6 +886,7 @@ int64_t simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, ui
 		}
 		case (kernel64_size::region_t::RODATA):
 		{
+			kprintf("Address in RODATA: low %h %h high\n", used_virtual_address);
 			pt_e->present			= 1;
 			pt_e->read_write_not_ro = 0;
 			pt_e->execute_disable	= 1;
@@ -948,6 +945,14 @@ int64_t simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, ui
 		}
 		}
 
+		constexpr bool make_all_rwx = false;
+		if (make_all_rwx)
+		{
+			pt_e->present			= 1;
+			pt_e->read_write_not_ro = 1;
+			pt_e->execute_disable	= 0;
+		}
+
 		// kprintf("Virtual address: %h\n", used_virtual_address);
 		// kprintf("pml4 index: %u\n", vas[i].pml4_index);
 		// kprintf("pdpt index: %u\n", vas[i].pdpt_index);
@@ -984,7 +989,8 @@ int64_t vmap_addresses(uint32_t phys_address, uint64_t virtual_address, uint64_t
 
 	uint32_t page_count = round_up_div(size, 0x1000);
 	kprintf("Page count = %u\n", page_count);
-	assert(page_count <= paging_structures.pt_count, "Must have alloacted enough pages");
+	assert(page_count <= paging_structures.pt_count * 512, "Must have alloacted enough page tables, Page count  %u, struct = %u\n",
+		page_count, paging_structures.pt_count * 512);
 
 	virtual_address_split va = to_split(virtual_address);
 
@@ -1082,7 +1088,7 @@ int64_t vmap_addresses(uint32_t phys_address, uint64_t virtual_address, uint64_t
 			pt_e->page_cache_disable = 1;
 			pt_e->page_write_through = 1;
 			// This needs page attribute table support
-			pt_e->page_attribute_table = 1;
+			// pt_e->page_attribute_table = 1;
 			break;
 		}
 		case (paging64_32::vmap_address_type::unmaped):

@@ -250,8 +250,8 @@ int cpp_main(struct cpp_main_args args)
 		kprintf("\nEntry phys: %h, entry virtual: %h%h, size: %h\n\n", k64.entry_physical, k64.entry_virtual, k64.size);
 		kprintf("&k64 = %h, %u\n", &k64, &k64);
 		longmode_prep::set_64bit_page_table();
-		// longmode_prep::simple_page_kernel64(k64.entry_physical, k64.entry_virtual, k64.size);
-		longmode_prep::simplest_page_kernel(k64.entry_physical, k64.entry_virtual, k64.size);
+		longmode_prep::simple_page_kernel64(k64.entry_physical, k64.entry_virtual, k64.size);
+		// longmode_prep::simplest_page_kernel(k64.entry_physical, k64.entry_virtual, k64.size);
 		longmode_prep::test_paging();
 		void	*framebuffer_base_address = (void *)framebuffer::g_framebuffer.get_base_address();
 		uint32_t framebuffer_size		  = framebuffer::g_framebuffer.get_size();
@@ -260,6 +260,8 @@ int cpp_main(struct cpp_main_args args)
 		longmode_prep::vmap_addresses((uint32_t)framebuffer_base_address, FB_MMIO_BASE, framebuffer_size,
 			longmode_prep::frame_buffer_paging_struct, paging64_32::vmap_address_type::mmio);
 #
+		framebuffer::g_framebuffer.draw_rectangle(
+			{.top_left_x = 0, .top_left_y = 0, .width = 1920, .height = 1080, .color = framebuffer::Color(0x123abc)});
 
 		// Jump to long mode
 
