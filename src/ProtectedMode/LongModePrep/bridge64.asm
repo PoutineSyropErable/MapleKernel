@@ -14,9 +14,8 @@ long_mode_entry:
 	mov gs, ax
 	mov ss, ax 
 
-	mov rbx, 0xdeadbeefdeadface
-	mov rax, KERNEL64_ENTRY
-	jmp rax
+	; mov rax, KERNEL64_ENTRY
+	; jmp rax
 
 
 	; Old method, which only works if the kernel entry is at the absolute start of .txt
@@ -28,13 +27,10 @@ long_mode_entry:
 	mov ebx, [rcx + PHYSICAL_ADDRESS_OFFSET] ; get the virtual address of the kernel
 	movzx rbx, ebx
 	; rax = 0xffffffff80000000 (gotten through runtime)
-	mov rcx, qword [rax]
-	mov rdx, qword [rbx]
 	; mov rdx, [0xdeadbeefdeadface]
 	jmp rax ; This jump to the kernel. Using the grub runtime method. But it's fragile
 
 
-	mov rdx, [0xdeadbeefdeadface]
 
 
 

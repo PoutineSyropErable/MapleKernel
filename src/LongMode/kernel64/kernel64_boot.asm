@@ -11,22 +11,41 @@ extern __rodata_start
 section .rodata
 msg db "Hello", 10, 0
 
+section .text
+; must use .text because its the only properly mapped section
+entry_virtual: dq 0
+entry_physical: dq 0
+
 section .text.entry
 global kernel64_start
 kernel64_start:
     ; Set stack pointer (stack grows downward)
-	; db 0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x95, 0x97  ; 8 NOPs in a row
     mov rsp, __stack_top
 
-	mov [msg], 0xab
-	mov ds:[msg], 0xab
-	mov dil, ds:[msg]
+	; rax = entry virtual
+	; rbx = entry_physical 
+	mov [entry_virtual], rax
+	mov [entry_physical], rbx
 
-	mov rax, 0x123
+
+	mov rcx, msg
+	sub rcx, rax 
+	add rcx, rbx
+	; RCX=000000000010d004
+	; phys address of the message
+
+	; jmp crash
+
+
+
+	; mov dil, [rbx]
+	mov dil, [msg]
+
 	mov [__rodata_start], rax
 	; mov dil, [msg]
 	movzx rdi, dil
 	call fill_framebuffer
+
 
 
 
@@ -61,3 +80,9 @@ fill_framebuffer:
     
 .end:
     ret
+
+
+
+crash: 
+	mov rsi, [0xAAAAAAAAAAAAAAAA]
+	ret

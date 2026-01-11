@@ -3,6 +3,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
+
+#ifdef __cplusplus 
+extern "C" {
+#endif
+
 size_t strlen(const char* str);
 size_t itoa(int value, char* buffer);
 size_t uitoa(uint32_t value, char* buffer);
@@ -14,3 +19,8 @@ size_t ptr_to_hex(void* ptr, char* buffer, int uppercase);
 #define CHAR_TO_UINT_INVALID 11
 
 uint32_t string_to_uint(const char* str);
+
+
+#ifdef __cplusplus 
+}
+#endif

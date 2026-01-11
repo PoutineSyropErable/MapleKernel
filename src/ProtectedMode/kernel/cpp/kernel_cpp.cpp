@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include "string_helper.h"
 
 // #include "framebuffer.h"
 #include "acpi.hpp"
@@ -33,6 +34,7 @@
 #include "string.h"
 
 #include "framebuffer_shared.h"
+#include "kernel64_size.hpp"
 
 #include "special_pointers.hpp"
 
@@ -264,6 +266,18 @@ int cpp_main(struct cpp_main_args args)
 			{.top_left_x = 0, .top_left_y = 0, .width = 1920, .height = 1080, .color = framebuffer::Color(0x123abc)});
 
 		// Jump to long mode
+
+		uint64_t entry_physical = (args.kernel64_address_information.entry_physical);
+		uint64_t entry_virtual = kernel64_size::VIRTUAL_BASE;
+		uint64_t rodata_start = kernel64_size::RODATA_START;
+		uint64_t hello_addr = rodata_start + 0x4;
+		uint64_t rodata_start_physical = entry_physical + (rodata_start - entry_virtual);
+		char *s = (char *)rodata_start_physical + 0x4;
+		kprintf("The message: |%s|, %h\n", s, s);
+
+		char *ss = "Hello\n";
+
+		memcpy32(s, ss, strlen(ss));
 
 		// struct gdt64_simple
 		// {

@@ -563,7 +563,7 @@ bool			test_paging()
 
 	kprintf("\n\n=====Rodata stuff======\n\n");
 
-	uint64_t rodata_addr_1 = 0xffffffff80003001;
+	uint64_t rodata_addr_1 = 0xffffffff80003004;
 	kprintf("The rodata address 1: low %h, high %h\n", rodata_addr_1);
 	kernel64_size::region_t rodata_1_region_type = kernel64_size::get_region_type(rodata_addr_1);
 	kprintf("The name of the region of rodata address 1: %s\n", kernel64_size::region_to_string(rodata_1_region_type));

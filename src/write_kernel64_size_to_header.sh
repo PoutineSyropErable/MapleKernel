@@ -88,7 +88,9 @@ cat >"$OUTPUT_INCLUDE_FILE" <<EOF
 ; =========================================================================
 ;
     VIRTUAL_BASE equ ${__kernel_virtual_base};
-    KERNEL64_ENTRY  equ ${kernel64_start};
+    KERNEL64_ENTRY equ ${kernel64_start};
+	KERNEL64_ENTRY_PHYSICAL equ 0x10a000
+
     KERNEL64_MAIN_ADDR equ ${kernel64_main};
 EOF
 
