@@ -824,7 +824,7 @@ int64_t simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, ui
 	for (uint64_t i = 0; i < page_count; i++)
 	{
 		uint64_t used_virtual_address  = virtual_address + i * 0x1000;
-		uint32_t used_physical_address = phys_address + i * 0x1000;
+		uint64_t used_physical_address = phys_address + i * 0x1000;
 		vas[i]						   = to_split(used_virtual_address);
 		if (vas[i].pml4_index != last_pml4_entry_index || i == 0)
 		{
@@ -879,6 +879,9 @@ int64_t simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, ui
 		case (kernel64_size::region_t::TEXT):
 		{
 			// kprintf("Address in text: low %h %h high\n", used_virtual_address);
+			kprintf("Address in CODE: low %h %h high\n", used_virtual_address);
+			kprintf("The physical address: %h\n", used_physical_address);
+
 			pt_e->present			= 1;
 			pt_e->read_write_not_ro = 0;
 			pt_e->execute_disable	= 0;
@@ -887,6 +890,7 @@ int64_t simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, ui
 		case (kernel64_size::region_t::RODATA):
 		{
 			kprintf("Address in RODATA: low %h %h high\n", used_virtual_address);
+			kprintf("The physical address: %h\n", used_physical_address);
 			pt_e->present			= 1;
 			pt_e->read_write_not_ro = 0;
 			pt_e->execute_disable	= 1;

@@ -1,6 +1,8 @@
 extern __stack_top
 extern __module_size
 
+extern __rodata_start
+
 
 
 ; =====================================================
@@ -16,7 +18,12 @@ kernel64_start:
 	; db 0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x95, 0x97  ; 8 NOPs in a row
     mov rsp, __stack_top
 
+	mov [msg], 0xab
+	mov ds:[msg], 0xab
 	mov dil, ds:[msg]
+
+	mov rax, 0x123
+	mov [__rodata_start], rax
 	; mov dil, [msg]
 	movzx rdi, dil
 	call fill_framebuffer
