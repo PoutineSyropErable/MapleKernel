@@ -65,35 +65,26 @@ ISO_DIR="../../isodir"
 
 mkdir -p "$BUILD_DIR"
 
-GCC64=x86_64-elf-gcc
-GPP64=x86_64-elf-g++
+ZIG_CC="zig cc -target x86_64-freestanding"
 
-# Use zig cc for everything - it's Clang-based and perfectly compatible with Zig
-
-GCC_FLAGS=("-std=gnu23" "-ffreestanding" "-Wall" "-Wextra" "-mcmodel=large")
-GPP_FLAGS=("-std=gnu++23" "-ffreestanding" "-Wall" "-Wextra" "-fno-threadsafe-statics" "-fno-rtti" "-fno-exceptions" "-fno-strict-aliasing")
-
-CLANG=clang
-
-CLANG_FLAGS=(
-	"-target" "x86_64-elf"
-	"-std=gnu23"
-	"-ffreestanding"
-	"-nostdlib"
-	"-fno-stack-protector"
-	"-fno-stack-check"
+ZIG_FLAGS=(
+	"-target" "x86_64-freestanding"
+	"-fno-stack-protector" # No stack protection
+	"-fno-stack-check"     # No stack checking
 	"-mcmodel=large"
-	"-mno-red-zone" # Critical f
+	# "-fPIC"
+	# "-fno-PIC" # Add this!
+	# "-fno-PIE" # Add this!
 )
 
-ZIG_CXX="zig c++ -target x86_64-freestanding"
-ZIG_CC="zig cc -target x86_64-freestanding"
 ZIG_C_FLAGS=(
 	"-std=gnu23"
 	"-ffreestanding"
 	"-mcmodel=large"
 	"-mno-red-zone"           # Critical f
 	"-fno-sanitize=undefined" # Disable UBSan
+	# "-fno-PIC"                # Add this
+	# "-fno-PIE"                # And this
 )
 
 ZIG_C_LD_FLAGS=(
@@ -104,62 +95,46 @@ ZIG_C_LD_FLAGS=(
 	"-Wl,--gc-sections"
 	"-Wl,--no-eh-frame-hdr"
 	"-no-pie"
-	"-Wl,--entry=kernel64_start" # <-- Tell linker about entry point
+	"-Wl,--entry=kernel64_start"          # <-- Tell linker about entry point
+	"-Wl,--image-base=0xFFFFFFFF80000000" # MATCH your linker script!
+	# "-fno-PIC"
+	# "-fno-PIE"
 )
 
-ZIG_FLAGS=(
-	"-target" "x86_64-freestanding"
-	"-fno-stack-protector" # No stack protection
-	"-fno-stack-check"     # No stack checking
-	"-mcmodel=large"
-	"-fPIC"
+ZIG_LIB_LD_FLAGS=(
+	"-static"
 )
-
-ZIG_LIB_LD_FLAGS=("-static")
 
 # Being generous with the cppflag
-LDFLAGS=("-ffreestanding" "-nostdlib" "-lgcc" "-fno-eliminate-unused-debug-symbols")
 NASM_FLAGS64=("-f" "elf64")
 
 NO_FPU_FLAGS=("-mno-sse" "-mno-sse2" "-mno-sse3" "-mno-sse4" "-mno-avx")
-# Correct way to concatenate arrays in bash
-GCC_FLAGS+=("${NO_FPU_FLAGS[@]}")
-GPP_FLAGS+=("${NO_FPU_FLAGS[@]}")
+# FPU should be initialized
 
 DEBUG_OPT_LVL="-O0"
 RELEASE_OPT_LVL="-O3"
-#					  I RUWP
-# a = 10 = 8 + 2 = 0000 1010
-# -O1 in Cpp breaks printf option number and i have no idea why
-QEMU_DBG_FLAGS=()
 
 if [[ "$DEBUG_OR_RELEASE" == "debug" ]]; then
 	echo "Debug mode enabled"
-	GCC_FLAGS+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG" "-fno-omit-frame-pointer" "-fno-optimize-sibling-calls")
-	# GPPFLAGS+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG" "-fno-omit-frame-pointer" "-fno-optimize-sibling-calls")
-	CFLAGS16+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG")
-	# LDFLAGS+=("-g")
-	# NASM_FLAGS64+=("-g" "-F" "dwarf" "-DDEBUG")
 
+	NASM_FLAGS64+=("-g" "-F" "dwarf" "-DDEBUG")
 	ZIG_C_FLAGS+=("$DEBUG_OPT_LVL" "-g" "-gdwarf-4" "-DDEBUG")
+
 	ZIG_FLAGS+=("-O" "Debug")
 	ZIG_LD_FLAGS+=("-g")
 
 else
 	echo "In normal mode, $RELEASE_OPT_LVL optimisation"
-	GCC_FLAGS+=("$RELEASE_OPT_LVL")
-	GPP_FLAGS+=("$RELEASE_OPT_LVL")
-	LDFLAGS+=("$RELEASE_OPT_LVL")
 
 	ZIG_FLAGS+=("-O" "ReleaseSafe")
 fi
 
 if [[ "$QEMU_OR_REAL_MACHINE" == "qemu" ]]; then
-	GCC_FLAGS+=("-DQEMU")
+	ZIG_C_FLAGS+=("-DQEMU")
+	NASM_FLAGS64+=("-DQEMU")
 fi
 
 KERNEL64="./kernel64"
-
 LONG_MODE_PREP32="../ProtectedMode/LongModePrep/"
 
 rm -f "$BUILD_DIR/*.o"
@@ -203,8 +178,6 @@ done
 BUILD_OBJECTS=("$BUILD_DIR"/*.o)
 
 printf -- "\n\n====================== Linking ===============================\n\n"
-# $GCC64 -T "linker_64.ld" -o "$BUILD_DIR/kernel64.elf" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}" "${LIBRARY_ARGS[@]}"
-
 $ZIG_CC \
 	-T "linker_64.ld" \
 	-o "$BUILD_DIR/kernel64.elf" \
@@ -212,16 +185,6 @@ $ZIG_CC \
 	"${BUILD_OBJECTS[@]}" \
 	"${LIBRARY_ARGS[@]}" \
 	-v
-# Use LLVM's linker (better with Zig DWARF)
-
-# Use zig build-exe or zig ld to link everything
-# zig build-exe \
-# 	"${BUILD_OBJECTS[@]}" \
-# 	"$KERNEL64/kernel64.zig" \
-# 	"${ZIGFLAGS[@]}" \
-# 	-T "linker_64.ld" \
-# 	-femit-bin="$BUILD_DIR/kernel64.elf" \
-# 	--verbose-link
 
 objdump -D -h -M intel "$BUILD_DIR/kernel64.elf" >"$BUILD_DIR/kernel64.dump"
 
