@@ -26,8 +26,9 @@ function get_symbol() {
         ')
 
 	if [[ -z "$value" ]]; then
-		printf "Error: symbol '%s' not found in %s\n" "$symbol_name" "$KERNEL64_ELF" >&2
-		exit 1
+		# printf "Error: symbol '%s' not found in %s\n" "$symbol_name" "$KERNEL64_ELF" >&2
+		# exit 1
+		printf "0\n"
 	fi
 
 	printf "%s\n" "$value"

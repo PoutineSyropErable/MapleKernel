@@ -273,11 +273,11 @@ int cpp_main(struct cpp_main_args args)
 		uint64_t hello_addr = rodata_start + 0x4;
 		uint64_t rodata_start_physical = entry_physical + (rodata_start - entry_virtual);
 		char *s = (char *)rodata_start_physical + 0x4;
-		kprintf("The message: |%s|, %h\n", s, s);
-
-		char *ss = "Hello\n";
-
-		memcpy32(s, ss, strlen(ss));
+		// kprintf("The message: |%s|, %h\n", s, s);
+		//
+		// char *ss = "Hello\n";
+		//
+		// memcpy32(s, ss, strlen(ss));
 
 		// struct gdt64_simple
 		// {

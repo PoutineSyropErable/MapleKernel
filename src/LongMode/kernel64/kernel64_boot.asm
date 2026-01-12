@@ -50,7 +50,7 @@ kernel64_start:
 
 
 extern kernel64_main
-    ; call kernel64_main
+    call kernel64_main
 
     ; Infinite halt loop if kernel_main returns
 halt_loop64:
