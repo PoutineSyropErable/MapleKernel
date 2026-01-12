@@ -68,6 +68,10 @@ mkdir -p "$BUILD_DIR"
 GCC64=x86_64-elf-gcc
 GPP64=x86_64-elf-g++
 
+# Use zig cc for everything - it's Clang-based and perfectly compatible with Zig
+ZIG_CC="zig cc -target x86_64-freestanding"
+ZIG_CXX="zig c++ -target x86_64-freestanding"
+
 CFLAGS=("-std=gnu23" "-ffreestanding" "-Wall" "-Wextra" "-mcmodel=large")
 CPPFLAGS=("-std=gnu++23" "-ffreestanding" "-Wall" "-Wextra" "-fno-threadsafe-statics" "-fno-rtti" "-fno-exceptions" "-fno-strict-aliasing")
 
