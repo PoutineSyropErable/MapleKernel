@@ -11,7 +11,7 @@ extern __rodata_start
 section .rodata
 msg db "Hello", 10, 0
 
-section .data
+section .bss
 ; must use .text because its the only properly mapped section
 entry_virtual: dq 0
 entry_physical: dq 0
@@ -24,16 +24,16 @@ kernel64_start:
 
 	; rax = entry virtual
 	; rbx = entry_physical 
-	; mov [entry_virtual], rax
-	; mov [entry_physical], rbx
+	mov [entry_virtual], rax
+	mov [entry_physical], rbx
 
 	jmp b
 	b:
 
 
-	; mov rcx, msg
-	; sub rcx, rax 
-	; add rcx, rbx
+	mov rcx, msg
+	sub rcx, rax 
+	add rcx, rbx
 	; RCX=000000000010d004
 	; phys address of the message
 

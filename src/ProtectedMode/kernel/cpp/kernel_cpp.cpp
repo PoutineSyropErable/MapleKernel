@@ -262,8 +262,8 @@ int cpp_main(struct cpp_main_args args)
 		longmode_prep::vmap_addresses((uint32_t)framebuffer_base_address, FB_MMIO_BASE, framebuffer_size,
 			longmode_prep::frame_buffer_paging_struct, paging64_32::vmap_address_type::mmio);
 #
-		framebuffer::g_framebuffer.draw_rectangle(
-			{.top_left_x = 0, .top_left_y = 0, .width = 1920, .height = 1080, .color = framebuffer::Color(0x123abc)});
+		// framebuffer::g_framebuffer.draw_rectangle(
+		// 	{.top_left_x = 0, .top_left_y = 0, .width = 1920, .height = 1080, .color = framebuffer::Color(0x123abc)});
 
 		// Jump to long mode
 

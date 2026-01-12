@@ -37,6 +37,7 @@ void kernel64_main()
 		com1_write(x);
 		com1_write("Com1 write ro data\n");
 
+		fill_screen(0x000000);
 		
 
 }

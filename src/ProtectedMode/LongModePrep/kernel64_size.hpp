@@ -47,37 +47,37 @@ constexpr uint64_t RODATA_GUARD_SIZE  = RODATA_GUARD_END - RODATA_GUARD_START;
 
 /* Data section */
 constexpr uint64_t DATA_START = 0xffffffff80204000;
-constexpr uint64_t DATA_END	  = 0xffffffff80305000;
+constexpr uint64_t DATA_END	  = 0xffffffff80304000;
 constexpr uint64_t DATA_SIZE  = DATA_END - DATA_START;
 
 /* Data guard page */
-constexpr uint64_t DATA_GUARD_START = 0xffffffff80305000;
-constexpr uint64_t DATA_GUARD_END	= 0xffffffff80305000;
+constexpr uint64_t DATA_GUARD_START = 0xffffffff80304000;
+constexpr uint64_t DATA_GUARD_END	= 0xffffffff80304000;
 constexpr uint64_t DATA_GUARD_SIZE	= DATA_GUARD_END - DATA_GUARD_START;
 
 /* BSS section */
-constexpr uint64_t BSS_START = 0xffffffff80305000;
-constexpr uint64_t BSS_END	 = 0xffffffff80405000;
+constexpr uint64_t BSS_START = 0xffffffff80304000;
+constexpr uint64_t BSS_END	 = 0xffffffff80404000;
 constexpr uint64_t BSS_SIZE	 = BSS_END - BSS_START;
 
 /* BSS guard page */
-constexpr uint64_t BSS_GUARD_START = 0xffffffff80405000;
-constexpr uint64_t BSS_GUARD_END   = 0xffffffff80405000;
+constexpr uint64_t BSS_GUARD_START = 0xffffffff80404000;
+constexpr uint64_t BSS_GUARD_END   = 0xffffffff80404000;
 constexpr uint64_t BSS_GUARD_SIZE  = BSS_GUARD_END - BSS_GUARD_START;
 
 /* Stack section */
-constexpr uint64_t STACK_BOTTOM = 0xffffffff80405000;
-constexpr uint64_t STACK_TOP	= 0xffffffff80409000;
+constexpr uint64_t STACK_BOTTOM = 0xffffffff80404000;
+constexpr uint64_t STACK_TOP	= 0xffffffff80408000;
 constexpr uint64_t STACK_SIZE	= STACK_TOP - STACK_BOTTOM;
 
 /* Stack guard page */
-constexpr uint64_t STACK_GUARD_START = 0xffffffff80409000;
-constexpr uint64_t STACK_GUARD_END	 = 0xffffffff80409000;
+constexpr uint64_t STACK_GUARD_START = 0xffffffff80408000;
+constexpr uint64_t STACK_GUARD_END	 = 0xffffffff80408000;
 constexpr uint64_t STACK_GUARD_SIZE	 = STACK_GUARD_END - STACK_GUARD_START;
 
 /* Heap section */
-constexpr uint64_t HEAP_START = 0xffffffff80409000;
-constexpr uint64_t HEAP_END	  = 0xffffffff80419000;
+constexpr uint64_t HEAP_START = 0xffffffff80408000;
+constexpr uint64_t HEAP_END	  = 0xffffffff80418000;
 constexpr uint64_t HEAP_SIZE  = HEAP_END - HEAP_START;
 
 /* Heap guard page */

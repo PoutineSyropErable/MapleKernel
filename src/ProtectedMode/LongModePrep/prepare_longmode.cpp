@@ -99,20 +99,24 @@ void set_64bit_page_table()
 	addr64 pd_addr_1 = transform_address(&first_page_directory);
 
 	main_pml4.entries[0].present	  = 1;
+	main_pml4.entries[0].read_write_not_ro	  = 1;
 	main_pml4.entries[0].address_mid  = pdpt_addr.address_mid; // This is just taking the address >> 12
 	main_pml4.entries[0].address_high = pdpt_addr.address_high;
 	kprintf("Address mid = %h\n", main_pml4.entries[0].address_mid);
 
 	first_pdpt.entries[0].present	   = 1;
+	first_pdpt.entries[0].read_write_not_ro	   = 1;
 	first_pdpt.entries[0].address_mid  = pd_addr_1.address_mid;
 	first_pdpt.entries[0].address_high = pd_addr_1.address_high;
 
 	first_page_directory.entries[0].present		 = 1;
+	first_page_directory.entries[0].read_write_not_ro		 = 1;
 	first_page_directory.entries[0].page_size	 = 1;
 	first_page_directory.entries[0].address_mid	 = 0;
 	first_page_directory.entries[0].address_high = 0;
 
-	first_page_directory.entries[1].present		= 1;
+	first_page_directory.entries[1].present					= 1;
+	first_page_directory.entries[1].read_write_not_ro		= 1;
 	first_page_directory.entries[1].page_size	= 1;
 	first_page_directory.entries[1].address_mid = (0x1000u * 512u) >> 12; // 12, not 21.
 	// The location doesnt matter for whatever page size of level
@@ -542,7 +546,8 @@ bool			test_paging()
 		return false;
 	}
 
-	uint64_t stack_addr = kernel64_size::STACK_TOP - 8;
+	kprintf("\n\n=====Stack stuff======\n\n");
+	uint64_t stack_addr = kernel64_size::STACK_TOP;
 	// uint64_t stack_addr = 0xffffffff8000c000;
 	kprintf("The stack address : low %h, high %h\n", stack_addr);
 	kernel64_size::region_t stack_region_type = kernel64_size::get_region_type(stack_addr);
@@ -556,6 +561,27 @@ bool			test_paging()
 	}
 
 	page_table_entry *pt_e = get_page_table_address(stack_addr);
+	kprintf("pt_e = low: %h:8, high : %h:8\n", pt_e);
+	kprintf("pt_e = low: %b:32, high : %b:32\n", pt_e);
+	kprintf("pt_e = {present = %u, execute_disable = %u, read_write_not_ro = %u}\n", pt_e->present, pt_e->execute_disable,
+		pt_e->read_write_not_ro);
+
+
+	kprintf("\n");
+	uint64_t stack_addr2 = kernel64_size::STACK_TOP - 8;
+	// uint64_t stack_addr = 0xffffffff8000c000;
+	kprintf("The stack address : low %h, high %h\n", stack_addr2);
+	kernel64_size::region_t stack_region_type2 = kernel64_size::get_region_type(stack_addr2);
+	kprintf("The name of the region of stack top: %s\n", kernel64_size::region_to_string(stack_region_type2));
+	k_addr_phys = software_transform(stack_addr2);
+	if (k_addr_phys.err)
+	{
+		kprintf("Error getting the physical address of : %h\n", stack_addr2);
+		exit(0);
+		return false;
+	}
+
+	pt_e = get_page_table_address(stack_addr2);
 	kprintf("pt_e = low: %h:8, high : %h:8\n", pt_e);
 	kprintf("pt_e = low: %b:32, high : %b:32\n", pt_e);
 	kprintf("pt_e = {present = %u, execute_disable = %u, read_write_not_ro = %u}\n", pt_e->present, pt_e->execute_disable,
@@ -637,173 +663,6 @@ constexpr tables_and_entries lround_up_div(uint16_t a, uint16_t b)
 	return {.full_tables = pages, .entries = entries};
 }
 
-void simplest_page_kernel(uint32_t physical_address, uint64_t virtual_address, uint64_t size)
-{
-
-	uint32_t page_count = max_page_count;
-
-	tables_and_entries page_tables		   = lround_up_div(page_count, 512);
-	tables_and_entries page_directories	   = lround_up_div(page_tables.full_tables, 512);
-	tables_and_entries page_directory_ptrs = lround_up_div(page_directories.full_tables, 512);
-	tables_and_entries pml4s			   = lround_up_div(page_directory_ptrs.full_tables, 512);
-
-	// print results
-	kprintf("Page Tables: Pages = %u, Entries in last = %u\n", page_tables.full_tables, page_tables.entries);
-	kprintf("Page Directories: Pages = %u, Entries in last = %u\n", page_directories.full_tables, page_directories.entries);
-	kprintf("PDPTs: Pages = %u, Entries in last = %u\n", page_directory_ptrs.full_tables, page_directory_ptrs.entries);
-	kprintf("PML4s: Pages = %u, Entries in last = %u\n", pml4s.full_tables, pml4s.entries);
-	assert(pml4s.full_tables == 1, "Only 1 pml4 anyway\n");
-
-	uint64_t used_virtual_address  = virtual_address;
-	uint32_t used_physical_address = physical_address;
-
-	uint16_t pml4_entry_index_max = pml4s.entries;
-	// ================= Starting the loop for the index (which table to pick)
-	for (uint16_t pdpt_index = 0; pdpt_index < page_directory_ptrs.full_tables; pdpt_index++)
-	{
-		bool	 last_pdpt			  = (pdpt_index == page_directory_ptrs.full_tables - 1);
-		uint16_t pdpt_entry_index_max = last_pdpt ? page_directory_ptrs.entries : 512;
-
-		for (uint16_t pd_index = 0; pd_index < page_directories.full_tables; pd_index++)
-		{
-			bool	 last_pd			= (pd_index == page_directories.full_tables - 1);
-			uint16_t pd_entry_index_max = last_pd ? page_directories.entries : 512;
-
-			for (uint16_t pt_index = 0; pt_index < page_tables.full_tables; pt_index++)
-			{
-				bool	 last_pt			= (pt_index == page_tables.full_tables - 1);
-				uint16_t pt_entry_index_max = last_pt ? page_tables.entries : 512;
-
-				// ================= Starting the loop for the index of the entries inside a table
-				virtual_address_split va = to_split(used_virtual_address);
-				addr64				  pa = transform_address((void *)used_physical_address);
-
-				pdpt		   *pdpt = &k64_pdpts[pdpt_index];
-				page_directory *pd	 = &k64_page_directories[pd_index];
-				page_table	   *pt	 = &k64_page_tables[pt_index];
-
-				for (uint16_t pml4_entry_index = 0; pml4_entry_index < pml4_entry_index_max; pml4_entry_index++)
-				{
-					pml4_entry *pml4_e = &main_pml4.entries[va.pml4_index];
-					if (!pml4_e->present)
-					{
-						pml4_e->present		 = 1;
-						addr64 pdpt_addr	 = transform_address(pdpt);
-						pml4_e->address_mid	 = pdpt_addr.address_mid;
-						pml4_e->address_high = pdpt_addr.address_high;
-					}
-					// End of loop
-				}
-				for (uint16_t pdpt_entry_index = 0; pdpt_entry_index < pdpt_entry_index_max; pdpt_entry_index++)
-				{
-					va				   = to_split(used_virtual_address);
-					pa				   = transform_address((void *)used_physical_address);
-					pdpt_entry *pdpt_e = &pdpt->entries[va.pdpt_index];
-					if (!pdpt_e->present)
-					{
-						pdpt_e->present		 = 1;
-						addr64 pd_addr		 = transform_address(pd);
-						pdpt_e->address_mid	 = pd_addr.address_mid;
-						pdpt_e->address_high = pd_addr.address_high;
-					}
-				}
-				for (uint16_t pd_entry_index = 0; pd_entry_index < pd_entry_index_max; pd_entry_index++)
-				{
-					va						   = to_split(used_virtual_address);
-					pa						   = transform_address((void *)used_physical_address);
-					page_directory_entry *pd_e = &pd->entries[va.pd_index];
-					if (!pd_e->present)
-					{
-						pd_e->present	   = 1;
-						addr64 pt_addr	   = transform_address(pt);
-						pd_e->address_mid  = pt_addr.address_mid;
-						pd_e->address_high = pt_addr.address_high;
-					}
-				}
-				for (uint16_t pt_entry_index = 0; pt_entry_index < pt_entry_index_max; pt_entry_index++)
-				{
-
-					va					   = to_split(used_virtual_address);
-					pa					   = transform_address((void *)used_physical_address);
-					page_table_entry *pt_e = &pt->entries[va.pt_index];
-					pt_e->address_mid	   = pa.address_mid;
-					pt_e->address_high	   = pa.address_high;
-					pt_e->global		   = 1;
-
-					kernel64_size::region_t region_type = kernel64_size::get_region_type(used_virtual_address);
-					switch (region_type)
-					{
-					case (kernel64_size::region_t::TEXT):
-					{
-						pt_e->present			= 1;
-						pt_e->read_write_not_ro = 0;
-						pt_e->execute_disable	= 0;
-						break;
-					}
-					case (kernel64_size::region_t::RODATA):
-					{
-						pt_e->present			= 1;
-						pt_e->read_write_not_ro = 0;
-						pt_e->execute_disable	= 1;
-						break;
-					}
-
-					case (kernel64_size::region_t::DATA):
-					{
-						pt_e->present			= 1;
-						pt_e->read_write_not_ro = 1;
-						pt_e->execute_disable	= 1;
-						break;
-					}
-
-					case (kernel64_size::region_t::BSS):
-					{
-						pt_e->present			= 1;
-						pt_e->read_write_not_ro = 1;
-						pt_e->execute_disable	= 1;
-						break;
-					}
-
-					case (kernel64_size::region_t::STACK):
-					{
-						pt_e->present			= 1;
-						pt_e->read_write_not_ro = 1;
-						pt_e->execute_disable	= 1;
-						break;
-					}
-
-					case (kernel64_size::region_t::HEAP):
-					{
-						pt_e->present			= 1;
-						pt_e->read_write_not_ro = 1;
-						pt_e->execute_disable	= 1;
-						break;
-					}
-
-					case (kernel64_size::region_t::GUARD):
-					{
-						pt_e->present			= 0;
-						pt_e->read_write_not_ro = 0;
-						pt_e->execute_disable	= 1;
-						break;
-					}
-
-					case (kernel64_size::region_t::INVALID):
-					{
-						pt_e->present			= 0;
-						pt_e->read_write_not_ro = 0;
-						pt_e->execute_disable	= 1;
-						break;
-					}
-					}
-
-					used_virtual_address += 0x1000;
-					used_physical_address += 0x1000;
-				}
-			}
-		}
-	}
-}
 
 int64_t simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, uint64_t size)
 {
@@ -837,6 +696,7 @@ int64_t simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, ui
 
 			addr64 pdpt_addr								  = transform_address(&k64_pdpts[pdpt_table_index]);
 			main_pml4.entries[vas[i].pml4_index].present	  = 1;
+			main_pml4.entries[vas[i].pml4_index].read_write_not_ro = 1;
 			main_pml4.entries[vas[i].pml4_index].address_mid  = pdpt_addr.address_mid;
 			main_pml4.entries[vas[i].pml4_index].address_high = pdpt_addr.address_high;
 
@@ -849,6 +709,7 @@ int64_t simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, ui
 
 			addr64 pd_addr														= transform_address(&k64_page_directories[pd_table_index]);
 			k64_pdpts[pdpt_table_index].entries[vas[i].pdpt_index].present		= 1;
+			k64_pdpts[pdpt_table_index].entries[vas[i].pdpt_index].read_write_not_ro		= 1;
 			k64_pdpts[pdpt_table_index].entries[vas[i].pdpt_index].address_mid	= pd_addr.address_mid;
 			k64_pdpts[pdpt_table_index].entries[vas[i].pdpt_index].address_high = pd_addr.address_high;
 
@@ -865,6 +726,7 @@ int64_t simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, ui
 			// The page directory entry points to page table base
 			addr64 pt_addr															  = transform_address(&k64_page_tables[pt_table_index]);
 			k64_page_directories[pd_table_index].entries[vas[i].pd_index].present	  = 1;
+			k64_page_directories[pd_table_index].entries[vas[i].pd_index].read_write_not_ro	  = 1;
 			k64_page_directories[pd_table_index].entries[vas[i].pd_index].address_mid = pt_addr.address_mid;
 			k64_page_directories[pd_table_index].entries[vas[i].pd_index].address_high = pt_addr.address_high;
 
@@ -1024,6 +886,7 @@ int64_t vmap_addresses(uint32_t phys_address, uint64_t virtual_address, uint64_t
 			addr64 pdpt_addr = transform_address(&fb_pdpts[pdpt_table_index]);
 			// now
 			main_pml4.entries[virtual_address_split.pml4_index].present		 = 1;
+			main_pml4.entries[virtual_address_split.pml4_index].read_write_not_ro		 = 1;
 			main_pml4.entries[virtual_address_split.pml4_index].address_mid	 = pdpt_addr.address_mid;
 			main_pml4.entries[virtual_address_split.pml4_index].address_high = pdpt_addr.address_high;
 
@@ -1036,6 +899,7 @@ int64_t vmap_addresses(uint32_t phys_address, uint64_t virtual_address, uint64_t
 
 			addr64 pd_addr = transform_address(&fb_page_directories[pd_table_index]);
 			fb_pdpts[pdpt_table_index].entries[virtual_address_split.pdpt_index].present	  = 1;
+			fb_pdpts[pdpt_table_index].entries[virtual_address_split.pdpt_index].read_write_not_ro	  = 1;
 			fb_pdpts[pdpt_table_index].entries[virtual_address_split.pdpt_index].address_mid  = pd_addr.address_mid;
 			fb_pdpts[pdpt_table_index].entries[virtual_address_split.pdpt_index].address_high = pd_addr.address_high;
 			// now
@@ -1053,6 +917,7 @@ int64_t vmap_addresses(uint32_t phys_address, uint64_t virtual_address, uint64_t
 			// The page directory entry points to page table base
 			addr64 pt_addr = transform_address(&fb_page_tables[pt_table_index]);
 			fb_page_directories[pd_table_index].entries[virtual_address_split.pd_index].present		 = 1;
+			fb_page_directories[pd_table_index].entries[virtual_address_split.pd_index].read_write_not_ro		 = 1;
 			fb_page_directories[pd_table_index].entries[virtual_address_split.pd_index].address_mid	 = pt_addr.address_mid;
 			fb_page_directories[pd_table_index].entries[virtual_address_split.pd_index].address_high = pt_addr.address_high;
 
