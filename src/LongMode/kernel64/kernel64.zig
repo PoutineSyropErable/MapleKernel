@@ -1,18 +1,15 @@
-const std = @import("std");
+// const std = @import("std");
+
 const file2 = @import("file2.zig");
+const builtin = @import("builtin");
+const std = @import("std");
 
-// CORRECT panic signature for Zig 0.11+
-pub fn panic(msg: []const u8, error_return_trace: ?*@import("std").builtin.StackTrace, ret_addr: ?usize) noreturn {
-    _ = msg;
-    _ = error_return_trace;
-    _ = ret_addr;
+const std_options = @import("std_options.zig");
 
-    // Halt CPU
-    while (true) {
-        asm volatile ("cli");
-        asm volatile ("hlt");
-    }
-}
+// Include std_options to customize std
+
+// Optional: Also export a direct panic function
+pub const panic = std.debug.FullPanic(std_options.kernel_panic_handler);
 
 export fn kernel64_zig_main() noreturn {
     // Your kernel code here

@@ -69,28 +69,62 @@ GCC64=x86_64-elf-gcc
 GPP64=x86_64-elf-g++
 
 # Use zig cc for everything - it's Clang-based and perfectly compatible with Zig
-ZIG_CC="zig cc -target x86_64-freestanding"
+
+GCC_FLAGS=("-std=gnu23" "-ffreestanding" "-Wall" "-Wextra" "-mcmodel=large")
+GPP_FLAGS=("-std=gnu++23" "-ffreestanding" "-Wall" "-Wextra" "-fno-threadsafe-statics" "-fno-rtti" "-fno-exceptions" "-fno-strict-aliasing")
+
+CLANG=clang
+
+CLANG_FLAGS=(
+	"-target" "x86_64-elf"
+	"-std=gnu23"
+	"-ffreestanding"
+	"-nostdlib"
+	"-fno-stack-protector"
+	"-fno-stack-check"
+	"-mcmodel=large"
+	"-mno-red-zone" # Critical f
+)
+
 ZIG_CXX="zig c++ -target x86_64-freestanding"
+ZIG_CC="zig cc -target x86_64-freestanding"
+ZIG_C_FLAGS=(
+	"-std=gnu23"
+	"-ffreestanding"
+	"-mcmodel=large"
+	"-mno-red-zone"           # Critical f
+	"-fno-sanitize=undefined" # Disable UBSan
+)
 
-CFLAGS=("-std=gnu23" "-ffreestanding" "-Wall" "-Wextra" "-mcmodel=large")
-CPPFLAGS=("-std=gnu++23" "-ffreestanding" "-Wall" "-Wextra" "-fno-threadsafe-statics" "-fno-rtti" "-fno-exceptions" "-fno-strict-aliasing")
+ZIG_C_LD_FLAGS=(
+	"-nostdlib"
+	"-ffreestanding"
+	"-no-pie" # Kernel shouldn't be PIE
+	"-Wl,-z,max-page-size=0x1000"
+	"-Wl,--gc-sections"
+	"-Wl,--no-eh-frame-hdr"
+	"-no-pie"
+	"-Wl,--entry=kernel64_start" # <-- Tell linker about entry point
+)
 
-ZIGFLAGS=(
+ZIG_FLAGS=(
 	"-target" "x86_64-freestanding"
 	"-fno-stack-protector" # No stack protection
 	"-fno-stack-check"     # No stack checking
-	# no redzone doesnt exist
+	"-mcmodel=large"
+	"-fPIC"
 )
 
 ZIG_LIB_LD_FLAGS=("-static")
+
 # Being generous with the cppflag
 LDFLAGS=("-ffreestanding" "-nostdlib" "-lgcc" "-fno-eliminate-unused-debug-symbols")
 NASM_FLAGS64=("-f" "elf64")
 
 NO_FPU_FLAGS=("-mno-sse" "-mno-sse2" "-mno-sse3" "-mno-sse4" "-mno-avx")
 # Correct way to concatenate arrays in bash
-CFLAGS+=("${NO_FPU_FLAGS[@]}")
-CPPFLAGS+=("${NO_FPU_FLAGS[@]}")
+GCC_FLAGS+=("${NO_FPU_FLAGS[@]}")
+GPP_FLAGS+=("${NO_FPU_FLAGS[@]}")
 
 DEBUG_OPT_LVL="-O0"
 RELEASE_OPT_LVL="-O3"
@@ -101,24 +135,27 @@ QEMU_DBG_FLAGS=()
 
 if [[ "$DEBUG_OR_RELEASE" == "debug" ]]; then
 	echo "Debug mode enabled"
-	CFLAGS+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG" "-fno-omit-frame-pointer" "-fno-optimize-sibling-calls")
-	CPPFLAGS+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG" "-fno-omit-frame-pointer" "-fno-optimize-sibling-calls")
+	GCC_FLAGS+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG" "-fno-omit-frame-pointer" "-fno-optimize-sibling-calls")
+	# GPPFLAGS+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG" "-fno-omit-frame-pointer" "-fno-optimize-sibling-calls")
 	CFLAGS16+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG")
-	LDFLAGS+=("-g")
-	NASM_FLAGS64+=("-g" "-F" "dwarf" "-DDEBUG")
+	# LDFLAGS+=("-g")
+	# NASM_FLAGS64+=("-g" "-F" "dwarf" "-DDEBUG")
 
-	ZIGFLAGS+=("-O" "Debug")
+	ZIG_C_FLAGS+=("$DEBUG_OPT_LVL" "-g" "-gdwarf-4" "-DDEBUG")
+	ZIG_FLAGS+=("-O" "Debug")
+	ZIG_LD_FLAGS+=("-g")
+
 else
 	echo "In normal mode, $RELEASE_OPT_LVL optimisation"
-	CFLAGS+=("$RELEASE_OPT_LVL")
-	CPPFLAGS+=("$RELEASE_OPT_LVL")
+	GCC_FLAGS+=("$RELEASE_OPT_LVL")
+	GPP_FLAGS+=("$RELEASE_OPT_LVL")
 	LDFLAGS+=("$RELEASE_OPT_LVL")
 
-	ZIGFLAGS+=("-O" "ReleaseSafe")
+	ZIG_FLAGS+=("-O" "ReleaseSafe")
 fi
 
 if [[ "$QEMU_OR_REAL_MACHINE" == "qemu" ]]; then
-	CFLAGS+=("-DQEMU")
+	GCC_FLAGS+=("-DQEMU")
 fi
 
 KERNEL64="./kernel64"
@@ -132,15 +169,16 @@ nasm "${NASM_FLAGS64[@]}" "$KERNEL64/kernel64_boot.asm" -o "$BUILD_DIR/kernel64_
 nasm "${NASM_FLAGS64[@]}" "$KERNEL64/guards.asm" -o "$BUILD_DIR/guard_pages.o"
 
 printf -- "\n\n====== Compiling the Entry C code ========\n\n"
-$GCC64 "${CFLAGS[@]}" -c "$KERNEL64/kernel_64.c" -o "$BUILD_DIR/kernel_64.o" "-I$LONG_MODE_PREP32"
-$GCC64 "${CFLAGS[@]}" -c "$KERNEL64/com1.c" -o "$BUILD_DIR/com1.o"
-$GCC64 "${CFLAGS[@]}" -c "$KERNEL64/dummy_kernel.c" -o "$BUILD_DIR/dummy_kernel.o"
+$ZIG_CC "${ZIG_C_FLAGS[@]}" -c "$KERNEL64/kernel_64.c" -o "$BUILD_DIR/kernel_64.o" "-I$LONG_MODE_PREP32"
+$ZIG_CC "${ZIG_C_FLAGS[@]}" -c "$KERNEL64/com1.c" -o "$BUILD_DIR/com1.o"
+$ZIG_CC "${ZIG_C_FLAGS[@]}" -c "$KERNEL64/dummy_kernel.c" -o "$BUILD_DIR/dummy_kernel.o"
 
 printf -- "\n\n====== Compiling the Zig library ========\n\n"
 ZIG_LIB_NAME="kernel64"
-zig build-lib "$KERNEL64/$ZIG_LIB_NAME.zig" "${ZIG_LIB_LD_FLAGS[@]}" "${ZIGFLAGS[@]}" -femit-bin="$BUILD_DIR/lib$ZIG_LIB_NAME.a"
+zig build-lib "$KERNEL64/$ZIG_LIB_NAME.zig" "${ZIG_LIB_LD_FLAGS[@]}" "${ZIG_FLAGS[@]}" -femit-bin="$BUILD_DIR/lib$ZIG_LIB_NAME.a"
 # This single line can do a lot of work. Since it will build the whole thing
 
+printf -- "\n\n====== Getting the '.o's and '.a's ========\n\n"
 # Library configuration
 LIBRARY_PATHS=(
 	"$BUILD_DIR"
@@ -162,9 +200,19 @@ for lib in "${LIBRARY_FILES[@]}"; do
 	LIBRARY_ARGS+=("-l$lib")
 done
 
-printf -- "\n\n====== Linking ========\n\n"
 BUILD_OBJECTS=("$BUILD_DIR"/*.o)
-$GCC64 -T "linker_64.ld" -o "$BUILD_DIR/kernel64.elf" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}" "${LIBRARY_ARGS[@]}"
+
+printf -- "\n\n====================== Linking ===============================\n\n"
+# $GCC64 -T "linker_64.ld" -o "$BUILD_DIR/kernel64.elf" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}" "${LIBRARY_ARGS[@]}"
+
+$ZIG_CC \
+	-T "linker_64.ld" \
+	-o "$BUILD_DIR/kernel64.elf" \
+	"${ZIG_C_LD_FLAGS[@]}" \
+	"${BUILD_OBJECTS[@]}" \
+	"${LIBRARY_ARGS[@]}" \
+	-v
+# Use LLVM's linker (better with Zig DWARF)
 
 # Use zig build-exe or zig ld to link everything
 # zig build-exe \
