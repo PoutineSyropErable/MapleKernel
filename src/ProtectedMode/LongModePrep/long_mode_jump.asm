@@ -25,6 +25,7 @@ extern compatibility_entry
 
 PAE_MASK equ 1 << 5
 PG_MASK equ 1 << 31
+WRITE_PROTECT_MASK equ 1 << 16
 
 EFER_MSR equ 0xC0000080
 EFER_LM_ENABLE equ 1 << 8
@@ -70,6 +71,7 @@ to_compatibility_mode:
 
 	mov eax, cr0
 	or eax, PG_MASK 
+	or eax, WRITE_PROTECT_MASK
 	mov cr0, eax
 
 	lidt [idtr_64]

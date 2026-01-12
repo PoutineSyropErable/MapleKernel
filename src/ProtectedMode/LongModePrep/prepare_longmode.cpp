@@ -524,8 +524,8 @@ bool			test_paging()
 		if (k_addr_phys.err)
 		{
 			kprintf("Error getting the physical address of : %h\n", k_addr);
-			exit(0);
-			return false;
+			// exit(0);
+			// return false;
 		}
 	}
 
@@ -563,7 +563,7 @@ bool			test_paging()
 
 	kprintf("\n\n=====Rodata stuff======\n\n");
 
-	uint64_t rodata_addr_1 = 0xffffffff80003004;
+	uint64_t rodata_addr_1 = 0xffffffff80001008;
 	kprintf("The rodata address 1: low %h, high %h\n", rodata_addr_1);
 	kernel64_size::region_t rodata_1_region_type = kernel64_size::get_region_type(rodata_addr_1);
 	kprintf("The name of the region of rodata address 1: %s\n", kernel64_size::region_to_string(rodata_1_region_type));
@@ -810,6 +810,10 @@ int64_t simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, ui
 
 	uint32_t page_count = max_page_count;
 	kprintf("Page count = %u\n", page_count);
+	assert(size <= kernel64_size::MODULE_SIZE,
+		"must be same size?  header={ low: %u high: %u } | grub={ low:%u, high:%u}\n",
+		kernel64_size::MODULE_SIZE, size);
+	// Maybe grub only gives one of these
 
 	virtual_address_split va = to_split(virtual_address);
 
@@ -879,8 +883,8 @@ int64_t simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, ui
 		case (kernel64_size::region_t::TEXT):
 		{
 			// kprintf("Address in text: low %h %h high\n", used_virtual_address);
-			kprintf("Address in CODE: low %h %h high\n", used_virtual_address);
-			kprintf("The physical address: %h\n", used_physical_address);
+			// kprintf("Address in CODE: low %h %h high\n", used_virtual_address);
+			// kprintf("The physical address: %h\n", used_physical_address);
 
 			pt_e->present			= 1;
 			pt_e->read_write_not_ro = 0;
@@ -889,8 +893,8 @@ int64_t simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, ui
 		}
 		case (kernel64_size::region_t::RODATA):
 		{
-			kprintf("Address in RODATA: low %h %h high\n", used_virtual_address);
-			kprintf("The physical address: %h\n", used_physical_address);
+			// kprintf("Address in RODATA: low %h %h high\n", used_virtual_address);
+			// kprintf("The physical address: %h\n", used_physical_address);
 			pt_e->present			= 1;
 			pt_e->read_write_not_ro = 0;
 			pt_e->execute_disable	= 1;
@@ -915,7 +919,7 @@ int64_t simple_page_kernel64(uint32_t phys_address, uint64_t virtual_address, ui
 
 		case (kernel64_size::region_t::STACK):
 		{
-			kprintf("Address in STACK: low %h %h high\n", used_virtual_address);
+			// kprintf("Address in STACK: low %h %h high\n", used_virtual_address);
 			pt_e->present			= 1;
 			pt_e->read_write_not_ro = 1;
 			pt_e->execute_disable	= 1;

@@ -114,6 +114,7 @@ $GCC64 "${CFLAGS[@]}" -c "$KERNEL64/kernel_64.c" -o "$BUILD_DIR/kernel_64.o" "-I
 $GCC64 "${CFLAGS[@]}" -c "$KERNEL64/com1.c" -o "$BUILD_DIR/com1.o"
 $GCC64 "${CFLAGS[@]}" -c "$KERNEL64/dummy_kernel.c" -o "$BUILD_DIR/dummy_kernel.o"
 nasm "${NASM_FLAGS64[@]}" "$KERNEL64/kernel64_boot.asm" -o "$BUILD_DIR/kernel64_boot.o"
+nasm "${NASM_FLAGS64[@]}" "$KERNEL64/guards.asm" -o "$BUILD_DIR/guard_pages.o"
 
 BUILD_OBJECTS=("$BUILD_DIR"/*.o)
 printf -- "\n\n====== Linking ========\n\n"

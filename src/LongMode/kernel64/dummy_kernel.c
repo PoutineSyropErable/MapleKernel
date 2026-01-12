@@ -3,8 +3,8 @@
 
 // Make sure sections are aligned to 4KB
 #define ALIGN4K __attribute__((aligned(0x1000)))
-// #define SECTION_SIZE (1024 * 1024)
-#define SECTION_SIZE (1)
+#define SECTION_SIZE (1024 * 1024)
+// #define SECTION_SIZE (1)
 
 __attribute__((section(".text"))) char dummy_text[SECTION_SIZE] ALIGN4K = {0}; // 1 MB in .text
 
