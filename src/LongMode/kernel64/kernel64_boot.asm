@@ -1,21 +1,20 @@
+BITS 64
 extern __stack_top
 extern __module_size
-
 extern __rodata_start
 
 
 
-; =====================================================
-; Kernel Entry Point
-; =====================================================
-section .rodata
+section .rodata 
 msg db "Hello", 10, 0
 
 section .bss
-; must use .text because its the only properly mapped section
-entry_virtual: dq 0
-entry_physical: dq 0
+entry_virtual: resq 1  ; Reserve 8 bytes, uninitialized
+entry_physical: resq 1
 
+; =====================================================
+; Kernel Entry Point
+; =====================================================
 section .text.entry
 global kernel64_start
 kernel64_start:
@@ -24,11 +23,11 @@ kernel64_start:
 
 	; rax = entry virtual
 	; rbx = entry_physical 
-	mov [entry_virtual], rax
-	mov [entry_physical], rbx
+	mov [rel entry_virtual], rax
+	mov [rel entry_physical], rbx
 
-	jmp b
-	b:
+	jmp .b
+	.b:
 
 
 	mov rcx, msg
@@ -40,7 +39,7 @@ kernel64_start:
 	; jmp crash
 
 
-	; mov dil, [msg]
+	; mov dil, [rel msg]
 	;
 	; movzx rdi, dil
 	; call fill_framebuffer
@@ -52,10 +51,10 @@ extern kernel64_main
     call kernel64_main
 
     ; Infinite halt loop if kernel_main returns
-halt_loop64:
+.halt_loop64:
     cli                     ; clear interrupt flag
     hlt                     ; halt CPU
-    jmp halt_loop64           ; jump back to halt
+    jmp .halt_loop64           ; jump back to halt
 
 ; Set symbol size (optional, useful for debugging)
 ; size _start, . - _start
@@ -83,5 +82,5 @@ fill_framebuffer:
 
 
 crash: 
-	mov rsi, [0xAAAAAAAAAAAAAAAA]
+	mov rsi, qword [0xAAAAAAAAAAAAAAAA]
 	ret

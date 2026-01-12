@@ -68,8 +68,17 @@ mkdir -p "$BUILD_DIR"
 GCC64=x86_64-elf-gcc
 GPP64=x86_64-elf-g++
 
-CFLAGS=("-std=gnu23" "-ffreestanding" "-Wall" "-Wextra" "-mcmodel=kernel")
+CFLAGS=("-std=gnu23" "-ffreestanding" "-Wall" "-Wextra" "-mcmodel=large")
 CPPFLAGS=("-std=gnu++23" "-ffreestanding" "-Wall" "-Wextra" "-fno-threadsafe-statics" "-fno-rtti" "-fno-exceptions" "-fno-strict-aliasing")
+
+ZIGFLAGS=(
+	"-target" "x86_64-freestanding"
+	"-fno-stack-protector" # No stack protection
+	"-fno-stack-check"     # No stack checking
+	# no redzone doesnt exist
+)
+
+ZIG_LIB_LD_FLAGS=("-static")
 # Being generous with the cppflag
 LDFLAGS=("-ffreestanding" "-nostdlib" "-lgcc" "-fno-eliminate-unused-debug-symbols")
 NASM_FLAGS64=("-f" "elf64")
@@ -93,11 +102,15 @@ if [[ "$DEBUG_OR_RELEASE" == "debug" ]]; then
 	CFLAGS16+=("$DEBUG_OPT_LVL" "-g" "-DDEBUG")
 	LDFLAGS+=("-g")
 	NASM_FLAGS64+=("-g" "-F" "dwarf" "-DDEBUG")
+
+	ZIGFLAGS+=("-O" "Debug")
 else
 	echo "In normal mode, $RELEASE_OPT_LVL optimisation"
 	CFLAGS+=("$RELEASE_OPT_LVL")
 	CPPFLAGS+=("$RELEASE_OPT_LVL")
 	LDFLAGS+=("$RELEASE_OPT_LVL")
+
+	ZIGFLAGS+=("-O" "ReleaseSafe")
 fi
 
 if [[ "$QEMU_OR_REAL_MACHINE" == "qemu" ]]; then
@@ -110,15 +123,53 @@ LONG_MODE_PREP32="../ProtectedMode/LongModePrep/"
 
 rm -f "$BUILD_DIR/*.o"
 
-$GCC64 "${CFLAGS[@]}" -c "$KERNEL64/kernel_64.c" -o "$BUILD_DIR/kernel_64.o" "-I$LONG_MODE_PREP32"
-$GCC64 "${CFLAGS[@]}" -c "$KERNEL64/com1.c" -o "$BUILD_DIR/com1.o"
-$GCC64 "${CFLAGS[@]}" -c "$KERNEL64/dummy_kernel.c" -o "$BUILD_DIR/dummy_kernel.o"
+printf -- "\n\n====== Assembly the Boot/Entry asm (And the guard pages) ========\n\n"
 nasm "${NASM_FLAGS64[@]}" "$KERNEL64/kernel64_boot.asm" -o "$BUILD_DIR/kernel64_boot.o"
 nasm "${NASM_FLAGS64[@]}" "$KERNEL64/guards.asm" -o "$BUILD_DIR/guard_pages.o"
 
-BUILD_OBJECTS=("$BUILD_DIR"/*.o)
+printf -- "\n\n====== Compiling the Entry C code ========\n\n"
+$GCC64 "${CFLAGS[@]}" -c "$KERNEL64/kernel_64.c" -o "$BUILD_DIR/kernel_64.o" "-I$LONG_MODE_PREP32"
+$GCC64 "${CFLAGS[@]}" -c "$KERNEL64/com1.c" -o "$BUILD_DIR/com1.o"
+$GCC64 "${CFLAGS[@]}" -c "$KERNEL64/dummy_kernel.c" -o "$BUILD_DIR/dummy_kernel.o"
+
+printf -- "\n\n====== Compiling the Zig library ========\n\n"
+ZIG_LIB_NAME="kernel64"
+zig build-lib "$KERNEL64/$ZIG_LIB_NAME.zig" "${ZIG_LIB_LD_FLAGS[@]}" "${ZIGFLAGS[@]}" -femit-bin="$BUILD_DIR/lib$ZIG_LIB_NAME.a"
+# This single line can do a lot of work. Since it will build the whole thing
+
+# Library configuration
+LIBRARY_PATHS=(
+	"$BUILD_DIR"
+	# "/path/to/other/libs"
+)
+
+LIBRARY_FILES=(
+	"$ZIG_LIB_NAME" # don't put the lib or the
+	# "libother.a"
+)
+
+# Build the -L and library arguments
+LIBRARY_ARGS=()
+for path in "${LIBRARY_PATHS[@]}"; do
+	LIBRARY_ARGS+=("-L$path")
+done
+
+for lib in "${LIBRARY_FILES[@]}"; do
+	LIBRARY_ARGS+=("-l$lib")
+done
+
 printf -- "\n\n====== Linking ========\n\n"
-$GPP64 -T "linker_64.ld" -o "$BUILD_DIR/kernel64.elf" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}" "${LIBRARY_ARGS[@]}"
+BUILD_OBJECTS=("$BUILD_DIR"/*.o)
+$GCC64 -T "linker_64.ld" -o "$BUILD_DIR/kernel64.elf" "${LDFLAGS[@]}" "${BUILD_OBJECTS[@]}" "${LIBRARY_ARGS[@]}"
+
+# Use zig build-exe or zig ld to link everything
+# zig build-exe \
+# 	"${BUILD_OBJECTS[@]}" \
+# 	"$KERNEL64/kernel64.zig" \
+# 	"${ZIGFLAGS[@]}" \
+# 	-T "linker_64.ld" \
+# 	-femit-bin="$BUILD_DIR/kernel64.elf" \
+# 	--verbose-link
 
 objdump -D -h -M intel "$BUILD_DIR/kernel64.elf" >"$BUILD_DIR/kernel64.dump"
 

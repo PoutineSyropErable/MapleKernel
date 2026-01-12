@@ -28,6 +28,8 @@ __attribute__((noinline)) void fill_screen(volatile uint32_t color)
 	}
 }
 
+void kernel64_zig_main();
+
 void kernel64_main()
 {
 		com1_init();
@@ -40,6 +42,8 @@ void kernel64_main()
 		fill_screen(0x000000);
 
 		com1_write("Going to Zig! No More C\n");
+
+		kernel64_zig_main();
 		
 
 }
