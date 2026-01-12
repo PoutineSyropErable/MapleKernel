@@ -20,6 +20,8 @@ SECTIONS
         *(.text.entry)
         *(.text)
         *(.text.*)
+        *(.ltext)
+        *(.ltext.*)
         . = ALIGN(0x1000);
     }
 
@@ -36,6 +38,8 @@ SECTIONS
     {
         *(.rodata)
         *(.rodata.*)
+        *(.lrodata)
+        *(.lrodata.*)
         . = ALIGN(0x1000);
     }
 
@@ -52,6 +56,8 @@ SECTIONS
     {
         *(.data)
         *(.data.*)
+        *(.ldata)
+        *(.ldata.*)
         . = ALIGN(0x1000);
     }
 
@@ -69,6 +75,8 @@ SECTIONS
         __bss_start = .;
         *(.bss)
         *(.bss.*)
+        *(.lbss)
+        *(.lbss.*)
         *(COMMON)
         __bss_end = .;
         . = ALIGN(0x1000);
