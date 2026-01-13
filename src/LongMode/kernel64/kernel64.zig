@@ -7,6 +7,7 @@ const file2 = @import("file2.zig");
 const stdio = @import("stdio");
 
 const std_options = @import("std_options.zig");
+const intrinsics = @import("intrinsics");
 
 // Include std_options to customize std
 
@@ -15,30 +16,7 @@ pub const panic = std.debug.FullPanic(std_options.kernel_panic_handler);
 
 // Declare external C function for printing
 extern fn com1_putc(c: u8) void;
-extern fn com1_write(s: [*]const u8) void;
-
-// Helper function to print null-terminated strings
-fn print_str(str: [*]const u8) void {
-    var i: usize = 0;
-    while (str[i] != 0) {
-        com1_putc(str[i]);
-        i += 1;
-    }
-}
-
-// Helper function to print with newline
-fn println(str: [*]const u8) void {
-    print_str(str);
-    com1_putc('\n');
-}
-
-// Helper function to print address
-fn print_addr(label: [*]const u8, addr: *const anyopaque) void {
-    print_str(label);
-    print_str(" at 0x");
-    _ = addr;
-    com1_putc('\n');
-}
+extern fn com1_write_c(s: [*]const u8) void;
 
 // ========== .rodata SECTION (read-only data) ==========
 const rodata_string = "Hello from .rodata! This string is read-only.\n";
@@ -89,17 +67,20 @@ export fn kernel64_zig_main() noreturn {
     const value: i32 = file2.zig_add(5, 6);
     _ = value + 1;
 
-    com1_write("\n\n=============== Start of Long Mode Zig Kernel ======================\n\n");
-    com1_write("\nHello from zig\n");
+    com1_write_c("\n\n=============== Start of Long Mode Zig Kernel ======================\n\n");
+    com1_write_c("\nHello from zig\n");
     const msg: []const u8 = "test other method\n";
-    com1_write(msg.ptr);
-    com1_write(data_string);
+    com1_write_c(msg.ptr);
+    com1_write_c(data_string);
 
-    stdio.some_stdio_function();
+    // runtime_fail();
 
-    runtime_fail();
+    stdio.com1_write("Zig write bytes\n");
+    stdio.com1_write("Another so its not inlined\n");
 
-    std_options.kernel_log(.err, .default, "Some Panic Msg\n", .{});
+    std_options.kernel_log(.debug,
+        // .default,
+        "Some Panic Msg\n", .{});
     std_options.kernel_panic_handler("End of kernel\n", null);
     // Never return
     while (true) {

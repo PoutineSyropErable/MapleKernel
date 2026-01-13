@@ -1,10 +1,9 @@
 // std_options.zig - Customize std for kernel
 const std = @import("std");
-
-extern fn com1_putc(c: u8) void;
-extern fn com1_write(s: [*]const u8) void;
+const stdio = @import("stdio");
 
 /// Customize standard library behavior for kernel
+/// This is something zig actually search for and use reflexion to modify its standard library behavior
 pub const std_options: std.Options = .{
     // Disable segfault handler (kernel handles its own faults)
     .enable_segfault_handler = false,
@@ -19,7 +18,7 @@ pub const std_options: std.Options = .{
 // Kernel logging to serial port
 pub fn kernel_log(
     comptime level: std.log.Level,
-    comptime scope: @Type(.enum_literal),
+    // comptime scope: @Type(.enum_literal),
     comptime format: []const u8,
     args: anytype,
 ) void {
@@ -34,21 +33,16 @@ pub fn kernel_log(
     };
 
     // Simple serial write (no formatting for now)
-    com1_write(prefix);
+    stdio.com1_write(prefix);
     // const runtime_str: [*]const u8 = format;
     // com1_write(format);
-    com1_write(format.ptr);
+    stdio.com1_write(format);
 
     // _ = runtime_str;
     // Could implement simple formatting here
     // _ = format;
     _ = args;
-    _ = scope;
-}
-
-// Create a wrapper that converts slice to C pointer
-fn com1_write_slice(msg: []const u8) void {
-    com1_write(msg.ptr); // .ptr gets the [*]const u8 pointer
+    // _ = scope;
 }
 
 // Simple panic handler without 32-bit relocations
@@ -57,8 +51,8 @@ pub fn kernel_panic_handler(msg: []const u8, first_trace_addr: ?usize) noreturn 
 
     // Write to serial
     const panic_msg = "KERNEL PANIC: ";
-    com1_write(panic_msg);
-    com1_write(msg.ptr);
+    stdio.com1_write(panic_msg);
+    stdio.com1_write(msg);
 
     // Halt
     while (true) {

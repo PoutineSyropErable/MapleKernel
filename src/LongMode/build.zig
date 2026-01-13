@@ -22,6 +22,12 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    const intrinsics_modules = b.createModule(.{
+        .root_source_file = b.path("stdlib/intrinsics.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     // ======================= The Full kernel
 
     const entire_kernel_module = b.createModule(.{
@@ -57,6 +63,7 @@ pub fn build(b: *std.Build) void {
 
     // Add the modules
     entire_kernel_module.addImport("stdio", stdio_module);
+    stdio_module.addImport("intrinsics", intrinsics_modules);
 
     // Add Zig-specific flags for kernel
     // kernel_lib.root_module.omit_frame_pointer = false;

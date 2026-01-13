@@ -27,6 +27,11 @@ void com1_init(void)
 static int com1_is_transmit_empty(void)
 {
 	return inb(COM1_PORT + 5) & 0x20;
+	// 0x20 = 32 = 1 0___0__0__0   0000
+	//               128 64 32 16  8421 
+	// 0x20 = 0010 0000
+	//        7654  3210 
+	// Bit 5
 }
 
 void com1_putc(char c)
@@ -36,7 +41,7 @@ void com1_putc(char c)
 	outb(COM1_PORT, c);
 }
 
-uint64_t com1_write(const char *str)
+uint64_t com1_write_c(const char *str)
 {
 	uint64_t i = 0;
 	while (str[i])
@@ -47,7 +52,7 @@ uint64_t com1_write(const char *str)
 	return i;
 }
 
-void com1_write_len(const char *str, size_t len)
+void com1_write_len_c(const char *str, size_t len)
 {
 	for (size_t i = 0; i < len; i++)
 	{
