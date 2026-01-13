@@ -130,7 +130,7 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 		// The abbort might not be needed anyway.
 	}
 
-#ifndef DEBUG
+// #ifndef DEBUG
 
 // #	define BIOS_FRAMEBUFFER_HACK
 #	ifdef GRUB_FRAMEBUFFER
@@ -170,7 +170,7 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 
 #	endif
 
-#endif // DEBUG
+// #endif // DEBUG
 
 #define GET_RSDP
 #ifdef GET_RSDP

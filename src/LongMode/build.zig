@@ -69,7 +69,7 @@ pub fn build(b: *std.Build) void {
         kernel_lib.pie = true;
         kernel_lib.root_module.pic = true;
         kernel_lib.root_module.stack_check = true;
-        kernel_lib.root_module.stack_protector = true;
+        kernel_lib.root_module.stack_protector = false; // no support for stack protection
     }
     // kernel_lib.root_module.red_zone = false;
     kernel_lib.root_module.code_model = .kernel;

@@ -257,6 +257,7 @@ int cpp_main(struct cpp_main_args args)
 		longmode_prep::test_paging();
 		void	*framebuffer_base_address = (void *)framebuffer::g_framebuffer.get_base_address();
 		uint32_t framebuffer_size		  = framebuffer::g_framebuffer.get_size();
+		
 		assert(framebuffer_size == 1920 * 1080 * 4, "Frame buffer must be proper size");
 
 		longmode_prep::vmap_addresses((uint32_t)framebuffer_base_address, FB_MMIO_BASE, framebuffer_size,

@@ -4,7 +4,7 @@ const std = @import("std");
 const builtin = @import("builtin");
 
 // const file2 = @import("kernel64.file2.zig");
-// const stdio = @import("stdio");
+const stdio = @import("stdio");
 
 // const std_options = @import("kernel64.std_options.zig");
 
@@ -66,11 +66,10 @@ export fn kernel64_zig_main() noreturn {
     // std_options.kernel_panic_handler("End of kernel\n", null);
     // std_options.kernel_log(.err, .default, "Some Panic Msg\n", .{});
 
-    // com1_write("Hello from zig\n");
+    com1_write("\nHello from zig\n");
     const msg: []const u8 = "test other method\n";
     com1_write(msg.ptr);
     com1_write(data_string);
-    com1_putc(msg.ptr[0]);
 
     // stdio.some_stdio_function();
 

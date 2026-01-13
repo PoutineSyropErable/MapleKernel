@@ -1,0 +1,23 @@
+# debug.lldb - FIXED
+platform select remote-gdb-server
+
+file ../build64/kernel64.elf
+
+settings set target.x86-disassembly-flavor intel
+
+# Connect to remote target FIRST
+gdb-remote localhost:1234
+
+# Set architecture
+
+# Load the kernel symbols
+
+# Set entry point breakpoints
+breakpoint set --name kernel64_start
+breakpoint set --name kernel64_zig_main
+
+# Show disassembly
+settings set target.skip-prologue false
+
+# Continue execution
+continue

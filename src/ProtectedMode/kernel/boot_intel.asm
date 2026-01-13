@@ -43,9 +43,9 @@ header_start:
 
 	
 	; === Framebuffer request tag ===
-	%ifdef DEBUG 
+	; %ifdef DEBUG 
 		; Don't request the framebuffer in debug mode
-	%else
+	; %else
 		%define GRUB_FRAMEBUFFER
 		%ifdef GRUB_FRAMEBUFFER 
 			dw MB2_TAG_FRAMEBUFFER         ; Type: framebuffer
@@ -57,7 +57,7 @@ header_start:
 			; dd 0                  ; Framebuffer type: 0 = RGB, 1 = EGA text
 			dd 0                  ; Padding/reserved
 		%endif
-	%endif
+	; %endif
     
     ; Required end tag
     dw MB2_TAG_END        ; Type: End
