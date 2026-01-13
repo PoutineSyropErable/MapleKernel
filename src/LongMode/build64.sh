@@ -181,9 +181,10 @@ $ZIG_CC "${ZIG_C_FLAGS[@]}" -c "$KERNEL64/dummy_kernel.c" -o "$BUILD_DIR/dummy_k
 
 printf -- "\n\n====== Compiling the Zig library ========\n\n"
 ZIG_LIB_NAME="kernel64"
-zig build-lib "$ZIG_LIB_NAME.zig" "${ZIG_LIB_LD_FLAGS[@]}" "${ZIG_FLAGS[@]}" -femit-bin="$BUILD_DIR/lib$ZIG_LIB_NAME.a"
+LIB_DIR="$KERNEL64"
+# zig build-lib "$LIB_DIR/$ZIG_LIB_NAME.zig" "${ZIG_LIB_LD_FLAGS[@]}" "${ZIG_FLAGS[@]}" -femit-bin="$BUILD_DIR/lib$ZIG_LIB_NAME.a"
 
-# zig build
+zig build
 
 # This single line can do a lot of work. Since it will build the whole thing
 
