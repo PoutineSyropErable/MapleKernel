@@ -10,19 +10,17 @@ pub fn build(b: *std.Build) void {
         },
     });
 
-    // const optimize = b.standardOptimizeOption(.{
-    //     .preferred_optimize_mode = .ReleaseSafe,
-    // });
-
-    const optimize = .ReleaseSafe;
+    const optimize = b.standardOptimizeOption(.{
+        .preferred_optimize_mode = .ReleaseSafe,
+    });
 
     // ======================= Specific modules
 
-    // const stdio_module = b.createModule(.{
-    //     .root_source_file = b.path("stdio/stdio.zig"),
-    //     .target = target,
-    //     .optimize = optimize,
-    // });
+    const stdio_module = b.createModule(.{
+        .root_source_file = b.path("stdio/stdio.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
 
     // ======================= The Full kernel
 
@@ -30,7 +28,6 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("kernel64/kernel64.zig"), // Source file
         .target = target,
         .optimize = optimize,
-        // .pic = false,
     });
 
     // Create the kernel library (static archive)
@@ -59,18 +56,23 @@ pub fn build(b: *std.Build) void {
     }
 
     // Add the modules
-    // entire_kernel_module.addImport("stdio", stdio_module);
-    // _ = stdio_module;
+    entire_kernel_module.addImport("stdio", stdio_module);
 
     // Add Zig-specific flags for kernel
     // kernel_lib.root_module.omit_frame_pointer = false;
-    kernel_lib.pie = false;
-    kernel_lib.root_module.pic = false;
+    if (optimize != .Debug) {
+        kernel_lib.pie = false;
+        kernel_lib.root_module.pic = false;
+        kernel_lib.root_module.stack_check = false;
+        kernel_lib.root_module.stack_protector = false;
+    } else {
+        kernel_lib.pie = true;
+        kernel_lib.root_module.pic = true;
+        kernel_lib.root_module.stack_check = true;
+        kernel_lib.root_module.stack_protector = true;
+    }
     // kernel_lib.root_module.red_zone = false;
-    kernel_lib.root_module.stack_check = false;
-    kernel_lib.root_module.stack_protector = false;
     kernel_lib.root_module.code_model = .kernel;
-    // kernel_lib.lto = .full;
     kernel_lib.root_module.link_libc = false;
     kernel_lib.root_module.link_libcpp = false;
 

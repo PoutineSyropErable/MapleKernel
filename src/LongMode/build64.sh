@@ -98,7 +98,7 @@ NO_FPU_FLAGS=("-mno-sse" "-mno-sse2" "-mno-sse3" "-mno-sse4" "-mno-avx")
 DEBUG_OPT_LVL="-O0"
 RELEASE_OPT_LVL="-O3"
 
-ZIG_RELEASE_FLAG=""
+ZIG_RELEASE_FLAG=()
 
 if [[ "$DEBUG_OR_RELEASE" == "debug" ]]; then
 	echo "Debug mode enabled"
@@ -112,7 +112,7 @@ if [[ "$DEBUG_OR_RELEASE" == "debug" ]]; then
 	ZIG_C_LD_FLAGS+=("-g"
 		"-fPIC"
 	)
-	ZIG_RELEASE_FLAG=""
+	ZIG_RELEASE_FLAG=()
 	# default is debug
 
 else
@@ -123,11 +123,12 @@ else
 		"-fno-PIE"
 	)
 
-	RELEASE_MODE="ReleaseSafe"
-	ZIG_RELEASE_FLAG="--release=safe"
 	if [[ "$DEBUG_OR_RELEASE" == "fast" ]]; then
 		RELEASE_MODE="ReleaseFast"
-		ZIG_RELEASE_FLAG="--release=fast"
+		ZIG_RELEASE_FLAG+=("--release=fast")
+	else
+		RELEASE_MODE="ReleaseSafe"
+		ZIG_RELEASE_FLAG+=("--release=safe")
 	fi
 	ZIG_FLAGS+=("-O" "$RELEASE_MODE"
 		"-fno-PIC"
@@ -173,12 +174,12 @@ ZIG_LIB_NAME="kernel64"
 LIB_DIR="$KERNEL64"
 LIB_OUT_DIR="zig-out/lib"
 
-USE_ZIG_BUILD_SYSTEM=false
+USE_ZIG_BUILD_SYSTEM=true
 if [[ "$USE_ZIG_BUILD_SYSTEM" == "true" ]]; then
 	printf -- "\n\n=====Zig Build System method===\n"
 	# zig build --release=safe
-	zig build --release=fast
-	# zig build "$ZIG_RELEASE_FLAG" --verbose
+	# zig build --release=fast
+	zig build "${ZIG_RELEASE_FLAG[@]}" --verbose
 
 	objdump -D -h -M intel "$LIB_OUT_DIR/lib$ZIG_LIB_NAME.a" >"lib$ZIG_LIB_NAME"_sys.dump
 else
@@ -195,7 +196,7 @@ printf -- "\n\n====== Getting the '.o's and '.a's ========\n\n"
 # Library configuration
 LIBRARY_PATHS=(
 	# "$BUILD_DIR"
-	"zig-out/lib"
+	"$LIB_OUT_DIR"
 )
 
 LIBRARY_FILES=(
