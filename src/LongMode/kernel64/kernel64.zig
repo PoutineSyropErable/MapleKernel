@@ -14,10 +14,6 @@ const intrinsics = @import("intrinsics");
 // Optional: Also export a direct panic function
 pub const panic = std.debug.FullPanic(std_options.kernel_panic_handler);
 
-// Declare external C function for printing
-extern fn com1_putc(c: u8) void;
-extern fn com1_write_c(s: [*]const u8) void;
-
 // ========== .rodata SECTION (read-only data) ==========
 const rodata_string = "Hello from .rodata! This string is read-only.\n";
 const rodata_number: u32 = 0xDEADBEEF;
@@ -67,11 +63,14 @@ export fn kernel64_zig_main() noreturn {
     const value: i32 = file2.zig_add(5, 6);
     _ = value + 1;
 
-    com1_write_c("\n\n=============== Start of Long Mode Zig Kernel ======================\n\n");
-    com1_write_c("\nHello from zig\n");
-    const msg: []const u8 = "test other method\n";
-    com1_write_c(msg.ptr);
-    com1_write_c(data_string);
+    stdio.com1_write("\n\n=============== Start of Long Mode Zig Kernel ======================\n\n");
+    stdio.com1_write("\nHello from zig\n");
+    const msg: []const u8 = "test different ways to print (1: ptr, 2: regular)\n";
+    const msg_c: [*:0]const u8 = "test different ways to print\n";
+    stdio.com1_write_ptr(msg.ptr, msg.len);
+    stdio.com1_write(msg);
+    stdio.com1_write_c(msg_c);
+    stdio.com1_write(data_string);
 
     // runtime_fail();
 

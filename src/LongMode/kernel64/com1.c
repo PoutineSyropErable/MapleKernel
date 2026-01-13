@@ -41,7 +41,7 @@ void com1_putc(char c)
 	outb(COM1_PORT, c);
 }
 
-uint64_t com1_write_c(const char *str)
+uint64_t com1_write_c_MANGLED(const char *str)
 {
 	uint64_t i = 0;
 	while (str[i])
@@ -52,7 +52,7 @@ uint64_t com1_write_c(const char *str)
 	return i;
 }
 
-void com1_write_len_c(const char *str, size_t len)
+void com1_write_len_c_MANGLED(const char *str, size_t len)
 {
 	for (size_t i = 0; i < len; i++)
 	{
@@ -61,7 +61,7 @@ void com1_write_len_c(const char *str, size_t len)
 }
 
 #define COM1 0x3F8
-void serial_write_char(char c)
+void serial_write_char_MANGLED(char c)
 {
 
 	// Wait until the transmit buffer is empty
@@ -70,10 +70,10 @@ void serial_write_char(char c)
 	outb(COM1, c);
 }
 
-void serial_write_string(const char *str)
+void serial_write_string_MANGLED(const char *str)
 {
 	while (*str)
 	{
-		serial_write_char(*str++);
+		serial_write_char_MANGLED(*str++);
 	}
 }

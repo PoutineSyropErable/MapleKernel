@@ -86,7 +86,7 @@ pub fn com1_write_ptr(ptr: [*]const u8, len: usize) void {
     }
 }
 
-pub fn com1_write_c_string(cstr: [*:0]const u8) void {
+pub fn com1_write_c(cstr: [*:0]const u8) void {
     var i: usize = 0;
     while (cstr[i] != 0) : (i += 1) {
         com1_putchar(cstr[i]);

@@ -36,12 +36,12 @@ void kernel64_main()
 
 
 		const char x[] = "\n\n=============Hello from 64 bit================\n\n";
-		com1_write_c(x);
-		com1_write_c("Com1 write ro data\n");
+		com1_write_c_MANGLED(x);
+		com1_write_c_MANGLED("Com1 write ro data\n");
 
 		fill_screen(0x000000);
 
-		com1_write_c("Going to Zig! No More C\n");
+		com1_write_c_MANGLED("Going to Zig! No More C\n");
 
 		kernel64_zig_main();
 		
