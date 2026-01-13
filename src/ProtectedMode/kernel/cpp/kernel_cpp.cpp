@@ -4,10 +4,10 @@
 #include "kernel_cpp.hpp"
 #include "paging64.hpp"
 #include "stdio.h"
+#include "string_helper.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include "string_helper.h"
 
 // #include "framebuffer.h"
 #include "acpi.hpp"
@@ -257,7 +257,7 @@ int cpp_main(struct cpp_main_args args)
 		longmode_prep::test_paging();
 		void	*framebuffer_base_address = (void *)framebuffer::g_framebuffer.get_base_address();
 		uint32_t framebuffer_size		  = framebuffer::g_framebuffer.get_size();
-		
+
 		assert(framebuffer_size == 1920 * 1080 * 4, "Frame buffer must be proper size");
 
 		longmode_prep::vmap_addresses((uint32_t)framebuffer_base_address, FB_MMIO_BASE, framebuffer_size,
@@ -268,12 +268,12 @@ int cpp_main(struct cpp_main_args args)
 
 		// Jump to long mode
 
-		uint64_t entry_physical = (args.kernel64_address_information.entry_physical);
-		uint64_t entry_virtual = kernel64_size::VIRTUAL_BASE;
-		uint64_t rodata_start = kernel64_size::RODATA_START;
-		uint64_t hello_addr = rodata_start + 0x4;
+		uint64_t entry_physical		   = (args.kernel64_address_information.entry_physical);
+		uint64_t entry_virtual		   = kernel64_size::VIRTUAL_BASE;
+		uint64_t rodata_start		   = kernel64_size::RODATA_START;
+		uint64_t hello_addr			   = rodata_start + 0x4;
 		uint64_t rodata_start_physical = entry_physical + (rodata_start - entry_virtual);
-		char *s = (char *)rodata_start_physical + 0x4;
+		char	*s					   = (char *)rodata_start_physical + 0x4;
 		// kprintf("The message: |%s|, %h\n", s, s);
 		//
 		// char *ss = "Hello\n";

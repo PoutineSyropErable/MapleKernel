@@ -2,6 +2,11 @@
 
 set -eou pipefail
 
+DEBUG_OR_RELEASE="${1:-release}"
+QEMU_OR_REAL_MACHINE="${2:-qemu}"
+MACHINE_BITNESS="${3:-64}"
+MOVE_VNC="${4:-move}"
+
 # If you have qemu full
 QEMU_FULL=false
 # CONTROL + ALT + G to get the mouse back (GTK), default on my machine
@@ -9,6 +14,26 @@ QEMU_FULL=false
 
 MOV_WORKSPACE=12 # In hyprland, move it there
 MOV_PID_DIR="$HOME/.local/bin"
+
+if [[ "${1:-}" == "help" ]]; then
+	cat <<'EOF'
+Usage: ./build.sh [debug|release] [QEMU|REAL] [32|64] [move|nomove]
+
+Arguments:
+  debug|release|fast|debug-run 	Build mode. Defaults to release if omitted. fast is a type of release. debug-run, doesn't wait for attach
+  qemu|real           	        Whether to run in QEMU or on a real machine. Defaults to QEMU.
+
+Examples:
+  ./build.sh debug QEMU
+  ./build.sh release REAL
+
+Notes:
+  - debug enables -g and -DDEBUG flags
+  - QEMU_OR_REAL_MACHINE chooses whether to start QEMU, and add -QEMU flags
+
+EOF
+	exit 0
+fi
 
 function find_git_root() {
 	local dir=${1:-$PWD} # start from given dir or current directory
@@ -31,15 +56,14 @@ cd "$src" || { # Tries to cd to "src" relative to current dir
 mkdir -p "$MOV_PID_DIR" && { [[ -e "$MOV_PID_DIR/move_pid_to_workspace" ]] || ln -s "$project_root/src/user_tools/move_pid_to_workspace.py" "$MOV_PID_DIR/move_pid_to_workspace"; }
 # this script might not work on something else, heh, who cares. Make your own or move it yourself
 
-DEBUG_OR_RELEASE="${1:-release}"
-QEMU_OR_REAL_MACHINE="${2:-qemu}"
-MACHINE_BITNESS="${3:-64}"
-MOVE_VNC="${4:-move}"
-
 QEMU_DBG_FLAGS=()
 if [[ "$DEBUG_OR_RELEASE" == "debug" ]]; then
 	echo "Debug mode enabled"
 	QEMU_DBG_FLAGS+=("-s" "-S")
+fi
+
+if [[ "$DEBUG_OR_RELEASE" == "debug-run" ]]; then
+	DEBUG_OR_RELEASE="debug"
 fi
 
 BUILD32_DIR="../build32"

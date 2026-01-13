@@ -22,6 +22,12 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    const string_module = b.createModule(.{
+        .root_source_file = b.path("stdlib/string.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     const intrinsics_modules = b.createModule(.{
         .root_source_file = b.path("stdlib/intrinsics.zig"),
         .target = target,
@@ -43,27 +49,10 @@ pub fn build(b: *std.Build) void {
         .linkage = .static,
     });
 
-    // Add include directories (For C/Cpp headers only)
-    kernel_lib.root_module.addIncludePath(b.path("../ProtectedMode/LongModePrep/"));
-
-    // Add single C file (Not needed)
-    const add_c_file: bool = false;
-    if (add_c_file) {
-        kernel_lib.root_module.addCSourceFile(.{
-            .file = b.path("kernel64/com1.c"),
-            .flags = &.{
-                "-std=gnu23",
-                "-ffreestanding",
-                "-mcmodel=kernel",
-                "-mno-red-zone",
-                "-fno-stack-protector",
-            },
-        });
-    }
-
     // Add the modules
     entire_kernel_module.addImport("stdio", stdio_module);
     stdio_module.addImport("intrinsics", intrinsics_modules);
+    stdio_module.addImport("string", string_module);
 
     // Add Zig-specific flags for kernel
     // kernel_lib.root_module.omit_frame_pointer = false;
@@ -82,6 +71,24 @@ pub fn build(b: *std.Build) void {
     kernel_lib.root_module.code_model = .kernel;
     kernel_lib.root_module.link_libc = false;
     kernel_lib.root_module.link_libcpp = false;
+
+    // Add include directories (For C/Cpp headers only)
+    kernel_lib.root_module.addIncludePath(b.path("../ProtectedMode/LongModePrep/"));
+
+    // Add single C file (Not needed)
+    const add_c_file: bool = false;
+    if (add_c_file) {
+        kernel_lib.root_module.addCSourceFile(.{
+            .file = b.path("kernel64/com1.c"),
+            .flags = &.{
+                "-std=gnu23",
+                "-ffreestanding",
+                "-mcmodel=kernel",
+                "-mno-red-zone",
+                "-fno-stack-protector",
+            },
+        });
+    }
 
     // Optional: Add assembly files
 

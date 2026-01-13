@@ -77,10 +77,16 @@ export fn kernel64_zig_main() noreturn {
     stdio.com1_write("Zig write bytes\n");
     stdio.com1_write("Another so its not inlined\n");
 
+    stdio.print_int(46);
+    stdio.string_writter("\n");
+
+    stdio.print_two_numbers(12345, 7890);
+
     std_options.kernel_log(.debug,
         // .default,
         "Some Panic Msg\n", .{});
     std_options.kernel_panic_handler("End of kernel\n", null);
+
     // Never return
     while (true) {
         // asm volatile ("mov rax, 15");

@@ -1,10 +1,7 @@
+# .clangd - Configuration for clangd language server
 CompileFlags:
   Add:
-    # Target and architecture
-    - --target=i686-elf
-    - -m32
-
-    # Freestanding / kernel-specific
+    # Common flags for all kernel code
     - -ffreestanding
     - -nostdlib
     - -fno-exceptions
@@ -15,7 +12,16 @@ CompileFlags:
     - -fno-stack-protector
     - -fno-common
 
-    # Include directories (match your build script)
+# ============ Protected Mode Configuration ============
+If:
+  PathMatch: ^ProtectedMode/.*
+CompileFlags:
+  Add:
+    # Protected mode specific
+    - --target=i686-elf
+    - -m32
+    - -march=i686
+    # Protected mode include directories
     - -IProtectedMode/kernel
     - -IProtectedMode/real16_wrappers
     - -IProtectedMode/realmode_functions
@@ -25,7 +31,6 @@ CompileFlags:
     - -IProtectedMode/stdlib
     - -IProtectedMode/other
     - -IProtectedMode/runtime_code_analysis
-
     - -IProtectedMode/cpu/
     - -IProtectedMode/cpu/multicore
     - -IProtectedMode/cpu/fpu
@@ -35,62 +40,108 @@ CompileFlags:
     - -IProtectedMode/cpu/idt
     - -IProtectedMode/cpu/pic
     - -IProtectedMode/cpu/apic
-
-
     - -IProtectedMode/drivers/ps2/
     - -IProtectedMode/drivers/ps2/controller
     - -IProtectedMode/drivers/ps2/mouse
     - -IProtectedMode/drivers/ps2/keyboard
     - -IProtectedMode/drivers/ps2/keyboard/cpp
     - -IProtectedMode/drivers/usb/controller
-
     - -IProtectedMode/z_otherLang/cpp/
     - -IProtectedMode/z_otherLang/zig/
     - -IProtectedMode/z_otherLang/rust/
-# C files (default standard)
+
+# ============ Long Mode Configuration ============
 If:
-  PathMatch: ".*\\.c$"
+  PathMatch: ^LongMode/.*
+CompileFlags:
+  Add:
+    # Long mode specific (64-bit)
+    - --target=x86_64-elf
+    - -m64
+    - -march=x86-64
+    - -mcmodel=kernel
+    - -mno-red-zone
+    - -fno-pie
+    # Long mode include directories
+    - -ILongMode/kernel64
+    - -ILongMode/stdio
+    - -ILongMode/LongModePrep
+    - -ILongMode/../ProtectedMode/LongModePrep
+
+# ============ File Type Specific Overrides ============
+
+# C files
+If:
+  PathMatch: .*\.c$
 CompileFlags:
   Add:
     - -std=gnu23
 
-
+# C headers
 If:
-  PathMatch: ".*\\.h$"
+  PathMatch: .*\.h$
 CompileFlags:
   Add:
     - -std=gnu23
 
-# Override flags for C++ files
+# C++ files
 If:
-  PathMatch: ".*\\.cpp$"
+  PathMatch: .*\.cpp$
 CompileFlags:
   Add:
     - -std=gnu++23
     - -fno-exceptions
     - -fno-rtti
 
-
+# C++ modules
 If:
-  PathMatch: ".*\\.cppm$"
+  PathMatch: .*\.cppm$
 CompileFlags:
   Add:
     - -std=c++23
-    - -I.
     - -fno-exceptions
     - -fno-rtti
-    - -fprebuilt-module-path=./build
 
-
-# Optional per-file overrides for 16-bit realmode code
+# Realmode 16-bit code (protected mode only)
 If:
-  PathMatch: "realmode_functions/.*\\.c"
+  And:
+    - PathMatch: ^ProtectedMode/realmode_functions/.*\.c$
+    - PathMatch: ^ProtectedMode/.*
 CompileFlags:
   Add:
     - -std=gnu99
+    - -m16
+
+# Zig files (clangd may not understand these, but we can set flags)
+If:
+  PathMatch: .*\.zig$
+CompileFlags:
+  Add:
+    # Zig uses its own compiler, but we can set C-compatible flags
+    - -x
+    - zig
+
+# ============ Additional Directory Specific Rules ============
 
 
 
+
+# ============ General Settings ============
 Hover:
   ShowAKA: Yes
   Expand: Yes
+
+Diagnostics:
+  ClangTidy:
+    Add:
+      - bugprone-*
+      - performance-*
+      - portability-*
+      - readability-*
+      - modernize-*
+
+Index:
+  Background: Skip
+
+Completion:
+  Smart: True

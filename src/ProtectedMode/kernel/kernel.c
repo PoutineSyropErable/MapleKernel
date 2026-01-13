@@ -44,7 +44,9 @@ uint32_t round_up_div(uint32_t top, uint32_t bot)
 {
 	uint32_t ret = top / bot;
 	if (top % bot != 0)
+	{
 		ret++;
+	}
 	return ret;
 }
 
@@ -112,14 +114,14 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 	print_activated_fpu_features(fpu_activated_features);
 	if (fpu_activated_features.fpu)
 	{
-		float a	  = 23.1;
-		float b	  = 42.6;
-		float res = fpu_add(a, b);
+		const float a	= 23.1F;
+		const float b	= 42.6F;
+		float		res = fpu_add(a, b);
 		kprintf("result of fpu addition: (%f + %f) = %f\n", a, b, res);
 	}
 
 	kprintf("multiboot2 information addr = %h, magic = %h, is_proper_multiboot_32 = %u\n", mb2_info_addr, magic, is_proper_multiboot_32);
-	bool is_proper_multiboot = is_proper_multiboot_32;
+	bool is_proper_multiboot = is_proper_multiboot_32 != 0U;
 	if (is_proper_multiboot)
 	{
 		kprintf("It's proper multiboot\n");
@@ -133,11 +135,11 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 // #ifndef DEBUG
 
 // #	define BIOS_FRAMEBUFFER_HACK
-#	ifdef GRUB_FRAMEBUFFER
+#ifdef GRUB_FRAMEBUFFER
 	struct framebuffer_info_t grub_fb_info = get_framebuffer(mb2_info_addr);
 
 	uint8_t bpp	 = grub_fb_info.bit_per_pixel;
-	bool	type = grub_fb_info.type;
+	bool	type = grub_fb_info.type != 0U;
 
 	kprintf("\n\n\n");
 	kprintf("FB addr: %h %h, pitch=%u, w=%u, h=%u, bpp=%u, type=%u\n", grub_fb_info.base_addr_high, grub_fb_info.base_addr_low,
@@ -149,11 +151,11 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 	uint32_t				 width		  = grub_fb_info.width;
 	uint32_t				 height		  = grub_fb_info.height;
 	uint32_t				 pitch		  = grub_fb_info.pitch;
-	volatile struct color_t *base_address = (struct color_t *)grub_fb_info.base_addr_low;
+	volatile struct color_t *base_address = (struct color_t *)(uintptr_t)grub_fb_info.base_addr_low;
 
 	do_test_c(base_address, width, height, pitch);
 
-#	elifdef BIOS_FRAMEBUFFER_HACK
+#elifdef BIOS_FRAMEBUFFER_HACK
 	kprintf("in elif\n\n\n");
 	uint32_t				 width		  = 1024;
 	uint32_t				 height		  = 768;
@@ -163,14 +165,14 @@ void kernel_main(uint32_t mb2_info_addr, uint32_t magic, uint32_t is_proper_mult
 	uint16_t result = call_real_mode_function(add16_ref, width, height); // argc automatically calculated
 	print_args16(&args16_start);
 
-#		define VIS_TEST
-#		ifdef VIS_TEST
+#	define VIS_TEST
+#	ifdef VIS_TEST
 	do_test_c(base_address, width, height, pitch);
-#		endif
-
 #	endif
 
-// #endif // DEBUG
+#endif
+
+	// #endif // DEBUG
 
 #define GET_RSDP
 #ifdef GET_RSDP
