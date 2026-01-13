@@ -173,6 +173,9 @@ printf -- "\n\n====== Compiling the Zig library ========\n\n"
 ZIG_LIB_NAME="kernel64"
 LIB_DIR="$KERNEL64"
 LIB_OUT_DIR="zig-out/lib"
+DUMP_DIR="./dumps"
+
+mkdir -p "$DUMP_DIR"
 
 USE_ZIG_BUILD_SYSTEM=true
 if [[ "$USE_ZIG_BUILD_SYSTEM" == "true" ]]; then
@@ -181,13 +184,13 @@ if [[ "$USE_ZIG_BUILD_SYSTEM" == "true" ]]; then
 	# zig build --release=fast
 	zig build "${ZIG_RELEASE_FLAG[@]}" --verbose
 
-	objdump -D -h -M intel "$LIB_OUT_DIR/lib$ZIG_LIB_NAME.a" >"lib$ZIG_LIB_NAME"_sys.dump
+	objdump -D -h -M intel "$LIB_OUT_DIR/lib$ZIG_LIB_NAME.a" >"$DUMP_DIR/lib$ZIG_LIB_NAME"_sys.dump
 else
 	printf -- "\n\n=====CLI method===\n"
 	mkdir -p "$LIB_OUT_DIR"
 	echo zig build-lib "$LIB_DIR/$ZIG_LIB_NAME.zig" -static "${ZIG_FLAGS[@]}" -femit-bin="$LIB_OUT_DIR/lib$ZIG_LIB_NAME.a"
 	zig build-lib "$LIB_DIR/$ZIG_LIB_NAME.zig" -static "${ZIG_FLAGS[@]}" -femit-bin="$LIB_OUT_DIR/lib$ZIG_LIB_NAME.a"
-	objdump -D -h -M intel "$LIB_OUT_DIR/lib$ZIG_LIB_NAME.a" >"lib$ZIG_LIB_NAME"_bash.dump
+	objdump -D -h -M intel "$LIB_OUT_DIR/lib$ZIG_LIB_NAME.a" >"$DUMP_DIR/lib$ZIG_LIB_NAME"_bash.dump
 fi
 
 # This single line can do a lot of work. Since it will build the whole thing
