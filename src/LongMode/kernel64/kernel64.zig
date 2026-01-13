@@ -62,11 +62,12 @@ export fn kernel64_zig_main() noreturn {
     // _ = value + 1;
 
     // std_options.kernel_panic_handler("End of kernel\n", null);
-    // std_options.kernel_log(.err, .default, "Panic", .{});
+    std_options.kernel_log(.err, .default, "Some Panic Msg\n", .{});
 
     // com1_write("Hello from zig\n");
     const msg: []const u8 = "test other method\n";
     com1_write(msg.ptr);
+    com1_write(data_string);
     // com1_putc(msg.ptr[0]);
 
     // Never return

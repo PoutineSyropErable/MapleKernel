@@ -24,7 +24,6 @@ pub fn kernel_log(
     args: anytype,
 ) void {
     // Write to COM1 serial port
-    const COM1 = 0x3F8;
 
     // Prefix with log level
     const prefix = switch (level) {
@@ -35,13 +34,14 @@ pub fn kernel_log(
     };
 
     // Simple serial write (no formatting for now)
-    for (prefix) |c| {
-        while ((@as(*volatile u8, @ptrFromInt(COM1 + 5)).* & 0x20) == 0) {}
-        @as(*volatile u8, @ptrFromInt(COM1)).* = c;
-    }
+    com1_write(prefix);
+    // const runtime_str: [*]const u8 = format;
+    // com1_write(format);
+    com1_write(format.ptr);
 
+    // _ = runtime_str;
     // Could implement simple formatting here
-    _ = format;
+    // _ = format;
     _ = args;
     _ = scope;
 }

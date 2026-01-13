@@ -14,16 +14,16 @@ namespace kernel64_size
 {
 
 /* Module size & page count */
-constexpr uint64_t MODULE_SIZE = 0x0000000000018000;
+constexpr uint64_t MODULE_SIZE = 0x0000000000017000;
 constexpr uint64_t PAGE_COUNT  = (MODULE_SIZE + 0xFFF) / 0x1000;
 STATIC_ASSERT(PAGE_COUNT < 0xFFFF'FFFF, "Page count must fit in a uint32_t number\n");
 
 /* Base addresses */
 constexpr uint64_t VIRTUAL_BASE		  = 0xffffffff80000000;
-constexpr uint64_t KERNEL64_MAIN_ADDR = 0xffffffff800003f0;
+constexpr uint64_t KERNEL64_MAIN_ADDR = 0xffffffff80000360;
 
 /* Module end */
-constexpr uint64_t MODULE_END = 0xffffffff80018000;
+constexpr uint64_t MODULE_END = 0xffffffff80017000;
 
 /* Text section */
 constexpr uint64_t TEXT_START = 0xffffffff80000000;
@@ -47,42 +47,42 @@ constexpr uint64_t RODATA_GUARD_SIZE  = RODATA_GUARD_END - RODATA_GUARD_START;
 
 /* Data section */
 constexpr uint64_t DATA_START = 0xffffffff80002000;
-constexpr uint64_t DATA_END	  = 0xffffffff80003000;
+constexpr uint64_t DATA_END	  = 0xffffffff80002000;
 constexpr uint64_t DATA_SIZE  = DATA_END - DATA_START;
 
 /* Data guard page */
-constexpr uint64_t DATA_GUARD_START = 0xffffffff80003000;
-constexpr uint64_t DATA_GUARD_END	= 0xffffffff80003000;
+constexpr uint64_t DATA_GUARD_START = 0xffffffff80002000;
+constexpr uint64_t DATA_GUARD_END	= 0xffffffff80002000;
 constexpr uint64_t DATA_GUARD_SIZE	= DATA_GUARD_END - DATA_GUARD_START;
 
 /* BSS section */
-constexpr uint64_t BSS_START = 0xffffffff80003000;
-constexpr uint64_t BSS_END	 = 0xffffffff80003010;
+constexpr uint64_t BSS_START = 0xffffffff80002000;
+constexpr uint64_t BSS_END	 = 0xffffffff80002010;
 constexpr uint64_t BSS_SIZE	 = BSS_END - BSS_START;
 
 /* BSS guard page */
-constexpr uint64_t BSS_GUARD_START = 0xffffffff80004000;
-constexpr uint64_t BSS_GUARD_END   = 0xffffffff80004000;
+constexpr uint64_t BSS_GUARD_START = 0xffffffff80003000;
+constexpr uint64_t BSS_GUARD_END   = 0xffffffff80003000;
 constexpr uint64_t BSS_GUARD_SIZE  = BSS_GUARD_END - BSS_GUARD_START;
 
 /* Stack section */
-constexpr uint64_t STACK_BOTTOM = 0xffffffff80004000;
-constexpr uint64_t STACK_TOP	= 0xffffffff80008000;
+constexpr uint64_t STACK_BOTTOM = 0xffffffff80003000;
+constexpr uint64_t STACK_TOP	= 0xffffffff80007000;
 constexpr uint64_t STACK_SIZE	= STACK_TOP - STACK_BOTTOM;
 
 /* Stack guard page */
-constexpr uint64_t STACK_GUARD_START = 0xffffffff80008000;
-constexpr uint64_t STACK_GUARD_END	 = 0xffffffff80008000;
+constexpr uint64_t STACK_GUARD_START = 0xffffffff80007000;
+constexpr uint64_t STACK_GUARD_END	 = 0xffffffff80007000;
 constexpr uint64_t STACK_GUARD_SIZE	 = STACK_GUARD_END - STACK_GUARD_START;
 
 /* Heap section */
-constexpr uint64_t HEAP_START = 0xffffffff80008000;
-constexpr uint64_t HEAP_END	  = 0xffffffff80018000;
+constexpr uint64_t HEAP_START = 0xffffffff80007000;
+constexpr uint64_t HEAP_END	  = 0xffffffff80017000;
 constexpr uint64_t HEAP_SIZE  = HEAP_END - HEAP_START;
 
 /* Heap guard page */
-constexpr uint64_t HEAP_GUARD_START = 0xffffffff80018000;
-constexpr uint64_t HEAP_GUARD_END	= 0xffffffff80018000;
+constexpr uint64_t HEAP_GUARD_START = 0xffffffff80017000;
+constexpr uint64_t HEAP_GUARD_END	= 0xffffffff80017000;
 constexpr uint64_t HEAP_GUARD_SIZE	= HEAP_GUARD_END - HEAP_GUARD_START;
 
 /* Total guard pages */
