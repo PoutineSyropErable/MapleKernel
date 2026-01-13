@@ -3,11 +3,6 @@
 set -eou pipefail
 shopt -s nullglob
 
-# If you have qemu full
-QEMU_FULL=true
-# CONTROL + ALT + G to get the mouse back (GTK), default on my machine
-# or CTRL+ALT (SDL)
-
 DEBUG_OR_RELEASE="${1:-release}"
 QEMU_OR_REAL_MACHINE="${2:-qemu}"
 
@@ -17,8 +12,8 @@ if [[ "${1:-}" == "help" ]]; then
 Usage: ./build.sh [debug|release] [QEMU|REAL] [32|64] [move|nomove]
 
 Arguments:
-  debug|release|fast       Build mode. Defaults to release if omitted.
-  qemu|real           Whether to run in QEMU or on a real machine. Defaults to QEMU.
+  debug|release|fast 	Build mode. Defaults to release if omitted.
+  qemu|real           	Whether to run in QEMU or on a real machine. Defaults to QEMU.
 
 Examples:
   ./build.sh debug QEMU
@@ -30,14 +25,6 @@ Notes:
 
 EOF
 	exit 0
-fi
-
-# use my custom gcc and g++:
-if true; then
-	PATH="$HOME/cross-gcc/install-ia16-elf/bin:$PATH"
-	PATH="$HOME/cross-gcc/install-i686-elf/bin:$PATH"
-	PATH="$HOME/cross-gcc/install-x86_64-elf/bin:$PATH"
-	export PATH
 fi
 
 function find_git_root() {
@@ -102,10 +89,6 @@ ZIG_C_LD_FLAGS=(
 	"-flto"
 )
 
-ZIG_LIB_LD_FLAGS=(
-	"-static"
-)
-
 # Being generous with the cppflag
 NASM_FLAGS64=("-f" "elf64")
 
@@ -114,6 +97,8 @@ NO_FPU_FLAGS=("-mno-sse" "-mno-sse2" "-mno-sse3" "-mno-sse4" "-mno-avx")
 
 DEBUG_OPT_LVL="-O0"
 RELEASE_OPT_LVL="-O3"
+
+ZIG_RELEASE_FLAG=""
 
 if [[ "$DEBUG_OR_RELEASE" == "debug" ]]; then
 	echo "Debug mode enabled"
@@ -127,6 +112,8 @@ if [[ "$DEBUG_OR_RELEASE" == "debug" ]]; then
 	ZIG_C_LD_FLAGS+=("-g"
 		"-fPIC"
 	)
+	ZIG_RELEASE_FLAG=""
+	# default is debug
 
 else
 	echo "In normal mode, $RELEASE_OPT_LVL optimisation"
@@ -137,8 +124,10 @@ else
 	)
 
 	RELEASE_MODE="ReleaseSafe"
+	ZIG_RELEASE_FLAG="--release=safe"
 	if [[ "$DEBUG_OR_RELEASE" == "fast" ]]; then
 		RELEASE_MODE="ReleaseFast"
+		ZIG_RELEASE_FLAG="--release=fast"
 	fi
 	ZIG_FLAGS+=("-O" "$RELEASE_MODE"
 		"-fno-PIC"
@@ -171,7 +160,7 @@ nasm "${NASM_FLAGS64[@]}" "$KERNEL64/kernel64_boot.asm" -o "$BUILD_DIR/kernel64_
 nasm "${NASM_FLAGS64[@]}" "$KERNEL64/guards.asm" -o "$BUILD_DIR/guard_pages.o"
 
 printf -- "\n\n====== Compiling the Entry C code ========\n\n"
-$ZIG_CC "${ZIG_C_FLAGS[@]}" -c "$KERNEL64/kernel_64.c" -o "$BUILD_DIR/kernel_64.o" "-I$LONG_MODE_PREP32"
+$ZIG_CC "${ZIG_C_FLAGS[@]}" -c "$KERNEL64/kernel_64.c" -o "$BUILD_DIR/c_kernel_64.o" "-I$LONG_MODE_PREP32"
 $ZIG_CC "${ZIG_C_FLAGS[@]}" -c "$KERNEL64/com1.c" -o "$BUILD_DIR/com1.o"
 $ZIG_CC "${ZIG_C_FLAGS[@]}" -c "$KERNEL64/dummy_kernel.c" -o "$BUILD_DIR/dummy_kernel.o"
 
@@ -182,9 +171,24 @@ $ZIG_CC "${ZIG_C_FLAGS[@]}" -c "$KERNEL64/dummy_kernel.c" -o "$BUILD_DIR/dummy_k
 printf -- "\n\n====== Compiling the Zig library ========\n\n"
 ZIG_LIB_NAME="kernel64"
 LIB_DIR="$KERNEL64"
-# zig build-lib "$LIB_DIR/$ZIG_LIB_NAME.zig" "${ZIG_LIB_LD_FLAGS[@]}" "${ZIG_FLAGS[@]}" -femit-bin="$BUILD_DIR/lib$ZIG_LIB_NAME.a"
+LIB_OUT_DIR="zig-out/lib"
 
-zig build
+USE_ZIG_BUILD_SYSTEM=true
+if [[ "$USE_ZIG_BUILD_SYSTEM" == "true" ]]; then
+	printf -- "\n\n=====Zig Build System method===\n"
+	# zig build --release=safe
+	zig build --release=fast
+	# zig build "$ZIG_RELEASE_FLAG" --verbose
+
+	objdump -D -h -M intel "$LIB_OUT_DIR/lib$ZIG_LIB_NAME.a" >"lib$ZIG_LIB_NAME"_sys.dump
+
+else
+	printf -- "\n\n=====CLI method===\n"
+	mkdir -p "$LIB_OUT_DIR"
+	echo zig build-lib "$LIB_DIR/$ZIG_LIB_NAME.zig" -static "${ZIG_FLAGS[@]}" -femit-bin="$LIB_OUT_DIR/lib$ZIG_LIB_NAME.a"
+	zig build-lib "$LIB_DIR/$ZIG_LIB_NAME.zig" -static "${ZIG_FLAGS[@]}" -femit-bin="$LIB_OUT_DIR/lib$ZIG_LIB_NAME.a"
+	objdump -D -h -M intel "$LIB_OUT_DIR/lib$ZIG_LIB_NAME.a" >"lib$ZIG_LIB_NAME"_bash.dump
+fi
 
 # This single line can do a lot of work. Since it will build the whole thing
 
@@ -192,7 +196,7 @@ printf -- "\n\n====== Getting the '.o's and '.a's ========\n\n"
 # Library configuration
 LIBRARY_PATHS=(
 	"$BUILD_DIR"
-	"zig-out/lib"
+	"$LIB_OUT_DIR"
 )
 
 LIBRARY_FILES=(
@@ -217,8 +221,9 @@ $ZIG_CC \
 	-T "linker_64.ld" \
 	-o "$BUILD_DIR/kernel64.elf" \
 	"${ZIG_C_LD_FLAGS[@]}" \
-	"${BUILD_OBJECTS[@]}" \
-	"${LIBRARY_ARGS[@]}" \
+	"${BUILD_OBJECTS[@]}"
+
+"${LIBRARY_ARGS[@]}" \
 	-v
 
 objdump -D -h -M intel "$BUILD_DIR/kernel64.elf" >"$BUILD_DIR/kernel64.dump"

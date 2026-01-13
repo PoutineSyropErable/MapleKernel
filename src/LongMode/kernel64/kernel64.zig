@@ -70,7 +70,7 @@ export fn kernel64_zig_main() noreturn {
     const msg: []const u8 = "test other method\n";
     com1_write(msg.ptr);
     com1_write(data_string);
-    // com1_putc(msg.ptr[0]);
+    com1_putc(msg.ptr[0]);
 
     // stdio.some_stdio_function();
 

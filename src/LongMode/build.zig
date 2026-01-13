@@ -6,21 +6,23 @@ pub fn build(b: *std.Build) void {
         .default_target = .{
             .cpu_arch = .x86_64,
             .os_tag = .freestanding,
-            .abi = .none,
+            // .abi = .none,
         },
     });
 
-    const optimize = b.standardOptimizeOption(.{
-        .preferred_optimize_mode = .ReleaseSafe,
-    });
+    // const optimize = b.standardOptimizeOption(.{
+    //     .preferred_optimize_mode = .ReleaseSafe,
+    // });
+
+    const optimize = .ReleaseSafe;
 
     // ======================= Specific modules
 
-    const stdio_module = b.createModule(.{
-        .root_source_file = b.path("stdio/stdio.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
+    // const stdio_module = b.createModule(.{
+    //     .root_source_file = b.path("stdio/stdio.zig"),
+    //     .target = target,
+    //     .optimize = optimize,
+    // });
 
     // ======================= The Full kernel
 
@@ -28,9 +30,8 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("kernel64/kernel64.zig"), // Source file
         .target = target,
         .optimize = optimize,
+        // .pic = false,
     });
-
-    entire_kernel_module.addImport("stdio", stdio_module);
 
     // Create the kernel library (static archive)
     const kernel_lib = b.addLibrary(.{
@@ -41,13 +42,6 @@ pub fn build(b: *std.Build) void {
 
     // Add include directories (For C/Cpp headers only)
     kernel_lib.root_module.addIncludePath(b.path("../ProtectedMode/LongModePrep/"));
-    // The ones bellow aren't really useful
-    kernel_lib.root_module.addIncludePath(b.path("."));
-    kernel_lib.root_module.addIncludePath(b.path("kernel64"));
-    kernel_lib.root_module.addIncludePath(b.path("stdio"));
-
-    // kernel_lib.addAssemblyFile(b.path("kernel64/kernel64_boot.asm"));
-    // kernel_lib.addAssemblyFile(b.path("kernel64/guards.asm"));
 
     // Add single C file (Not needed)
     const add_c_file: bool = false;
@@ -64,20 +58,28 @@ pub fn build(b: *std.Build) void {
         });
     }
 
+    // Add the modules
+    // entire_kernel_module.addImport("stdio", stdio_module);
+    // _ = stdio_module;
+
     // Add Zig-specific flags for kernel
-    kernel_lib.root_module.omit_frame_pointer = false;
+    // kernel_lib.root_module.omit_frame_pointer = false;
     kernel_lib.pie = false;
-    // kernel_lib.red_zone = false;
-    // kernel_lib.stack_check = false;
-    // kernel_lib.stack_protector = false;
+    kernel_lib.root_module.pic = false;
+    // kernel_lib.root_module.red_zone = false;
+    kernel_lib.root_module.stack_check = false;
+    kernel_lib.root_module.stack_protector = false;
+    kernel_lib.root_module.code_model = .kernel;
+    // kernel_lib.lto = .full;
+    kernel_lib.root_module.link_libc = false;
+    kernel_lib.root_module.link_libcpp = false;
 
     // Optional: Add assembly files
 
     // Set output directory to match your bash script
     const build_dir_path_str = "../../build64";
-    const build_dir = b.path("build64");
+    const build_dir = b.path(build_dir_path_str);
     _ = build_dir;
-    _ = build_dir_path_str;
     // kernel_lib.setOutputDir(b.pathFromRoot(build_dir_path_str));
 
     // Install the library to the build directory
