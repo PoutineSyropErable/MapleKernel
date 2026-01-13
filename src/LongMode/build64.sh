@@ -17,7 +17,7 @@ if [[ "${1:-}" == "help" ]]; then
 Usage: ./build.sh [debug|release] [QEMU|REAL] [32|64] [move|nomove]
 
 Arguments:
-  debug|release       Build mode. Defaults to release if omitted.
+  debug|release|fast       Build mode. Defaults to release if omitted.
   qemu|real           Whether to run in QEMU or on a real machine. Defaults to QEMU.
 
 Examples:
@@ -135,7 +135,12 @@ else
 		"-fno-PIC"
 		"-fno-PIE"
 	)
-	ZIG_FLAGS+=("-O" "ReleaseSafe"
+
+	RELEASE_MODE="ReleaseSafe"
+	if [[ "$DEBUG_OR_RELEASE" == "fast" ]]; then
+		RELEASE_MODE="ReleaseFast"
+	fi
+	ZIG_FLAGS+=("-O" "$RELEASE_MODE"
 		"-fno-PIC"
 		"-fno-PIE"
 	)
