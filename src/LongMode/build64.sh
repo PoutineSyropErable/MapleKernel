@@ -63,6 +63,7 @@ cd "$src" || { # Tries to cd to "src" relative to current dir
 BUILD_DIR="../../build64"
 ISO_DIR="../../isodir"
 
+rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
 ZIG_CC="zig cc -target x86_64-freestanding"
@@ -71,34 +72,32 @@ ZIG_FLAGS=(
 	"-target" "x86_64-freestanding"
 	"-fno-stack-protector" # No stack protection
 	"-fno-stack-check"     # No stack checking
-	"-mcmodel=large"
+	"-mcmodel=kernel"
 	# "-fPIC"
-	# "-fno-PIC" # Add this!
-	# "-fno-PIE" # Add this!
+	"-fno-PIC" # Add this!
+	"-fno-PIE" # Add this!
 )
 
 ZIG_C_FLAGS=(
 	"-std=gnu23"
 	"-ffreestanding"
-	"-mcmodel=large"
+	"-mcmodel=kernel"
 	"-mno-red-zone"           # Critical f
 	"-fno-sanitize=undefined" # Disable UBSan
-	# "-fno-PIC"                # Add this
-	# "-fno-PIE"                # And this
+	"-fno-PIC"                # Add this
+	"-fno-PIE"                # And this
 )
 
 ZIG_C_LD_FLAGS=(
 	"-nostdlib"
 	"-ffreestanding"
-	"-no-pie" # Kernel shouldn't be PIE
 	"-Wl,-z,max-page-size=0x1000"
 	"-Wl,--gc-sections"
 	"-Wl,--no-eh-frame-hdr"
-	"-no-pie"
 	"-Wl,--entry=kernel64_start"          # <-- Tell linker about entry point
 	"-Wl,--image-base=0xFFFFFFFF80000000" # MATCH your linker script!
-	# "-fno-PIC"
-	# "-fno-PIE"
+	"-Wl,-no-pie"
+	"-flto"
 )
 
 ZIG_LIB_LD_FLAGS=(
@@ -137,8 +136,6 @@ fi
 KERNEL64="./kernel64"
 LONG_MODE_PREP32="../ProtectedMode/LongModePrep/"
 
-rm -f "$BUILD_DIR/*.o"
-
 printf -- "\n\n====== Assembly the Boot/Entry asm (And the guard pages) ========\n\n"
 nasm "${NASM_FLAGS64[@]}" "$KERNEL64/kernel64_boot.asm" -o "$BUILD_DIR/kernel64_boot.o"
 nasm "${NASM_FLAGS64[@]}" "$KERNEL64/guards.asm" -o "$BUILD_DIR/guard_pages.o"
@@ -148,9 +145,14 @@ $ZIG_CC "${ZIG_C_FLAGS[@]}" -c "$KERNEL64/kernel_64.c" -o "$BUILD_DIR/kernel_64.
 $ZIG_CC "${ZIG_C_FLAGS[@]}" -c "$KERNEL64/com1.c" -o "$BUILD_DIR/com1.o"
 $ZIG_CC "${ZIG_C_FLAGS[@]}" -c "$KERNEL64/dummy_kernel.c" -o "$BUILD_DIR/dummy_kernel.o"
 
+# $ZIG_CC "${ZIG_C_FLAGS[@]}" -c "$KERNEL64/kernel64.zig" -o "$BUILD_DIR/kernel64_zig.o"
+# $ZIG_CC "${ZIG_C_FLAGS[@]}" -c "$KERNEL64/std_options.zig" -o "$BUILD_DIR/std_options.o"
+# $ZIG_CC "${ZIG_C_FLAGS[@]}" -c "$KERNEL64/file2.zig" -o "$BUILD_DIR/file2.o"
+
 printf -- "\n\n====== Compiling the Zig library ========\n\n"
 ZIG_LIB_NAME="kernel64"
 zig build-lib "$KERNEL64/$ZIG_LIB_NAME.zig" "${ZIG_LIB_LD_FLAGS[@]}" "${ZIG_FLAGS[@]}" -femit-bin="$BUILD_DIR/lib$ZIG_LIB_NAME.a"
+
 # This single line can do a lot of work. Since it will build the whole thing
 
 printf -- "\n\n====== Getting the '.o's and '.a's ========\n\n"

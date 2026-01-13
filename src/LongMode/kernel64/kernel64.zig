@@ -58,13 +58,16 @@ export fn kernel64_zig_main() noreturn {
 
     // Setup your kernel...
 
-    const value: i32 = file2.zig_add(5, 6);
-    _ = value + 1;
+    // const value: i32 = file2.zig_add(5, 6);
+    // _ = value + 1;
 
-    const val = "abc\n";
-    com1_write("Hello from zig\n");
+    // std_options.kernel_panic_handler("End of kernel\n", null);
+    // std_options.kernel_log(.err, .default, "Panic", .{});
 
-    _ = val;
+    // com1_write("Hello from zig\n");
+    const msg: []const u8 = "test other method\n";
+    com1_write(msg.ptr);
+    // com1_putc(msg.ptr[0]);
 
     // Never return
     while (true) {

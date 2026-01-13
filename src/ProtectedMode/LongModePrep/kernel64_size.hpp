@@ -20,7 +20,7 @@ STATIC_ASSERT(PAGE_COUNT < 0xFFFF'FFFF, "Page count must fit in a uint32_t numbe
 
 /* Base addresses */
 constexpr uint64_t VIRTUAL_BASE		  = 0xffffffff80000000;
-constexpr uint64_t KERNEL64_MAIN_ADDR = 0xffffffff800003c0;
+constexpr uint64_t KERNEL64_MAIN_ADDR = 0xffffffff80000360;
 
 /* Module end */
 constexpr uint64_t MODULE_END = 0xffffffff80017000;

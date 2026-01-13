@@ -1,6 +1,9 @@
 // std_options.zig - Customize std for kernel
 const std = @import("std");
 
+extern fn com1_putc(c: u8) void;
+extern fn com1_write(s: [*]const u8) void;
+
 /// Customize standard library behavior for kernel
 pub const std_options: std.Options = .{
     // Disable segfault handler (kernel handles its own faults)
@@ -14,7 +17,7 @@ pub const std_options: std.Options = .{
 };
 
 // Kernel logging to serial port
-fn kernel_log(
+pub fn kernel_log(
     comptime level: std.log.Level,
     comptime scope: @Type(.enum_literal),
     comptime format: []const u8,
@@ -43,23 +46,19 @@ fn kernel_log(
     _ = scope;
 }
 
+// Create a wrapper that converts slice to C pointer
+fn com1_write_slice(msg: []const u8) void {
+    com1_write(msg.ptr); // .ptr gets the [*]const u8 pointer
+}
+
 // Simple panic handler without 32-bit relocations
 pub fn kernel_panic_handler(msg: []const u8, first_trace_addr: ?usize) noreturn {
     _ = first_trace_addr;
 
     // Write to serial
-    const COM1 = 0x3F8;
     const panic_msg = "KERNEL PANIC: ";
-
-    for (panic_msg) |c| {
-        while ((@as(*volatile u8, @ptrFromInt(COM1 + 5)).* & 0x20) == 0) {}
-        @as(*volatile u8, @ptrFromInt(COM1)).* = c;
-    }
-
-    for (msg) |c| {
-        while ((@as(*volatile u8, @ptrFromInt(COM1 + 5)).* & 0x20) == 0) {}
-        @as(*volatile u8, @ptrFromInt(COM1)).* = c;
-    }
+    com1_write(panic_msg);
+    com1_write(msg.ptr);
 
     // Halt
     while (true) {
