@@ -10,6 +10,9 @@
 **/*.iso
 **/*.img
 
+**/build32/**
+**/build64/**
+
 **/*.gdb_history
 **/.gdb_history
 

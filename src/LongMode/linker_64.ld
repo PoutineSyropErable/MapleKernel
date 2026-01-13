@@ -55,6 +55,7 @@ SECTIONS
     .data ALIGN(0x1000) : AT(ADDR(.data) - KERNEL_VIRTUAL_BASE)
     {
         *(.data)
+        *(.data.rel.ro)
         *(.data.*)
         *(.ldata)
         *(.ldata.*)

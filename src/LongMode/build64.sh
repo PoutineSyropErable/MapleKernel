@@ -53,6 +53,14 @@ function find_git_root() {
 	return 1
 }
 
+print_array() {
+	printf -- "\n\n%s:\n" "$2"
+	local -n arr_ref=$1 # Use nameref to pass array by name
+	for elem in "${arr_ref[@]}"; do
+		echo "$elem"
+	done
+}
+
 project_root=$(find_git_root)
 src="$project_root/src/LongMode"
 cd "$src" || { # Tries to cd to "src" relative to current dir
@@ -63,29 +71,24 @@ cd "$src" || { # Tries to cd to "src" relative to current dir
 BUILD_DIR="../../build64"
 ISO_DIR="../../isodir"
 
-rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
 ZIG_CC="zig cc -target x86_64-freestanding"
+MCMODEL="kernel"
 
 ZIG_FLAGS=(
 	"-target" "x86_64-freestanding"
 	"-fno-stack-protector" # No stack protection
 	"-fno-stack-check"     # No stack checking
-	"-mcmodel=kernel"
-	# "-fPIC"
-	"-fno-PIC" # Add this!
-	"-fno-PIE" # Add this!
+	"-mcmodel=$MCMODEL"
 )
 
 ZIG_C_FLAGS=(
 	"-std=gnu23"
 	"-ffreestanding"
-	"-mcmodel=kernel"
+	"-mcmodel=$MCMODEL"
 	"-mno-red-zone"           # Critical f
 	"-fno-sanitize=undefined" # Disable UBSan
-	"-fno-PIC"                # Add this
-	"-fno-PIE"                # And this
 )
 
 ZIG_C_LD_FLAGS=(
@@ -96,7 +99,6 @@ ZIG_C_LD_FLAGS=(
 	"-Wl,--no-eh-frame-hdr"
 	"-Wl,--entry=kernel64_start"          # <-- Tell linker about entry point
 	"-Wl,--image-base=0xFFFFFFFF80000000" # MATCH your linker script!
-	"-Wl,-no-pie"
 	"-flto"
 )
 
@@ -117,15 +119,29 @@ if [[ "$DEBUG_OR_RELEASE" == "debug" ]]; then
 	echo "Debug mode enabled"
 
 	NASM_FLAGS64+=("-g" "-F" "dwarf" "-DDEBUG")
-	ZIG_C_FLAGS+=("$DEBUG_OPT_LVL" "-g" "-gdwarf-4" "-DDEBUG")
 
-	ZIG_FLAGS+=("-O" "Debug")
-	ZIG_LD_FLAGS+=("-g")
+	ZIG_C_FLAGS+=("$DEBUG_OPT_LVL" "-g" "-gdwarf-4" "-DDEBUG")
+	ZIG_FLAGS+=("-O" "Debug"
+		"-fPIC"
+	)
+	ZIG_C_LD_FLAGS+=("-g"
+		"-fPIC"
+	)
 
 else
 	echo "In normal mode, $RELEASE_OPT_LVL optimisation"
 
-	ZIG_FLAGS+=("-O" "ReleaseSafe")
+	ZIG_C_FLAGS+=(
+		"-fno-PIC"
+		"-fno-PIE"
+	)
+	ZIG_FLAGS+=("-O" "ReleaseSafe"
+		"-fno-PIC"
+		"-fno-PIE"
+	)
+	ZIG_C_LD_FLAGS+=(
+		"-Wl,-no-pie"
+	)
 fi
 
 if [[ "$QEMU_OR_REAL_MACHINE" == "qemu" ]]; then
@@ -135,6 +151,15 @@ fi
 
 KERNEL64="./kernel64"
 LONG_MODE_PREP32="../ProtectedMode/LongModePrep/"
+
+rm -f "$BUILD_DIR/*.o"
+rm -f "$BUILD_DIR/*.a"
+rm -f "$BUILD_DIR/*.elf"
+
+# print_array NASM_FLAGS64
+print_array ZIG_C_FLAGS "ZIG_C_FLAGS"
+print_array ZIG_C_LD_FLAGS "ZIG_C_LD_FLAGS"
+print_array ZIG_FLAGS "ZIG_FLAGS"
 
 printf -- "\n\n====== Assembly the Boot/Entry asm (And the guard pages) ========\n\n"
 nasm "${NASM_FLAGS64[@]}" "$KERNEL64/kernel64_boot.asm" -o "$BUILD_DIR/kernel64_boot.o"
