@@ -21,6 +21,7 @@ pub fn build(b: *std.Build) void {
         .root_module = mod,
     });
 
+    // This is just for C headers
     obj.root_module.addIncludePath(b.path("../../stdio"));
     obj.root_module.addIncludePath(b.path("../../stdlib/"));
     obj.root_module.red_zone = false;

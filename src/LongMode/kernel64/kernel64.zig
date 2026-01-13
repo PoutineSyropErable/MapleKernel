@@ -1,15 +1,17 @@
 // const std = @import("std");
 
-const file2 = @import("file2.zig");
-const builtin = @import("builtin");
 const std = @import("std");
+const builtin = @import("builtin");
 
-const std_options = @import("std_options.zig");
+// const file2 = @import("kernel64.file2.zig");
+const stdio = @import("stdio");
+
+// const std_options = @import("kernel64.std_options.zig");
 
 // Include std_options to customize std
 
 // Optional: Also export a direct panic function
-pub const panic = std.debug.FullPanic(std_options.kernel_panic_handler);
+// pub const panic = std.debug.FullPanic(std_options.kernel_panic_handler);
 
 // Declare external C function for printing
 extern fn com1_putc(c: u8) void;
@@ -62,13 +64,15 @@ export fn kernel64_zig_main() noreturn {
     // _ = value + 1;
 
     // std_options.kernel_panic_handler("End of kernel\n", null);
-    std_options.kernel_log(.err, .default, "Some Panic Msg\n", .{});
+    // std_options.kernel_log(.err, .default, "Some Panic Msg\n", .{});
 
     // com1_write("Hello from zig\n");
     const msg: []const u8 = "test other method\n";
     com1_write(msg.ptr);
     com1_write(data_string);
     // com1_putc(msg.ptr[0]);
+
+    stdio.some_stdio_function();
 
     // Never return
     while (true) {
