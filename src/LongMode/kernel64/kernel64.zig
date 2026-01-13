@@ -4,7 +4,7 @@ const std = @import("std");
 const builtin = @import("builtin");
 
 // const file2 = @import("kernel64.file2.zig");
-const stdio = @import("stdio");
+// const stdio = @import("stdio");
 
 // const std_options = @import("kernel64.std_options.zig");
 
@@ -72,7 +72,7 @@ export fn kernel64_zig_main() noreturn {
     com1_write(data_string);
     // com1_putc(msg.ptr[0]);
 
-    stdio.some_stdio_function();
+    // stdio.some_stdio_function();
 
     // Never return
     while (true) {

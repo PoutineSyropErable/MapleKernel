@@ -183,13 +183,15 @@ printf -- "\n\n====== Compiling the Zig library ========\n\n"
 ZIG_LIB_NAME="kernel64"
 zig build-lib "$ZIG_LIB_NAME.zig" "${ZIG_LIB_LD_FLAGS[@]}" "${ZIG_FLAGS[@]}" -femit-bin="$BUILD_DIR/lib$ZIG_LIB_NAME.a"
 
+# zig build
+
 # This single line can do a lot of work. Since it will build the whole thing
 
 printf -- "\n\n====== Getting the '.o's and '.a's ========\n\n"
 # Library configuration
 LIBRARY_PATHS=(
 	"$BUILD_DIR"
-	# "/path/to/other/libs"
+	"zig-out/lib"
 )
 
 LIBRARY_FILES=(
