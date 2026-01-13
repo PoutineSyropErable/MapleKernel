@@ -146,9 +146,9 @@ fi
 KERNEL64="./kernel64"
 LONG_MODE_PREP32="../ProtectedMode/LongModePrep/"
 
-rm -f "$BUILD_DIR/*.o"
-rm -f "$BUILD_DIR/*.a"
-rm -f "$BUILD_DIR/*.elf"
+rm -f "$BUILD_DIR/"*.o
+rm -f "$BUILD_DIR/"*.a
+rm -f "$BUILD_DIR/"*.elf
 
 # print_array NASM_FLAGS64
 print_array ZIG_C_FLAGS "ZIG_C_FLAGS"
@@ -160,7 +160,7 @@ nasm "${NASM_FLAGS64[@]}" "$KERNEL64/kernel64_boot.asm" -o "$BUILD_DIR/kernel64_
 nasm "${NASM_FLAGS64[@]}" "$KERNEL64/guards.asm" -o "$BUILD_DIR/guard_pages.o"
 
 printf -- "\n\n====== Compiling the Entry C code ========\n\n"
-$ZIG_CC "${ZIG_C_FLAGS[@]}" -c "$KERNEL64/kernel_64.c" -o "$BUILD_DIR/c_kernel_64.o" "-I$LONG_MODE_PREP32"
+$ZIG_CC "${ZIG_C_FLAGS[@]}" -c "$KERNEL64/kernel_64.c" -o "$BUILD_DIR/kernel_64_c.o" "-I$LONG_MODE_PREP32"
 $ZIG_CC "${ZIG_C_FLAGS[@]}" -c "$KERNEL64/com1.c" -o "$BUILD_DIR/com1.o"
 $ZIG_CC "${ZIG_C_FLAGS[@]}" -c "$KERNEL64/dummy_kernel.c" -o "$BUILD_DIR/dummy_kernel.o"
 
@@ -173,7 +173,7 @@ ZIG_LIB_NAME="kernel64"
 LIB_DIR="$KERNEL64"
 LIB_OUT_DIR="zig-out/lib"
 
-USE_ZIG_BUILD_SYSTEM=true
+USE_ZIG_BUILD_SYSTEM=false
 if [[ "$USE_ZIG_BUILD_SYSTEM" == "true" ]]; then
 	printf -- "\n\n=====Zig Build System method===\n"
 	# zig build --release=safe
@@ -181,7 +181,6 @@ if [[ "$USE_ZIG_BUILD_SYSTEM" == "true" ]]; then
 	# zig build "$ZIG_RELEASE_FLAG" --verbose
 
 	objdump -D -h -M intel "$LIB_OUT_DIR/lib$ZIG_LIB_NAME.a" >"lib$ZIG_LIB_NAME"_sys.dump
-
 else
 	printf -- "\n\n=====CLI method===\n"
 	mkdir -p "$LIB_OUT_DIR"
@@ -195,8 +194,8 @@ fi
 printf -- "\n\n====== Getting the '.o's and '.a's ========\n\n"
 # Library configuration
 LIBRARY_PATHS=(
-	"$BUILD_DIR"
-	"$LIB_OUT_DIR"
+	# "$BUILD_DIR"
+	"zig-out/lib"
 )
 
 LIBRARY_FILES=(
@@ -221,9 +220,8 @@ $ZIG_CC \
 	-T "linker_64.ld" \
 	-o "$BUILD_DIR/kernel64.elf" \
 	"${ZIG_C_LD_FLAGS[@]}" \
-	"${BUILD_OBJECTS[@]}"
-
-"${LIBRARY_ARGS[@]}" \
+	"${BUILD_OBJECTS[@]}" \
+	"${LIBRARY_ARGS[@]}" \
 	-v
 
 objdump -D -h -M intel "$BUILD_DIR/kernel64.elf" >"$BUILD_DIR/kernel64.dump"
