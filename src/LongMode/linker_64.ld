@@ -10,13 +10,13 @@ ENTRY(kernel64_start)
 __kernel_virtual_base = KERNEL_VIRTUAL_BASE;
 
 /* Define memory regions */
-MEMORY {
-    /* RAM - where kernel code/data lives */
-    RAM (rwx) : ORIGIN = KERNEL_VIRTUAL_BASE, LENGTH = 256M
-    
-    /* Optional: Separate region for debug sections */
-    /* DEBUG (r) : ORIGIN = 3M, LENGTH = 16M */
-}
+/* MEMORY { */
+/*     RAM - where kernel code/data lives */
+/*     RAM (rwx) : ORIGIN = KERNEL_VIRTUAL_BASE, LENGTH = 256M */
+/*      */
+/*     Optional: Separate region for debug sections */
+/*     DEBUG (r) : ORIGIN = 3M, LENGTH = 16M */
+/* } */
 
 SECTIONS
 {
@@ -91,6 +91,9 @@ SECTIONS
   /*       __debug_pubtypes_start = .; */
   /*       KEEP(*(.debug_pubtypes)) */
   /*       __debug_pubtypes_end = .; */
+
+
+        . = ALIGN(0x1000);
 
     }
 
