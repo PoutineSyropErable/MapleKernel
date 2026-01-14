@@ -227,9 +227,7 @@ SECTIONS
     /DISCARD/ : {
         *(.comment)
         *(.note.*)
-        *(.eh_frame)
         *(.eh_frame*)
-        *(.eh_frame.*)
         *(.interp)
         *(.dynamic)
     }
