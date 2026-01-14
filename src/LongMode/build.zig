@@ -60,9 +60,8 @@ pub fn build(b: *std.Build) void {
 
     // Add the modules
     entire_kernel_module.addImport("stdio", stdio_module);
-    // entire_kernel_module.addImport("debug", debug_module);
-    // debug_module.addImport("stdio", stdio_module);
-    _ = debug_module;
+    entire_kernel_module.addImport("debug", debug_module);
+    debug_module.addImport("stdio", stdio_module);
     stdio_module.addImport("intrinsics", intrinsics_modules);
     stdio_module.addImport("string", string_module);
 

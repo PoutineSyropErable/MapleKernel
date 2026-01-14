@@ -9,7 +9,7 @@ const stdio = @import("stdio");
 const std_options = @import("std_options.zig");
 const intrinsics = @import("intrinsics");
 
-// const debug = @import("debug");
+const debug = @import("debug");
 
 // Include std_options to customize std
 
@@ -102,7 +102,7 @@ export fn kernel64_zig_main() noreturn {
 
     stdio.print_two_numbers(12345, 7890);
 
-    // debug.print_addresses();
+    debug.print_addresses();
 
     // debug.assert(1 == 2, "Fails", @src());
 
