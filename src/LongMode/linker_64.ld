@@ -15,7 +15,7 @@ MEMORY {
     RAM (rwx) : ORIGIN = KERNEL_VIRTUAL_BASE, LENGTH = 256M
     
     /* Optional: Separate region for debug sections */
-    DEBUG (r) : ORIGIN = 3M, LENGTH = 16M
+    /* DEBUG (r) : ORIGIN = 3M, LENGTH = 16M */
 }
 
 SECTIONS
@@ -34,6 +34,8 @@ SECTIONS
         . = ALIGN(0x1000);
     }
 
+
+
 	/* Text guard - uses guard.asm */
     .text_guard ALIGN(0x1000) : AT(ADDR(.text_guard) - KERNEL_VIRTUAL_BASE)
     {
@@ -50,27 +52,53 @@ SECTIONS
         *(.lrodata)
         *(.lrodata.*)
 
-		__debug_info_start = .;
-        KEEP(*(.debug_info))
-        __debug_info_end = .;
+		/* . = ALIGN(8); */
+		/* __debug_info_start = .; */
+  /*       KEEP(*(.debug_info)) */
+  /*       __debug_info_end = .; */
+		/**/
+		/* . = ALIGN(8); */
+		/*   __debug_abbrev_start = .; */
+  /*       KEEP(*(.debug_abbrev)) */
+  /*       __debug_abbrev_end = .; */
 
-		  __debug_abbrev_start = .;
-        KEEP(*(.debug_abbrev))
-        __debug_abbrev_end = .;
-				/**/
-        __debug_str_start = .;
-        KEEP(*(.debug_str))
-        __debug_str_end = .;
-				/**/
-        __debug_line_start = .;
-        KEEP(*(.debug_line))
-        __debug_line_end = .;
-				/**/
-        __debug_ranges_start = .;
-        KEEP(*(.debug_ranges))
-        __debug_ranges_end = .;
-        . = ALIGN(0x1000);
+		/* . = ALIGN(8); */
+  /*       __debug_str_start = .; */
+  /*       KEEP(*(.debug_str)) */
+  /*       __debug_str_end = .; */
+
+		/* . = ALIGN(8); */
+  /*       __debug_line_start = .; */
+  /*       KEEP(*(.debug_line)) */
+  /*       __debug_line_end = .; */
+		/**/
+		/* . = ALIGN(8); */
+  /*       __debug_ranges_start = .; */
+  /*       KEEP(*(.debug_ranges)) */
+  /*       __debug_ranges_end = .; */
+
+		/* . = ALIGN(8); */
+  /*       __debug_loc_start = .; */
+  /*       KEEP(*(.debug_loc)) */
+  /*       __debug_loc_end = .; */
+		/**/
+		/* . = ALIGN(8); */
+  /*       __debug_pubnames_start = .; */
+  /*       KEEP(*(.debug_pubnames)) */
+  /*       __debug_pubnames_end = .; */
+		/**/
+		/* . = ALIGN(8); */
+  /*       __debug_pubtypes_start = .; */
+  /*       KEEP(*(.debug_pubtypes)) */
+  /*       __debug_pubtypes_end = .; */
+
     }
+
+ /*    .mtfk ALIGN(0x1000) : AT(ADDR(.mtfk) - KERNEL_VIRTUAL_BASE) */
+	/* { */
+ /*        . = ALIGN(0x1000); */
+	/* } > RAM */
+	/* mother fucker, It can't put it in a custom section */
 
 
     .rodata_guard ALIGN(0x1000) : AT(ADDR(.rodata_guard) - KERNEL_VIRTUAL_BASE)
@@ -197,7 +225,9 @@ SECTIONS
     /DISCARD/ : {
         *(.comment)
         *(.note.*)
+        *(.eh_frame)
         *(.eh_frame*)
+        *(.eh_frame.*)
         *(.interp)
         *(.dynamic)
     }

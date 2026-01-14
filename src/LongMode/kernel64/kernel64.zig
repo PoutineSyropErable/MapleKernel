@@ -9,7 +9,7 @@ const stdio = @import("stdio");
 const std_options = @import("std_options.zig");
 const intrinsics = @import("intrinsics");
 
-const debug = @import("debug");
+// const debug = @import("debug");
 
 // Include std_options to customize std
 
@@ -66,6 +66,17 @@ test "addition works" {
     // This will crash but im curious
 }
 
+fn debug_info() void {
+    var stack_buf: [64 * 1024]u8 = undefined; // 64 KB on the stack
+    var allocator = std.heap.FixedBufferAllocator.init(stack_buf[0..]).allocator;
+
+    const slice = try allocator.alloc(u8, 1024); // allocate 1 KB from the stack buffer
+    defer allocator.free(slice);
+
+    // use slice...
+
+}
+
 export fn kernel64_zig_main() noreturn {
     // Your kernel code here
 
@@ -91,9 +102,12 @@ export fn kernel64_zig_main() noreturn {
 
     stdio.print_two_numbers(12345, 7890);
 
+    // debug.print_addresses();
+
     // debug.assert(1 == 2, "Fails", @src());
 
     runtime_fail();
+
     std_options.kernel_log(.debug,
         // .default,
         "Some Panic Msg\n", .{});

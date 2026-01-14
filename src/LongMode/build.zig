@@ -59,9 +59,10 @@ pub fn build(b: *std.Build) void {
     });
 
     // Add the modules
-    entire_kernel_module.addImport("debug", debug_module);
     entire_kernel_module.addImport("stdio", stdio_module);
-    debug_module.addImport("stdio", stdio_module);
+    // entire_kernel_module.addImport("debug", debug_module);
+    // debug_module.addImport("stdio", stdio_module);
+    _ = debug_module;
     stdio_module.addImport("intrinsics", intrinsics_modules);
     stdio_module.addImport("string", string_module);
 
@@ -83,6 +84,10 @@ pub fn build(b: *std.Build) void {
     kernel_lib.root_module.link_libc = false;
     kernel_lib.root_module.link_libcpp = false;
     kernel_lib.root_module.dwarf_format = .@"64";
+
+    // kernel_lib.root_module.unwind_tables = .none;
+    // kernel_lib.link_eh_frame_hdr = false;
+    // kernel_lib.root_module.
 
     // Add include directories (For C/Cpp headers only)
     kernel_lib.root_module.addIncludePath(b.path("../ProtectedMode/LongModePrep/"));
