@@ -9,6 +9,15 @@ ENTRY(kernel64_start)
 /* Define symbols for kernel use */
 __kernel_virtual_base = KERNEL_VIRTUAL_BASE;
 
+/* Define memory regions */
+MEMORY {
+    /* RAM - where kernel code/data lives */
+    RAM (rwx) : ORIGIN = KERNEL_VIRTUAL_BASE, LENGTH = 256M
+    
+    /* Optional: Separate region for debug sections */
+    DEBUG (r) : ORIGIN = 3M, LENGTH = 16M
+}
+
 SECTIONS
 {
     /* Start at the higher half virtual address */
@@ -40,6 +49,26 @@ SECTIONS
         *(.rodata.*)
         *(.lrodata)
         *(.lrodata.*)
+
+		__debug_info_start = .;
+        KEEP(*(.debug_info))
+        __debug_info_end = .;
+
+		  __debug_abbrev_start = .;
+        KEEP(*(.debug_abbrev))
+        __debug_abbrev_end = .;
+				/**/
+        __debug_str_start = .;
+        KEEP(*(.debug_str))
+        __debug_str_end = .;
+				/**/
+        __debug_line_start = .;
+        KEEP(*(.debug_line))
+        __debug_line_end = .;
+				/**/
+        __debug_ranges_start = .;
+        KEEP(*(.debug_ranges))
+        __debug_ranges_end = .;
         . = ALIGN(0x1000);
     }
 
@@ -125,6 +154,24 @@ SECTIONS
         *(.guard)  /* References guard.asm */
         __heap_guard_end = .;
     }
+
+	/* Runtime debug info */
+    /* .debug_info ALIGN(0x1000) : AT(ADDR(.debug_info) - KERNEL_VIRTUAL_BASE) */
+    /* { */
+    /*     __debug_info_start = .; */
+    /*     KEEP(*(.debug_info))   */
+    /*     __debug_info_end = .; */
+    /*     . = ALIGN(0x1000); */
+    /* } > DEBUG */
+    /**/
+    /**/
+    /* .debug_guard ALIGN(0x1000) : AT(ADDR(.debug_guard) - KERNEL_VIRTUAL_BASE) */
+    /* { */
+    /*     __debug_guard_start = .; */
+    /*     *(.guard)   */
+    /*     __debug_guard_end = .; */
+    /* } > DEBUG */
+
     
     /* End of the module */
     . = ALIGN(0x1000);

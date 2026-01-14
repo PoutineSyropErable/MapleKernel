@@ -17,6 +17,19 @@ void *memcpy(void *dest, const void *src, size_t n)
 	return dest;
 }
 
+void *memset(void *dest, int value, size_t n)
+{
+	unsigned char *d   = (unsigned char *)dest;
+	unsigned char  val = (unsigned char)value;
+
+	for (size_t i = 0; i < n; i++)
+	{
+		d[i] = val;
+	}
+
+	return dest; // mimic standard memset return value
+}
+
 __attribute__((noinline)) void fill_screen(volatile uint32_t color)
 {
 
@@ -32,18 +45,15 @@ void kernel64_zig_main();
 
 void kernel64_main()
 {
-		com1_init();
+	com1_init();
 
+	const char x[] = "\n\n=============Hello from 64 bit================\n\n";
+	com1_write_c_MANGLED(x);
+	com1_write_c_MANGLED("Com1 write ro data\n");
 
-		const char x[] = "\n\n=============Hello from 64 bit================\n\n";
-		com1_write_c_MANGLED(x);
-		com1_write_c_MANGLED("Com1 write ro data\n");
+	fill_screen(0x000000);
 
-		fill_screen(0x000000);
+	com1_write_c_MANGLED("Going to Zig! No More C\n");
 
-		com1_write_c_MANGLED("Going to Zig! No More C\n");
-
-		kernel64_zig_main();
-		
-
+	kernel64_zig_main();
 }

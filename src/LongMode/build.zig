@@ -34,6 +34,12 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    const debug_module = b.createModule(.{
+        .root_source_file = b.path("stdlib/debug.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     // ======================= The Full kernel
 
     const entire_kernel_module = b.createModule(.{
@@ -41,6 +47,9 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
+
+    // might be a cool feature (error tracing)
+    // entire_kernel_module.error_tracing = true;
 
     // Create the kernel library (static archive)
     const kernel_lib = b.addLibrary(.{
@@ -50,7 +59,9 @@ pub fn build(b: *std.Build) void {
     });
 
     // Add the modules
+    entire_kernel_module.addImport("debug", debug_module);
     entire_kernel_module.addImport("stdio", stdio_module);
+    debug_module.addImport("stdio", stdio_module);
     stdio_module.addImport("intrinsics", intrinsics_modules);
     stdio_module.addImport("string", string_module);
 
@@ -71,6 +82,7 @@ pub fn build(b: *std.Build) void {
     kernel_lib.root_module.code_model = .kernel;
     kernel_lib.root_module.link_libc = false;
     kernel_lib.root_module.link_libcpp = false;
+    kernel_lib.root_module.dwarf_format = .@"64";
 
     // Add include directories (For C/Cpp headers only)
     kernel_lib.root_module.addIncludePath(b.path("../ProtectedMode/LongModePrep/"));
@@ -91,6 +103,42 @@ pub fn build(b: *std.Build) void {
     }
 
     // Optional: Add assembly files
+
+    // ======================= Create a test runner step
+
+    // This doesn't really work in freestanding
+    // I'd have to learn how to do it with test_runner.
+    // I might need a custom testing environment. Semi Hosting
+    const kernel_tests = b.addTest(
+        .{
+            .root_module = entire_kernel_module,
+            .name = "test",
+            .emit_object = true,
+            .test_runner = null,
+            .filters = &[_][]const u8{},
+        },
+    );
+
+    const stdio_tests = b.addTest(
+        .{
+            .root_module = stdio_module,
+            .name = "test",
+            .emit_object = true,
+            .test_runner = null,
+            .filters = &[_][]const u8{},
+        },
+    );
+
+    const run_kernel_tests = b.addRunArtifact(kernel_tests);
+    const run_stdio_tests = b.addRunArtifact(stdio_tests);
+
+    const test_step = b.step("test", "Run all tests");
+    test_step.dependOn(&run_kernel_tests.step);
+    test_step.dependOn(&run_stdio_tests.step);
+
+    // b.addSystemCommand();
+
+    // ======================= Test steps for the user
 
     // Set output directory to match your bash script
     const build_dir_path_str = "../../build64";

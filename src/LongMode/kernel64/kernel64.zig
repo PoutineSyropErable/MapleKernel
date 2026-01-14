@@ -9,6 +9,8 @@ const stdio = @import("stdio");
 const std_options = @import("std_options.zig");
 const intrinsics = @import("intrinsics");
 
+const debug = @import("debug");
+
 // Include std_options to customize std
 
 // Optional: Also export a direct panic function
@@ -55,6 +57,15 @@ fn runtime_fail() void {
     len = 12;
 }
 
+test "addition works" {
+    // test doesn't work in freestanding
+    try std.testing.expect(1 + 1 == 3);
+    stdio.string_writter("Addition works test\n");
+    const a: bool = builtin.is_test;
+    stdio.snprintf(null, a);
+    // This will crash but im curious
+}
+
 export fn kernel64_zig_main() noreturn {
     // Your kernel code here
 
@@ -63,25 +74,26 @@ export fn kernel64_zig_main() noreturn {
     const value: i32 = file2.zig_add(5, 6);
     _ = value + 1;
 
-    stdio.com1_write("\n\n=============== Start of Long Mode Zig Kernel ======================\n\n");
-    stdio.com1_write("\nHello from zig\n");
+    stdio.string_writter("\n\n=============== Start of Long Mode Zig Kernel ======================\n\n");
+    stdio.string_writter("\nHello from zig\n");
     const msg: []const u8 = "test different ways to print (1: ptr, 2: regular)\n";
     const msg_c: [*:0]const u8 = "test different ways to print\n";
     stdio.com1_write_ptr(msg.ptr, msg.len);
-    stdio.com1_write(msg);
+    stdio.string_writter(msg);
     stdio.com1_write_c(msg_c);
-    stdio.com1_write(data_string);
+    stdio.string_writter(data_string);
 
-    // runtime_fail();
-
-    stdio.com1_write("Zig write bytes\n");
-    stdio.com1_write("Another so its not inlined\n");
+    stdio.string_writter("Zig write bytes\n");
+    stdio.string_writter("Another so its not inlined\n");
 
     stdio.print_int(46);
     stdio.string_writter("\n");
 
     stdio.print_two_numbers(12345, 7890);
 
+    // debug.assert(1 == 2, "Fails", @src());
+
+    runtime_fail();
     std_options.kernel_log(.debug,
         // .default,
         "Some Panic Msg\n", .{});

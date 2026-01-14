@@ -76,6 +76,8 @@ ZIG_C_FLAGS=(
 	"-mcmodel=$MCMODEL"
 	"-mno-red-zone"           # Critical f
 	"-fno-sanitize=undefined" # Disable UBSan
+	"-fdebug-types-section"
+	"-gdwarf64"
 )
 
 ZIG_C_LD_FLAGS=(
@@ -87,6 +89,14 @@ ZIG_C_LD_FLAGS=(
 	"-Wl,--entry=kernel64_start"          # <-- Tell linker about entry point
 	"-Wl,--image-base=0xFFFFFFFF80000000" # MATCH your linker script!
 	"-flto"
+)
+
+LLD_FLAGS=(
+	"--gc-sections"
+	"--no-eh-frame-hdr"
+	"--entry=kernel64_start"          # <-- Tell linker about entry point
+	"--image-base=0xFFFFFFFF80000000" # MATCH your linker script!
+	# "-flto"
 )
 
 # Being generous with the cppflag
@@ -105,7 +115,7 @@ if [[ "$DEBUG_OR_RELEASE" == "debug" ]]; then
 
 	NASM_FLAGS64+=("-g" "-F" "dwarf" "-DDEBUG")
 
-	ZIG_C_FLAGS+=("$DEBUG_OPT_LVL" "-g" "-gdwarf-4" "-DDEBUG")
+	# ZIG_C_FLAGS+=("$DEBUG_OPT_LVL" "-g" "-gdwarf-4" "-DDEBUG")
 	ZIG_FLAGS+=("-O" "Debug"
 		"-fPIC"
 	)
@@ -163,7 +173,6 @@ nasm "${NASM_FLAGS64[@]}" "$KERNEL64/guards.asm" -o "$BUILD_DIR/guard_pages.o"
 printf -- "\n\n====== Compiling the Entry C code ========\n\n"
 $ZIG_CC "${ZIG_C_FLAGS[@]}" -c "$KERNEL64/kernel_64.c" -o "$BUILD_DIR/kernel_64_c.o" "-I$LONG_MODE_PREP32"
 $ZIG_CC "${ZIG_C_FLAGS[@]}" -c "$KERNEL64/com1.c" -o "$BUILD_DIR/com1.o"
-$ZIG_CC "${ZIG_C_FLAGS[@]}" -c "$KERNEL64/dummy_kernel.c" -o "$BUILD_DIR/dummy_kernel.o"
 
 # $ZIG_CC "${ZIG_C_FLAGS[@]}" -c "$KERNEL64/kernel64.zig" -o "$BUILD_DIR/kernel64_zig.o"
 # $ZIG_CC "${ZIG_C_FLAGS[@]}" -c "$KERNEL64/std_options.zig" -o "$BUILD_DIR/std_options.o"
@@ -219,7 +228,14 @@ done
 
 BUILD_OBJECTS=("$BUILD_DIR"/*.o)
 
+printf -- "\n\n====================== Linking Arguments ===============================\n\n"
+
+print_array ZIG_C_LD_FLAGS "ZIG_C_LD_FLAGS"
+print_array BUILD_OBJECTS "BUILD_OBJECTS"
+print_array LIBRARY_ARGS "LIBRARY_ARGS"
+
 printf -- "\n\n====================== Linking ===============================\n\n"
+
 $ZIG_CC \
 	-T "linker_64.ld" \
 	-o "$BUILD_DIR/kernel64.elf" \
@@ -227,6 +243,14 @@ $ZIG_CC \
 	"${BUILD_OBJECTS[@]}" \
 	"${LIBRARY_ARGS[@]}" \
 	-v
+
+# ld.lld \
+# 	-T "linker_64.ld" \
+# 	-o "$BUILD_DIR/kernel64.elf" \
+# 	"${LLD_FLAGS[@]}" \
+# 	"${BUILD_OBJECTS[@]}" \
+# 	"${LIBRARY_ARGS[@]}" \
+# 	-v
 
 objdump -D -h -M intel "$BUILD_DIR/kernel64.elf" >"$BUILD_DIR/kernel64.dump"
 

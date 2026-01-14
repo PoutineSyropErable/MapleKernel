@@ -33,10 +33,10 @@ pub fn kernel_log(
     };
 
     // Simple serial write (no formatting for now)
-    stdio.com1_write(prefix);
+    stdio.string_writter(prefix);
     // const runtime_str: [*]const u8 = format;
-    // com1_write(format);
-    stdio.com1_write(format);
+    // string_writter(format);
+    stdio.string_writter(format);
 
     // _ = runtime_str;
     // Could implement simple formatting here
@@ -47,12 +47,28 @@ pub fn kernel_log(
 
 // Simple panic handler without 32-bit relocations
 pub fn kernel_panic_handler(msg: []const u8, first_trace_addr: ?usize) noreturn {
-    _ = first_trace_addr;
+    const src = @src();
+    _ = src;
 
     // Write to serial
-    const panic_msg = "KERNEL PANIC: ";
-    stdio.com1_write(panic_msg);
-    stdio.com1_write(msg);
+    const panic_msg = "\nKERNEL PANIC: ";
+    stdio.string_writter(panic_msg);
+    stdio.string_writter(msg);
+
+    if (first_trace_addr) |addr| {
+        stdio.string_writter("\nError at ");
+        stdio.print_hex(@intCast(addr));
+
+        // const index: usize = 0;
+        // var instruction_addresses: [50]usize = undefined;
+        // var stack_trace: std.builtin.StackTrace = std.builtin.StackTrace{ .instruction_addresses = &instruction_addresses, .index = index };
+        // std.debug.captureStackTrace(first_trace_addr, &stack_trace);
+        // std.debug.dumpStackTrace(stack_trace);
+    } else {
+        stdio.string_writter("\nDoes not know error addr\n");
+    }
+
+    // std.debug.getSelfDebugInfo();
 
     // Halt
     while (true) {
