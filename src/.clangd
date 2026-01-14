@@ -65,8 +65,8 @@ CompileFlags:
     # Long mode include directories
     - -ILongMode/kernel64
     - -ILongMode/stdio
-    - -ILongMode/LongModePrep
-    - -ILongMode/../ProtectedMode/LongModePrep
+    - -IProtectedMode/LongModePrep
+    - -I../ProtectedMode/LongModePrep
 
 # ============ File Type Specific Overrides ============
 
