@@ -136,7 +136,6 @@ fn check_dwarf_magic() void {
             stdio.string_writter(ver_str);
             stdio.string_writter("\n");
         }
-        // first_word = 0;
     }
 
     // Check .debug_str for typical strings
@@ -158,4 +157,65 @@ fn check_dwarf_magic() void {
         }
         stdio.string_writter("\n");
     }
+}
+
+/// Print the i-th null-terminated string from .debug_str section
+/// Index is zero-based (0 = first string, 1 = second string, etc.)
+pub fn print_debug_str_string(index: usize) void {
+    // Get boundaries from linker script
+    const str_start = @as([*]const u8, @ptrCast(&__debug_str_start));
+    const str_end = @as([*]const u8, @ptrCast(&__debug_str_end));
+    const total_size = @intFromPtr(str_end) - @intFromPtr(str_start);
+
+    if (total_size == 0) {
+        stdio.string_writter(".debug_str is empty\n");
+        return;
+    }
+
+    var current_string_index: usize = 0;
+    var position: usize = 0;
+
+    // Walk through the string table
+    while (position < total_size) {
+        // Find length of current string
+        var len: usize = 0;
+        while (position + len < total_size and str_start[position + len] != 0) {
+            len += 1;
+        }
+
+        // Check if this is the string we're looking for
+        if (current_string_index == index) {
+            stdio.string_writter(".debug_str[");
+            stdio.print_uint(index);
+            stdio.string_writter("]: \"");
+
+            // Print the string
+            for (0..len) |j| {
+                const ch = str_start[position + j];
+                if (ch >= 32 and ch < 127) {
+                    // Printable ASCII
+                    stdio.string_writter(&[_]u8{ch});
+                } else {
+                    // Non-printable
+                    stdio.string_writter(".");
+                }
+            }
+
+            stdio.string_writter("\" (length=");
+            stdio.print_uint(len);
+            stdio.string_writter(")\n");
+            return;
+        }
+
+        // Move to next string (skip null terminator)
+        position += len + 1;
+        current_string_index += 1;
+    }
+
+    // If we get here, index was out of bounds
+    stdio.string_writter("String index ");
+    stdio.print_uint(index);
+    stdio.string_writter(" out of bounds (");
+    stdio.print_uint(current_string_index);
+    stdio.string_writter(" strings total)\n");
 }

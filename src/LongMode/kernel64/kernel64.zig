@@ -103,6 +103,9 @@ export fn kernel64_zig_main() noreturn {
     stdio.print_two_numbers(12345, 7890);
 
     debug.print_addresses();
+    for (0..100) |i| {
+        debug.print_debug_str_string(i);
+    }
 
     // debug.assert(1 == 2, "Fails", @src());
 
