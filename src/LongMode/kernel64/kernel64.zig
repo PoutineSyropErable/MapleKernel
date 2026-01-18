@@ -57,6 +57,17 @@ fn runtime_fail() void {
     len = 12;
 }
 
+fn runtime_fail2() void {
+    const stack_buffer: [5]u8 = undefined;
+
+    for (stack_buffer, 0..) |*item, i| {
+        item.* = @as(i32, @intCast(i));
+    }
+
+    const a = stack_buffer[2];
+    _ = a;
+}
+
 test "addition works" {
     // test doesn't work in freestanding
     try std.testing.expect(1 + 1 == 3);
@@ -97,10 +108,7 @@ export fn kernel64_zig_main() noreturn {
     stdio.string_writter("Zig write bytes\n");
     stdio.string_writter("Another so its not inlined\n");
 
-    stdio.print_int(46);
     stdio.string_writter("\n");
-
-    stdio.print_two_numbers(12345, 7890);
 
     debug.print_addresses();
 
@@ -114,12 +122,22 @@ export fn kernel64_zig_main() noreturn {
 
     // debug.assert(1 == 2, "Fails", @src());
 
-    runtime_fail();
+    if (false) {
+        runtime_fail();
 
-    std_options.kernel_log(.debug,
-        // .default,
-        "Some Panic Msg\n", .{});
-    std_options.kernel_panic_handler("End of kernel\n", null);
+        std_options.kernel_log(.debug,
+            // .default,
+            "Some Panic Msg\n", .{});
+        std_options.kernel_panic_handler("End of kernel\n", null);
+    }
+
+    const bruh = struct {
+        field1: u8,
+        f2: u8,
+    };
+
+    const val: bruh = .{ .f2 = 5, .field1 = 7 };
+    stdio.printf("How are you {} {}\n", .{ 5, val });
 
     // Never return
     while (true) {
