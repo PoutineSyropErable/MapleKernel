@@ -1,0 +1,50 @@
+[
+  {
+    "file": "src/main.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Iinclude/",
+      "-std=c99",
+      "-O3",
+      "-c",
+      "src/main.c",
+      "-o",
+      "obj/main.o"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/LongMode/libs/x86_dasm",
+    "output": "obj/main.o"
+  },
+  {
+    "file": "src/x86_dasm.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Iinclude/",
+      "-std=c99",
+      "-O3",
+      "-c",
+      "src/x86_dasm.c",
+      "-o",
+      "obj/x86_dasm.o"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/LongMode/libs/x86_dasm",
+    "output": "obj/x86_dasm.o"
+  },
+  {
+    "file": "src/x86_dasm_tables.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Iinclude/",
+      "-std=c99",
+      "-O3",
+      "-c",
+      "src/x86_dasm_tables.c",
+      "-o",
+      "obj/x86_dasm_tables.o"
+    ],
+    "directory": "/home/francois/Documents/zzz__PersonalProjects/MapleKernel/src/LongMode/libs/x86_dasm",
+    "output": "obj/x86_dasm_tables.o"
+  }
+]

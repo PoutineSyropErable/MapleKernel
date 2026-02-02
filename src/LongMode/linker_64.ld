@@ -92,6 +92,16 @@ SECTIONS
         __debug_pubtypes_end = .;
 
 
+		/* . = ALIGN(8); */
+  /*       __symtab_start = .; */
+  /*       KEEP(*(.symtab)) */
+  /*       __symtab_end = .; */
+		/* . = ALIGN(8); */
+  /*       __strtab_start = .; */
+  /*       KEEP(*(.strtab)) */
+  /*       __strtab_end = .; */
+
+
         . = ALIGN(0x1000);
 
     }

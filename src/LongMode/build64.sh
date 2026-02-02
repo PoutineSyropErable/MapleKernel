@@ -78,6 +78,9 @@ ZIG_C_FLAGS=(
 	"-fno-sanitize=undefined" # Disable UBSan
 	"-fdebug-types-section"
 	"-gdwarf64"
+
+	"-fno-unwind-tables"              # disables .eh_frame
+	"-fno-asynchronous-unwind-tables" # optional
 )
 
 ZIG_C_LD_FLAGS=(
@@ -185,6 +188,8 @@ LIB_OUT_DIR="zig-out/lib"
 DUMP_DIR="./dumps"
 
 mkdir -p "$DUMP_DIR"
+
+LIB_OUT_PATH="$LIB_OUT_DIR/lib$ZIG_LIB_NAME.a"
 
 USE_ZIG_BUILD_SYSTEM=true
 if [[ "$USE_ZIG_BUILD_SYSTEM" == "true" ]]; then

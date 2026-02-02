@@ -35,7 +35,7 @@ pub fn build(b: *std.Build) void {
     });
 
     const debug_module = b.createModule(.{
-        .root_source_file = b.path("stdlib/debug.zig"),
+        .root_source_file = b.path("debug/debug.zig"),
         .target = target,
         .optimize = optimize,
     });

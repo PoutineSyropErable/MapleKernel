@@ -110,14 +110,14 @@ export fn kernel64_zig_main() noreturn {
 
     stdio.string_writter("\n");
 
-    debug.print_addresses();
+    // debug.print_addresses();
 
     if (false) {
         // malformed children if true
         // .eh_corrupted if false
-        for (0..100) |i| {
-            debug.print_debug_str_string(i);
-        }
+        // for (0..100) |i| {
+        // debug.print_debug_str_string(i);
+        // }
     }
 
     // debug.assert(1 == 2, "Fails", @src());
