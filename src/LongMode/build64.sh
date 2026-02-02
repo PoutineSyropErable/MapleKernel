@@ -197,6 +197,7 @@ if [[ "$USE_ZIG_BUILD_SYSTEM" == "true" ]]; then
 	# zig build --release=safe
 	# zig build --release=fast
 	zig build "${ZIG_RELEASE_FLAG[@]}" --verbose
+	# This single line can do a lot of work. Since it will build the whole thing
 
 	objdump -D -h -M intel "$LIB_OUT_DIR/lib$ZIG_LIB_NAME.a" >"$DUMP_DIR/lib$ZIG_LIB_NAME"_sys.dump
 else
@@ -207,7 +208,46 @@ else
 	objdump -D -h -M intel "$LIB_OUT_DIR/lib$ZIG_LIB_NAME.a" >"$DUMP_DIR/lib$ZIG_LIB_NAME"_bash.dump
 fi
 
-# This single line can do a lot of work. Since it will build the whole thing
+remove_eh_frame_from_o() {
+	local lib_path="$1"
+	local obj_name="$2"
+
+	echo -e "\n\n"
+	echo "Current directory: $(pwd)"
+	echo "Library: $lib_path"
+	echo "Stripping .eh_frame from $obj_name ..."
+
+	# Save current directory
+	local old_dir
+	old_dir=$(pwd)
+
+	# Go to library directory
+	local lib_dir
+	lib_dir=$(dirname "$lib_path")
+	cd "$lib_dir"
+
+	# Extract all objects
+	ar x "$(basename "$lib_path")"
+
+	# Remove .eh_frame from the specific object
+	if [[ -f "$obj_name" ]]; then
+		objcopy --remove-section=.eh_frame "$obj_name"
+	else
+		echo "Warning: $obj_name not found inside $lib_path"
+	fi
+
+	# Repack the archive
+	ar rcs "$(basename "$lib_path")" *.o
+
+	# Go back to original directory
+	cd "$old_dir"
+
+	echo "Done removing .eh_frame from $obj_name"
+	echo -e "\n\n"
+}
+
+# ===== Call the function to remove .eh_frame from kernel64.o =====
+remove_eh_frame_from_o "$LIB_OUT_PATH" "kernel64.o"
 
 printf -- "\n\n====== Getting the '.o's and '.a's ========\n\n"
 # Library configuration

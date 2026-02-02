@@ -111,36 +111,6 @@ pub fn build(b: *std.Build) void {
 
     // ======================= Create a test runner step
 
-    // This doesn't really work in freestanding
-    // I'd have to learn how to do it with test_runner.
-    // I might need a custom testing environment. Semi Hosting
-    const kernel_tests = b.addTest(
-        .{
-            .root_module = entire_kernel_module,
-            .name = "test",
-            .emit_object = true,
-            .test_runner = null,
-            .filters = &[_][]const u8{},
-        },
-    );
-
-    const stdio_tests = b.addTest(
-        .{
-            .root_module = stdio_module,
-            .name = "test",
-            .emit_object = true,
-            .test_runner = null,
-            .filters = &[_][]const u8{},
-        },
-    );
-
-    const run_kernel_tests = b.addRunArtifact(kernel_tests);
-    const run_stdio_tests = b.addRunArtifact(stdio_tests);
-
-    const test_step = b.step("test", "Run all tests");
-    test_step.dependOn(&run_kernel_tests.step);
-    test_step.dependOn(&run_stdio_tests.step);
-
     // b.addSystemCommand();
 
     // ======================= Test steps for the user

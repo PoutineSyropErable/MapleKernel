@@ -12,7 +12,7 @@ QEMU_FULL=false
 # CONTROL + ALT + G to get the mouse back (GTK), default on my machine
 # or CTRL+ALT (SDL)
 
-MOV_WORKSPACE=12 # In hyprland, move it there
+MOV_WORKSPACE=21 # In hyprland, move it there
 MOV_PID_DIR="$HOME/.local/bin"
 
 if [[ "${1:-}" == "help" ]]; then
@@ -57,9 +57,13 @@ mkdir -p "$MOV_PID_DIR" && { [[ -e "$MOV_PID_DIR/move_pid_to_workspace" ]] || ln
 # this script might not work on something else, heh, who cares. Make your own or move it yourself
 
 QEMU_DBG_FLAGS=()
+STOP_AT_ENTRY=false
 if [[ "$DEBUG_OR_RELEASE" == "debug" ]]; then
 	echo "Debug mode enabled"
-	QEMU_DBG_FLAGS+=("-s" "-S")
+	QEMU_DBG_FLAGS+=("-s") # open tcp server on port 1234
+	if [[ "$STOP_AT_ENTRY" == "true" ]]; then
+		QEMU_DBG_FLAGS+=("-S")
+	fi
 fi
 
 if [[ "$DEBUG_OR_RELEASE" == "debug-run" ]]; then
