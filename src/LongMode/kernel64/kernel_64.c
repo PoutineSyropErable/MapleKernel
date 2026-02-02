@@ -31,7 +31,6 @@ void *memmove(void *dest, const void *src, size_t n)
 	return dest;
 }
 
-// Also implement these - they'll likely be needed soon
 void *memcpy(void *dest, const void *src, size_t n)
 {
 	// memmove handles all cases correctly
