@@ -5,7 +5,8 @@ set -eou pipefail
 DEBUG_OR_RELEASE="${1:-release}"
 QEMU_OR_REAL_MACHINE="${2:-qemu}"
 MACHINE_BITNESS="${3:-64}"
-MOVE_VNC="${4:-move}"
+MOVE_VM_WINDOW="${4:-move}"
+STOP_AT_ENTRY="${5:-false}"
 
 # If you have qemu full
 QEMU_FULL=false
@@ -22,6 +23,10 @@ Usage: ./build.sh [debug|release] [QEMU|REAL] [32|64] [move|nomove]
 Arguments:
   debug|release|fast|debug-run 	Build mode. Defaults to release if omitted. fast is a type of release. debug-run, doesn't wait for attach
   qemu|real           	        Whether to run in QEMU or on a real machine. Defaults to QEMU.
+  32|64 						The machine bitness. Default to 64. 
+  move|''                    	Move the window 
+  true|false                    Stop the code execution at the vm boot (true). Useful to wait to attach to debugger. Only apply in debug mode. 
+										Use (false) this to normally run a debug build. 
 
 Examples:
   ./build.sh debug QEMU
@@ -57,7 +62,6 @@ mkdir -p "$MOV_PID_DIR" && { [[ -e "$MOV_PID_DIR/move_pid_to_workspace" ]] || ln
 # this script might not work on something else, heh, who cares. Make your own or move it yourself
 
 QEMU_DBG_FLAGS=()
-STOP_AT_ENTRY=false
 if [[ "$DEBUG_OR_RELEASE" == "debug" ]]; then
 	echo "Debug mode enabled"
 	QEMU_DBG_FLAGS+=("-s") # open tcp server on port 1234
@@ -229,7 +233,7 @@ else
 
 	QEMU_PID=$!
 	if [[ "$QEMU_FULL" == "true" ]]; then
-		if [[ "$MOVE_VNC" == "move" ]]; then
+		if [[ "$MOVE_VM_WINDOW" == "move" ]]; then
 			# this is a ~/.local/bin script
 			move_pid_to_workspace $QEMU_PID "$MOV_WORKSPACE"
 		fi
@@ -242,7 +246,7 @@ else
 		VNC_PID=$!
 
 		# sleep 1
-		if [[ "$MOVE_VNC" == "move" ]]; then
+		if [[ "$MOVE_VM_WINDOW" == "move" ]]; then
 			move_pid_to_workspace $VNC_PID "$MOV_WORKSPACE"
 		fi
 
