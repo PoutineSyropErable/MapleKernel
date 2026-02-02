@@ -60,7 +60,7 @@ ISO_DIR="../../isodir"
 
 mkdir -p "$BUILD_DIR"
 
-ZIG_CC="zig cc -target x86_64-freestanding"
+ZIG_CC="clang -target x86_64-freestanding"
 MCMODEL="kernel"
 
 ZIG_FLAGS=(
