@@ -52,44 +52,44 @@ SECTIONS
         *(.lrodata)
         *(.lrodata.*)
 
-		/* . = ALIGN(8); */
-		/* __debug_info_start = .; */
-  /*       KEEP(*(.debug_info)) */
-  /*       __debug_info_end = .; */
-		/**/
+		. = ALIGN(8);
+		__debug_info_start = .;
+        KEEP(*(.debug_info))
+        __debug_info_end = .;
+
 		/* . = ALIGN(8); */
 		/*   __debug_abbrev_start = .; */
   /*       KEEP(*(.debug_abbrev)) */
   /*       __debug_abbrev_end = .; */
-		/**/
-		/* . = ALIGN(8); */
-  /*       __debug_str_start = .; */
-  /*       KEEP(*(.debug_str)) */
-  /*       __debug_str_end = .; */
-		/**/
-		/* . = ALIGN(8); */
-  /*       __debug_line_start = .; */
-  /*       KEEP(*(.debug_line)) */
-  /*       __debug_line_end = .; */
-		/**/
-		/* . = ALIGN(8); */
-  /*       __debug_ranges_start = .; */
-  /*       KEEP(*(.debug_ranges)) */
-  /*       __debug_ranges_end = .; */
-		/**/
-		/* . = ALIGN(8); */
-  /*       __debug_loc_start = .; */
-  /*       KEEP(*(.debug_loc)) */
-  /*       __debug_loc_end = .; */
-		/**/
-		/* . = ALIGN(8); */
-  /*       __debug_pubnames_start = .; */
-  /*       KEEP(*(.debug_pubnames)) */
-  /*       __debug_pubnames_end = .; */
-		/* . = ALIGN(8); */
-  /*       __debug_pubtypes_start = .; */
-  /*       KEEP(*(.debug_pubtypes)) */
-  /*       __debug_pubtypes_end = .; */
+
+		. = ALIGN(8);
+        __debug_str_start = .;
+        KEEP(*(.debug_str))
+        __debug_str_end = .;
+
+		. = ALIGN(8);
+        __debug_line_start = .;
+        KEEP(*(.debug_line))
+        __debug_line_end = .;
+
+		. = ALIGN(8);
+        __debug_ranges_start = .;
+        KEEP(*(.debug_ranges))
+        __debug_ranges_end = .;
+
+		. = ALIGN(8);
+        __debug_loc_start = .;
+        KEEP(*(.debug_loc))
+        __debug_loc_end = .;
+
+		. = ALIGN(8);
+        __debug_pubnames_start = .;
+        KEEP(*(.debug_pubnames))
+        __debug_pubnames_end = .;
+		. = ALIGN(8);
+        __debug_pubtypes_start = .;
+        KEEP(*(.debug_pubtypes))
+        __debug_pubtypes_end = .;
 
 
 		/* . = ALIGN(8); */

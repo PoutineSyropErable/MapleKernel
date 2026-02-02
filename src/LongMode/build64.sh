@@ -81,6 +81,7 @@ ZIG_C_FLAGS=(
 
 	"-fno-unwind-tables"              # disables .eh_frame
 	"-fno-asynchronous-unwind-tables" # optional
+	# "-fno-compiler-rt"
 )
 
 ZIG_C_LD_FLAGS=(
@@ -92,6 +93,8 @@ ZIG_C_LD_FLAGS=(
 	"-Wl,--entry=kernel64_start"          # <-- Tell linker about entry point
 	"-Wl,--image-base=0xFFFFFFFF80000000" # MATCH your linker script!
 	"-flto"
+	# "-fno-compiler-rt"
+	"-Wl,--exclude-libs=libcompiler_rt.a"
 )
 
 LLD_FLAGS=(
@@ -247,7 +250,11 @@ remove_eh_frame_from_o() {
 }
 
 # ===== Call the function to remove .eh_frame from kernel64.o =====
-remove_eh_frame_from_o "$LIB_OUT_PATH" "kernel64.o"
+if [[ "$DEBUG_OR_RELEASE" == "debug" ]]; then
+	remove_eh_frame_from_o "$LIB_OUT_PATH" "kernel64.o"
+	echo "Removed eh frame"
+
+fi
 
 printf -- "\n\n====== Getting the '.o's and '.a's ========\n\n"
 # Library configuration
@@ -281,21 +288,21 @@ print_array LIBRARY_ARGS "LIBRARY_ARGS"
 
 printf -- "\n\n====================== Linking ===============================\n\n"
 
-$ZIG_CC \
-	-T "linker_64.ld" \
-	-o "$BUILD_DIR/kernel64.elf" \
-	"${ZIG_C_LD_FLAGS[@]}" \
-	"${BUILD_OBJECTS[@]}" \
-	"${LIBRARY_ARGS[@]}" \
-	-v
-
-# ld.lld \
+# $ZIG_CC \
 # 	-T "linker_64.ld" \
 # 	-o "$BUILD_DIR/kernel64.elf" \
-# 	"${LLD_FLAGS[@]}" \
+# 	"${ZIG_C_LD_FLAGS[@]}" \
 # 	"${BUILD_OBJECTS[@]}" \
 # 	"${LIBRARY_ARGS[@]}" \
 # 	-v
+
+ld.lld \
+	-T "linker_64.ld" \
+	-o "$BUILD_DIR/kernel64.elf" \
+	"${LLD_FLAGS[@]}" \
+	"${BUILD_OBJECTS[@]}" \
+	"${LIBRARY_ARGS[@]}" \
+	-v
 
 objdump -D -h -M intel "$BUILD_DIR/kernel64.elf" >"$BUILD_DIR/kernel64.dump"
 

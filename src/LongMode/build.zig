@@ -83,11 +83,13 @@ pub fn build(b: *std.Build) void {
     kernel_lib.root_module.link_libc = false;
     kernel_lib.root_module.link_libcpp = false;
     kernel_lib.root_module.dwarf_format = .@"64";
-    // kernel_lib.root_module.sanitize_c = .full;
+    kernel_lib.root_module.sanitize_c = .off; //
 
     kernel_lib.root_module.unwind_tables = .none;
     kernel_lib.link_eh_frame_hdr = false;
     // kernel_lib.root_module.
+
+    kernel_lib.bundle_compiler_rt = false;
 
     // Add include directories (For C/Cpp headers only)
     kernel_lib.root_module.addIncludePath(b.path("../ProtectedMode/LongModePrep/"));
